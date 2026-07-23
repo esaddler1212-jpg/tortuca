@@ -52,6 +52,10 @@ plus manual browser checks of the flows above.
 - Tortuca's admin uses an **in-memory store** when Supabase is not configured;
   created posts/data reset when the dev server restarts. This is expected in
   local dev and lets the admin CRUD work offline.
+- Gotcha (build vs dev share `.next`): running `next build` for an app while
+  its `next dev` server is live corrupts the dev server's chunks and causes
+  `MODULE_NOT_FOUND` / HTTP 500s. Build an app only when its dev server is
+  stopped, or afterwards `rm -rf apps/<app>/.next` and restart dev.
 - The `packages/shared` standalone `typecheck` needs Node types — its
   `tsconfig.json` sets `"types": ["react", "node"]` and it depends on
   `@types/node`. Keep both if you touch that config.
@@ -59,9 +63,19 @@ plus manual browser checks of the flows above.
   patches rather than jumping to 15/16 unless intentionally migrating.
 - Daily Brief specifics: it reads ECS action items from Tortuca over HTTP
   (`NEXT_PUBLIC_ADMIN_URL`, default `http://localhost:3003`), so run Tortuca too
-  for live data (otherwise it falls back to sample). Its calendar reads a phone
-  calendar's iCal/ICS URL (`CALENDAR_ICS_URL`); priority email is a sample
-  placeholder pending Gmail OAuth.
+  for live data (otherwise it falls back to sample).
+- Daily Brief calendar/email sources resolve in priority order: Google
+  (`lib/google.ts`, OAuth) → ICS feed (`CALENDAR_ICS_URL`) → sample for the
+  schedule; Gmail → sample for email. Orchestration lives in `lib/schedule.ts`
+  and `lib/inbox.ts`.
+- Google OAuth: uses read-only Calendar + Gmail scopes. The refresh token is
+  stored in an httpOnly cookie (`ecs_google_rt`); access tokens are refreshed on
+  demand and cached in a `globalThis` map (we can't set cookies during a
+  server-component render, so we never persist the short-lived access token).
+  Pure API mappers live in `lib/google-map.ts` (no `server-only`/`next/headers`
+  imports) so they are Vitest-testable; `lib/google.ts` holds the
+  server-only/network parts. Requires `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET`
+  and the redirect URI `…/api/google/callback`.
 - Gotcha (in-memory stores across route segments): Next dev can give different
   route segments separate copies of a module's mutable state. `daily-brief`'s
   in-memory task/tracker store is therefore backed by a `globalThis` singleton

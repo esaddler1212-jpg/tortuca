@@ -25,10 +25,16 @@ breakdown by aggregating several sources:
   live from the Tortuca backend API.
 - **Trackers** — counters you add/increment (e.g. songs written, sessions).
 - **Tasks** — daily to-dos you add and check off.
-- **Calendar** — today's events from your phone calendar's iCal/ICS feed
-  (`CALENDAR_ICS_URL`); parsed by a dependency-free ICS parser.
-- **Priority email** — a provider interface with a sample fallback (Gmail via
-  OAuth is the intended real source).
+- **Calendar** — live **Google Calendar** when connected (OAuth), else your
+  phone calendar's iCal/ICS feed (`CALENDAR_ICS_URL`, dependency-free parser),
+  else a sample schedule.
+- **Priority email** — live **Gmail** (important, last 24h) when connected via
+  OAuth, else a sample provider.
+
+Connect Google from the dashboard header ("Connect Google"). Requires a Google
+OAuth 2.0 Web client (`GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`) with the
+Calendar + Gmail APIs enabled and the redirect URI
+`http://localhost:3004/api/google/callback`. Only read-only scopes are used.
 
 ## Tech stack
 
@@ -77,6 +83,7 @@ the apps fall back gracefully:
 | Supabase | Blog shows sample posts; auth is disabled with a notice |
 | Supabase (admin) | Tortuca / Daily Brief use an in-memory store (CRUD still works, resets on restart) |
 | Stripe | Checkout returns a clear "not configured" message |
+| Google OAuth | Daily Brief uses ICS calendar (if set) + sample email |
 | Calendar (ICS) | Daily Brief shows a sample schedule |
 | Gmail | Daily Brief shows sample priority email |
 

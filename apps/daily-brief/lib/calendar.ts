@@ -132,7 +132,7 @@ export function isCalendarConfigured(): boolean {
   return Boolean(process.env.CALENDAR_ICS_URL)
 }
 
-function sampleTodayEvents(): CalendarEvent[] {
+export function sampleTodayEvents(): CalendarEvent[] {
   const at = (h: number, m = 0) => {
     const d = new Date()
     d.setHours(h, m, 0, 0)
@@ -146,27 +146,24 @@ function sampleTodayEvents(): CalendarEvent[] {
 }
 
 /**
- * Returns today's events from the configured ICS calendar feed
- * (`CALENDAR_ICS_URL`), falling back to sample events when not configured or
- * unreachable. This is how a phone calendar (Apple/Google) is surfaced to the
- * web: subscribe to its private iCal/ICS URL.
+ * Fetches today's events from the configured ICS calendar feed
+ * (`CALENDAR_ICS_URL`). Returns `null` when not configured or unreachable so
+ * the caller can fall back. This is how a phone calendar (Apple/Google) is
+ * surfaced to the web: subscribe to its private iCal/ICS URL.
  */
-export async function getTodayEvents(): Promise<{
-  events: CalendarEvent[]
-  configured: boolean
-}> {
+export async function fetchIcsEvents(): Promise<CalendarEvent[] | null> {
   const url = process.env.CALENDAR_ICS_URL
-  if (!url) return { events: sampleTodayEvents(), configured: false }
+  if (!url) return null
 
   try {
     const init: RequestInit & { next?: { revalidate?: number } } = {
       next: { revalidate: 300 },
     }
     const res = await fetch(url, init)
-    if (!res.ok) return { events: sampleTodayEvents(), configured: false }
+    if (!res.ok) return null
     const text = await res.text()
-    return { events: eventsForDay(parseIcs(text)), configured: true }
+    return eventsForDay(parseIcs(text))
   } catch {
-    return { events: sampleTodayEvents(), configured: false }
+    return null
   }
 }
