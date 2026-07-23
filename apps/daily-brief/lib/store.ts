@@ -24,7 +24,7 @@ export interface Tracker {
 // ---------------------------------------------------------------------------
 const now = () => new Date().toISOString()
 
-const memoryTasks: Task[] = [
+const seedTasks: Task[] = [
   {
     id: 'seed-task-1',
     title: 'Approve pending Easy Supply orders',
@@ -48,11 +48,22 @@ const memoryTasks: Task[] = [
   },
 ]
 
-const memoryTrackers: Tracker[] = [
+const seedTrackers: Tracker[] = [
   { id: 'trk-songs', label: 'Songs written', value: 3, unit: 'songs', category: 'creative', updated_at: now() },
   { id: 'trk-sessions', label: 'Studio sessions', value: 2, unit: 'sessions', category: 'creative', updated_at: now() },
   { id: 'trk-workouts', label: 'Workouts', value: 1, unit: 'days', category: 'health', updated_at: now() },
 ]
+
+// Back the in-memory store with a globalThis singleton so every route segment
+// (and Next dev HMR reloads) share the same data instead of separate copies.
+type BriefStore = { tasks: Task[]; trackers: Tracker[] }
+const globalRef = globalThis as unknown as { __ecsBriefStore?: BriefStore }
+const store: BriefStore =
+  globalRef.__ecsBriefStore ??
+  (globalRef.__ecsBriefStore = {
+    tasks: [...seedTasks],
+    trackers: [...seedTrackers],
+  })
 
 function uid(): string {
   return globalThis.crypto?.randomUUID?.() ?? `id-${Date.now()}-${Math.random().toString(36).slice(2)}`
@@ -62,7 +73,7 @@ function uid(): string {
 export async function listTasks(): Promise<Task[]> {
   const supabase = getAdminSupabase()
   if (!supabase) {
-    return [...memoryTasks].sort((a, b) => b.created_at.localeCompare(a.created_at))
+    return [...store.tasks].sort((a, b) => b.created_at.localeCompare(a.created_at))
   }
   const { data, error } = await supabase
     .from('tasks')
@@ -82,7 +93,7 @@ export async function createTask(title: string, dueAt?: string): Promise<Task> {
   }
   const supabase = getAdminSupabase()
   if (!supabase) {
-    memoryTasks.unshift(task)
+    store.tasks.unshift(task)
     return task
   }
   const { data, error } = await supabase
@@ -97,7 +108,7 @@ export async function createTask(title: string, dueAt?: string): Promise<Task> {
 export async function setTaskDone(id: string, done: boolean): Promise<Task | null> {
   const supabase = getAdminSupabase()
   if (!supabase) {
-    const task = memoryTasks.find((t) => t.id === id)
+    const task = store.tasks.find((t) => t.id === id)
     if (!task) return null
     task.done = done
     return task
@@ -115,7 +126,7 @@ export async function setTaskDone(id: string, done: boolean): Promise<Task | nul
 // --- Trackers --------------------------------------------------------------
 export async function listTrackers(): Promise<Tracker[]> {
   const supabase = getAdminSupabase()
-  if (!supabase) return [...memoryTrackers]
+  if (!supabase) return [...store.trackers]
   const { data, error } = await supabase
     .from('trackers')
     .select('*')
@@ -139,7 +150,7 @@ export async function createTracker(
   }
   const supabase = getAdminSupabase()
   if (!supabase) {
-    memoryTrackers.push(tracker)
+    store.trackers.push(tracker)
     return tracker
   }
   const { data, error } = await supabase
@@ -154,7 +165,7 @@ export async function createTracker(
 export async function adjustTracker(id: string, delta: number): Promise<Tracker | null> {
   const supabase = getAdminSupabase()
   if (!supabase) {
-    const tracker = memoryTrackers.find((t) => t.id === id)
+    const tracker = store.trackers.find((t) => t.id === id)
     if (!tracker) return null
     tracker.value = Math.max(0, tracker.value + delta)
     tracker.updated_at = now()

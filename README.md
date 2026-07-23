@@ -9,11 +9,26 @@ ecs-network-platform/
 ├─ apps/
 │  ├─ easy-supply-co/   # E-commerce (Shopify + Stripe)      → :3001
 │  ├─ ecs-network/      # Marketing site (blog + contact)    → :3002
-│  └─ tortuca/          # Admin dashboard + backend APIs     → :3003
+│  ├─ tortuca/          # Admin dashboard + backend APIs     → :3003
+│  └─ daily-brief/      # Personal daily dashboard ("Jarvis") → :3004
 ├─ packages/
 │  └─ shared/           # Supabase/Shopify clients, auth, types, UI components
 └─ supabase/            # SQL migrations + seed for the shared database
 ```
+
+### Daily Brief
+
+`apps/daily-brief` is a no-voice personal dashboard that gives a daily
+breakdown by aggregating several sources:
+
+- **ECS data** — orders awaiting approval and open contact submissions pulled
+  live from the Tortuca backend API.
+- **Trackers** — counters you add/increment (e.g. songs written, sessions).
+- **Tasks** — daily to-dos you add and check off.
+- **Calendar** — today's events from your phone calendar's iCal/ICS feed
+  (`CALENDAR_ICS_URL`); parsed by a dependency-free ICS parser.
+- **Priority email** — a provider interface with a sample fallback (Gmail via
+  OAuth is the intended real source).
 
 ## Tech stack
 
@@ -40,6 +55,7 @@ Then open:
 - Easy Supply Co → http://localhost:3001
 - ECS Network    → http://localhost:3002
 - Tortuca admin  → http://localhost:3003
+- Daily Brief    → http://localhost:3004
 
 Run a single app instead:
 
@@ -47,6 +63,7 @@ Run a single app instead:
 npm run dev:store     # easy-supply-co
 npm run dev:network   # ecs-network
 npm run dev:tortuca   # tortuca
+npm run dev:brief     # daily-brief
 ```
 
 ### Works without any credentials
@@ -58,8 +75,10 @@ the apps fall back gracefully:
 | --- | --- |
 | Shopify | Store shows a bundled sample catalog |
 | Supabase | Blog shows sample posts; auth is disabled with a notice |
-| Supabase (admin) | Tortuca uses an in-memory store (CRUD still works, resets on restart) |
+| Supabase (admin) | Tortuca / Daily Brief use an in-memory store (CRUD still works, resets on restart) |
 | Stripe | Checkout returns a clear "not configured" message |
+| Calendar (ICS) | Daily Brief shows a sample schedule |
+| Gmail | Daily Brief shows sample priority email |
 
 ## Environment variables
 
@@ -95,10 +114,11 @@ editor. Tables: `profiles`, `posts`, `contact_submissions`, `orders`.
 
 | Command | Description |
 | --- | --- |
-| `npm run dev` | Run all three apps concurrently |
+| `npm run dev` | Run all four apps concurrently |
 | `npm run build` | Build every app |
 | `npm run lint` | Lint every app |
 | `npm run typecheck` | Type-check every workspace |
+| `npm run test` | Run unit tests where present (e.g. daily-brief ICS parser) |
 
 ## Deployment (Vercel)
 

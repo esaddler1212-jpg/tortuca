@@ -11,6 +11,7 @@ durable, non-obvious guidance for working in the repo.
 | `apps/easy-supply-co` | E-commerce (Shopify + Stripe) | 3001 |
 | `apps/ecs-network` | Marketing site (blog + contact) | 3002 |
 | `apps/tortuca` | Admin dashboard + backend API routes | 3003 |
+| `apps/daily-brief` | Personal daily dashboard (ECS + calendar + email) | 3004 |
 | `packages/shared` (`@ecs/shared`) | Supabase/Shopify clients, auth, types, UI | n/a |
 | `supabase/` | SQL migration + seed for the shared DB | n/a |
 
@@ -22,9 +23,10 @@ Standard commands live in the root `package.json` and each workspace's
 `dev:network` / `dev:tortuca`. Also `npm run build`, `npm run lint`,
 `npm run typecheck` (each runs across all workspaces).
 
-There is currently **no automated test suite**; verification is
-`npm run typecheck` + `npm run lint` + `npm run build`, plus manual browser
-checks of the flows above.
+Automated tests are minimal: `apps/daily-brief` has a Vitest unit test for the
+ICS calendar parser (`npm run test` at the root runs tests where present).
+Otherwise verification is `npm run typecheck` + `npm run lint` + `npm run build`,
+plus manual browser checks of the flows above.
 
 ## Cursor Cloud specific instructions
 
@@ -55,6 +57,17 @@ checks of the flows above.
   `@types/node`. Keep both if you touch that config.
 - Next.js is pinned to the patched **14.2.x** line (App Router). Stay on 14.2.x
   patches rather than jumping to 15/16 unless intentionally migrating.
+- Daily Brief specifics: it reads ECS action items from Tortuca over HTTP
+  (`NEXT_PUBLIC_ADMIN_URL`, default `http://localhost:3003`), so run Tortuca too
+  for live data (otherwise it falls back to sample). Its calendar reads a phone
+  calendar's iCal/ICS URL (`CALENDAR_ICS_URL`); priority email is a sample
+  placeholder pending Gmail OAuth.
+- Gotcha (in-memory stores across route segments): Next dev can give different
+  route segments separate copies of a module's mutable state. `daily-brief`'s
+  in-memory task/tracker store is therefore backed by a `globalThis` singleton
+  (`__ecsBriefStore`) so create in `/api/tasks` is visible to toggle in
+  `/api/tasks/[id]`. Prefer this pattern for any dev in-memory fallback that is
+  written from more than one route.
 - The Supabase schema/seed live in `supabase/`; apply with the Supabase CLI
   (`supabase start` + `supabase db reset`) or by running
   `supabase/migrations/0001_init.sql` in a hosted project's SQL editor.
