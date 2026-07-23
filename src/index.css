@@ -1,0 +1,24 @@
+:root {
+  --bg: #0b1120;
+  --card: #111a2e;
+  --input: #0e1730;
+  --border: #1e2a44;
+  --muted: #94a3b8;
+
+  color-scheme: dark;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+  line-height: 1.5;
+  color: #e2e8f0;
+  background: radial-gradient(1200px 600px at 50% -10%, #12203c, var(--bg));
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
