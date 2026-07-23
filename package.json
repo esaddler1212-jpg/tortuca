@@ -8,13 +8,15 @@
     "apps/*"
   ],
   "scripts": {
-    "dev": "concurrently -n store,network,tortuca -c cyan,magenta,green \"npm:dev:store\" \"npm:dev:network\" \"npm:dev:tortuca\"",
+    "dev": "concurrently -n store,network,tortuca,brief -c cyan,magenta,green,yellow \"npm:dev:store\" \"npm:dev:network\" \"npm:dev:tortuca\" \"npm:dev:brief\"",
     "dev:store": "npm run dev --workspace @ecs/easy-supply-co",
     "dev:network": "npm run dev --workspace @ecs/ecs-network",
     "dev:tortuca": "npm run dev --workspace @ecs/tortuca",
+    "dev:brief": "npm run dev --workspace @ecs/daily-brief",
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
