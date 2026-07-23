@@ -1,0 +1,22 @@
+# Minimal Supabase CLI config for local development.
+# Run `supabase start` (requires the Supabase CLI + Docker) to bring up a local
+# stack, then `supabase db reset` to apply migrations and seed data.
+
+project_id = "tortuca"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+
+[db]
+port = 54322
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+enable_signup = true
