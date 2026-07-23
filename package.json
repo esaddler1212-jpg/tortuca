@@ -1,0 +1,27 @@
+{
+  "name": "ecs-network-platform",
+  "private": true,
+  "version": "0.1.0",
+  "description": "ECS Network — multi-site platform (Easy Supply Co, ECS Network Overview) on a shared Tortuca backend.",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n store,network,tortuca,brief -c cyan,magenta,green,yellow \"npm:dev:store\" \"npm:dev:network\" \"npm:dev:tortuca\" \"npm:dev:brief\"",
+    "dev:store": "npm run dev --workspace @ecs/easy-supply-co",
+    "dev:network": "npm run dev --workspace @ecs/ecs-network",
+    "dev:tortuca": "npm run dev --workspace @ecs/tortuca",
+    "dev:brief": "npm run dev --workspace @ecs/daily-brief",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "engines": {
+    "node": ">=18.18"
+  }
+}
