@@ -74,25 +74,41 @@ label {
   margin-bottom: 1rem;
 }
 
-.reason-grid {
-  display: grid;
-  gap: 0.5rem;
+.pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
 }
 
-.reason-chip {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  padding: 0.5rem 0.65rem;
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 40px;
+  padding: 0.45rem 0.8rem;
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  font-size: 0.9rem;
+  border-radius: 999px;
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background 0.12s, border-color 0.12s;
 }
 
-.reason-chip input {
-  width: auto;
-  margin-top: 0.2rem;
+.pill:hover {
+  border-color: var(--accent);
+}
+
+.pill-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0a1628;
+  font-weight: 600;
+}
+
+.pill-meta {
+  font-size: 0.75rem;
+  opacity: 0.7;
 }
 
 .btn {

@@ -4,6 +4,9 @@ import { DEFAULT_DEBRIEF_SETTINGS } from "./types";
 const CHECKINS_KEY = "tortuca_checkins";
 const SETTINGS_KEY = "tortuca_debrief_settings";
 
+/** Parsing the whole log on every keystroke is wasteful; keep it in memory. */
+let checkInCache: CheckIn[] | null = null;
+
 function todayKey(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -19,38 +22,39 @@ export function getTodayDateLabel(): string {
 }
 
 export function loadAllCheckIns(): CheckIn[] {
+  if (checkInCache) return checkInCache;
   try {
     const raw = localStorage.getItem(CHECKINS_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as CheckIn[];
-    return Array.isArray(parsed) ? parsed : [];
+    const parsed = raw ? (JSON.parse(raw) as CheckIn[]) : [];
+    checkInCache = Array.isArray(parsed) ? parsed : [];
   } catch {
-    return [];
+    checkInCache = [];
   }
+  return checkInCache;
 }
 
 export function saveAllCheckIns(checkIns: CheckIn[]): void {
+  checkInCache = checkIns;
   localStorage.setItem(CHECKINS_KEY, JSON.stringify(checkIns));
 }
 
+export function isToday(checkIn: CheckIn): boolean {
+  return checkIn.createdAt.startsWith(todayKey());
+}
+
 export function loadTodayCheckIns(): CheckIn[] {
-  const key = todayKey();
   return loadAllCheckIns()
-    .filter((c) => c.createdAt.startsWith(key))
+    .filter(isToday)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-export function addCheckIn(
-  entry: Omit<CheckIn, "id" | "createdAt">,
-): CheckIn {
+export function addCheckIn(entry: Omit<CheckIn, "id" | "createdAt">): CheckIn {
   const newEntry: CheckIn = {
     ...entry,
     id: crypto.randomUUID(),
     createdAt: new Date().toISOString(),
   };
-  const all = loadAllCheckIns();
-  all.push(newEntry);
-  saveAllCheckIns(all);
+  saveAllCheckIns([...loadAllCheckIns(), newEntry]);
   return newEntry;
 }
 

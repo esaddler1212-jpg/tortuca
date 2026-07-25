@@ -1,6 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  CHECK_IN_REASONS,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
   GRADES,
   type CheckIn,
   type CheckInReason,
@@ -9,29 +14,68 @@ import {
 import {
   addCheckIn,
   deleteCheckIn,
+  loadAllCheckIns,
   loadDebriefSettings,
   loadTodayCheckIns,
   saveDebriefSettings,
   getTodayDateLabel,
 } from "./storage";
+import {
+  buildRecentPeriods,
+  buildRoster,
+  findStudent,
+  normalizeName,
+  orderReasonsByUse,
+  type StudentProfile,
+} from "./roster";
 import { buildDebriefText, buildMailtoUrl } from "./debrief";
-import { downloadDebriefPdf } from "./debriefPdf";
 
 type Tab = "log" | "debrief" | "settings";
 
-function CheckInForm({ onSaved }: { onSaved: () => void }) {
+function CheckInForm({
+  roster,
+  recentPeriods,
+  reasonOrder,
+  todayNames,
+  onSaved,
+}: {
+  roster: StudentProfile[];
+  recentPeriods: string[];
+  reasonOrder: CheckInReason[];
+  todayNames: Set<string>;
+  onSaved: () => void;
+}) {
   const [studentName, setStudentName] = useState("");
   const [grade, setGrade] = useState<string>("9");
   const [classPeriod, setClassPeriod] = useState("");
   const [reasons, setReasons] = useState<CheckInReason[]>([]);
   const [reasonNotes, setReasonNotes] = useState("");
   const [error, setError] = useState("");
+  const nameInput = useRef<HTMLInputElement>(null);
 
   const toggleReason = (r: CheckInReason) => {
     setReasons((prev) =>
       prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r],
     );
   };
+
+  /** Typing or picking a known student fills in their grade and period. */
+  const applyStudent = (name: string) => {
+    setStudentName(name);
+    const known = findStudent(roster, name);
+    if (known) {
+      setGrade(known.grade);
+      setClassPeriod(known.classPeriod);
+    }
+  };
+
+  const quickPick = (student: StudentProfile) => {
+    applyStudent(student.name);
+    nameInput.current?.focus();
+  };
+
+  const alreadyLoggedToday =
+    studentName.trim().length > 0 && todayNames.has(normalizeName(studentName));
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,26 +99,63 @@ function CheckInForm({ onSaved }: { onSaved: () => void }) {
       reasons,
       reasonNotes: reasonNotes.trim(),
     });
+    // Grade and period carry over: consecutive check-ins usually share a class.
     setStudentName("");
-    setClassPeriod("");
     setReasons([]);
     setReasonNotes("");
+    nameInput.current?.focus();
     onSaved();
   };
+
+  const suggestions = roster.slice(0, 8);
 
   return (
     <form className="card" onSubmit={submit}>
       <h2>Log a check-in</h2>
+
+      {suggestions.length > 0 && (
+        <div className="field">
+          <label>Recent students — tap to fill</label>
+          <div className="pill-row">
+            {suggestions.map((s) => (
+              <button
+                key={s.name}
+                type="button"
+                className="pill"
+                onClick={() => quickPick(s)}
+              >
+                {s.name}
+                <span className="pill-meta">Gr {s.grade}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="field">
         <label htmlFor="studentName">Student name</label>
         <input
           id="studentName"
+          ref={nameInput}
           value={studentName}
-          onChange={(e) => setStudentName(e.target.value)}
+          onChange={(e) => applyStudent(e.target.value)}
           placeholder="e.g. Maria Lopez"
-          autoComplete="name"
+          list="roster-names"
+          autoComplete="off"
+          enterKeyHint="done"
+          // eslint-disable-next-line jsx-a11y/no-autofocus
+          autoFocus
         />
+        <datalist id="roster-names">
+          {roster.map((s) => (
+            <option key={s.name} value={s.name} />
+          ))}
+        </datalist>
+        {alreadyLoggedToday && (
+          <p className="hint">Already checked in today — this adds a second entry.</p>
+        )}
       </div>
+
       <div className="row-2">
         <div className="field">
           <label htmlFor="grade">Grade</label>
@@ -97,40 +178,77 @@ function CheckInForm({ onSaved }: { onSaved: () => void }) {
             value={classPeriod}
             onChange={(e) => setClassPeriod(e.target.value)}
             placeholder="e.g. Period 3 — Algebra"
+            list="recent-periods"
+            autoComplete="off"
           />
+          <datalist id="recent-periods">
+            {recentPeriods.map((p) => (
+              <option key={p} value={p} />
+            ))}
+          </datalist>
         </div>
       </div>
+
+      {recentPeriods.length > 0 && (
+        <div className="field">
+          <label>Recent periods</label>
+          <div className="pill-row">
+            {recentPeriods.map((p) => (
+              <button
+                key={p}
+                type="button"
+                className={`pill ${classPeriod === p ? "pill-active" : ""}`}
+                onClick={() => setClassPeriod(p)}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="field">
-        <label>Reason(s) for check-in</label>
-        <div className="reason-grid">
-          {CHECK_IN_REASONS.map((r) => (
-            <label key={r} className="reason-chip">
-              <input
-                type="checkbox"
-                checked={reasons.includes(r)}
-                onChange={() => toggleReason(r)}
-              />
-              <span>{r}</span>
-            </label>
-          ))}
+        <label id="reasons-label">Reason(s) for check-in</label>
+        <div className="pill-row" role="group" aria-labelledby="reasons-label">
+          {reasonOrder.map((r) => {
+            const selected = reasons.includes(r);
+            return (
+              <button
+                key={r}
+                type="button"
+                className={`pill ${selected ? "pill-active" : ""}`}
+                aria-pressed={selected}
+                onClick={() => toggleReason(r)}
+              >
+                {r}
+              </button>
+            );
+          })}
         </div>
       </div>
+
       <div className="field">
-        <label htmlFor="reasonNotes">Additional details (why)</label>
+        <label htmlFor="reasonNotes">Additional details (optional)</label>
         <textarea
           id="reasonNotes"
-          rows={3}
+          rows={2}
           value={reasonNotes}
           onChange={(e) => setReasonNotes(e.target.value)}
           placeholder="Brief context for school staff and your program…"
         />
       </div>
+
       {error && (
         <p style={{ color: "var(--danger)", marginBottom: "1rem" }}>{error}</p>
       )}
+
       <button type="submit" className="btn btn-primary">
         Save check-in
       </button>
+      <p className="hint">
+        Grade and period stay set after saving, so back-to-back check-ins in the
+        same class only need a name and a reason.
+      </p>
     </form>
   );
 }
@@ -178,9 +296,7 @@ function TodayList({
             </p>
             <div className="checkin-reasons">
               {c.reasons.length > 0 && (
-                <p style={{ margin: "0 0 0.25rem" }}>
-                  {c.reasons.join(" · ")}
-                </p>
+                <p style={{ margin: "0 0 0.25rem" }}>{c.reasons.join(" · ")}</p>
               )}
               {c.reasonNotes && (
                 <p style={{ margin: 0, color: "var(--text-muted)" }}>
@@ -206,6 +322,8 @@ function DebriefPanel({
   onCopied: () => void;
   onPdfDownloaded: () => void;
 }) {
+  const [pdfBusy, setPdfBusy] = useState(false);
+
   const text = useMemo(
     () => buildDebriefText(checkIns, settings),
     [checkIns, settings],
@@ -218,25 +336,20 @@ function DebriefPanel({
     onCopied();
   };
 
-  const emailBoth = () => {
-    const recipients = [settings.staffEmail, settings.companyEmail];
+  /** The PDF library is heavy, so it loads only when a PDF is requested. */
+  const downloadPdf = async () => {
+    setPdfBusy(true);
+    try {
+      const { downloadDebriefPdf } = await import("./debriefPdf");
+      downloadDebriefPdf(checkIns, settings);
+      onPdfDownloaded();
+    } finally {
+      setPdfBusy(false);
+    }
+  };
+
+  const emailTo = (recipients: string[]) => {
     window.location.href = buildMailtoUrl(recipients, subject, text);
-  };
-
-  const emailStaff = () => {
-    window.location.href = buildMailtoUrl(
-      [settings.staffEmail],
-      subject,
-      text,
-    );
-  };
-
-  const emailCompany = () => {
-    window.location.href = buildMailtoUrl(
-      [settings.companyEmail],
-      subject,
-      text,
-    );
   };
 
   return (
@@ -253,12 +366,10 @@ function DebriefPanel({
         <button
           type="button"
           className="btn btn-primary"
-          onClick={() => {
-            downloadDebriefPdf(checkIns, settings);
-            onPdfDownloaded();
-          }}
+          onClick={downloadPdf}
+          disabled={pdfBusy}
         >
-          Download PDF
+          {pdfBusy ? "Preparing PDF…" : "Download PDF"}
         </button>
         <button type="button" className="btn btn-secondary" onClick={() => copy()}>
           Copy to clipboard
@@ -266,15 +377,15 @@ function DebriefPanel({
         <button
           type="button"
           className="btn btn-secondary"
-          onClick={emailBoth}
+          onClick={() => emailTo([settings.staffEmail, settings.companyEmail])}
           disabled={!settings.staffEmail && !settings.companyEmail}
         >
-          Email staff & company
+          Email staff &amp; company
         </button>
         <button
           type="button"
           className="btn btn-secondary"
-          onClick={emailStaff}
+          onClick={() => emailTo([settings.staffEmail])}
           disabled={!settings.staffEmail}
         >
           Email school staff only
@@ -282,7 +393,7 @@ function DebriefPanel({
         <button
           type="button"
           className="btn btn-secondary"
-          onClick={emailCompany}
+          onClick={() => emailTo([settings.companyEmail])}
           disabled={!settings.companyEmail}
         >
           Email company only
@@ -324,7 +435,7 @@ function SettingsPanel({
         onSave(form);
       }}
     >
-      <h2>Debrief & profile</h2>
+      <h2>Debrief &amp; profile</h2>
       <p className="hint" style={{ marginBottom: "1rem" }}>
         These appear on your daily debrief and pre-fill email recipients.
       </p>
@@ -373,13 +484,16 @@ function SettingsPanel({
           placeholder="supervisor@company.com"
         />
       </div>
-      <button type="submit" className="btn btn-primary">Save settings</button>
+      <button type="submit" className="btn btn-primary">
+        Save settings
+      </button>
     </form>
   );
 }
 
 export default function App() {
   const [tab, setTab] = useState<Tab>("log");
+  const [revision, setRevision] = useState(0);
   const [checkIns, setCheckIns] = useState<CheckIn[]>(() => loadTodayCheckIns());
   const [settings, setSettings] = useState<DebriefSettings>(() =>
     loadDebriefSettings(),
@@ -388,7 +502,17 @@ export default function App() {
 
   const refresh = useCallback(() => {
     setCheckIns(loadTodayCheckIns());
+    setRevision((r) => r + 1);
   }, []);
+
+  const history = useMemo(() => loadAllCheckIns(), [revision]);
+  const roster = useMemo(() => buildRoster(history), [history]);
+  const recentPeriods = useMemo(() => buildRecentPeriods(history), [history]);
+  const reasonOrder = useMemo(() => orderReasonsByUse(history), [history]);
+  const todayNames = useMemo(
+    () => new Set(checkIns.map((c) => normalizeName(c.studentName))),
+    [checkIns],
+  );
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -429,6 +553,10 @@ export default function App() {
       {tab === "log" && (
         <>
           <CheckInForm
+            roster={roster}
+            recentPeriods={recentPeriods}
+            reasonOrder={reasonOrder}
+            todayNames={todayNames}
             onSaved={() => {
               refresh();
               showToast("Check-in saved");
@@ -457,7 +585,11 @@ export default function App() {
         />
       )}
 
-      {toast && <div className="toast" role="status">{toast}</div>}
+      {toast && (
+        <div className="toast" role="status">
+          {toast}
+        </div>
+      )}
     </div>
   );
 }
