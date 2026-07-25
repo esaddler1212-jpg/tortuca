@@ -12,16 +12,26 @@ import {
 } from "./storage";
 import { buildRecentPeriods, buildRoster, orderReasonsByUse } from "./roster";
 import LogTab from "./LogTab";
+import FollowUpTab from "./FollowUpTab";
 import GroupTab from "./GroupTab";
 import DebriefTab from "./DebriefTab";
 import ReportsTab from "./ReportsTab";
 import ImpactTab from "./ImpactTab";
 import SettingsTab from "./SettingsTab";
+import { buildFollowUpQueue, needsOutcome } from "./followups";
 
-type Tab = "log" | "group" | "debrief" | "reports" | "impact" | "settings";
+type Tab =
+  | "log"
+  | "followup"
+  | "group"
+  | "debrief"
+  | "reports"
+  | "impact"
+  | "settings";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "log", label: "Log" },
+  { id: "followup", label: "Follow-up" },
   { id: "group", label: "Group" },
   { id: "debrief", label: "Debrief" },
   { id: "reports", label: "Reports" },
@@ -65,6 +75,13 @@ export default function App() {
   const recentPeriods = useMemo(() => buildRecentPeriods(history), [history]);
   const reasonOrder = useMemo(() => orderReasonsByUse(history), [history]);
 
+  /** Anything owed: shown on the tab so it is visible without going looking. */
+  const outstanding = useMemo(() => {
+    const queue = buildFollowUpQueue(history);
+    return queue.overdue.length + queue.dueToday.length;
+  }, [history]);
+  const awaitingOutcome = useMemo(() => needsOutcome(history).length, [history]);
+
   return (
     <div className="app-shell">
       <header className="app-header">
@@ -82,6 +99,9 @@ export default function App() {
             onClick={() => setTab(t.id)}
           >
             {t.label}
+            {t.id === "followup" && outstanding + awaitingOutcome > 0 && (
+              <span className="tab-badge">{outstanding + awaitingOutcome}</span>
+            )}
           </button>
         ))}
       </nav>
@@ -94,6 +114,10 @@ export default function App() {
           todayCheckIns={todayCheckIns}
           onChanged={onChanged}
         />
+      )}
+
+      {tab === "followup" && (
+        <FollowUpTab checkIns={history} onChanged={onChanged} />
       )}
 
       {tab === "group" && (
@@ -109,6 +133,8 @@ export default function App() {
       {tab === "debrief" && (
         <DebriefTab
           checkIns={todayCheckIns}
+          allCheckIns={history}
+          sessions={sessions}
           session={todaySession}
           settings={settings}
           onCopied={() => showToast("Debrief copied")}

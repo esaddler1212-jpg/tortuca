@@ -153,7 +153,7 @@ describe("group sign-in", () => {
     );
     await user.click(screen.getByRole("button", { name: "Debrief" }));
 
-    const preview = screen.getByLabelText("Debrief preview");
+    const preview = screen.getByLabelText("End-of-day debrief preview");
     expect(preview).toHaveTextContent("BOYS Group signed in today: 1");
     expect(preview).toHaveTextContent("Signed in (1): Andre Bell");
   });

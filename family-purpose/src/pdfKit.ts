@@ -42,10 +42,13 @@ export function drawHeader(
   doc.text(range.label, MARGIN, y);
   y += 15;
 
-  doc.setFontSize(9);
-  doc.setTextColor(...MUTED);
-  doc.text(`${range.start} through ${range.end}`, MARGIN, y);
-  y += 18;
+  // A single-day document already says the date in its label.
+  if (range.start !== range.end) {
+    doc.setFontSize(9);
+    doc.setTextColor(...MUTED);
+    doc.text(`${range.start} through ${range.end}`, MARGIN, y);
+    y += 18;
+  }
 
   doc.setFontSize(11);
   doc.setTextColor(...BODY);

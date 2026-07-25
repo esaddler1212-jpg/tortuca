@@ -5,6 +5,8 @@ import type { CheckIn, DebriefSettings, GroupSession } from "./types";
 const settings: DebriefSettings = {
   staffEmail: "counselor@school.edu",
   companyEmail: "supervisor@company.com",
+  attendanceEmail: "attendance@school.edu",
+  careTeamEmail: "careteam@school.edu",
   yourName: "Jordan Reeves",
   yourRole: "Community mentor",
   schoolName: "Riverside High",

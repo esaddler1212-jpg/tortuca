@@ -163,6 +163,29 @@ export default function SettingsTab({
           placeholder="supervisor@company.com"
         />
       </div>
+      <div className="field">
+        <label htmlFor="attendanceEmail">Attendance clerk email</label>
+        <input
+          id="attendanceEmail"
+          type="email"
+          value={form.attendanceEmail}
+          onChange={(e) => update("attendanceEmail", e.target.value)}
+          placeholder="attendance@school.edu"
+        />
+      </div>
+      <div className="field">
+        <label htmlFor="careTeamEmail">CARE team email</label>
+        <input
+          id="careTeamEmail"
+          type="email"
+          value={form.careTeamEmail}
+          onChange={(e) => update("careTeamEmail", e.target.value)}
+          placeholder="careteam@school.edu"
+        />
+        <p className="hint">
+          CARE team referrals go here and nowhere else.
+        </p>
+      </div>
       <button type="submit" className="btn btn-primary">
         Save settings
       </button>

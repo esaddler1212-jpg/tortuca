@@ -1,5 +1,6 @@
 import type { CheckIn, DebriefSettings, GroupSession } from "./types";
 import { getTodayDateLabel } from "./storage";
+import { formatDueLabel, studentLabel } from "./followups";
 
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString(undefined, {
@@ -25,16 +26,37 @@ export function hasSessionContent(session: GroupSession | null): boolean {
   );
 }
 
+/** Follow-ups raised today plus anything still owed from earlier check-ins. */
+export function outstandingFollowUps(
+  todayCheckIns: CheckIn[],
+  allCheckIns: CheckIn[] = todayCheckIns,
+): CheckIn[] {
+  const todayIds = new Set(todayCheckIns.map((c) => c.id));
+  return allCheckIns
+    .filter((c) => c.followUp && !c.followUp.completedAt)
+    .sort((a, b) => {
+      // Today's new commitments lead, then the oldest deadlines.
+      const aToday = todayIds.has(a.id) ? 0 : 1;
+      const bToday = todayIds.has(b.id) ? 0 : 1;
+      return (
+        aToday - bToday || a.followUp!.dueAt.localeCompare(b.followUp!.dueAt)
+      );
+    });
+}
+
 export function buildDebriefText(
   checkIns: CheckIn[],
   settings: DebriefSettings,
   session: GroupSession | null = null,
+  allCheckIns: CheckIn[] = checkIns,
 ): string {
   const name = settings.yourName.trim() || "Staff member";
   const role = settings.yourRole.trim();
   const school = settings.schoolName.trim();
   const groupName = settings.groupName.trim() || "Group";
   const showSession = hasSessionContent(session);
+  const followUps = outstandingFollowUps(checkIns, allCheckIns);
+  const referrals = followUps.filter((c) => c.followUp!.careTeamReferral);
 
   const lines = ["END OF DAY CHECK-IN DEBRIEF", getTodayDateLabel(), ""];
 
@@ -45,9 +67,12 @@ export function buildDebriefText(
   if (showSession) {
     lines.push(`${groupName} signed in today: ${session!.attendees.length}`);
   }
+  if (followUps.length > 0) {
+    lines.push(`Follow-ups outstanding: ${followUps.length}`);
+  }
   lines.push("");
 
-  if (checkIns.length === 0 && !showSession) {
+  if (checkIns.length === 0 && !showSession && followUps.length === 0) {
     lines.push(
       "No student check-ins were logged for today. If check-ins occurred, please update the log and resend this debrief.",
     );
@@ -64,11 +89,30 @@ export function buildDebriefText(
 
     for (const c of sorted) {
       lines.push("");
-      lines.push(`Student: ${c.studentName}`);
+      lines.push(`Student: ${studentLabel(c)}`);
       lines.push(
         `Grade: ${c.grade}  |  Period: ${c.classPeriod}  |  Time: ${formatTime(c.createdAt)}`,
       );
       lines.push(`Reason(s): ${formatReasons(c)}`);
+      if (c.outcome) {
+        const detail = c.outcomeNotes?.trim();
+        lines.push(`Outcome: ${c.outcome}${detail ? ` — ${detail}` : ""}`);
+      }
+    }
+    lines.push("");
+  }
+
+  if (followUps.length > 0) {
+    lines.push("FOLLOW-UPS");
+    lines.push("----------");
+    for (const c of followUps) {
+      const f = c.followUp!;
+      lines.push("");
+      lines.push(`${studentLabel(c)} — ${formatDueLabel(f)}`);
+      if (f.services.length > 0) {
+        lines.push(`  Recommended: ${f.services.join("; ")}`);
+      }
+      if (f.careTeamReferral) lines.push("  Referred to the CARE team");
     }
     lines.push("");
   }
@@ -87,6 +131,11 @@ export function buildDebriefText(
   lines.push(
     "This debrief documents same-day student check-ins for school staff and program reporting. Please reach out if any follow-up is needed.",
   );
+  if (referrals.length > 0) {
+    lines.push(
+      `${referrals.length} student${referrals.length === 1 ? "" : "s"} referred to the CARE team. Detail is in the separate CARE team debrief, shared only with that team.`,
+    );
+  }
 
   return lines.join("\n");
 }
