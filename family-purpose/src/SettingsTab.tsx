@@ -1,13 +1,88 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { DebriefSettings } from "./types";
 import { saveDebriefSettings } from "./storage";
+import {
+  BackupError,
+  downloadBackup,
+  parseBackup,
+  restoreBackup,
+} from "./backup";
+
+function DataBackup({ onRestored }: { onRestored: () => void }) {
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  const restore = async (file: File) => {
+    setError("");
+    setMessage("");
+    try {
+      const backup = parseBackup(await file.text());
+      restoreBackup(backup);
+      setMessage(
+        `Restored ${backup.checkIns.length} check-ins and ${backup.groupSessions.length} group sessions.`,
+      );
+      onRestored();
+    } catch (e) {
+      setError(
+        e instanceof BackupError ? e.message : "That backup could not be read.",
+      );
+    }
+  };
+
+  return (
+    <div className="card">
+      <h2>Data backup</h2>
+      <p className="hint" style={{ marginBottom: "1rem" }}>
+        Check-ins live in this browser only. Save a backup regularly so the
+        record survives a cleared browser or a new device — and so the data is
+        available later for impact reporting.
+      </p>
+      <div className="btn-row">
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => downloadBackup()}
+        >
+          Download backup (JSON)
+        </button>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => fileInput.current?.click()}
+        >
+          Restore from backup
+        </button>
+      </div>
+      <input
+        ref={fileInput}
+        type="file"
+        accept="application/json,.json"
+        aria-label="Backup file"
+        style={{ display: "none" }}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) void restore(file);
+          e.target.value = "";
+        }}
+      />
+      {message && <p className="hint">{message}</p>}
+      {error && (
+        <p style={{ color: "var(--danger)", marginTop: "0.5rem" }}>{error}</p>
+      )}
+      <p className="hint">Restoring replaces the data currently on this device.</p>
+    </div>
+  );
+}
 
 export default function SettingsTab({
   settings,
   onSave,
+  onRestored,
 }: {
   settings: DebriefSettings;
   onSave: (s: DebriefSettings) => void;
+  onRestored: () => void;
 }) {
   const [form, setForm] = useState(settings);
 
@@ -20,6 +95,7 @@ export default function SettingsTab({
   };
 
   return (
+    <>
     <form
       className="card"
       onSubmit={(e) => {
@@ -91,5 +167,7 @@ export default function SettingsTab({
         Save settings
       </button>
     </form>
+    <DataBackup onRestored={onRestored} />
+    </>
   );
 }

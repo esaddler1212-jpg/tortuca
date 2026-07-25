@@ -7,10 +7,28 @@ import type {
 import { DEFAULT_DEBRIEF_SETTINGS } from "./types";
 import { dayKeyOf } from "./reports";
 
-const CHECKINS_KEY = "tortuca_checkins";
-const SETTINGS_KEY = "tortuca_debrief_settings";
-const GROUP_MEMBERS_KEY = "tortuca_group_members";
-const GROUP_SESSIONS_KEY = "tortuca_group_sessions";
+export const CHECKINS_KEY = "familypurpose_checkins";
+export const SETTINGS_KEY = "familypurpose_debrief_settings";
+export const GROUP_MEMBERS_KEY = "familypurpose_group_members";
+export const GROUP_SESSIONS_KEY = "familypurpose_group_sessions";
+
+/** Keys used before the app was named, kept so early data is not stranded. */
+const RENAMED_KEYS: [from: string, to: string][] = [
+  ["tortuca_checkins", CHECKINS_KEY],
+  ["tortuca_debrief_settings", SETTINGS_KEY],
+  ["tortuca_group_members", GROUP_MEMBERS_KEY],
+  ["tortuca_group_sessions", GROUP_SESSIONS_KEY],
+];
+
+export function migrateRenamedKeys(): void {
+  for (const [from, to] of RENAMED_KEYS) {
+    const value = localStorage.getItem(from);
+    if (value === null || localStorage.getItem(to) !== null) continue;
+    localStorage.setItem(to, value);
+    localStorage.removeItem(from);
+  }
+  clearCheckInCache();
+}
 
 /** Parsing the whole log on every keystroke is wasteful; keep it in memory. */
 let checkInCache: CheckIn[] | null = null;

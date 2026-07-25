@@ -2,11 +2,11 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
-import { clearCheckInCache } from "./storage";
+import { CHECKINS_KEY, clearCheckInCache } from "./storage";
 import type { CheckIn } from "./types";
 
 function seed(checkIns: CheckIn[]): void {
-  localStorage.setItem("tortuca_checkins", JSON.stringify(checkIns));
+  localStorage.setItem(CHECKINS_KEY, JSON.stringify(checkIns));
   clearCheckInCache();
 }
 

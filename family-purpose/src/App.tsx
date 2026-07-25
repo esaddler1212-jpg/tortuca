@@ -66,7 +66,7 @@ export default function App() {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <h1>Tortuca</h1>
+        <h1>Family Purpose</h1>
         <p>{getTodayDateLabel()} — student check-in log</p>
       </header>
 
@@ -130,6 +130,10 @@ export default function App() {
           onSave={(s) => {
             setSettings(s);
             showToast("Settings saved");
+          }}
+          onRestored={() => {
+            setSettings(loadDebriefSettings());
+            onChanged("Backup restored");
           }}
         />
       )}

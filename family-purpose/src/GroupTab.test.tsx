@@ -3,6 +3,9 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
 import {
+  CHECKINS_KEY,
+  GROUP_MEMBERS_KEY,
+  GROUP_SESSIONS_KEY,
   clearCheckInCache,
   loadGroupSessions,
   todayKey,
@@ -10,11 +13,11 @@ import {
 import type { GroupMember, GroupSession } from "./types";
 
 function seedMembers(members: GroupMember[]): void {
-  localStorage.setItem("tortuca_group_members", JSON.stringify(members));
+  localStorage.setItem(GROUP_MEMBERS_KEY, JSON.stringify(members));
 }
 
 function seedSessions(sessions: GroupSession[]): void {
-  localStorage.setItem("tortuca_group_sessions", JSON.stringify(sessions));
+  localStorage.setItem(GROUP_SESSIONS_KEY, JSON.stringify(sessions));
 }
 
 async function openGroupTab(user: ReturnType<typeof userEvent.setup>) {
@@ -165,7 +168,7 @@ describe("reports tab", () => {
   it("summarises the selected period", async () => {
     const year = new Date().getFullYear();
     localStorage.setItem(
-      "tortuca_checkins",
+      CHECKINS_KEY,
       JSON.stringify([
         {
           id: "c1",
