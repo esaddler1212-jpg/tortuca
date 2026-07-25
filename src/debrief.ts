@@ -1,4 +1,4 @@
-import type { CheckIn, DebriefSettings } from "./types";
+import type { CheckIn, DebriefSettings, GroupSession } from "./types";
 import { getTodayDateLabel } from "./storage";
 
 function formatTime(iso: string): string {
@@ -16,56 +16,79 @@ function formatReasons(checkIn: CheckIn): string {
   return parts.join("; ");
 }
 
+export function hasSessionContent(session: GroupSession | null): boolean {
+  if (!session) return false;
+  return (
+    session.attendees.length > 0 ||
+    session.topic.trim().length > 0 ||
+    session.notes.trim().length > 0
+  );
+}
+
 export function buildDebriefText(
   checkIns: CheckIn[],
   settings: DebriefSettings,
+  session: GroupSession | null = null,
 ): string {
-  const dateLabel = getTodayDateLabel();
   const name = settings.yourName.trim() || "Staff member";
   const role = settings.yourRole.trim();
   const school = settings.schoolName.trim();
+  const groupName = settings.groupName.trim() || "Group";
+  const showSession = hasSessionContent(session);
 
-  const headerLines = [
-    "END OF DAY CHECK-IN DEBRIEF",
-    dateLabel,
-    "",
-  ];
+  const lines = ["END OF DAY CHECK-IN DEBRIEF", getTodayDateLabel(), ""];
 
-  if (school) headerLines.push(`School: ${school}`);
-  if (role) headerLines.push(`Prepared by: ${name} (${role})`);
-  else headerLines.push(`Prepared by: ${name}`);
-  headerLines.push("");
-  headerLines.push(`Total student check-ins today: ${checkIns.length}`);
-  headerLines.push("");
+  if (school) lines.push(`School: ${school}`);
+  lines.push(`Prepared by: ${role ? `${name} (${role})` : name}`);
+  lines.push("");
+  lines.push(`Total student check-ins today: ${checkIns.length}`);
+  if (showSession) {
+    lines.push(`${groupName} signed in today: ${session!.attendees.length}`);
+  }
+  lines.push("");
 
-  if (checkIns.length === 0) {
-    headerLines.push(
+  if (checkIns.length === 0 && !showSession) {
+    lines.push(
       "No student check-ins were logged for today. If check-ins occurred, please update the log and resend this debrief.",
     );
-    return headerLines.join("\n");
+    return lines.join("\n");
   }
 
-  headerLines.push("SUMMARY BY STUDENT");
-  headerLines.push("------------------");
+  if (checkIns.length > 0) {
+    lines.push("SUMMARY BY STUDENT");
+    lines.push("------------------");
 
-  const sorted = [...checkIns].sort((a, b) =>
-    a.studentName.localeCompare(b.studentName),
-  );
+    const sorted = [...checkIns].sort((a, b) =>
+      a.studentName.localeCompare(b.studentName),
+    );
 
-  for (const c of sorted) {
-    headerLines.push("");
-    headerLines.push(`Student: ${c.studentName}`);
-    headerLines.push(`Grade: ${c.grade}  |  Period: ${c.classPeriod}  |  Time: ${formatTime(c.createdAt)}`);
-    headerLines.push(`Reason(s): ${formatReasons(c)}`);
+    for (const c of sorted) {
+      lines.push("");
+      lines.push(`Student: ${c.studentName}`);
+      lines.push(
+        `Grade: ${c.grade}  |  Period: ${c.classPeriod}  |  Time: ${formatTime(c.createdAt)}`,
+      );
+      lines.push(`Reason(s): ${formatReasons(c)}`);
+    }
+    lines.push("");
   }
 
-  headerLines.push("");
-  headerLines.push("---");
-  headerLines.push(
+  if (showSession) {
+    const s = session!;
+    lines.push(`${groupName.toUpperCase()} SESSION`);
+    lines.push("-".repeat(groupName.length + 8));
+    if (s.topic.trim()) lines.push(`Focus: ${s.topic.trim()}`);
+    lines.push(`Signed in (${s.attendees.length}): ${s.attendees.join(", ") || "—"}`);
+    if (s.notes.trim()) lines.push(`Notes: ${s.notes.trim()}`);
+    lines.push("");
+  }
+
+  lines.push("---");
+  lines.push(
     "This debrief documents same-day student check-ins for school staff and program reporting. Please reach out if any follow-up is needed.",
   );
 
-  return headerLines.join("\n");
+  return lines.join("\n");
 }
 
 export function buildMailtoUrl(

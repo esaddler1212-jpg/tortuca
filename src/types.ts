@@ -24,12 +24,30 @@ export interface CheckIn {
   createdAt: string;
 }
 
+/** A student on the group's standing roster. */
+export interface GroupMember {
+  name: string;
+  grade: string;
+}
+
+/** One meeting of the group, with the members who signed in that day. */
+export interface GroupSession {
+  id: string;
+  /** Local calendar day, YYYY-MM-DD. */
+  date: string;
+  topic: string;
+  notes: string;
+  attendees: string[];
+  updatedAt: string;
+}
+
 export interface DebriefSettings {
   staffEmail: string;
   companyEmail: string;
   yourName: string;
   yourRole: string;
   schoolName: string;
+  groupName: string;
 }
 
 export const DEFAULT_DEBRIEF_SETTINGS: DebriefSettings = {
@@ -38,6 +56,7 @@ export const DEFAULT_DEBRIEF_SETTINGS: DebriefSettings = {
   yourName: "",
   yourRole: "",
   schoolName: "",
+  groupName: "BOYS Group",
 };
 
 export const GRADES = [

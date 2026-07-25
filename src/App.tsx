@@ -1,574 +1,67 @@
+import { useCallback, useMemo, useState } from "react";
+import type { DebriefSettings } from "./types";
 import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import {
-  GRADES,
-  type CheckIn,
-  type CheckInReason,
-  type DebriefSettings,
-} from "./types";
-import {
-  addCheckIn,
-  deleteCheckIn,
+  getOrCreateSession,
+  getTodayDateLabel,
   loadAllCheckIns,
   loadDebriefSettings,
+  loadGroupMembers,
+  loadGroupSessions,
   loadTodayCheckIns,
-  saveDebriefSettings,
-  getTodayDateLabel,
+  todayKey,
 } from "./storage";
-import {
-  buildRecentPeriods,
-  buildRoster,
-  findStudent,
-  normalizeName,
-  orderReasonsByUse,
-  type StudentProfile,
-} from "./roster";
-import { buildDebriefText, buildMailtoUrl } from "./debrief";
+import { buildRecentPeriods, buildRoster, orderReasonsByUse } from "./roster";
+import LogTab from "./LogTab";
+import GroupTab from "./GroupTab";
+import DebriefTab from "./DebriefTab";
+import ReportsTab from "./ReportsTab";
+import SettingsTab from "./SettingsTab";
 
-type Tab = "log" | "debrief" | "settings";
+type Tab = "log" | "group" | "debrief" | "reports" | "settings";
 
-function CheckInForm({
-  roster,
-  recentPeriods,
-  reasonOrder,
-  todayNames,
-  onSaved,
-}: {
-  roster: StudentProfile[];
-  recentPeriods: string[];
-  reasonOrder: CheckInReason[];
-  todayNames: Set<string>;
-  onSaved: () => void;
-}) {
-  const [studentName, setStudentName] = useState("");
-  const [grade, setGrade] = useState<string>("9");
-  const [classPeriod, setClassPeriod] = useState("");
-  const [reasons, setReasons] = useState<CheckInReason[]>([]);
-  const [reasonNotes, setReasonNotes] = useState("");
-  const [error, setError] = useState("");
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const nameInput = useRef<HTMLInputElement>(null);
-
-  /**
-   * A hand-rolled list rather than a native <datalist>: the native popup is
-   * unreliable on mobile and Chrome clears the field when Escape closes it.
-   */
-  const nameMatches = useMemo(() => {
-    const query = normalizeName(studentName);
-    if (!query) return [];
-    return roster
-      .filter((s) => {
-        const candidate = normalizeName(s.name);
-        return candidate.includes(query) && candidate !== query;
-      })
-      .slice(0, 5);
-  }, [roster, studentName]);
-
-  const toggleReason = (r: CheckInReason) => {
-    setReasons((prev) =>
-      prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r],
-    );
-  };
-
-  /** Typing or picking a known student fills in their grade and period. */
-  const applyStudent = (name: string) => {
-    setStudentName(name);
-    const known = findStudent(roster, name);
-    if (known) {
-      setGrade(known.grade);
-      setClassPeriod(known.classPeriod);
-    }
-  };
-
-  const quickPick = (student: StudentProfile) => {
-    applyStudent(student.name);
-    setShowSuggestions(false);
-  };
-
-  /** Escape clears the field it is pressed in, matching browser expectations. */
-  const clearOnEscape =
-    (clear: () => void) => (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key !== "Escape") return;
-      clear();
-      setShowSuggestions(false);
-    };
-
-  const alreadyLoggedToday =
-    studentName.trim().length > 0 && todayNames.has(normalizeName(studentName));
-
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    if (!studentName.trim()) {
-      setError("Student name is required.");
-      return;
-    }
-    if (!classPeriod.trim()) {
-      setError("Class period is required.");
-      return;
-    }
-    if (reasons.length === 0 && !reasonNotes.trim()) {
-      setError("Select at least one reason or add notes explaining why.");
-      return;
-    }
-    addCheckIn({
-      studentName: studentName.trim(),
-      grade,
-      classPeriod: classPeriod.trim(),
-      reasons,
-      reasonNotes: reasonNotes.trim(),
-    });
-    // Grade and period carry over: consecutive check-ins usually share a class.
-    setStudentName("");
-    setReasons([]);
-    setReasonNotes("");
-    nameInput.current?.focus();
-    onSaved();
-  };
-
-  const suggestions = roster.slice(0, 8);
-
-  return (
-    <form className="card" onSubmit={submit}>
-      <h2>Log a check-in</h2>
-
-      {suggestions.length > 0 && (
-        <div className="field">
-          <label id="recent-students-label">Recent students — tap to fill</label>
-          <div
-            className="pill-row"
-            role="group"
-            aria-labelledby="recent-students-label"
-          >
-            {suggestions.map((s) => (
-              <button
-                key={s.name}
-                type="button"
-                className="pill"
-                onClick={() => quickPick(s)}
-              >
-                {s.name}
-                <span className="pill-meta">Gr {s.grade}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="field">
-        <label htmlFor="studentName">Student name</label>
-        <input
-          id="studentName"
-          ref={nameInput}
-          value={studentName}
-          onChange={(e) => {
-            applyStudent(e.target.value);
-            setShowSuggestions(true);
-          }}
-          onFocus={() => setShowSuggestions(true)}
-          onBlur={() => setShowSuggestions(false)}
-          onKeyDown={clearOnEscape(() => setStudentName(""))}
-          placeholder="e.g. Maria Lopez"
-          autoComplete="off"
-          enterKeyHint="done"
-          // eslint-disable-next-line jsx-a11y/no-autofocus
-          autoFocus
-        />
-        {showSuggestions && nameMatches.length > 0 && (
-          <ul className="suggestions" aria-label="Matching students">
-            {nameMatches.map((s) => (
-              <li key={s.name}>
-                <button
-                  type="button"
-                  className="suggestion"
-                  // Fires before blur, so the click is never lost.
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    quickPick(s);
-                  }}
-                >
-                  <span>{s.name}</span>
-                  <span className="pill-meta">
-                    Gr {s.grade} · {s.classPeriod}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        {alreadyLoggedToday && (
-          <p className="hint">
-            Already checked in today — this adds a second entry.
-          </p>
-        )}
-      </div>
-
-      <div className="row-2">
-        <div className="field">
-          <label htmlFor="grade">Grade</label>
-          <select
-            id="grade"
-            value={grade}
-            onChange={(e) => setGrade(e.target.value)}
-          >
-            {GRADES.map((g) => (
-              <option key={g} value={g}>
-                Grade {g}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="field">
-          <label htmlFor="period">Class period</label>
-          <input
-            id="period"
-            value={classPeriod}
-            onChange={(e) => setClassPeriod(e.target.value)}
-            onKeyDown={clearOnEscape(() => setClassPeriod(""))}
-            placeholder="e.g. Period 3 — Algebra"
-            autoComplete="off"
-          />
-        </div>
-      </div>
-
-      {recentPeriods.length > 0 && (
-        <div className="field">
-          <label id="recent-periods-label">Recent periods</label>
-          <div
-            className="pill-row"
-            role="group"
-            aria-labelledby="recent-periods-label"
-          >
-            {recentPeriods.map((p) => (
-              <button
-                key={p}
-                type="button"
-                className={`pill ${classPeriod === p ? "pill-active" : ""}`}
-                onClick={() => setClassPeriod(p)}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="field">
-        <label id="reasons-label">Reason(s) for check-in</label>
-        <div className="pill-row" role="group" aria-labelledby="reasons-label">
-          {reasonOrder.map((r) => {
-            const selected = reasons.includes(r);
-            return (
-              <button
-                key={r}
-                type="button"
-                className={`pill ${selected ? "pill-active" : ""}`}
-                aria-pressed={selected}
-                onClick={() => toggleReason(r)}
-              >
-                {r}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="field">
-        <label htmlFor="reasonNotes">Additional details (optional)</label>
-        <textarea
-          id="reasonNotes"
-          rows={2}
-          value={reasonNotes}
-          onChange={(e) => setReasonNotes(e.target.value)}
-          placeholder="Brief context for school staff and your program…"
-        />
-      </div>
-
-      {error && (
-        <p style={{ color: "var(--danger)", marginBottom: "1rem" }}>{error}</p>
-      )}
-
-      <button type="submit" className="btn btn-primary">
-        Save check-in
-      </button>
-      <p className="hint">
-        Grade and period stay set after saving, so back-to-back check-ins in the
-        same class only need a name and a reason.
-      </p>
-    </form>
-  );
-}
-
-function TodayList({
-  checkIns,
-  onDelete,
-}: {
-  checkIns: CheckIn[];
-  onDelete: () => void;
-}) {
-  if (checkIns.length === 0) {
-    return (
-      <div className="card empty-state">
-        No check-ins yet today. Log your first student above.
-      </div>
-    );
-  }
-
-  return (
-    <div className="card">
-      <h2>Today&apos;s check-ins ({checkIns.length})</h2>
-      <ul className="checkin-list" aria-label="Today's check-ins">
-        {checkIns.map((c) => (
-          <li key={c.id} className="checkin-item">
-            <div className="checkin-item-header">
-              <h3>{c.studentName}</h3>
-              <button
-                type="button"
-                className="btn btn-ghost"
-                onClick={() => {
-                  deleteCheckIn(c.id);
-                  onDelete();
-                }}
-              >
-                Remove
-              </button>
-            </div>
-            <p className="checkin-meta">
-              Grade {c.grade} · {c.classPeriod} ·{" "}
-              {new Date(c.createdAt).toLocaleTimeString(undefined, {
-                hour: "numeric",
-                minute: "2-digit",
-              })}
-            </p>
-            <div className="checkin-reasons">
-              {c.reasons.length > 0 && (
-                <p style={{ margin: "0 0 0.25rem" }}>{c.reasons.join(" · ")}</p>
-              )}
-              {c.reasonNotes && (
-                <p style={{ margin: 0, color: "var(--text-muted)" }}>
-                  {c.reasonNotes}
-                </p>
-              )}
-            </div>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function DebriefPanel({
-  checkIns,
-  settings,
-  onCopied,
-  onPdfDownloaded,
-}: {
-  checkIns: CheckIn[];
-  settings: DebriefSettings;
-  onCopied: () => void;
-  onPdfDownloaded: () => void;
-}) {
-  const [pdfBusy, setPdfBusy] = useState(false);
-
-  const text = useMemo(
-    () => buildDebriefText(checkIns, settings),
-    [checkIns, settings],
-  );
-
-  const subject = `Daily student check-in debrief — ${getTodayDateLabel()}`;
-
-  const copy = async () => {
-    await navigator.clipboard.writeText(text);
-    onCopied();
-  };
-
-  /** The PDF library is heavy, so it loads only when a PDF is requested. */
-  const downloadPdf = async () => {
-    setPdfBusy(true);
-    try {
-      const { downloadDebriefPdf } = await import("./debriefPdf");
-      downloadDebriefPdf(checkIns, settings);
-      onPdfDownloaded();
-    } finally {
-      setPdfBusy(false);
-    }
-  };
-
-  const emailTo = (recipients: string[]) => {
-    window.location.href = buildMailtoUrl(recipients, subject, text);
-  };
-
-  return (
-    <div className="card">
-      <h2>End-of-day debrief</h2>
-      <p className="hint" style={{ marginBottom: "1rem" }}>
-        Review the summary below, then download a PDF, copy text, or open your
-        email app to send to school staff and your employer.
-      </p>
-      <div className="debrief-preview" aria-label="Debrief preview">
-        {text}
-      </div>
-      <div className="btn-row">
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={downloadPdf}
-          disabled={pdfBusy}
-        >
-          {pdfBusy ? "Preparing PDF…" : "Download PDF"}
-        </button>
-        <button type="button" className="btn btn-secondary" onClick={() => copy()}>
-          Copy to clipboard
-        </button>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          onClick={() => emailTo([settings.staffEmail, settings.companyEmail])}
-          disabled={!settings.staffEmail && !settings.companyEmail}
-        >
-          Email staff &amp; company
-        </button>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          onClick={() => emailTo([settings.staffEmail])}
-          disabled={!settings.staffEmail}
-        >
-          Email school staff only
-        </button>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          onClick={() => emailTo([settings.companyEmail])}
-          disabled={!settings.companyEmail}
-        >
-          Email company only
-        </button>
-      </div>
-      {!settings.staffEmail && !settings.companyEmail && (
-        <p className="hint">
-          Add email addresses in Settings so &quot;Email&quot; buttons pre-fill
-          recipients.
-        </p>
-      )}
-    </div>
-  );
-}
-
-function SettingsPanel({
-  settings,
-  onSave,
-}: {
-  settings: DebriefSettings;
-  onSave: (s: DebriefSettings) => void;
-}) {
-  const [form, setForm] = useState(settings);
-
-  useEffect(() => {
-    setForm(settings);
-  }, [settings]);
-
-  const update = (key: keyof DebriefSettings, value: string) => {
-    setForm((f) => ({ ...f, [key]: value }));
-  };
-
-  return (
-    <form
-      className="card"
-      onSubmit={(e) => {
-        e.preventDefault();
-        saveDebriefSettings(form);
-        onSave(form);
-      }}
-    >
-      <h2>Debrief &amp; profile</h2>
-      <p className="hint" style={{ marginBottom: "1rem" }}>
-        These appear on your daily debrief and pre-fill email recipients.
-      </p>
-      <div className="field">
-        <label htmlFor="yourName">Your name</label>
-        <input
-          id="yourName"
-          value={form.yourName}
-          onChange={(e) => update("yourName", e.target.value)}
-        />
-      </div>
-      <div className="field">
-        <label htmlFor="yourRole">Your role / program</label>
-        <input
-          id="yourRole"
-          value={form.yourRole}
-          onChange={(e) => update("yourRole", e.target.value)}
-          placeholder="e.g. Community mentor, XYZ Corp"
-        />
-      </div>
-      <div className="field">
-        <label htmlFor="schoolName">School name</label>
-        <input
-          id="schoolName"
-          value={form.schoolName}
-          onChange={(e) => update("schoolName", e.target.value)}
-        />
-      </div>
-      <div className="field">
-        <label htmlFor="staffEmail">School staff email</label>
-        <input
-          id="staffEmail"
-          type="email"
-          value={form.staffEmail}
-          onChange={(e) => update("staffEmail", e.target.value)}
-          placeholder="counselor@school.edu"
-        />
-      </div>
-      <div className="field">
-        <label htmlFor="companyEmail">Company / program email</label>
-        <input
-          id="companyEmail"
-          type="email"
-          value={form.companyEmail}
-          onChange={(e) => update("companyEmail", e.target.value)}
-          placeholder="supervisor@company.com"
-        />
-      </div>
-      <button type="submit" className="btn btn-primary">
-        Save settings
-      </button>
-    </form>
-  );
-}
+const TABS: { id: Tab; label: string }[] = [
+  { id: "log", label: "Log" },
+  { id: "group", label: "Group" },
+  { id: "debrief", label: "Debrief" },
+  { id: "reports", label: "Reports" },
+  { id: "settings", label: "Settings" },
+];
 
 export default function App() {
   const [tab, setTab] = useState<Tab>("log");
   const [revision, setRevision] = useState(0);
-  const [checkIns, setCheckIns] = useState<CheckIn[]>(() => loadTodayCheckIns());
   const [settings, setSettings] = useState<DebriefSettings>(() =>
     loadDebriefSettings(),
   );
   const [toast, setToast] = useState("");
 
-  const refresh = useCallback(() => {
-    setCheckIns(loadTodayCheckIns());
-    setRevision((r) => r + 1);
+  const showToast = useCallback((msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(""), 2500);
   }, []);
 
+  /** Bumped whenever stored data changes so the derived views recompute. */
+  const onChanged = useCallback(
+    (message?: string) => {
+      setRevision((r) => r + 1);
+      if (message) showToast(message);
+    },
+    [showToast],
+  );
+
   const history = useMemo(() => loadAllCheckIns(), [revision]);
+  const todayCheckIns = useMemo(() => loadTodayCheckIns(), [revision]);
+  const sessions = useMemo(() => loadGroupSessions(), [revision]);
+  const members = useMemo(() => loadGroupMembers(), [revision]);
+  const todaySession = useMemo(
+    () => getOrCreateSession(todayKey()),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [sessions],
+  );
+
   const roster = useMemo(() => buildRoster(history), [history]);
   const recentPeriods = useMemo(() => buildRecentPeriods(history), [history]);
   const reasonOrder = useMemo(() => orderReasonsByUse(history), [history]);
-  const todayNames = useMemo(
-    () => new Set(checkIns.map((c) => normalizeName(c.studentName))),
-    [checkIns],
-  );
-
-  const showToast = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(""), 2500);
-  };
 
   return (
     <div className="app-shell">
@@ -578,56 +71,61 @@ export default function App() {
       </header>
 
       <nav className="tabs" aria-label="Main">
-        <button
-          type="button"
-          className={`tab ${tab === "log" ? "active" : ""}`}
-          onClick={() => setTab("log")}
-        >
-          Log
-        </button>
-        <button
-          type="button"
-          className={`tab ${tab === "debrief" ? "active" : ""}`}
-          onClick={() => setTab("debrief")}
-        >
-          Debrief
-        </button>
-        <button
-          type="button"
-          className={`tab ${tab === "settings" ? "active" : ""}`}
-          onClick={() => setTab("settings")}
-        >
-          Settings
-        </button>
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            className={`tab ${tab === t.id ? "active" : ""}`}
+            aria-current={tab === t.id ? "page" : undefined}
+            onClick={() => setTab(t.id)}
+          >
+            {t.label}
+          </button>
+        ))}
       </nav>
 
       {tab === "log" && (
-        <>
-          <CheckInForm
-            roster={roster}
-            recentPeriods={recentPeriods}
-            reasonOrder={reasonOrder}
-            todayNames={todayNames}
-            onSaved={() => {
-              refresh();
-              showToast("Check-in saved");
-            }}
-          />
-          <TodayList checkIns={checkIns} onDelete={refresh} />
-        </>
+        <LogTab
+          roster={roster}
+          recentPeriods={recentPeriods}
+          reasonOrder={reasonOrder}
+          todayCheckIns={todayCheckIns}
+          onChanged={onChanged}
+        />
+      )}
+
+      {tab === "group" && (
+        <GroupTab
+          settings={settings}
+          members={members}
+          sessions={sessions}
+          roster={roster}
+          onChanged={onChanged}
+        />
       )}
 
       {tab === "debrief" && (
-        <DebriefPanel
-          checkIns={checkIns}
+        <DebriefTab
+          checkIns={todayCheckIns}
+          session={todaySession}
           settings={settings}
           onCopied={() => showToast("Debrief copied")}
           onPdfDownloaded={() => showToast("PDF downloaded")}
         />
       )}
 
+      {tab === "reports" && (
+        <ReportsTab
+          checkIns={history}
+          sessions={sessions}
+          settings={settings}
+          onCopied={() => showToast("Summary copied")}
+          onPdfDownloaded={() => showToast("PDF downloaded")}
+        />
+      )}
+
       {tab === "settings" && (
-        <SettingsPanel
+        <SettingsTab
           settings={settings}
           onSave={(s) => {
             setSettings(s);

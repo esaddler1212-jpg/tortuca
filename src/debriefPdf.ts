@@ -1,7 +1,8 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import type { CheckIn, DebriefSettings } from "./types";
+import type { CheckIn, DebriefSettings, GroupSession } from "./types";
 import { getTodayDateLabel } from "./storage";
+import { hasSessionContent } from "./debrief";
 
 function pdfFileDate(): string {
   const d = new Date();
@@ -26,6 +27,7 @@ function formatTime(iso: string): string {
 export function downloadDebriefPdf(
   checkIns: CheckIn[],
   settings: DebriefSettings,
+  session: GroupSession | null = null,
 ): void {
   const doc = new jsPDF({ unit: "pt", format: "letter" });
   const margin = 40;
@@ -60,10 +62,18 @@ export function downloadDebriefPdf(
     doc.text(`Prepared by: ${name}`, margin, y);
     y += 14;
   }
-  doc.text(`Total student check-ins: ${checkIns.length}`, margin, y);
-  y += 22;
+  const groupName = settings.groupName.trim() || "Group";
+  const showSession = hasSessionContent(session);
 
-  if (checkIns.length === 0) {
+  doc.text(`Total student check-ins: ${checkIns.length}`, margin, y);
+  y += 14;
+  if (showSession) {
+    doc.text(`${groupName} signed in: ${session!.attendees.length}`, margin, y);
+    y += 14;
+  }
+  y += 8;
+
+  if (checkIns.length === 0 && !showSession) {
     doc.setFontSize(10);
     doc.text(
       "No student check-ins were logged for today. If check-ins occurred, please update the log and regenerate this debrief.",
@@ -71,7 +81,7 @@ export function downloadDebriefPdf(
       y,
       { maxWidth: contentWidth },
     );
-  } else {
+  } else if (checkIns.length > 0) {
     const sorted = [...checkIns].sort((a, b) =>
       a.studentName.localeCompare(b.studentName),
     );
@@ -107,6 +117,38 @@ export function downloadDebriefPdf(
         4: { cellWidth: "auto" },
       },
     });
+    y =
+      (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable
+        .finalY + 26;
+  }
+
+  if (showSession) {
+    const s = session!;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(20, 28, 40);
+    doc.text(`${groupName} session`, margin, y);
+    y += 16;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(40, 48, 60);
+    if (s.topic.trim()) {
+      doc.text(`Focus: ${s.topic.trim()}`, margin, y, { maxWidth: contentWidth });
+      y += 14;
+    }
+    doc.text(
+      `Signed in (${s.attendees.length}): ${s.attendees.join(", ") || "—"}`,
+      margin,
+      y,
+      { maxWidth: contentWidth },
+    );
+    y += 14 * Math.max(1, Math.ceil(s.attendees.join(", ").length / 90));
+    if (s.notes.trim()) {
+      doc.text(`Notes: ${s.notes.trim()}`, margin, y, {
+        maxWidth: contentWidth,
+      });
+    }
   }
 
   const pageHeight = doc.internal.pageSize.getHeight();

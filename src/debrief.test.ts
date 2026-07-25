@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildDebriefText, buildMailtoUrl } from "./debrief";
-import type { CheckIn, DebriefSettings } from "./types";
+import type { CheckIn, DebriefSettings, GroupSession } from "./types";
 
 const settings: DebriefSettings = {
   staffEmail: "counselor@school.edu",
@@ -8,7 +8,20 @@ const settings: DebriefSettings = {
   yourName: "Jordan Reeves",
   yourRole: "Community mentor",
   schoolName: "Riverside High",
+  groupName: "BOYS Group",
 };
+
+function makeSession(overrides: Partial<GroupSession> = {}): GroupSession {
+  return {
+    id: crypto.randomUUID(),
+    date: "2026-07-25",
+    topic: "Goal setting",
+    notes: "",
+    attendees: ["Andre Bell", "Devon Carter"],
+    updatedAt: new Date().toISOString(),
+    ...overrides,
+  };
+}
 
 function makeCheckIn(overrides: Partial<CheckIn> = {}): CheckIn {
   return {
@@ -64,6 +77,29 @@ describe("buildDebriefText", () => {
     const text = buildDebriefText([], settings);
     expect(text).toContain("Total student check-ins today: 0");
     expect(text).toContain("No student check-ins were logged");
+  });
+
+  it("adds the group session when members signed in", () => {
+    const text = buildDebriefText([makeCheckIn()], settings, makeSession());
+    expect(text).toContain("BOYS Group signed in today: 2");
+    expect(text).toContain("BOYS GROUP SESSION");
+    expect(text).toContain("Focus: Goal setting");
+    expect(text).toContain("Signed in (2): Andre Bell, Devon Carter");
+  });
+
+  it("reports a group session even on a day with no check-ins", () => {
+    const text = buildDebriefText([], settings, makeSession());
+    expect(text).not.toContain("No student check-ins were logged");
+    expect(text).toContain("Signed in (2)");
+  });
+
+  it("leaves out the group section when nobody signed in", () => {
+    const text = buildDebriefText(
+      [makeCheckIn()],
+      settings,
+      makeSession({ attendees: [], topic: "", notes: "" }),
+    );
+    expect(text).not.toContain("BOYS GROUP SESSION");
   });
 });
 
