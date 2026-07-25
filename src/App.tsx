@@ -15,6 +15,7 @@ import {
   getTodayDateLabel,
 } from "./storage";
 import { buildDebriefText, buildMailtoUrl } from "./debrief";
+import { downloadDebriefPdf } from "./debriefPdf";
 
 type Tab = "log" | "debrief" | "settings";
 
@@ -198,10 +199,12 @@ function DebriefPanel({
   checkIns,
   settings,
   onCopied,
+  onPdfDownloaded,
 }: {
   checkIns: CheckIn[];
   settings: DebriefSettings;
   onCopied: () => void;
+  onPdfDownloaded: () => void;
 }) {
   const text = useMemo(
     () => buildDebriefText(checkIns, settings),
@@ -240,14 +243,24 @@ function DebriefPanel({
     <div className="card">
       <h2>End-of-day debrief</h2>
       <p className="hint" style={{ marginBottom: "1rem" }}>
-        Review the summary below, then copy or open your email app to send to
-        school staff and your employer.
+        Review the summary below, then download a PDF, copy text, or open your
+        email app to send to school staff and your employer.
       </p>
       <div className="debrief-preview" aria-label="Debrief preview">
         {text}
       </div>
       <div className="btn-row">
-        <button type="button" className="btn btn-primary" onClick={() => copy()}>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={() => {
+            downloadDebriefPdf(checkIns, settings);
+            onPdfDownloaded();
+          }}
+        >
+          Download PDF
+        </button>
+        <button type="button" className="btn btn-secondary" onClick={() => copy()}>
           Copy to clipboard
         </button>
         <button
@@ -430,6 +443,7 @@ export default function App() {
           checkIns={checkIns}
           settings={settings}
           onCopied={() => showToast("Debrief copied")}
+          onPdfDownloaded={() => showToast("PDF downloaded")}
         />
       )}
 
