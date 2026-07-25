@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CHECK_IN_OUTCOMES,
   GRADES,
@@ -13,6 +13,23 @@ import {
   normalizeName,
   type StudentProfile,
 } from "./roster";
+import {
+  classPeriods,
+  formatPeriodRange,
+  scheduleFor,
+  suggestedPeriod,
+} from "./schedule";
+import ScheduleBanner from "./ScheduleBanner";
+
+/** Re-renders on the minute so the live bell period stays accurate. */
+function useClock(): Date {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(timer);
+  }, []);
+  return now;
+}
 
 function CheckInForm({
   roster,
@@ -38,6 +55,23 @@ function CheckInForm({
   const [error, setError] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const nameInput = useRef<HTMLInputElement>(null);
+
+  const now = useClock();
+  const schedule = scheduleFor(now, grade);
+  const bellPeriods = classPeriods(schedule);
+  const livePeriod = suggestedPeriod(now, grade);
+  const liveName = livePeriod?.name ?? "";
+  /** What the bell schedule last filled in, so a typed value is never lost. */
+  const autoFilled = useRef("");
+
+  useEffect(() => {
+    if (!liveName) return;
+    setClassPeriod((current) => {
+      if (current && current !== autoFilled.current) return current;
+      autoFilled.current = liveName;
+      return liveName;
+    });
+  }, [liveName]);
 
   /**
    * A hand-rolled list rather than a native <datalist>: the native popup is
@@ -131,10 +165,16 @@ function CheckInForm({
   };
 
   const suggestions = roster.slice(0, 8);
+  /** Recent entries that carry a class name the bell schedule cannot supply. */
+  const customPeriods = recentPeriods.filter(
+    (p) => !bellPeriods.some((b) => b.name === p),
+  );
 
   return (
     <form className="card" onSubmit={submit}>
       <h2>Log a check-in</h2>
+
+      <ScheduleBanner now={now} grade={grade} />
 
       {suggestions.length > 0 && (
         <div className="field">
@@ -238,6 +278,32 @@ function CheckInForm({
 
       <div className="field">
         <label htmlFor="period">Class period</label>
+        <div
+          className="pill-row"
+          role="group"
+          aria-label={`Bell schedule — ${schedule.label}`}
+        >
+          {bellPeriods.map((p) => {
+            const isLive = livePeriod?.name === p.name;
+            return (
+              <button
+                key={p.name}
+                type="button"
+                className={`pill ${classPeriod === p.name ? "pill-active" : ""}`}
+                aria-label={`${p.name}, ${formatPeriodRange(p)}${isLive ? ", happening now" : ""}`}
+                onClick={() => {
+                  autoFilled.current = p.name;
+                  setClassPeriod(p.name);
+                }}
+              >
+                {p.name}
+                <span className="pill-meta">
+                  {isLive ? "now" : formatPeriodRange(p)}
+                </span>
+              </button>
+            );
+          })}
+        </div>
         <input
           id="period"
           value={classPeriod}
@@ -245,30 +311,35 @@ function CheckInForm({
           onKeyDown={clearOnEscape(() => setClassPeriod(""))}
           placeholder="e.g. Period 3 — Algebra"
           autoComplete="off"
+          style={{ marginTop: "0.5rem" }}
         />
-      </div>
-
-      {recentPeriods.length > 0 && (
-        <div className="field">
-          <label id="recent-periods-label">Recent periods</label>
+        <p className="hint">
+          {schedule.label}. The period in session is filled in for you — tap
+          another or type the class name.
+        </p>
+        {customPeriods.length > 0 && (
           <div
             className="pill-row"
             role="group"
-            aria-labelledby="recent-periods-label"
+            aria-label="Recent periods"
+            style={{ marginTop: "0.5rem" }}
           >
-            {recentPeriods.map((p) => (
+            {customPeriods.map((p) => (
               <button
                 key={p}
                 type="button"
                 className={`pill ${classPeriod === p ? "pill-active" : ""}`}
-                onClick={() => setClassPeriod(p)}
+                onClick={() => {
+                  autoFilled.current = p;
+                  setClassPeriod(p);
+                }}
               >
                 {p}
               </button>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       <div className="field">
         <label id="reasons-label">Reason(s) for check-in</label>

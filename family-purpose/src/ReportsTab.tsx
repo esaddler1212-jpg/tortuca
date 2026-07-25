@@ -1,12 +1,8 @@
 import { useMemo, useState } from "react";
 import type { CheckIn, DebriefSettings, GroupSession } from "./types";
-import {
-  PERIOD_OPTIONS,
-  availableYears,
-  buildPeriodReport,
-  buildReportText,
-  type PeriodScope,
-} from "./reports";
+import { buildPeriodReport, buildReportText } from "./reports";
+import { defaultPeriodChoice, periodChoices } from "./periods";
+import PeriodPicker from "./PeriodPicker";
 import { buildMailtoUrl } from "./debrief";
 
 function StatGrid({
@@ -49,17 +45,18 @@ export default function ReportsTab({
   onCopied: () => void;
   onPdfDownloaded: () => void;
 }) {
-  const years = useMemo(
-    () => availableYears(checkIns, sessions),
+  const choices = useMemo(
+    () => periodChoices(checkIns, sessions),
     [checkIns, sessions],
   );
-  const [year, setYear] = useState(years[0]);
-  const [scope, setScope] = useState<PeriodScope>("year");
+  const [period, setPeriod] = useState(() =>
+    defaultPeriodChoice(choices, checkIns, sessions),
+  );
   const [pdfBusy, setPdfBusy] = useState(false);
 
   const report = useMemo(
-    () => buildPeriodReport(checkIns, sessions, year, scope),
-    [checkIns, sessions, year, scope],
+    () => buildPeriodReport(checkIns, sessions, period.range),
+    [checkIns, sessions, period],
   );
   const text = useMemo(
     () => buildReportText(report, settings),
@@ -97,39 +94,16 @@ export default function ReportsTab({
       <h2>Quarterly &amp; yearly summary</h2>
       <p className="hint" style={{ marginBottom: "1rem" }}>
         Counts only — no individual notes — so it can go to the school and your
-        company as-is.
+        company as-is. Quarters, semesters and trimesters follow the district
+        calendar.
       </p>
 
-      <div className="row-2">
-        <div className="field">
-          <label htmlFor="reportYear">Year</label>
-          <select
-            id="reportYear"
-            value={year}
-            onChange={(e) => setYear(Number(e.target.value))}
-          >
-            {years.map((y) => (
-              <option key={y} value={y}>
-                {y}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="field">
-          <label htmlFor="reportScope">Period</label>
-          <select
-            id="reportScope"
-            value={scope}
-            onChange={(e) => setScope(e.target.value as PeriodScope)}
-          >
-            {PERIOD_OPTIONS.map((o) => (
-              <option key={o.scope} value={o.scope}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+      <PeriodPicker
+        id="reportPeriod"
+        choices={choices}
+        value={period}
+        onChange={setPeriod}
+      />
 
       <StatGrid report={report} groupName={groupName} />
 

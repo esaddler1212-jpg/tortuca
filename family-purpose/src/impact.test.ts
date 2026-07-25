@@ -5,6 +5,7 @@ import {
   describeAttendanceTrend,
   describeReasonShift,
 } from "./impact";
+import { getRange } from "./reports";
 import type {
   CheckIn,
   CheckInOutcome,
@@ -83,7 +84,7 @@ describe("returning students", () => {
   ];
 
   it("counts who came back and who kept coming", () => {
-    const { engagement } = buildImpactReport(data, [], 2026, "year");
+    const { engagement } = buildImpactReport(data, [], getRange(2026, "year"));
 
     expect(engagement.studentsSeen).toBe(3);
     expect(engagement.returning).toBe(2);
@@ -93,7 +94,7 @@ describe("returning students", () => {
   });
 
   it("tracks how long each student stayed engaged", () => {
-    const { engagement } = buildImpactReport(data, [], 2026, "year");
+    const { engagement } = buildImpactReport(data, [], getRange(2026, "year"));
     const maria = engagement.students[0];
 
     expect(maria.name).toBe("Maria Lopez");
@@ -110,15 +111,13 @@ describe("returning students", () => {
         checkIn({ studentName: "  maria lopez " }),
       ],
       [],
-      2026,
-      "year",
-    );
+      getRange(2026, "year"));
     expect(engagement.studentsSeen).toBe(1);
     expect(engagement.students[0].checkIns).toBe(2);
   });
 
   it("respects the selected period", () => {
-    const q1 = buildImpactReport(data, [], 2026, "q1");
+    const q1 = buildImpactReport(data, [], getRange(2026, "q1"));
     expect(q1.engagement.students[0].checkIns).toBe(3);
     expect(q1.engagement.sustained).toBe(0);
   });
@@ -137,7 +136,7 @@ describe("attendance trend", () => {
         "Jalen Price",
       ]),
     ];
-    const { attendance } = buildImpactReport([], sessions, 2026, "year");
+    const { attendance } = buildImpactReport([], sessions, getRange(2026, "year"));
 
     expect(attendance.sessionsHeld).toBe(4);
     expect(attendance.averageAttendance).toBe(2.8);
@@ -154,9 +153,7 @@ describe("attendance trend", () => {
         session("2026-01-07", ["Andre Bell", "Devon Carter", "Marcus Webb"]),
         session("2026-02-07", ["Andre Bell"]),
       ],
-      2026,
-      "year",
-    );
+      getRange(2026, "year"));
     expect(attendance.change).toBe(-2);
     expect(describeAttendanceTrend(attendance)).toContain("down");
   });
@@ -170,9 +167,7 @@ describe("attendance trend", () => {
         session("2026-02-07", ["Andre Bell", "Devon Carter"]),
         session("2026-02-21", ["Andre Bell"]),
       ],
-      2026,
-      "year",
-    );
+      getRange(2026, "year"));
 
     expect(attendance.members[0]).toEqual({
       name: "Andre Bell",
@@ -194,9 +189,7 @@ describe("attendance trend", () => {
         session("2026-01-21", ["Andre Bell", "Devon Carter", "Marcus Webb"]),
         session("2026-02-07", ["Andre Bell", "Devon Carter"]),
       ],
-      2026,
-      "year",
-    );
+      getRange(2026, "year"));
 
     expect(attendance.monthly).toEqual([
       { label: "Jan 2026", average: 2, sessions: 2 },
@@ -208,9 +201,7 @@ describe("attendance trend", () => {
     const { attendance } = buildImpactReport(
       [],
       [session("2026-01-07", ["Andre Bell"])],
-      2026,
-      "year",
-    );
+      getRange(2026, "year"));
     expect(attendance.change).toBe(0);
     expect(describeAttendanceTrend(attendance)).toContain("Not enough sessions");
   });
@@ -229,7 +220,7 @@ describe("reason mix over time", () => {
       checkIn({ month: 5, day: 18, reasons: growth }),
       checkIn({ month: 6, day: 1, reasons: intervention }),
     ];
-    const { reasonMix } = buildImpactReport(data, [], 2026, "year");
+    const { reasonMix } = buildImpactReport(data, [], getRange(2026, "year"));
 
     const growthShift = reasonMix.categories.find(
       (c) => c.category === "Growth",
@@ -252,9 +243,7 @@ describe("reason mix over time", () => {
         checkIn({ month: 3, day: 5, reasons: growth }),
       ],
       [],
-      2026,
-      "year",
-    );
+      getRange(2026, "year"));
 
     expect(reasonMix.split?.earlier.start).toBe("2026-01-05");
     expect(reasonMix.split?.later.end).toBe("2026-03-05");
@@ -264,9 +253,7 @@ describe("reason mix over time", () => {
     const { reasonMix } = buildImpactReport(
       [checkIn({ month: 1, day: 5, reasons: intervention })],
       [],
-      2026,
-      "year",
-    );
+      getRange(2026, "year"));
     expect(reasonMix.split).toBeNull();
     expect(describeReasonShift(reasonMix)).toContain("Not enough check-ins");
   });
@@ -282,9 +269,7 @@ describe("reason mix over time", () => {
         checkIn({ month: 3, day: 5, reasons: growth }),
       ],
       [],
-      2026,
-      "year",
-    );
+      getRange(2026, "year"));
     const earlier = reasonMix.categories.find((c) => c.category === "Growth")!;
     expect(earlier.earlierShare).toBe(50);
   });
@@ -303,9 +288,7 @@ describe("outcomes", () => {
         checkIn(),
       ],
       [],
-      2026,
-      "year",
-    );
+      getRange(2026, "year"));
 
     expect(outcomes.recorded).toBe(3);
     expect(outcomes.missing).toBe(1);
@@ -318,7 +301,7 @@ describe("outcomes", () => {
   });
 
   it("handles check-ins logged before outcomes existed", () => {
-    const { outcomes } = buildImpactReport([checkIn()], [], 2026, "year");
+    const { outcomes } = buildImpactReport([checkIn()], [], getRange(2026, "year"));
     expect(outcomes.recorded).toBe(0);
     expect(outcomes.counts).toEqual([]);
   });
@@ -347,9 +330,7 @@ describe("buildImpactText", () => {
         session("2026-01-07", ["Andre Bell"]),
         session("2026-05-07", ["Andre Bell", "Devon Carter"]),
       ],
-      2026,
-      "year",
-    );
+      getRange(2026, "year"));
     const text = buildImpactText(report, settings);
 
     expect(text).toContain("STUDENT IMPACT SUMMARY");
@@ -365,16 +346,14 @@ describe("buildImpactText", () => {
     const report = buildImpactReport(
       [checkIn({ reasonNotes: "Confidential family detail" })],
       [],
-      2026,
-      "year",
-    );
+      getRange(2026, "year"));
     expect(buildImpactText(report, settings)).not.toContain(
       "Confidential family detail",
     );
   });
 
   it("prompts for outcomes when none have been recorded", () => {
-    const report = buildImpactReport([checkIn()], [], 2026, "year");
+    const report = buildImpactReport([checkIn()], [], getRange(2026, "year"));
     expect(buildImpactText(report, settings)).toContain(
       "No outcomes recorded yet",
     );

@@ -7,6 +7,7 @@ import {
   parseBackup,
   restoreBackup,
 } from "./backup";
+import SchoolScheduleCard from "./SchoolScheduleCard";
 
 function DataBackup({ onRestored }: { onRestored: () => void }) {
   const fileInput = useRef<HTMLInputElement>(null);
@@ -190,6 +191,7 @@ export default function SettingsTab({
         Save settings
       </button>
     </form>
+    <SchoolScheduleCard />
     <DataBackup onRestored={onRestored} />
     </>
   );

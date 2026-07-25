@@ -120,7 +120,7 @@ describe("Impact tab", () => {
     render(<App />);
     await openImpact(user);
 
-    await user.selectOptions(screen.getByLabelText("Period"), "q2");
+    await user.selectOptions(screen.getByLabelText("Period"), `cal:${YEAR}:q2`);
 
     const table = screen.getByRole("table", { name: "Returning students" });
     expect(within(table).getByText("Andre Bell")).toBeInTheDocument();

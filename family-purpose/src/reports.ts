@@ -123,10 +123,8 @@ export function availableYears(
 export function buildPeriodReport(
   checkIns: CheckIn[],
   sessions: GroupSession[],
-  year: number,
-  scope: PeriodScope,
+  range: DateRange,
 ): PeriodReport {
-  const range = getRange(year, scope);
   const inPeriod = checkIns.filter((c) => inRange(dayKeyOf(c.createdAt), range));
   const sessionsInPeriod = sessions.filter((s) => inRange(s.date, range));
 

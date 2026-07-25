@@ -6,7 +6,7 @@ import type {
   ReasonCategory,
 } from "./types";
 import { REASON_CATEGORY_ORDER, categoryOf } from "./types";
-import { dayKeyOf, getRange, type DateRange, type PeriodScope } from "./reports";
+import { dayKeyOf, type DateRange } from "./reports";
 
 export interface StudentEngagement {
   name: string;
@@ -325,10 +325,8 @@ function summariseOutcomes(checkIns: CheckIn[]): OutcomeMix {
 export function buildImpactReport(
   checkIns: CheckIn[],
   sessions: GroupSession[],
-  year: number,
-  scope: PeriodScope,
+  range: DateRange,
 ): ImpactReport {
-  const range = getRange(year, scope);
   const inPeriod = checkIns.filter((c) => inRange(dayKeyOf(c.createdAt), range));
   const sessionsInPeriod = sessions.filter((s) => inRange(s.date, range));
 

@@ -104,26 +104,26 @@ describe("buildPeriodReport", () => {
   ];
 
   it("counts only check-ins inside the quarter", () => {
-    const q1 = buildPeriodReport(data, sessions, 2026, "q1");
+    const q1 = buildPeriodReport(data, sessions, getRange(2026, "q1"));
     expect(q1.totalCheckIns).toBe(2);
     expect(q1.uniqueStudents).toBe(1);
 
-    const q2 = buildPeriodReport(data, sessions, 2026, "q2");
+    const q2 = buildPeriodReport(data, sessions, getRange(2026, "q2"));
     expect(q2.totalCheckIns).toBe(1);
   });
 
   it("counts a full year across quarters", () => {
-    const year = buildPeriodReport(data, sessions, 2026, "year");
+    const year = buildPeriodReport(data, sessions, getRange(2026, "year"));
     expect(year.totalCheckIns).toBe(3);
     expect(year.uniqueStudents).toBe(2);
   });
 
   it("excludes other years", () => {
-    expect(buildPeriodReport(data, sessions, 2025, "year").totalCheckIns).toBe(1);
+    expect(buildPeriodReport(data, sessions, getRange(2025, "year")).totalCheckIns).toBe(1);
   });
 
   it("ranks reasons by frequency", () => {
-    const year = buildPeriodReport(data, sessions, 2026, "year");
+    const year = buildPeriodReport(data, sessions, getRange(2026, "year"));
     expect(year.byReason[0]).toEqual({
       label: "Attendance / tardiness",
       count: 2,
@@ -131,7 +131,7 @@ describe("buildPeriodReport", () => {
   });
 
   it("breaks down by grade and month", () => {
-    const year = buildPeriodReport(data, sessions, 2026, "year");
+    const year = buildPeriodReport(data, sessions, getRange(2026, "year"));
     expect(year.byGrade).toEqual([
       { label: "10", count: 2 },
       { label: "11", count: 1 },
@@ -140,7 +140,7 @@ describe("buildPeriodReport", () => {
   });
 
   it("ranks the most frequent students", () => {
-    const year = buildPeriodReport(data, sessions, 2026, "year");
+    const year = buildPeriodReport(data, sessions, getRange(2026, "year"));
     expect(year.topStudents[0]).toEqual({
       label: "Maria Lopez",
       grade: "10",
@@ -149,7 +149,7 @@ describe("buildPeriodReport", () => {
   });
 
   it("summarises group attendance for the period", () => {
-    const q1 = buildPeriodReport(data, sessions, 2026, "q1");
+    const q1 = buildPeriodReport(data, sessions, getRange(2026, "q1"));
     expect(q1.group.sessions).toBe(2);
     expect(q1.group.totalAttendance).toBe(3);
     expect(q1.group.uniqueAttendees).toBe(2);
@@ -158,7 +158,7 @@ describe("buildPeriodReport", () => {
   });
 
   it("returns zeroes for an empty period", () => {
-    const q3 = buildPeriodReport(data, sessions, 2026, "q3");
+    const q3 = buildPeriodReport(data, sessions, getRange(2026, "q3"));
     expect(q3.totalCheckIns).toBe(0);
     expect(q3.group.sessions).toBe(0);
     expect(q3.group.averageAttendance).toBe(0);
@@ -173,9 +173,7 @@ describe("buildReportText", () => {
     const report = buildPeriodReport(
       [checkIn(), checkIn({ studentName: "Andre Bell", grade: "11" })],
       [session()],
-      2026,
-      "q1",
-    );
+      getRange(2026, "q1"));
     const text = buildReportText(report, settings);
 
     expect(text).toContain("Q1 (Jan–Mar) 2026");
@@ -195,9 +193,7 @@ describe("buildReportText", () => {
         checkIn({ reasons: ["Family / home situation"] }),
       ],
       [],
-      2026,
-      "q1",
-    );
+      getRange(2026, "q1"));
     const text = buildReportText(report, settings);
     expect(text).toContain("Attendance / tardiness: 2 (67%)");
     expect(text).toContain("Family / home situation: 1 (33%)");
@@ -207,9 +203,7 @@ describe("buildReportText", () => {
     const report = buildPeriodReport(
       [checkIn({ reasonNotes: "Confidential family detail" })],
       [],
-      2026,
-      "q1",
-    );
+      getRange(2026, "q1"));
     expect(buildReportText(report, settings)).not.toContain(
       "Confidential family detail",
     );

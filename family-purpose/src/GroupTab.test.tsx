@@ -49,9 +49,7 @@ describe("group sign-in", () => {
     ).toHaveAttribute("aria-pressed", "true");
     expect(loadGroupSessions()[0].attendees).toEqual(["Andre Bell"]);
 
-    await user.click(
-      within(group).getByRole("button", { name: /Andre Bell/ }),
-    );
+    await user.click(within(group).getByRole("button", { name: /Andre Bell/ }));
     expect(loadGroupSessions()[0].attendees).toEqual([]);
   });
 
@@ -102,7 +100,9 @@ describe("group sign-in", () => {
     ).toBeInTheDocument();
 
     const rosterList = screen.getByLabelText("BOYS Group members");
-    await user.click(within(rosterList).getByRole("button", { name: "Remove" }));
+    await user.click(
+      within(rosterList).getByRole("button", { name: "Remove" }),
+    );
     expect(screen.getByText(/No members yet/)).toBeInTheDocument();
   });
 
@@ -136,7 +136,9 @@ describe("group sign-in", () => {
     await openGroupTab(user);
 
     const past = screen.getByLabelText("Recent group sessions");
-    expect(within(past).getByText(/2 signed in · Study habits/)).toBeInTheDocument();
+    expect(
+      within(past).getByText(/2 signed in · Study habits/),
+    ).toBeInTheDocument();
   });
 
   it("carries today's sign-ins into the debrief", async () => {
@@ -195,7 +197,7 @@ describe("reports tab", () => {
     render(<App />);
 
     await user.click(screen.getByRole("button", { name: "Reports" }));
-    await user.selectOptions(screen.getByLabelText("Period"), "q1");
+    await user.selectOptions(screen.getByLabelText("Period"), `cal:${year}:q1`);
 
     const preview = screen.getByLabelText("Summary preview");
     expect(preview).toHaveTextContent("Total check-ins: 2");
@@ -203,7 +205,7 @@ describe("reports tab", () => {
     expect(preview).toHaveTextContent("Attendance / tardiness: 2 (100%)");
     expect(preview).not.toHaveTextContent("private detail");
 
-    await user.selectOptions(screen.getByLabelText("Period"), "q3");
+    await user.selectOptions(screen.getByLabelText("Period"), `cal:${year}:q3`);
     expect(screen.getByLabelText("Summary preview")).toHaveTextContent(
       "Total check-ins: 0",
     );

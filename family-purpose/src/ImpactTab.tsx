@@ -1,10 +1,7 @@
 import { useMemo, useState } from "react";
 import type { CheckIn, DebriefSettings, GroupSession } from "./types";
-import {
-  PERIOD_OPTIONS,
-  availableYears,
-  type PeriodScope,
-} from "./reports";
+import { defaultPeriodChoice, periodChoices } from "./periods";
+import PeriodPicker from "./PeriodPicker";
 import {
   buildImpactReport,
   buildImpactText,
@@ -36,17 +33,18 @@ export default function ImpactTab({
   onCopied: () => void;
   onPdfDownloaded: () => void;
 }) {
-  const years = useMemo(
-    () => availableYears(checkIns, sessions),
+  const choices = useMemo(
+    () => periodChoices(checkIns, sessions),
     [checkIns, sessions],
   );
-  const [year, setYear] = useState(years[0]);
-  const [scope, setScope] = useState<PeriodScope>("year");
+  const [period, setPeriod] = useState(() =>
+    defaultPeriodChoice(choices, checkIns, sessions),
+  );
   const [pdfBusy, setPdfBusy] = useState(false);
 
   const report = useMemo(
-    () => buildImpactReport(checkIns, sessions, year, scope),
-    [checkIns, sessions, year, scope],
+    () => buildImpactReport(checkIns, sessions, period.range),
+    [checkIns, sessions, period],
   );
   const text = useMemo(
     () => buildImpactText(report, settings),
@@ -89,36 +87,12 @@ export default function ImpactTab({
           what conversations are about, and how they end.
         </p>
 
-        <div className="row-2">
-          <div className="field">
-            <label htmlFor="impactYear">Year</label>
-            <select
-              id="impactYear"
-              value={year}
-              onChange={(e) => setYear(Number(e.target.value))}
-            >
-              {years.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="impactScope">Period</label>
-            <select
-              id="impactScope"
-              value={scope}
-              onChange={(e) => setScope(e.target.value as PeriodScope)}
-            >
-              {PERIOD_OPTIONS.map((o) => (
-                <option key={o.scope} value={o.scope}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+        <PeriodPicker
+          id="impactPeriod"
+          choices={choices}
+          value={period}
+          onChange={setPeriod}
+        />
       </div>
 
       <div className="card">
