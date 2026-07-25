@@ -111,7 +111,8 @@ describe("returning students", () => {
         checkIn({ studentName: "  maria lopez " }),
       ],
       [],
-      getRange(2026, "year"));
+      getRange(2026, "year"),
+    );
     expect(engagement.studentsSeen).toBe(1);
     expect(engagement.students[0].checkIns).toBe(2);
   });
@@ -136,7 +137,10 @@ describe("attendance trend", () => {
         "Jalen Price",
       ]),
     ];
-    const { attendance } = buildImpactReport([], sessions, getRange(2026, "year"));
+    const { attendance } = buildImpactReport(
+      [], sessions,
+      getRange(2026, "year"),
+    );
 
     expect(attendance.sessionsHeld).toBe(4);
     expect(attendance.averageAttendance).toBe(2.8);
@@ -153,7 +157,8 @@ describe("attendance trend", () => {
         session("2026-01-07", ["Andre Bell", "Devon Carter", "Marcus Webb"]),
         session("2026-02-07", ["Andre Bell"]),
       ],
-      getRange(2026, "year"));
+      getRange(2026, "year"),
+    );
     expect(attendance.change).toBe(-2);
     expect(describeAttendanceTrend(attendance)).toContain("down");
   });
@@ -167,7 +172,8 @@ describe("attendance trend", () => {
         session("2026-02-07", ["Andre Bell", "Devon Carter"]),
         session("2026-02-21", ["Andre Bell"]),
       ],
-      getRange(2026, "year"));
+      getRange(2026, "year"),
+    );
 
     expect(attendance.members[0]).toEqual({
       name: "Andre Bell",
@@ -189,7 +195,8 @@ describe("attendance trend", () => {
         session("2026-01-21", ["Andre Bell", "Devon Carter", "Marcus Webb"]),
         session("2026-02-07", ["Andre Bell", "Devon Carter"]),
       ],
-      getRange(2026, "year"));
+      getRange(2026, "year"),
+    );
 
     expect(attendance.monthly).toEqual([
       { label: "Jan 2026", average: 2, sessions: 2 },
@@ -201,7 +208,8 @@ describe("attendance trend", () => {
     const { attendance } = buildImpactReport(
       [],
       [session("2026-01-07", ["Andre Bell"])],
-      getRange(2026, "year"));
+      getRange(2026, "year"),
+    );
     expect(attendance.change).toBe(0);
     expect(describeAttendanceTrend(attendance)).toContain("Not enough sessions");
   });
@@ -243,7 +251,8 @@ describe("reason mix over time", () => {
         checkIn({ month: 3, day: 5, reasons: growth }),
       ],
       [],
-      getRange(2026, "year"));
+      getRange(2026, "year"),
+    );
 
     expect(reasonMix.split?.earlier.start).toBe("2026-01-05");
     expect(reasonMix.split?.later.end).toBe("2026-03-05");
@@ -253,7 +262,8 @@ describe("reason mix over time", () => {
     const { reasonMix } = buildImpactReport(
       [checkIn({ month: 1, day: 5, reasons: intervention })],
       [],
-      getRange(2026, "year"));
+      getRange(2026, "year"),
+    );
     expect(reasonMix.split).toBeNull();
     expect(describeReasonShift(reasonMix)).toContain("Not enough check-ins");
   });
@@ -269,7 +279,8 @@ describe("reason mix over time", () => {
         checkIn({ month: 3, day: 5, reasons: growth }),
       ],
       [],
-      getRange(2026, "year"));
+      getRange(2026, "year"),
+    );
     const earlier = reasonMix.categories.find((c) => c.category === "Growth")!;
     expect(earlier.earlierShare).toBe(50);
   });
@@ -288,7 +299,8 @@ describe("outcomes", () => {
         checkIn(),
       ],
       [],
-      getRange(2026, "year"));
+      getRange(2026, "year"),
+    );
 
     expect(outcomes.recorded).toBe(3);
     expect(outcomes.missing).toBe(1);
@@ -301,7 +313,10 @@ describe("outcomes", () => {
   });
 
   it("handles check-ins logged before outcomes existed", () => {
-    const { outcomes } = buildImpactReport([checkIn()], [], getRange(2026, "year"));
+    const { outcomes } = buildImpactReport(
+      [checkIn()], [],
+      getRange(2026, "year"),
+    );
     expect(outcomes.recorded).toBe(0);
     expect(outcomes.counts).toEqual([]);
   });
@@ -330,7 +345,8 @@ describe("buildImpactText", () => {
         session("2026-01-07", ["Andre Bell"]),
         session("2026-05-07", ["Andre Bell", "Devon Carter"]),
       ],
-      getRange(2026, "year"));
+      getRange(2026, "year"),
+    );
     const text = buildImpactText(report, settings);
 
     expect(text).toContain("STUDENT IMPACT SUMMARY");
@@ -346,7 +362,8 @@ describe("buildImpactText", () => {
     const report = buildImpactReport(
       [checkIn({ reasonNotes: "Confidential family detail" })],
       [],
-      getRange(2026, "year"));
+      getRange(2026, "year"),
+    );
     expect(buildImpactText(report, settings)).not.toContain(
       "Confidential family detail",
     );

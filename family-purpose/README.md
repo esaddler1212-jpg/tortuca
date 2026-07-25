@@ -21,14 +21,49 @@ Each check-in records:
 
 Logging students back-to-back is the common case, so the form is built for speed:
 
+- **The period in session is already filled in** — the app knows the bell
+  schedule, so most check-ins need no period entry at all
 - **Recent students** — one tap fills the name, grade, and class period from that
   student’s last check-in
 - **Name suggestions** — start typing and pick a match, or type a known name in
   full and the rest fills itself
-- **Recent periods** — tap to set the class period
+- **Period buttons** — every period of today’s schedule, with its times, one tap
+  each; recent classes with a subject name are offered underneath
 - **Reason pills** — one tap each, ordered by how often you use them
 - **Sticky class** — grade and period stay set after saving, so the next student
   in the same room needs only a name and a reason
+
+## The school schedule
+
+The app is set up for Oak Grove Middle School on the Mt. Diablo Unified
+2026–2027 calendar, and uses it in three places.
+
+**Filling in the period.** A banner at the top of the log names the period in
+session and the schedule it comes from, and the class period is filled in to
+match. Between periods it offers the class the student just left. The four
+schedules are all built in:
+
+| Schedule | When | Ends |
+| --- | --- | --- |
+| 6th grade | Mon, Tue, Thu, Fri | 2:18 PM, lunch at 11:30 |
+| 7th & 8th grade | Mon, Tue, Thu, Fri | 2:18 PM, lunch at 12:16 |
+| All grades | Wednesday | 12:43 PM, early release |
+| All grades | Nine minimum days | 12:00 PM |
+
+**Naming the day.** Holidays, recesses, teacher in-service days and the start
+and end of each term are known, so the log says "No school — Fall Recess" and
+when school resumes rather than offering periods that do not exist. Short days
+are noted on the debrief, the attendance clerk list and the weekly summary,
+since a half day explains a short list of check-ins.
+
+**Reporting on terms.** Reports and Impact run over the district's quarters,
+semesters, trimesters and full school year, with the instructional day counts
+from the calendar. Calendar quarters are still there for anyone who wants them.
+
+Settings shows every schedule, the term dates and the minimum days, so it is
+clear what the app is working from. To move to another school, edit
+`src/schedule.ts` and `src/schoolCalendar.ts` — the dates and times all live in
+those two files.
 
 ## Follow-up
 
@@ -81,8 +116,8 @@ email addressed from Settings.
 
 ## Quarterly and yearly reports
 
-The **Reports** tab rolls the data up by quarter (Jan–Mar, Apr–Jun, Jul–Sep,
-Oct–Dec) or full year:
+The **Reports** tab rolls the data up over any school term — quarter, semester,
+trimester or the whole year — or over a calendar quarter or year:
 
 - Total check-ins, students served, group sessions, members signed in, average
   attendance
@@ -95,7 +130,7 @@ daily log and never appear in a shared summary.
 ## Impact
 
 Where **Reports** answers "how much," the **Impact** tab answers "is it working."
-Pick a quarter or a year and it shows four measures:
+Pick a term or a year and it shows four measures:
 
 - **Students who come back** — how many were seen once versus repeatedly, how
   many reached four or more check-ins, and how many weeks each student stayed

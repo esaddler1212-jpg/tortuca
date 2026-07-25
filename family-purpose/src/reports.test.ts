@@ -119,7 +119,9 @@ describe("buildPeriodReport", () => {
   });
 
   it("excludes other years", () => {
-    expect(buildPeriodReport(data, sessions, getRange(2025, "year")).totalCheckIns).toBe(1);
+    expect(
+      buildPeriodReport(data, sessions, getRange(2025, "year")).totalCheckIns,
+    ).toBe(1);
   });
 
   it("ranks reasons by frequency", () => {
@@ -173,7 +175,8 @@ describe("buildReportText", () => {
     const report = buildPeriodReport(
       [checkIn(), checkIn({ studentName: "Andre Bell", grade: "11" })],
       [session()],
-      getRange(2026, "q1"));
+      getRange(2026, "q1"),
+    );
     const text = buildReportText(report, settings);
 
     expect(text).toContain("Q1 (Jan–Mar) 2026");
@@ -193,7 +196,8 @@ describe("buildReportText", () => {
         checkIn({ reasons: ["Family / home situation"] }),
       ],
       [],
-      getRange(2026, "q1"));
+      getRange(2026, "q1"),
+    );
     const text = buildReportText(report, settings);
     expect(text).toContain("Attendance / tardiness: 2 (67%)");
     expect(text).toContain("Family / home situation: 1 (33%)");
@@ -203,7 +207,8 @@ describe("buildReportText", () => {
     const report = buildPeriodReport(
       [checkIn({ reasonNotes: "Confidential family detail" })],
       [],
-      getRange(2026, "q1"));
+      getRange(2026, "q1"),
+    );
     expect(buildReportText(report, settings)).not.toContain(
       "Confidential family detail",
     );
