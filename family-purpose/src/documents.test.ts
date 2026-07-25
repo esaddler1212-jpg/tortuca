@@ -127,6 +127,22 @@ describe("attendance clerk list", () => {
       "No students checked in on this day.",
     );
   });
+
+  it("notes a short day, which explains a short list", () => {
+    const wednesday = [
+      checkIn({ studentName: "Maria Lopez", createdAt: at("2026-12-02", 10) }),
+    ];
+    expect(buildAttendanceListText(wednesday, "2026-12-02", settings)).toContain(
+      "Wednesday early release",
+    );
+    expect(
+      buildAttendanceListText(
+        [checkIn({ createdAt: at("2026-12-01", 10) })],
+        "2026-12-01",
+        settings,
+      ),
+    ).toContain("Minimum day");
+  });
 });
 
 describe("weekly summary", () => {

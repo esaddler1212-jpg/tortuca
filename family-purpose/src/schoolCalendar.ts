@@ -272,6 +272,24 @@ export function isSchoolDay(day: string): boolean {
   return describeDay(day).isSchoolDay;
 }
 
+/**
+ * A line for reports when the day was not a normal one, since a short day
+ * explains a short list of check-ins.
+ */
+export function scheduleNote(day: string): string | null {
+  const info = describeDay(day);
+  switch (info.kind) {
+    case "school":
+      return info.milestone ?? null;
+    case "minimum":
+      return `Minimum day — school ended at 12:00 PM${info.milestone ? `. ${info.milestone}` : ""}`;
+    case "wednesday":
+      return `Wednesday early release — school ended at 12:43 PM${info.milestone ? `. ${info.milestone}` : ""}`;
+    default:
+      return info.label;
+  }
+}
+
 /** The next day students are in school, for "school resumes" messaging. */
 export function nextSchoolDay(day: string): string | null {
   const cursor = parseDay(day);

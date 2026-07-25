@@ -1,6 +1,7 @@
 import type { CheckIn, DebriefSettings, GroupSession } from "./types";
 import { getTodayDateLabel, todayKey } from "./storage";
 import { hasSessionContent, outstandingFollowUps } from "./debrief";
+import { scheduleNote } from "./schoolCalendar";
 import { formatDueLabel, studentLabel } from "./followups";
 import {
   createDoc,
@@ -47,6 +48,9 @@ export function downloadDebriefPdf(
     { start: day, end: day, label: getTodayDateLabel() },
     settings,
   );
+
+  const note = scheduleNote(day);
+  if (note) y = drawParagraph(doc, y, note);
 
   const overview: string[][] = [
     ["Student check-ins today", String(checkIns.length)],

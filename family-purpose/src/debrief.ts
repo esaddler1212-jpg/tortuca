@@ -1,5 +1,6 @@
 import type { CheckIn, DebriefSettings, GroupSession } from "./types";
-import { getTodayDateLabel } from "./storage";
+import { getTodayDateLabel, todayKey } from "./storage";
+import { scheduleNote } from "./schoolCalendar";
 import { formatDueLabel, studentLabel } from "./followups";
 
 function formatTime(iso: string): string {
@@ -58,7 +59,11 @@ export function buildDebriefText(
   const followUps = outstandingFollowUps(checkIns, allCheckIns);
   const referrals = followUps.filter((c) => c.followUp!.careTeamReferral);
 
-  const lines = ["END OF DAY CHECK-IN DEBRIEF", getTodayDateLabel(), ""];
+  const lines = ["END OF DAY CHECK-IN DEBRIEF", getTodayDateLabel()];
+
+  const note = scheduleNote(todayKey());
+  if (note) lines.push(note);
+  lines.push("");
 
   if (school) lines.push(`School: ${school}`);
   lines.push(`Prepared by: ${role ? `${name} (${role})` : name}`);

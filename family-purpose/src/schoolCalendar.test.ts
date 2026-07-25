@@ -8,6 +8,7 @@ import {
   isMinimumDay,
   isSchoolDay,
   nextSchoolDay,
+  scheduleNote,
   termFor,
   termsOfKind,
 } from "./schoolCalendar";
@@ -104,6 +105,27 @@ describe("describeDay", () => {
   it("says when a date is outside the school year", () => {
     expect(describeDay("2026-07-25").label).toContain("Outside the 2026–2027");
     expect(describeDay("2027-07-01").isSchoolDay).toBe(false);
+  });
+});
+
+describe("scheduleNote", () => {
+  it("says nothing about an ordinary day", () => {
+    expect(scheduleNote("2026-09-15")).toBeNull();
+  });
+
+  it("explains a short day", () => {
+    expect(scheduleNote("2026-09-16")).toContain("Wednesday early release");
+    expect(scheduleNote("2026-09-01")).toContain("Minimum day");
+  });
+
+  it("carries the milestone alongside the short day", () => {
+    expect(scheduleNote("2026-10-02")).toBe(
+      "Minimum day — school ended at 12:00 PM. End of Quarter 1",
+    );
+  });
+
+  it("names a closure", () => {
+    expect(scheduleNote("2026-11-25")).toBe("No school — School Recess");
   });
 });
 

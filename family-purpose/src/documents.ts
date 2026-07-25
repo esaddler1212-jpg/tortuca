@@ -1,6 +1,7 @@
 import type { CheckIn, DebriefSettings, GroupSession } from "./types";
 import { formatDayLabel } from "./storage";
 import { dayKeyOf } from "./reports";
+import { scheduleNote } from "./schoolCalendar";
 import {
   careTeamReferrals,
   formatDueLabel,
@@ -117,7 +118,10 @@ export function buildAttendanceListText(
   settings: DebriefSettings,
 ): string {
   const rows = buildAttendanceRows(checkIns, day);
-  const lines = ["STUDENT CHECK-IN LIST — ATTENDANCE CLERK", formatDayLabel(day), ""];
+  const lines = ["STUDENT CHECK-IN LIST — ATTENDANCE CLERK", formatDayLabel(day)];
+  const note = scheduleNote(day);
+  if (note) lines.push(note);
+  lines.push("");
   if (settings.schoolName.trim()) lines.push(`School: ${settings.schoolName.trim()}`);
   lines.push(`Prepared by: ${preparedBy(settings)}`);
   lines.push("");
@@ -236,8 +240,9 @@ export function buildWeeklySummaryText(
     lines.push("WHO WE CHECKED IN WITH");
     lines.push("----------------------");
     for (const day of summary.days) {
+      const note = scheduleNote(day.day);
       lines.push("");
-      lines.push(`${day.label} (${day.checkIns})`);
+      lines.push(`${day.label} (${day.checkIns})${note ? ` — ${note}` : ""}`);
       for (const student of day.students) lines.push(`  ${student}`);
     }
     lines.push("");
