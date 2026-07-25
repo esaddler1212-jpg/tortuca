@@ -62,8 +62,8 @@ describe("the bell schedule on the log tab", () => {
     render(<App />);
 
     expect(periodField()).toHaveValue("Period 3");
-    expect(banner()).toHaveTextContent("School day");
-    expect(banner()).toHaveTextContent("Period 3 now");
+    expect(banner()).toHaveTextContent("Period 3 now · 10:02 AM–10:44 AM");
+    expect(banner()).toHaveTextContent("7th & 8th grade");
   });
 
   it("follows the early-release clock on Wednesday", () => {
@@ -71,7 +71,7 @@ describe("the bell schedule on the log tab", () => {
     render(<App />);
 
     expect(periodField()).toHaveValue("Period 4");
-    expect(banner()).toHaveTextContent("early release");
+    expect(banner()).toHaveTextContent("Early release — ends 12:43 PM");
   });
 
   it("follows the minimum-day clock", () => {
@@ -79,7 +79,14 @@ describe("the bell schedule on the log tab", () => {
     render(<App />);
 
     expect(periodField()).toHaveValue("Period 4");
-    expect(banner()).toHaveTextContent("school ends at 12:00 PM");
+    expect(banner()).toHaveTextContent("Minimum day — ends 12:00 PM");
+  });
+
+  it("names the period just finished during passing", () => {
+    freeze(TUESDAY, 9, 59);
+    render(<App />);
+
+    expect(banner()).toHaveTextContent("Passing period — Period 2 just ended");
   });
 
   it("gives 6th grade the earlier lunch", async () => {

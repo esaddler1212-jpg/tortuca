@@ -21,7 +21,14 @@ function longDate(day: string): string {
   });
 }
 
-/** Today's bell schedule and where the clock currently sits in it. */
+/** Tags for a day that does not run to the normal bell. */
+function dayTags(kind: string): string[] {
+  if (kind === "minimum") return ["Minimum day — ends 12:00 PM"];
+  if (kind === "wednesday") return ["Early release — ends 12:43 PM"];
+  return [];
+}
+
+/** Where the clock sits in today's bell schedule. */
 export default function ScheduleBanner({
   now,
   grade,
@@ -35,32 +42,42 @@ export default function ScheduleBanner({
   const live = periodAt(now, grade);
   const suggestion = suggestedPeriod(now, grade);
 
-  const resumes = info.isSchoolDay ? null : nextSchoolDay(day);
-  const upcoming = resumes ?? (day < FIRST_STUDENT_DAY ? FIRST_STUDENT_DAY : null);
+  if (!info.isSchoolDay) {
+    const resumes =
+      nextSchoolDay(day) ?? (day < FIRST_STUDENT_DAY ? FIRST_STUDENT_DAY : null);
+    return (
+      <div className={`schedule-banner schedule-${info.kind}`}>
+        <p className="schedule-line">
+          <strong>{info.label}</strong>
+        </p>
+        <p className="hint">
+          {resumes
+            ? `School resumes ${longDate(resumes)}.`
+            : `The ${SCHOOL_NAME} year has ended.`}{" "}
+          You can still log and back-fill check-ins.
+        </p>
+      </div>
+    );
+  }
+
+  const headline = live
+    ? `${live.name} now · ${formatPeriodRange(live)}`
+    : suggestion
+      ? `Passing period — ${suggestion.name} just ended`
+      : "Before the first bell";
 
   return (
     <div className={`schedule-banner schedule-${info.kind}`}>
       <p className="schedule-line">
-        <strong>{info.label}</strong>
+        <strong>{headline}</strong>
+        {dayTags(info.kind).map((tag) => (
+          <span key={tag} className="tag">
+            {tag}
+          </span>
+        ))}
         {info.milestone && <span className="tag">{info.milestone}</span>}
       </p>
-      {info.isSchoolDay ? (
-        <p className="hint">
-          {schedule.label} ·{" "}
-          {live
-            ? `${live.name} now, ${formatPeriodRange(live)}`
-            : suggestion
-              ? `Passing period — ${suggestion.name} just ended`
-              : "Before the first bell"}
-        </p>
-      ) : (
-        <p className="hint">
-          {upcoming
-            ? `School resumes ${longDate(upcoming)}.`
-            : `The ${SCHOOL_NAME} year has ended.`}{" "}
-          You can still log and back-fill check-ins.
-        </p>
-      )}
+      <p className="hint">{schedule.label}</p>
     </div>
   );
 }
