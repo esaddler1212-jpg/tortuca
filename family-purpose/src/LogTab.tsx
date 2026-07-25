@@ -7,6 +7,7 @@ import {
   type CheckInReason,
 } from "./types";
 import { addCheckIn, deleteCheckIn } from "./storage";
+import { createFollowUp, formatDueLabel } from "./followups";
 import {
   findStudent,
   normalizeName,
@@ -27,10 +28,12 @@ function CheckInForm({
   onSaved: () => void;
 }) {
   const [studentName, setStudentName] = useState("");
+  const [studentId, setStudentId] = useState("");
   const [grade, setGrade] = useState<string>("9");
   const [classPeriod, setClassPeriod] = useState("");
   const [reasons, setReasons] = useState<CheckInReason[]>([]);
   const [outcome, setOutcome] = useState<CheckInOutcome | null>(null);
+  const [followUp, setFollowUp] = useState(false);
   const [reasonNotes, setReasonNotes] = useState("");
   const [error, setError] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -57,14 +60,21 @@ function CheckInForm({
     );
   };
 
-  /** Typing or picking a known student fills in their grade and period. */
+  /** Typing or picking a known student fills in their ID, grade and period. */
   const applyStudent = (name: string) => {
     setStudentName(name);
     const known = findStudent(roster, name);
     if (known) {
+      setStudentId(known.studentId);
       setGrade(known.grade);
       setClassPeriod(known.classPeriod);
     }
+  };
+
+  /** Choosing this outcome implies a follow-up, so schedule one by default. */
+  const pickOutcome = (o: CheckInOutcome | null) => {
+    setOutcome(o);
+    if (o === "Follow-up scheduled") setFollowUp(true);
   };
 
   const quickPick = (student: StudentProfile) => {
@@ -98,18 +108,23 @@ function CheckInForm({
       setError("Select at least one reason or add notes explaining why.");
       return;
     }
+    const now = new Date().toISOString();
     addCheckIn({
       studentName: studentName.trim(),
+      ...(studentId.trim() ? { studentId: studentId.trim() } : {}),
       grade,
       classPeriod: classPeriod.trim(),
       reasons,
       reasonNotes: reasonNotes.trim(),
       ...(outcome ? { outcome } : {}),
+      ...(followUp ? { followUp: createFollowUp(now) } : {}),
     });
     // Grade and period carry over: consecutive check-ins usually share a class.
     setStudentName("");
+    setStudentId("");
     setReasons([]);
     setOutcome(null);
+    setFollowUp(false);
     setReasonNotes("");
     nameInput.current?.focus();
     onSaved();
@@ -194,6 +209,18 @@ function CheckInForm({
 
       <div className="row-2">
         <div className="field">
+          <label htmlFor="studentId">Student ID (optional)</label>
+          <input
+            id="studentId"
+            value={studentId}
+            onChange={(e) => setStudentId(e.target.value)}
+            onKeyDown={clearOnEscape(() => setStudentId(""))}
+            placeholder="e.g. 10482"
+            inputMode="numeric"
+            autoComplete="off"
+          />
+        </div>
+        <div className="field">
           <label htmlFor="grade">Grade</label>
           <select
             id="grade"
@@ -207,17 +234,18 @@ function CheckInForm({
             ))}
           </select>
         </div>
-        <div className="field">
-          <label htmlFor="period">Class period</label>
-          <input
-            id="period"
-            value={classPeriod}
-            onChange={(e) => setClassPeriod(e.target.value)}
-            onKeyDown={clearOnEscape(() => setClassPeriod(""))}
-            placeholder="e.g. Period 3 — Algebra"
-            autoComplete="off"
-          />
-        </div>
+      </div>
+
+      <div className="field">
+        <label htmlFor="period">Class period</label>
+        <input
+          id="period"
+          value={classPeriod}
+          onChange={(e) => setClassPeriod(e.target.value)}
+          onKeyDown={clearOnEscape(() => setClassPeriod(""))}
+          placeholder="e.g. Period 3 — Algebra"
+          autoComplete="off"
+        />
       </div>
 
       {recentPeriods.length > 0 && (
@@ -273,13 +301,34 @@ function CheckInForm({
                 type="button"
                 className={`pill ${selected ? "pill-active" : ""}`}
                 aria-pressed={selected}
-                onClick={() => setOutcome(selected ? null : o)}
+                onClick={() => pickOutcome(selected ? null : o)}
               >
                 {o}
               </button>
             );
           })}
         </div>
+        <p className="hint">
+          Leave this blank now if you would rather record what happened later —
+          the Follow-up tab lists anything still open.
+        </p>
+      </div>
+
+      <div className="field">
+        <label className="checkbox">
+          <input
+            type="checkbox"
+            checked={followUp}
+            onChange={(e) => setFollowUp(e.target.checked)}
+          />
+          <span>Follow up within 48 hours</span>
+        </label>
+        {followUp && (
+          <p className="hint">
+            {formatDueLabel(createFollowUp(new Date().toISOString()))}. It will
+            appear on the Follow-up tab and in today&apos;s debrief.
+          </p>
+        )}
       </div>
 
       <div className="field">
@@ -343,12 +392,18 @@ function TodayList({
               </button>
             </div>
             <p className="checkin-meta">
-              Grade {c.grade} · {c.classPeriod} ·{" "}
+              {c.studentId ? `ID ${c.studentId} · ` : ""}Grade {c.grade} ·{" "}
+              {c.classPeriod} ·{" "}
               {new Date(c.createdAt).toLocaleTimeString(undefined, {
                 hour: "numeric",
                 minute: "2-digit",
               })}
             </p>
+            {c.followUp && (
+              <p className="checkin-meta">
+                <span className="tag">{formatDueLabel(c.followUp)}</span>
+              </p>
+            )}
             <div className="checkin-reasons">
               {c.reasons.length > 0 && (
                 <p style={{ margin: "0 0 0.25rem" }}>{c.reasons.join(" · ")}</p>
