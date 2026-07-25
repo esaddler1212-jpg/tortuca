@@ -1,6 +1,13 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
 import type { LibraryTrack } from './types'
-import { normalizeMatchKey, parseFilename, scoreMatch } from './match'
+import { normalizeMatchKey, scoreMatch } from './match'
+import { getFileIdentity } from './tags'
+
+export interface ImportFileResult {
+  file: string
+  status: 'matched' | 'new' | 'skipped'
+  trackTitle?: string
+}
 
 interface TortucaDB extends DBSchema {
   tracks: {
@@ -131,23 +138,30 @@ export async function attachUpload(
 ): Promise<LibraryTrack> {
   const db = await getDb()
   let track: LibraryTrack | undefined
+  const identity = await getFileIdentity(file)
 
   if (matchedTrackId) {
     track = await db.get('tracks', matchedTrackId)
   }
 
   if (!track) {
-    const parsed = parseFilename(file.name)
-    const artists = parsed?.artists ?? 'Unknown artist'
-    const title = parsed?.title ?? file.name.replace(/\.[^.]+$/, '')
     track = {
       id: crypto.randomUUID(),
-      title,
-      artists,
+      title: identity.title,
+      artists: identity.artists,
+      album: identity.album,
       source: 'upload',
-      matchKey: normalizeMatchKey(artists, title),
+      matchKey: identity.matchKey,
       hasAudio: false,
       addedAt: Date.now(),
+    }
+  } else {
+    track = {
+      ...track,
+      title: track.title || identity.title,
+      artists: track.artists || identity.artists,
+      album: track.album ?? identity.album,
+      matchKey: track.matchKey || identity.matchKey,
     }
   }
 
@@ -160,6 +174,37 @@ export async function attachUpload(
   await db.put('tracks', track)
   await db.put('audio', file, track.id)
   return track
+}
+
+export async function attachBlobToTrack(
+  trackId: string,
+  blob: Blob,
+  filename: string,
+): Promise<LibraryTrack> {
+  const file = new File([blob], filename, { type: blob.type || 'audio/mpeg' })
+  return attachUpload(file, trackId)
+}
+
+export async function importFilesBatch(
+  files: FileList | File[],
+): Promise<{ results: ImportFileResult[]; refreshed: LibraryTrack[] }> {
+  const fileArr = Array.from(files).filter((f) =>
+    /\.(mp3|wav|flac|ogg|m4a|aac)$/i.test(f.name),
+  )
+  const results: ImportFileResult[] = []
+  for (const file of fileArr) {
+    let current = await listTracks()
+    const match = await findBestMatchForFile(file, current)
+    const track = await attachUpload(file, match?.track.id)
+    results.push({
+      file: file.name,
+      status: match ? 'matched' : 'new',
+      trackTitle: track.title,
+    })
+    current = await listTracks()
+  }
+  const refreshed = await listTracks()
+  return { results, refreshed }
 }
 
 
@@ -187,16 +232,14 @@ export async function findBestMatchForFile(
   file: File,
   tracks: LibraryTrack[],
 ): Promise<{ track: LibraryTrack; score: number } | null> {
-  const parsed = parseFilename(file.name)
-  const fileKey = parsed
-    ? normalizeMatchKey(parsed.artists, parsed.title)
-    : normalizeMatchKey('', file.name.replace(/\.[^.]+$/, ''))
+  const identity = await getFileIdentity(file)
+  const fileKey = identity.matchKey
 
   let best: { track: LibraryTrack; score: number } | null = null
   for (const track of tracks) {
-    if (!track.spotifyTrackId || track.hasAudio) continue
+    if (track.hasAudio) continue
     const score = scoreMatch(fileKey, track.matchKey)
-    if (score >= 0.65 && (!best || score > best.score)) {
+    if (score >= 0.6 && (!best || score > best.score)) {
       best = { track, score }
     }
   }
@@ -207,11 +250,13 @@ export async function libraryStats(): Promise<{
   total: number
   withAudio: number
   fromSpotify: number
+  missing: number
 }> {
   const all = await listTracks()
   return {
     total: all.length,
     withAudio: all.filter((t) => t.hasAudio).length,
     fromSpotify: all.filter((t) => t.source === 'spotify-likes').length,
+    missing: all.filter((t) => !t.hasAudio).length,
   }
 }

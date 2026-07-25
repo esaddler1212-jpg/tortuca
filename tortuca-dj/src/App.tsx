@@ -13,8 +13,16 @@ import { importSpotifyLikes } from './lib/spotify/importLikes'
 function App() {
   const { loading: authLoading, isLoggedIn, userName, authError } =
     useSpotifyAuth()
-  const { tracks, stats, loading: libraryLoading, refresh, importFiles } =
-    useLibrary()
+  const {
+    tracks,
+    stats,
+    loading: libraryLoading,
+    importing,
+    lastImportSummary,
+    refresh,
+    importFiles,
+    attachFileToTrack,
+  } = useLibrary()
   const engine = useDeckEngine()
 
   const [deckATrack, setDeckATrack] = useState<LibraryTrack | null>(null)
@@ -94,12 +102,16 @@ function App() {
           tracks={tracks}
           stats={stats}
           loading={libraryLoading}
+          importing={importing}
           importingLikes={importingLikes}
+          importSummary={lastImportSummary}
           spotifyConnected={isLoggedIn}
           onImportFiles={(files) => void importFiles(files)}
           onImportSpotifyLikes={() => void handleImportLikes()}
           onConnectSpotify={() => void beginLogin()}
           onLoadToDeck={(t, d) => void loadToDeck(t, d)}
+          onAttachFile={(id, file) => void attachFileToTrack(id, file)}
+          onLibraryRefresh={() => void refresh()}
         />
 
         <main className="flex min-h-0 flex-1 flex-col p-4 md:p-6">

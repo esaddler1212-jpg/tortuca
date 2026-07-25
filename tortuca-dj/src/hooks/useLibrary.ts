@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
   attachUpload,
-  findBestMatchForFile,
+  importFilesBatch,
   libraryStats,
   listTracks,
 } from '../lib/library/db'
+import type { ImportFileResult } from '../lib/library/db'
 import type { LibraryTrack } from '../lib/library/types'
 
 export function useLibrary() {
@@ -13,8 +14,13 @@ export function useLibrary() {
     total: 0,
     withAudio: 0,
     fromSpotify: 0,
+    missing: 0,
   })
   const [loading, setLoading] = useState(true)
+  const [importing, setImporting] = useState(false)
+  const [lastImportSummary, setLastImportSummary] = useState<string | null>(
+    null,
+  )
 
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -31,20 +37,44 @@ export function useLibrary() {
     void refresh()
   }, [refresh])
 
-  const importFiles = useCallback(
+  const runImport = useCallback(
     async (files: FileList | File[]) => {
-      const fileArr = Array.from(files).filter((f) =>
-        /\.(mp3|wav|flac|ogg|m4a|aac)$/i.test(f.name),
-      )
-      const current = await listTracks()
-      for (const file of fileArr) {
-        const match = await findBestMatchForFile(file, current)
-        await attachUpload(file, match?.track.id)
+      setImporting(true)
+      setLastImportSummary(null)
+      try {
+        const { results } = await importFilesBatch(files)
+        const matched = results.filter((r) => r.status === 'matched').length
+        const fresh = results.filter((r) => r.status === 'new').length
+        setLastImportSummary(
+          `Imported ${results.length} file(s): ${matched} matched catalog, ${fresh} new.`,
+        )
+        await refresh()
+      } finally {
+        setImporting(false)
       }
-      await refresh()
     },
     [refresh],
   )
 
-  return { tracks, stats, loading, refresh, importFiles }
+  const attachFileToTrack = useCallback(
+    async (trackId: string, file: File) => {
+      await attachUpload(file, trackId)
+      await refresh()
+      setLastImportSummary(`Attached “${file.name}” to your library.`)
+    },
+    [refresh],
+  )
+
+  return {
+    tracks,
+    stats,
+    loading,
+    importing,
+    lastImportSummary,
+    refresh,
+    importFiles: runImport,
+    attachFileToTrack,
+  }
 }
+
+export type { ImportFileResult }

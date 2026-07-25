@@ -1,4 +1,4 @@
-export type TrackSource = 'spotify-likes' | 'upload' | 'manual'
+export type TrackSource = 'spotify-likes' | 'upload' | 'manual' | 'navidrome'
 
 export interface LibraryTrack {
   id: string
