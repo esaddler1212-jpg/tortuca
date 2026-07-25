@@ -1,17 +1,15 @@
-import { Headphones, Pause, Play, RotateCcw } from 'lucide-react'
-import type { DeckTrack } from '../lib/spotify/types'
-import { artistNames, formatDuration, trackImage } from '../lib/utils'
+import { Pause, Play, RotateCcw } from 'lucide-react'
+import type { LibraryTrack } from '../lib/library/types'
+import { artistNamesFromLibrary, formatDuration } from '../lib/utils'
 
 interface DeckProps {
   label: 'A' | 'B'
-  track: DeckTrack | null
-  isLive: boolean
+  track: LibraryTrack | null
   isPlaying: boolean
   positionMs: number
   onPlay: () => void
   onPause: () => void
-  onCuePreview: () => void
-  cuePreviewActive: boolean
+  onRestart: () => void
 }
 
 function deckAccent(label: 'A' | 'B') {
@@ -31,25 +29,22 @@ function deckAccent(label: 'A' | 'B') {
 export function Deck({
   label,
   track,
-  isLive,
   isPlaying,
   positionMs,
   onPlay,
   onPause,
-  onCuePreview,
-  cuePreviewActive,
+  onRestart,
 }: DeckProps) {
   const colors = deckAccent(label)
-  const img = trackImage(track)
+  const img = track?.artworkUrl ?? null
+  const duration = track?.durationMs ?? 0
   const progress =
-    track && track.duration_ms > 0
-      ? Math.min(100, (positionMs / track.duration_ms) * 100)
-      : 0
+    duration > 0 ? Math.min(100, (positionMs / duration) * 100) : 0
 
   return (
     <div
       className={`flex flex-1 flex-col rounded-2xl border bg-zinc-900/80 p-4 shadow-lg ${
-        isLive ? colors.live : 'border-zinc-800'
+        isPlaying ? colors.live : 'border-zinc-800'
       }`}
     >
       <div className="mb-3 flex items-center justify-between">
@@ -58,9 +53,9 @@ export function Deck({
         >
           DECK {label}
         </span>
-        {isLive && (
+        {isPlaying && (
           <span className="text-xs font-medium uppercase tracking-wide text-emerald-400">
-            Live
+            Playing
           </span>
         )}
       </div>
@@ -68,7 +63,7 @@ export function Deck({
       <div className="flex flex-1 flex-col items-center justify-center gap-4 py-4">
         <div
           className={`relative h-40 w-40 rounded-full border-4 border-zinc-800 bg-zinc-950 shadow-inner ring-4 ${colors.ring} ${
-            isLive && isPlaying ? 'vinyl-spin' : 'vinyl-spin vinyl-spin-paused'
+            isPlaying ? 'vinyl-spin' : 'vinyl-spin vinyl-spin-paused'
           }`}
         >
           {img ? (
@@ -87,22 +82,26 @@ export function Deck({
 
         {track ? (
           <div className="w-full text-center">
-            <p className="truncate text-lg font-semibold">{track.name}</p>
-            <p className="truncate text-sm text-zinc-400">{artistNames(track)}</p>
+            <p className="truncate text-lg font-semibold">{track.title}</p>
+            <p className="truncate text-sm text-zinc-400">
+              {artistNamesFromLibrary(track)}
+            </p>
             <p className="mt-1 font-mono text-xs text-zinc-500">
               {track.bpm != null && <span>{Math.round(track.bpm)} BPM</span>}
               {track.musicalKey && (
                 <span className="ml-3">{track.musicalKey}</span>
               )}
-              <span className="ml-3">{formatDuration(track.duration_ms)}</span>
+              {duration > 0 && (
+                <span className="ml-3">{formatDuration(duration)}</span>
+              )}
             </p>
           </div>
         ) : (
-          <p className="text-sm text-zinc-500">Load a track from your playlist</p>
+          <p className="text-sm text-zinc-500">Load a track from your library</p>
         )}
       </div>
 
-      {track && (
+      {track && duration > 0 && (
         <div className="mb-3 h-1 overflow-hidden rounded-full bg-zinc-800">
           <div
             className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all"
@@ -115,10 +114,10 @@ export function Deck({
         <button
           type="button"
           disabled={!track}
-          onClick={isPlaying && isLive ? onPause : onPlay}
+          onClick={isPlaying ? onPause : onPlay}
           className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 text-zinc-900 transition hover:bg-white disabled:opacity-30"
         >
-          {isPlaying && isLive ? (
+          {isPlaying ? (
             <Pause className="h-5 w-5" />
           ) : (
             <Play className="h-5 w-5 translate-x-0.5" />
@@ -126,22 +125,8 @@ export function Deck({
         </button>
         <button
           type="button"
-          disabled={!track?.preview_url}
-          onClick={onCuePreview}
-          className={`flex items-center gap-1 rounded-lg border px-3 py-2 text-xs font-medium transition disabled:opacity-30 ${
-            cuePreviewActive
-              ? 'border-amber-400/50 bg-amber-500/20 text-amber-100'
-              : 'border-zinc-600 text-zinc-300 hover:border-zinc-400'
-          }`}
-          title="30s preview in browser (headphone cue)"
-        >
-          <Headphones className="h-4 w-4" />
-          Cue preview
-        </button>
-        <button
-          type="button"
-          disabled={!track || !isLive}
-          onClick={() => onPlay()}
+          disabled={!track}
+          onClick={onRestart}
           className="flex items-center gap-1 rounded-lg border border-zinc-600 px-3 py-2 text-xs text-zinc-300 hover:border-zinc-400 disabled:opacity-30"
         >
           <RotateCcw className="h-4 w-4" />

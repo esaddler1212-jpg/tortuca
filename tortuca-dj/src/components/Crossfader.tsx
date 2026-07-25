@@ -44,8 +44,8 @@ export function Crossfader({
       </button>
 
       <p className="max-w-xs text-center text-xs text-zinc-500">
-        Full tracks play through one Spotify stream. Use cue preview on the idle deck,
-        then crossfade to hand off playback.
+        Both decks use your local files—play simultaneously and crossfade for a
+        real two-channel mix.
       </p>
 
       <style>{`

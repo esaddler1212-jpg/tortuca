@@ -69,6 +69,23 @@ export async function getPlaylistTracks(
   return tracks
 }
 
+export async function getSavedTracks(): Promise<SpotifyTrack[]> {
+  const tracks: SpotifyTrack[] = []
+  let url: string | null = '/me/tracks?limit=50'
+  while (url) {
+    const res = await spotifyFetch(url)
+    const data = await res.json()
+    for (const item of data.items as { track: SpotifyTrack | null }[]) {
+      if (item.track?.uri) tracks.push(item.track)
+    }
+    url = data.next
+      ? new URL(data.next).pathname.replace(/^\/v1/, '') +
+        new URL(data.next).search
+      : null
+  }
+  return tracks
+}
+
 export async function getAudioFeatures(
   trackIds: string[],
 ): Promise<Map<string, AudioFeatures>> {

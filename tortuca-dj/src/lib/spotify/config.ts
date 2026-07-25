@@ -1,11 +1,7 @@
 export const SPOTIFY_SCOPES = [
-  'streaming',
   'user-read-email',
   'user-read-private',
-  'playlist-read-private',
-  'playlist-read-collaborative',
-  'user-read-playback-state',
-  'user-modify-playback-state',
+  'user-library-read',
 ].join(' ')
 
 export const REDIRECT_URI =
