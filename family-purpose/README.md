@@ -15,6 +15,7 @@ Each check-in records:
 - Grade (K–12)
 - Class period
 - Reason(s) — a preset list plus free-text detail
+- Outcome (optional) — how the conversation ended, which feeds the impact report
 
 Logging students back-to-back is the common case, so the form is built for speed:
 
@@ -54,6 +55,28 @@ Oct–Dec) or full year:
 
 Reports carry counts only. Free-text notes from individual check-ins stay in the
 daily log and never appear in a shared summary.
+
+## Impact
+
+Where **Reports** answers "how much," the **Impact** tab answers "is it working."
+Pick a quarter or a year and it shows four measures:
+
+- **Students who come back** — how many were seen once versus repeatedly, how
+  many reached four or more check-ins, and how many weeks each student stayed
+  engaged. Sustained relationships, not one-off contacts.
+- **Attendance trend** — group attendance early in the period against later in
+  the period, month by month, plus each member's attendance rate.
+- **What check-ins are about** — reasons are grouped into *Intervention*
+  (behavior, attendance, conflict, family, referrals), *Support* (academic,
+  wellness) and *Growth* (goal-setting, career planning, recognition). The
+  period is split at the midpoint of the days actually logged and the two halves
+  are compared, so a shift from putting out fires toward forward-looking work
+  shows up as a change in percentage points.
+- **Outcomes** — the mix of how conversations ended, and what share of check-ins
+  have an outcome recorded at all, so the number can be read honestly.
+
+Like the reports, this is counts and trends only, and it exports to PDF, plain
+text, or email.
 
 ## Where the data lives
 

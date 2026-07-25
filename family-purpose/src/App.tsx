@@ -15,15 +15,17 @@ import LogTab from "./LogTab";
 import GroupTab from "./GroupTab";
 import DebriefTab from "./DebriefTab";
 import ReportsTab from "./ReportsTab";
+import ImpactTab from "./ImpactTab";
 import SettingsTab from "./SettingsTab";
 
-type Tab = "log" | "group" | "debrief" | "reports" | "settings";
+type Tab = "log" | "group" | "debrief" | "reports" | "impact" | "settings";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "log", label: "Log" },
   { id: "group", label: "Group" },
   { id: "debrief", label: "Debrief" },
   { id: "reports", label: "Reports" },
+  { id: "impact", label: "Impact" },
   { id: "settings", label: "Settings" },
 ];
 
@@ -120,6 +122,16 @@ export default function App() {
           sessions={sessions}
           settings={settings}
           onCopied={() => showToast("Summary copied")}
+          onPdfDownloaded={() => showToast("PDF downloaded")}
+        />
+      )}
+
+      {tab === "impact" && (
+        <ImpactTab
+          checkIns={history}
+          sessions={sessions}
+          settings={settings}
+          onCopied={() => showToast("Impact summary copied")}
           onPdfDownloaded={() => showToast("PDF downloaded")}
         />
       )}
