@@ -65,15 +65,52 @@ export const CHECK_IN_OUTCOMES = [
 
 export type CheckInOutcome = (typeof CHECK_IN_OUTCOMES)[number];
 
+/** Supports a student can be pointed toward, recorded on a follow-up. */
+export const RECOMMENDED_SERVICES = [
+  "School counselor",
+  "School psychologist",
+  "Social worker",
+  "Attendance / truancy support",
+  "Academic tutoring",
+  "Mentoring program",
+  "Food or clothing assistance",
+  "Housing or transportation support",
+  "Health services / school nurse",
+  "Family outreach",
+  "Behavior intervention plan",
+  "Community mental health",
+] as const;
+
+export type RecommendedService = (typeof RECOMMENDED_SERVICES)[number];
+
+/** How long after a check-in a follow-up is expected. */
+export const FOLLOW_UP_WINDOW_HOURS = 48;
+
+export interface FollowUp {
+  /** FOLLOW_UP_WINDOW_HOURS after the check-in that raised it. */
+  dueAt: string;
+  /** Set once the follow-up has happened. */
+  completedAt?: string;
+  /** What happened when you went back to the student. */
+  notes: string;
+  services: RecommendedService[];
+  careTeamReferral: boolean;
+}
+
 export interface CheckIn {
   id: string;
   studentName: string;
+  /** School-issued ID, used to identify the student on shared documents. */
+  studentId?: string;
   grade: string;
   classPeriod: string;
   reasons: CheckInReason[];
   reasonNotes: string;
   /** Absent on check-ins logged before outcomes were tracked. */
   outcome?: CheckInOutcome;
+  /** What actually happened, usually recorded after the conversation. */
+  outcomeNotes?: string;
+  followUp?: FollowUp;
   createdAt: string;
 }
 
@@ -97,6 +134,8 @@ export interface GroupSession {
 export interface DebriefSettings {
   staffEmail: string;
   companyEmail: string;
+  attendanceEmail: string;
+  careTeamEmail: string;
   yourName: string;
   yourRole: string;
   schoolName: string;
@@ -106,6 +145,8 @@ export interface DebriefSettings {
 export const DEFAULT_DEBRIEF_SETTINGS: DebriefSettings = {
   staffEmail: "",
   companyEmail: "",
+  attendanceEmail: "",
+  careTeamEmail: "",
   yourName: "",
   yourRole: "",
   schoolName: "",

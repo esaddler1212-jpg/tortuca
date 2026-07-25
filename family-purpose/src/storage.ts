@@ -110,6 +110,21 @@ export function addCheckIn(entry: Omit<CheckIn, "id" | "createdAt">): CheckIn {
   return newEntry;
 }
 
+/** Applies a partial edit to one check-in, such as recording its outcome. */
+export function updateCheckIn(
+  id: string,
+  patch: Partial<Omit<CheckIn, "id" | "createdAt">>,
+): CheckIn | null {
+  const checkIns = loadAllCheckIns();
+  const index = checkIns.findIndex((c) => c.id === id);
+  if (index < 0) return null;
+  const updated = { ...checkIns[index], ...patch };
+  const next = [...checkIns];
+  next[index] = updated;
+  saveAllCheckIns(next);
+  return updated;
+}
+
 export function deleteCheckIn(id: string): void {
   saveAllCheckIns(loadAllCheckIns().filter((c) => c.id !== id));
 }

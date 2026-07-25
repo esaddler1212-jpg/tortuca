@@ -3,6 +3,7 @@ import { CHECK_IN_REASONS } from "./types";
 
 export interface StudentProfile {
   name: string;
+  studentId: string;
   grade: string;
   classPeriod: string;
   lastCheckInAt: string;
@@ -27,6 +28,7 @@ export function buildRoster(checkIns: CheckIn[]): StudentProfile[] {
     if (!existing) {
       byStudent.set(key, {
         name: c.studentName.trim(),
+        studentId: c.studentId?.trim() ?? "",
         grade: c.grade,
         classPeriod: c.classPeriod,
         lastCheckInAt: c.createdAt,
@@ -35,6 +37,8 @@ export function buildRoster(checkIns: CheckIn[]): StudentProfile[] {
       continue;
     }
     existing.count += 1;
+    // An ID entered on any visit sticks, even if a later one was left blank.
+    if (c.studentId?.trim()) existing.studentId = c.studentId.trim();
     if (c.createdAt > existing.lastCheckInAt) {
       existing.name = c.studentName.trim();
       existing.grade = c.grade;
