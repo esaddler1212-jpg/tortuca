@@ -51,7 +51,23 @@ function CheckInForm({
   const [reasons, setReasons] = useState<CheckInReason[]>([]);
   const [reasonNotes, setReasonNotes] = useState("");
   const [error, setError] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const nameInput = useRef<HTMLInputElement>(null);
+
+  /**
+   * A hand-rolled list rather than a native <datalist>: the native popup is
+   * unreliable on mobile and Chrome clears the field when Escape closes it.
+   */
+  const nameMatches = useMemo(() => {
+    const query = normalizeName(studentName);
+    if (!query) return [];
+    return roster
+      .filter((s) => {
+        const candidate = normalizeName(s.name);
+        return candidate.includes(query) && candidate !== query;
+      })
+      .slice(0, 5);
+  }, [roster, studentName]);
 
   const toggleReason = (r: CheckInReason) => {
     setReasons((prev) =>
@@ -71,8 +87,16 @@ function CheckInForm({
 
   const quickPick = (student: StudentProfile) => {
     applyStudent(student.name);
-    nameInput.current?.focus();
+    setShowSuggestions(false);
   };
+
+  /** Escape clears the field it is pressed in, matching browser expectations. */
+  const clearOnEscape =
+    (clear: () => void) => (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key !== "Escape") return;
+      clear();
+      setShowSuggestions(false);
+    };
 
   const alreadyLoggedToday =
     studentName.trim().length > 0 && todayNames.has(normalizeName(studentName));
@@ -115,8 +139,12 @@ function CheckInForm({
 
       {suggestions.length > 0 && (
         <div className="field">
-          <label>Recent students — tap to fill</label>
-          <div className="pill-row">
+          <label id="recent-students-label">Recent students — tap to fill</label>
+          <div
+            className="pill-row"
+            role="group"
+            aria-labelledby="recent-students-label"
+          >
             {suggestions.map((s) => (
               <button
                 key={s.name}
@@ -138,21 +166,45 @@ function CheckInForm({
           id="studentName"
           ref={nameInput}
           value={studentName}
-          onChange={(e) => applyStudent(e.target.value)}
+          onChange={(e) => {
+            applyStudent(e.target.value);
+            setShowSuggestions(true);
+          }}
+          onFocus={() => setShowSuggestions(true)}
+          onBlur={() => setShowSuggestions(false)}
+          onKeyDown={clearOnEscape(() => setStudentName(""))}
           placeholder="e.g. Maria Lopez"
-          list="roster-names"
           autoComplete="off"
           enterKeyHint="done"
           // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
         />
-        <datalist id="roster-names">
-          {roster.map((s) => (
-            <option key={s.name} value={s.name} />
-          ))}
-        </datalist>
+        {showSuggestions && nameMatches.length > 0 && (
+          <ul className="suggestions" aria-label="Matching students">
+            {nameMatches.map((s) => (
+              <li key={s.name}>
+                <button
+                  type="button"
+                  className="suggestion"
+                  // Fires before blur, so the click is never lost.
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    quickPick(s);
+                  }}
+                >
+                  <span>{s.name}</span>
+                  <span className="pill-meta">
+                    Gr {s.grade} · {s.classPeriod}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
         {alreadyLoggedToday && (
-          <p className="hint">Already checked in today — this adds a second entry.</p>
+          <p className="hint">
+            Already checked in today — this adds a second entry.
+          </p>
         )}
       </div>
 
@@ -177,22 +229,21 @@ function CheckInForm({
             id="period"
             value={classPeriod}
             onChange={(e) => setClassPeriod(e.target.value)}
+            onKeyDown={clearOnEscape(() => setClassPeriod(""))}
             placeholder="e.g. Period 3 — Algebra"
-            list="recent-periods"
             autoComplete="off"
           />
-          <datalist id="recent-periods">
-            {recentPeriods.map((p) => (
-              <option key={p} value={p} />
-            ))}
-          </datalist>
         </div>
       </div>
 
       {recentPeriods.length > 0 && (
         <div className="field">
-          <label>Recent periods</label>
-          <div className="pill-row">
+          <label id="recent-periods-label">Recent periods</label>
+          <div
+            className="pill-row"
+            role="group"
+            aria-labelledby="recent-periods-label"
+          >
             {recentPeriods.map((p) => (
               <button
                 key={p}
@@ -271,7 +322,7 @@ function TodayList({
   return (
     <div className="card">
       <h2>Today&apos;s check-ins ({checkIns.length})</h2>
-      <ul className="checkin-list">
+      <ul className="checkin-list" aria-label="Today's check-ins">
         {checkIns.map((c) => (
           <li key={c.id} className="checkin-item">
             <div className="checkin-item-header">

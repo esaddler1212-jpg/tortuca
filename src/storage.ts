@@ -21,6 +21,11 @@ export function getTodayDateLabel(): string {
   });
 }
 
+/** Drops the in-memory copy so the next read comes from localStorage. */
+export function clearCheckInCache(): void {
+  checkInCache = null;
+}
+
 export function loadAllCheckIns(): CheckIn[] {
   if (checkInCache) return checkInCache;
   try {
