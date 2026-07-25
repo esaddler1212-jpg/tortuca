@@ -12,7 +12,7 @@ Student check-in log with an end-of-day debrief for school staff and your employ
 ## Fast entry
 
 - **Recent students** — tap a name to fill in that student’s grade and period
-- **Name autocomplete** — typing a known name fills the rest
+- **Name suggestions** — start typing and pick a match, or type a known name in full and the rest fills itself
 - **Recent periods** — tap to set the class period
 - **Reason pills** — one tap each, ordered by how often you use them
 - **Sticky class** — grade and period stay set after saving, so the next student in the same room needs only a name and a reason
