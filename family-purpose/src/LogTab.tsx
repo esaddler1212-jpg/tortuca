@@ -1,5 +1,11 @@
 import { useMemo, useRef, useState } from "react";
-import { GRADES, type CheckIn, type CheckInReason } from "./types";
+import {
+  CHECK_IN_OUTCOMES,
+  GRADES,
+  type CheckIn,
+  type CheckInOutcome,
+  type CheckInReason,
+} from "./types";
 import { addCheckIn, deleteCheckIn } from "./storage";
 import {
   findStudent,
@@ -24,6 +30,7 @@ function CheckInForm({
   const [grade, setGrade] = useState<string>("9");
   const [classPeriod, setClassPeriod] = useState("");
   const [reasons, setReasons] = useState<CheckInReason[]>([]);
+  const [outcome, setOutcome] = useState<CheckInOutcome | null>(null);
   const [reasonNotes, setReasonNotes] = useState("");
   const [error, setError] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -97,10 +104,12 @@ function CheckInForm({
       classPeriod: classPeriod.trim(),
       reasons,
       reasonNotes: reasonNotes.trim(),
+      ...(outcome ? { outcome } : {}),
     });
     // Grade and period carry over: consecutive check-ins usually share a class.
     setStudentName("");
     setReasons([]);
+    setOutcome(null);
     setReasonNotes("");
     nameInput.current?.focus();
     onSaved();
@@ -247,6 +256,26 @@ function CheckInForm({
                 onClick={() => toggleReason(r)}
               >
                 {r}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="field">
+        <label id="outcome-label">Outcome (optional)</label>
+        <div className="pill-row" role="group" aria-labelledby="outcome-label">
+          {CHECK_IN_OUTCOMES.map((o) => {
+            const selected = outcome === o;
+            return (
+              <button
+                key={o}
+                type="button"
+                className={`pill ${selected ? "pill-active" : ""}`}
+                aria-pressed={selected}
+                onClick={() => setOutcome(selected ? null : o)}
+              >
+                {o}
               </button>
             );
           })}
