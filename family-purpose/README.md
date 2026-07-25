@@ -12,10 +12,12 @@ anything else in this repository.
 Each check-in records:
 
 - Student name
+- Student ID — optional, and what identifies the student on anything you send out
 - Grade (K–12)
 - Class period
 - Reason(s) — a preset list plus free-text detail
-- Outcome (optional) — how the conversation ended, which feeds the impact report
+- Outcome — how the conversation ended; can be left blank now and filled in later
+- A 48-hour follow-up, if the conversation needs one
 
 Logging students back-to-back is the common case, so the form is built for speed:
 
@@ -28,6 +30,26 @@ Logging students back-to-back is the common case, so the form is built for speed
 - **Sticky class** — grade and period stay set after saving, so the next student
   in the same room needs only a name and a reason
 
+## Follow-up
+
+Outcomes are usually not known when the student walks out, so the **Follow-up**
+tab is where the day gets tidied up before anything is sent.
+
+- **Awaiting an outcome** — check-ins from the past week with nothing recorded
+  yet. Write what happened and tap an outcome.
+- **The 48-hour queue** — anything you ticked "follow up within 48 hours" on,
+  split into overdue, due today and upcoming, oldest deadline first. Ticking the
+  "Follow-up scheduled" outcome schedules one for you.
+- **Recommended services** — School counselor, social worker, attendance
+  support, food or clothing assistance, family outreach and the rest. Tap the
+  ones a student needs.
+- **CARE team referral** — a checkbox that moves the student onto the CARE team
+  debrief without putting their detail into the debrief that goes to everyone
+  else.
+
+The tab carries a badge with everything outstanding, so it is visible without
+going looking for it.
+
 ## Group sign-in
 
 The **Group** tab is a standing sign-in sheet for a mentoring group, named
@@ -38,10 +60,24 @@ The **Group** tab is a standing sign-in sheet for a mentoring group, named
 - Record the day’s focus and session notes
 - Today’s session is folded into the end-of-day debrief
 
-## End-of-day debrief
+## Debriefs
 
-The **Debrief** tab writes up the day’s check-ins and group sign-in. Download it
-as a PDF, copy the text, or open your email client with recipients from Settings.
+Different people need different things, so the **Debrief** tab holds four
+documents. Each one previews on screen and exports as a PDF, plain text, or an
+email addressed from Settings.
+
+- **End-of-day debrief** — the day's check-ins with student IDs, outcomes, the
+  group sign-in, and every follow-up still owed. Goes to school staff and
+  Family Purpose. Where a student was referred to the CARE team it says so, and
+  nothing more.
+- **Attendance clerk list** — time, name, ID, grade and the class each student
+  came from, in arrival order, so the clerk can reconcile the period.
+- **Weekly summary** — who was checked in with each day of the week, who was
+  seen more than once, the group sessions held, and what is still open.
+- **CARE team referrals** — the confidential one. Full detail for each referred
+  student: context, outcome, recommended services and follow-up notes, over the
+  last week, 30 days or 90 days. It has its own recipient in Settings and its
+  own email button so it cannot go out with the daily debrief by mistake.
 
 ## Quarterly and yearly reports
 
