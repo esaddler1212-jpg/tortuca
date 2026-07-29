@@ -471,6 +471,23 @@ label {
   font-size: 0.9rem;
 }
 
+.connectivity-banner {
+  margin: 0 0 0.75rem;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--danger);
+  border-radius: var(--radius);
+  background: var(--surface-elevated);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.connectivity-banner .hint {
+  margin: 0;
+}
+
 .schedule-minimum {
   border-left-color: var(--success);
 }

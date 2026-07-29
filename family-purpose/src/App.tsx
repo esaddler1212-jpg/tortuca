@@ -13,6 +13,8 @@ import {
 import { buildRecentPeriods, buildRoster, orderReasonsByUse } from "./roster";
 import LogTab from "./LogTab";
 import { buildFollowUpQueue, needsOutcome } from "./followups";
+import { ConnectivityBannerLive } from "./ConnectivityBanner";
+import { useAutoBackupOnReconnect } from "./useAutoBackup";
 
 const FollowUpTab = lazy(() => import("./FollowUpTab"));
 const GroupTab = lazy(() => import("./GroupTab"));
@@ -58,8 +60,10 @@ export default function App() {
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
-    setTimeout(() => setToast(""), 2500);
+    setTimeout(() => setToast(""), 3500);
   }, []);
+
+  useAutoBackupOnReconnect(settings, showToast);
 
   /** Bumped whenever stored data changes so the derived views recompute. */
   const onChanged = useCallback(
@@ -97,6 +101,8 @@ export default function App() {
         <h1>Family Purpose</h1>
         <p>{getTodayDateLabel()} — student check-in log</p>
       </header>
+
+      <ConnectivityBannerLive />
 
       <nav className="tabs" aria-label="Main">
         {TABS.map((t) => (

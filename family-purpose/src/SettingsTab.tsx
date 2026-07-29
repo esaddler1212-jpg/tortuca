@@ -7,12 +7,19 @@ import {
   parseBackup,
   restoreBackup,
 } from "./backup";
+import {
+  formatLastBackupLabel,
+  loadBackupState,
+  needsBackup,
+} from "./autoBackup";
 import SchoolScheduleCard from "./SchoolScheduleCard";
 
 function DataBackup({ onRestored }: { onRestored: () => void }) {
   const fileInput = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const lastBackup = formatLastBackupLabel(loadBackupState());
+  const pending = needsBackup();
 
   const restore = async (file: File) => {
     setError("");
@@ -35,10 +42,19 @@ function DataBackup({ onRestored }: { onRestored: () => void }) {
     <div className="card">
       <h2>Data backup</h2>
       <p className="hint" style={{ marginBottom: "1rem" }}>
-        Check-ins live in this browser only. Save a backup regularly so the
-        record survives a cleared browser or a new device — and so the data is
-        available later for impact reporting.
+        Check-ins live on this Chromebook. Install the app once while you have
+        internet, then log students all day offline. When your hotspot connects,
+        new data backs up automatically (see Offline &amp; auto-backup below).
       </p>
+      {pending && (
+        <p className="hint" style={{ marginBottom: "1rem" }}>
+          <strong>Not backed up yet</strong> — connect to the internet or tap
+          Download backup below.
+        </p>
+      )}
+      {lastBackup && (
+        <p className="hint" style={{ marginBottom: "1rem" }}>{lastBackup}</p>
+      )}
       <div className="btn-row">
         <button
           type="button"
@@ -91,7 +107,7 @@ export default function SettingsTab({
     setForm(settings);
   }, [settings]);
 
-  const update = (key: keyof DebriefSettings, value: string) => {
+  const update = (key: keyof DebriefSettings, value: string | boolean) => {
     setForm((f) => ({ ...f, [key]: value }));
   };
 
@@ -186,6 +202,59 @@ export default function SettingsTab({
         <p className="hint">
           CARE team referrals go here and nowhere else.
         </p>
+      </div>
+      <h3 style={{ marginTop: "1.25rem", marginBottom: "0.35rem" }}>
+        Offline &amp; auto-backup
+      </h3>
+      <p className="hint" style={{ marginBottom: "1rem" }}>
+        At school without Wi‑Fi, the app keeps working after you open it once
+        with internet. Turn on your phone hotspot later and new check-ins back up
+        on their own — usually as a file in Downloads, or to a URL if Family
+        Purpose gives you one.
+      </p>
+      <div className="field">
+        <label className="checkbox">
+          <input
+            type="checkbox"
+            checked={form.autoBackupEnabled}
+            onChange={(e) => update("autoBackupEnabled", e.target.checked)}
+          />
+          <span>Back up automatically when the internet comes back</span>
+        </label>
+      </div>
+      <div className="field">
+        <label htmlFor="deviceLabel">This Chromebook (optional)</label>
+        <input
+          id="deviceLabel"
+          value={form.deviceLabel}
+          onChange={(e) => update("deviceLabel", e.target.value)}
+          placeholder="e.g. Jordan work Chromebook"
+        />
+      </div>
+      <div className="field">
+        <label htmlFor="backupUploadUrl">Backup upload URL (optional)</label>
+        <input
+          id="backupUploadUrl"
+          type="url"
+          value={form.backupUploadUrl}
+          onChange={(e) => update("backupUploadUrl", e.target.value)}
+          placeholder="https://your-site.netlify.app/api/family-purpose-backup"
+        />
+        <p className="hint">
+          Leave blank to save a JSON file to Downloads when you are online. If
+          Family Purpose hosts a backup endpoint, paste it here instead.
+        </p>
+      </div>
+      <div className="field">
+        <label htmlFor="backupUploadKey">Backup upload key (optional)</label>
+        <input
+          id="backupUploadKey"
+          type="password"
+          value={form.backupUploadKey}
+          onChange={(e) => update("backupUploadKey", e.target.value)}
+          placeholder="Only if your upload URL requires a key"
+          autoComplete="off"
+        />
       </div>
       <button type="submit" className="btn btn-primary">
         Save settings

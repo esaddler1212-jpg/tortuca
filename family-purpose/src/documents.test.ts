@@ -13,8 +13,10 @@ import type {
   FollowUp,
   GroupSession,
 } from "./types";
+import { DEFAULT_DEBRIEF_SETTINGS } from "./types";
 
 const settings: DebriefSettings = {
+  ...DEFAULT_DEBRIEF_SETTINGS,
   staffEmail: "counselor@school.edu",
   companyEmail: "supervisor@company.com",
   attendanceEmail: "attendance@school.edu",

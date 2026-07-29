@@ -6,6 +6,12 @@ import "./index.css";
 
 migrateRenamedKeys();
 
+if (import.meta.env.PROD) {
+  void import("virtual:pwa-register").then(({ registerSW }) => {
+    registerSW({ immediate: true });
+  });
+}
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App />

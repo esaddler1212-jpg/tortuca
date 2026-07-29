@@ -165,8 +165,32 @@ Built for **ChromeOS stable-channel Chrome** (including current builds such as
 Chrome 150) on typical school hardware — including dual-core Celeron
 Chromebooks (e.g. Intel Celeron N4000).
 
-- **No install** — open the site in Chrome, same as any web app. Data stays in
-  the browser on that Chromebook.
+### Work offline at school
+
+1. **Once** — on your phone hotspot, open the app in Chrome and **install it**
+   (Chrome menu → **Install Family Purpose**, or **Add to shelf**).
+2. **All day** — log check-ins with no Wi‑Fi. Data stays on the Chromebook.
+3. **After school** — turn on the hotspot. If **Back up automatically when the
+   internet comes back** is on in Settings (default), a JSON backup lands in
+   **Downloads** when there is new data since the last backup.
+
+You will see an **Offline** banner while disconnected; it disappears when you
+are online again.
+
+### Auto-backup options
+
+| Setting | What happens when you connect |
+| --- | --- |
+| Auto-backup on, no upload URL | `family-purpose-backup-YYYY-MM-DD.json` in Downloads |
+| Auto-backup on + upload URL | JSON POST to Family Purpose (or your Netlify site) |
+| Auto-backup off | Use **Download backup (JSON)** manually in Settings |
+
+Optional **upload URL** for Family Purpose: deploy this folder to Netlify and set
+`FAMILY_PURPOSE_BACKUP_KEY` in the site environment. Paste
+`https://your-site.netlify.app/api/family-purpose-backup` and the same key in
+Settings.
+
+### Performance on slower Chromebooks
 - **Light first load** — only the Log tab code loads at startup; Reports, Debrief,
   Impact and the rest load when you open them. PDF libraries load only when you
   tap **Download PDF**.

@@ -140,6 +140,14 @@ export interface DebriefSettings {
   yourRole: string;
   schoolName: string;
   groupName: string;
+  /** When true, new data is backed up after the device comes back online. */
+  autoBackupEnabled: boolean;
+  /** Shown on uploaded backups, e.g. "Jordan Chromebook". */
+  deviceLabel: string;
+  /** Optional POST URL (Family Purpose or Netlify) to upload JSON instead of downloading. */
+  backupUploadUrl: string;
+  /** Optional shared secret sent as X-Backup-Key when uploading. */
+  backupUploadKey: string;
 }
 
 export const DEFAULT_DEBRIEF_SETTINGS: DebriefSettings = {
@@ -151,6 +159,10 @@ export const DEFAULT_DEBRIEF_SETTINGS: DebriefSettings = {
   yourRole: "",
   schoolName: "",
   groupName: "BOYS Group",
+  autoBackupEnabled: true,
+  deviceLabel: "",
+  backupUploadUrl: "",
+  backupUploadKey: "",
 };
 
 export const GRADES = [

@@ -6,16 +6,18 @@ import {
   describeReasonShift,
 } from "./impact";
 import { getRange } from "./reports";
-import type {
-  CheckIn,
-  CheckInOutcome,
-  CheckInReason,
-  DebriefSettings,
-  GroupSession,
+import {
+  categoryOf,
+  DEFAULT_DEBRIEF_SETTINGS,
+  type CheckIn,
+  type CheckInOutcome,
+  type CheckInReason,
+  type DebriefSettings,
+  type GroupSession,
 } from "./types";
-import { categoryOf } from "./types";
 
 const settings: DebriefSettings = {
+  ...DEFAULT_DEBRIEF_SETTINGS,
   staffEmail: "counselor@school.edu",
   companyEmail: "supervisor@company.com",
   attendanceEmail: "attendance@school.edu",
