@@ -61,6 +61,12 @@ async function openTab(
 ) {
   const nav = screen.getByRole("navigation", { name: "Main" });
   await u.click(within(nav).getByRole("button", { name }));
+  const label = typeof name === "string" ? name : name.source;
+  if (/Follow-up/.test(label)) {
+    await screen.findByRole("heading", { name: "Follow-up" });
+  } else if (/Debrief/.test(label)) {
+    await screen.findByRole("heading", { name: "Send a debrief" });
+  }
 }
 
 describe("scheduling a follow-up", () => {

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useMemo, useState } from "react";
 import type { DebriefSettings } from "./types";
 import {
   getOrCreateSession,
@@ -12,13 +12,22 @@ import {
 } from "./storage";
 import { buildRecentPeriods, buildRoster, orderReasonsByUse } from "./roster";
 import LogTab from "./LogTab";
-import FollowUpTab from "./FollowUpTab";
-import GroupTab from "./GroupTab";
-import DebriefTab from "./DebriefTab";
-import ReportsTab from "./ReportsTab";
-import ImpactTab from "./ImpactTab";
-import SettingsTab from "./SettingsTab";
 import { buildFollowUpQueue, needsOutcome } from "./followups";
+
+const FollowUpTab = lazy(() => import("./FollowUpTab"));
+const GroupTab = lazy(() => import("./GroupTab"));
+const DebriefTab = lazy(() => import("./DebriefTab"));
+const ReportsTab = lazy(() => import("./ReportsTab"));
+const ImpactTab = lazy(() => import("./ImpactTab"));
+const SettingsTab = lazy(() => import("./SettingsTab"));
+
+function TabLoading() {
+  return (
+    <div className="card hint" role="status">
+      Loading…
+    </div>
+  );
+}
 
 type Tab =
   | "log"
@@ -116,65 +125,67 @@ export default function App() {
         />
       )}
 
-      {tab === "followup" && (
-        <FollowUpTab checkIns={history} onChanged={onChanged} />
-      )}
+      <Suspense fallback={<TabLoading />}>
+        {tab === "followup" && (
+          <FollowUpTab checkIns={history} onChanged={onChanged} />
+        )}
 
-      {tab === "group" && (
-        <GroupTab
-          settings={settings}
-          members={members}
-          sessions={sessions}
-          roster={roster}
-          onChanged={onChanged}
-        />
-      )}
+        {tab === "group" && (
+          <GroupTab
+            settings={settings}
+            members={members}
+            sessions={sessions}
+            roster={roster}
+            onChanged={onChanged}
+          />
+        )}
 
-      {tab === "debrief" && (
-        <DebriefTab
-          checkIns={todayCheckIns}
-          allCheckIns={history}
-          sessions={sessions}
-          session={todaySession}
-          settings={settings}
-          onCopied={() => showToast("Debrief copied")}
-          onPdfDownloaded={() => showToast("PDF downloaded")}
-        />
-      )}
+        {tab === "debrief" && (
+          <DebriefTab
+            checkIns={todayCheckIns}
+            allCheckIns={history}
+            sessions={sessions}
+            session={todaySession}
+            settings={settings}
+            onCopied={() => showToast("Debrief copied")}
+            onPdfDownloaded={() => showToast("PDF downloaded")}
+          />
+        )}
 
-      {tab === "reports" && (
-        <ReportsTab
-          checkIns={history}
-          sessions={sessions}
-          settings={settings}
-          onCopied={() => showToast("Summary copied")}
-          onPdfDownloaded={() => showToast("PDF downloaded")}
-        />
-      )}
+        {tab === "reports" && (
+          <ReportsTab
+            checkIns={history}
+            sessions={sessions}
+            settings={settings}
+            onCopied={() => showToast("Summary copied")}
+            onPdfDownloaded={() => showToast("PDF downloaded")}
+          />
+        )}
 
-      {tab === "impact" && (
-        <ImpactTab
-          checkIns={history}
-          sessions={sessions}
-          settings={settings}
-          onCopied={() => showToast("Impact summary copied")}
-          onPdfDownloaded={() => showToast("PDF downloaded")}
-        />
-      )}
+        {tab === "impact" && (
+          <ImpactTab
+            checkIns={history}
+            sessions={sessions}
+            settings={settings}
+            onCopied={() => showToast("Impact summary copied")}
+            onPdfDownloaded={() => showToast("PDF downloaded")}
+          />
+        )}
 
-      {tab === "settings" && (
-        <SettingsTab
-          settings={settings}
-          onSave={(s) => {
-            setSettings(s);
-            showToast("Settings saved");
-          }}
-          onRestored={() => {
-            setSettings(loadDebriefSettings());
-            onChanged("Backup restored");
-          }}
-        />
-      )}
+        {tab === "settings" && (
+          <SettingsTab
+            settings={settings}
+            onSave={(s) => {
+              setSettings(s);
+              showToast("Settings saved");
+            }}
+            onRestored={() => {
+              setSettings(loadDebriefSettings());
+              onChanged("Backup restored");
+            }}
+          />
+        )}
+      </Suspense>
 
       {toast && (
         <div className="toast" role="status">

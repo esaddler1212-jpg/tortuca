@@ -49,6 +49,7 @@ function seed(checkIns: CheckIn[], sessions: GroupSession[] = []): void {
 
 async function openImpact(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole("button", { name: "Impact" }));
+  await screen.findByRole("heading", { name: "Impact" });
 }
 
 describe("Impact tab", () => {

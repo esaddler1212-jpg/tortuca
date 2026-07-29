@@ -171,6 +171,7 @@ describe("school terms in reporting", () => {
     render(<App />);
 
     await user.click(screen.getByRole("button", { name: "Reports" }));
+    await screen.findByLabelText("Period");
 
     expect(screen.getByLabelText("Period")).toHaveValue("term:q1");
     expect(screen.getByLabelText("Summary preview")).toHaveTextContent(
@@ -188,6 +189,7 @@ describe("school terms in reporting", () => {
     render(<App />);
 
     await user.click(screen.getByRole("button", { name: "Reports" }));
+    await screen.findByLabelText("Period");
 
     await user.selectOptions(screen.getByLabelText("Period"), "term:q1");
     expect(screen.getByLabelText("Summary preview")).toHaveTextContent(
@@ -212,6 +214,7 @@ describe("school terms in reporting", () => {
     render(<App />);
 
     await user.click(screen.getByRole("button", { name: "Reports" }));
+    await screen.findByLabelText("Period");
     await user.selectOptions(screen.getByLabelText("Period"), "cal:2026:q3");
 
     expect(screen.getByLabelText("Summary preview")).toHaveTextContent(
@@ -237,6 +240,7 @@ describe("the schedule reference in settings", () => {
     render(<App />);
 
     await user.click(screen.getByRole("button", { name: "Settings" }));
+    await screen.findByRole("heading", { name: "School schedule" });
 
     const table = screen.getByRole("table", {
       name: "7th & 8th grade — Mon, Tue, Thu, Fri",
@@ -257,6 +261,7 @@ describe("the schedule reference in settings", () => {
     render(<App />);
 
     await user.click(screen.getByRole("button", { name: "Settings" }));
+    await screen.findByRole("heading", { name: "School schedule" });
 
     const terms = screen.getByRole("table", { name: "School terms" });
     const q1 = within(terms).getByText("Quarter 1").closest("tr")!;

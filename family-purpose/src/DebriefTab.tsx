@@ -10,6 +10,8 @@ import {
   weekRange,
 } from "./documents";
 import { careTeamReferrals } from "./followups";
+import { PDF_PREP_HINT } from "./lowPowerHint";
+import { yieldToMain } from "./yieldMain";
 
 type DocumentId = "debrief" | "attendance" | "weekly" | "care";
 
@@ -119,15 +121,17 @@ export default function DebriefTab({
     onCopied();
   };
 
-  /** The PDF library is heavy, so it loads only when a PDF is requested. */
   const downloadPdf = async () => {
     setPdfBusy(true);
     try {
+      await yieldToMain();
       if (docId === "debrief") {
         const { downloadDebriefPdf } = await import("./debriefPdf");
+        await yieldToMain();
         downloadDebriefPdf(checkIns, settings, session, allCheckIns);
       } else {
         const pdfs = await import("./documentPdfs");
+        await yieldToMain();
         if (docId === "attendance") {
           pdfs.downloadAttendanceListPdf(allCheckIns, todayKey(), settings);
         } else if (docId === "weekly") {
@@ -277,6 +281,7 @@ export default function DebriefTab({
         )}
       </div>
 
+      {PDF_PREP_HINT && <p className="hint">{PDF_PREP_HINT}</p>}
       <p className="hint">
         Add recipients in Settings so the email buttons pre-fill addresses.
       </p>

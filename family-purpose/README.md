@@ -159,6 +159,27 @@ JSON file holding every check-in, group session, and setting, and can restore
 them onto a new device or browser. That file is also what a future impact
 analysis would read from.
 
+## Chromebooks and school devices
+
+Built for **ChromeOS stable-channel Chrome** (including current builds such as
+Chrome 150) on typical school hardware — including dual-core Celeron
+Chromebooks (e.g. Intel Celeron N4000).
+
+- **No install** — open the site in Chrome, same as any web app. Data stays in
+  the browser on that Chromebook.
+- **Light first load** — only the Log tab code loads at startup; Reports, Debrief,
+  Impact and the rest load when you open them. PDF libraries load only when you
+  tap **Download PDF**.
+- **No web fonts** — the UI uses the system font so the first screen does not wait
+  on Google Fonts over a slow school network.
+- **PDFs on slower CPUs** — the button shows **Preparing PDF…** while the file is
+  built. On dual-core devices you may also see a short note that the first PDF
+  can take a few seconds; copy-to-clipboard and email use plain text and stay
+  snappy.
+
+If PDF export is painfully slow, use **Copy to clipboard** or **Email** for the
+daily debrief and save PDFs for end-of-week summaries when you have a moment.
+
 ## Development
 
 ```bash

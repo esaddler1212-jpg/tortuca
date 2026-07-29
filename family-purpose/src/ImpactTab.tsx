@@ -9,6 +9,8 @@ import {
   describeReasonShift,
 } from "./impact";
 import { buildMailtoUrl } from "./debrief";
+import { PDF_PREP_HINT } from "./lowPowerHint";
+import { yieldToMain } from "./yieldMain";
 
 function signed(value: number, suffix = ""): string {
   return value > 0 ? `+${value}${suffix}` : `${value}${suffix}`;
@@ -62,7 +64,9 @@ export default function ImpactTab({
   const downloadPdf = async () => {
     setPdfBusy(true);
     try {
+      await yieldToMain();
       const { downloadImpactPdf } = await import("./impactPdf");
+      await yieldToMain();
       downloadImpactPdf(report, settings);
       onPdfDownloaded();
     } finally {
@@ -268,6 +272,7 @@ export default function ImpactTab({
             Email staff &amp; company
           </button>
         </div>
+        {PDF_PREP_HINT && <p className="hint">{PDF_PREP_HINT}</p>}
       </div>
     </>
   );

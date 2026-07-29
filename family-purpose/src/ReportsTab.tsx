@@ -4,6 +4,8 @@ import { buildPeriodReport, buildReportText } from "./reports";
 import { defaultPeriodChoice, periodChoices } from "./periods";
 import PeriodPicker from "./PeriodPicker";
 import { buildMailtoUrl } from "./debrief";
+import { PDF_PREP_HINT } from "./lowPowerHint";
+import { yieldToMain } from "./yieldMain";
 
 function StatGrid({
   report,
@@ -73,7 +75,9 @@ export default function ReportsTab({
   const downloadPdf = async () => {
     setPdfBusy(true);
     try {
+      await yieldToMain();
       const { downloadReportPdf } = await import("./reportPdf");
+      await yieldToMain();
       downloadReportPdf(report, settings);
       onPdfDownloaded();
     } finally {
@@ -132,6 +136,7 @@ export default function ReportsTab({
           Email staff &amp; company
         </button>
       </div>
+      {PDF_PREP_HINT && <p className="hint">{PDF_PREP_HINT}</p>}
     </div>
   );
 }

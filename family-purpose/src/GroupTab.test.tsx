@@ -22,6 +22,7 @@ function seedSessions(sessions: GroupSession[]): void {
 
 async function openGroupTab(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole("button", { name: "Group" }));
+  await screen.findByRole("heading", { name: /sign-in$/i });
 }
 
 describe("group sign-in", () => {
@@ -152,6 +153,7 @@ describe("group sign-in", () => {
       ),
     );
     await user.click(screen.getByRole("button", { name: "Debrief" }));
+    await screen.findByRole("heading", { name: "Send a debrief" });
 
     const preview = screen.getByLabelText("End-of-day debrief preview");
     expect(preview).toHaveTextContent("BOYS Group signed in today: 1");
@@ -195,6 +197,7 @@ describe("reports tab", () => {
     render(<App />);
 
     await user.click(screen.getByRole("button", { name: "Reports" }));
+    await screen.findByLabelText("Period");
     await user.selectOptions(screen.getByLabelText("Period"), `cal:${year}:q1`);
 
     const preview = screen.getByLabelText("Summary preview");
