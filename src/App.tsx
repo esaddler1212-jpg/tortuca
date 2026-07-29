@@ -1,3 +1,4 @@
+import { EasySupplyPanel } from "./components/EasySupplyPanel";
 import { MorningBriefing } from "./components/MorningBriefing";
 import { WeatherPanel } from "./components/WeatherPanel";
 import { TodoPanel } from "./components/TodoPanel";
@@ -9,9 +10,10 @@ import { useWeather } from "./hooks/useWeather";
 import { useTodos } from "./hooks/useTodos";
 import { useGoogleIntegration, useSchedule } from "./hooks/useGoogle";
 import { useEmails } from "./hooks/useEmails";
+import { useWoodhouse } from "./hooks/useWoodhouse";
 
 export default function App() {
-  const { settings, updateCity, saving, error, setError } = useSettings();
+  const { settings, persist, updateCity, saving, error, setError } = useSettings();
   const { weather, loading: weatherLoading, error: weatherError, refresh } = useWeather(settings);
   const { pending, done, add, toggle, remove } = useTodos();
   const { connected, accountEmail, connect, disconnect } = useGoogleIntegration();
@@ -19,6 +21,8 @@ export default function App() {
     useSchedule(connected);
   const { messages, loading: emailLoading, error: emailError, refresh: refreshEmail, unread } =
     useEmails(connected);
+  const { snapshot: woodhouse, source: woodhouseSource, loading: woodhouseLoading, error: woodhouseError, lastSync, refresh: refreshWoodhouse } =
+    useWoodhouse();
 
   const nextEvent = allEvents[0]?.title;
   const displayName = accountEmail?.split("@")[0];
@@ -44,6 +48,17 @@ export default function App() {
           unreadEmails={unread}
           nextEventTitle={nextEvent}
           userName={displayName}
+          woodhouse={woodhouse}
+        />
+
+        <EasySupplyPanel
+          snapshot={woodhouse}
+          source={woodhouseSource}
+          loading={woodhouseLoading}
+          error={woodhouseError}
+          lastSync={lastSync}
+          onRefresh={() => void refreshWoodhouse()}
+          onImportAction={(title) => add(title)}
         />
 
         <div className="grid gap-6 lg:grid-cols-2">
@@ -80,6 +95,10 @@ export default function App() {
         onSaveCity={async (city) => {
           setError(null);
           return updateCity(city);
+        }}
+        onSaveWoodhouseUrl={(url) => {
+          persist({ ...settings, woodhouseNodeUrl: url.trim() });
+          void refreshWoodhouse();
         }}
         onConnectGoogle={connect}
         onDisconnectGoogle={() => void disconnect()}

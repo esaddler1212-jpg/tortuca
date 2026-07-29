@@ -7,6 +7,7 @@ interface Props {
   googleConnected: boolean;
   accountEmail?: string;
   onSaveCity: (city: string) => Promise<boolean>;
+  onSaveWoodhouseUrl: (url: string) => void;
   onConnectGoogle: () => void;
   onDisconnectGoogle: () => void;
   saving: boolean;
@@ -18,6 +19,7 @@ export function SettingsDrawer({
   googleConnected,
   accountEmail,
   onSaveCity,
+  onSaveWoodhouseUrl,
   onConnectGoogle,
   onDisconnectGoogle,
   saving,
@@ -25,6 +27,7 @@ export function SettingsDrawer({
 }: Props) {
   const [open, setOpen] = useState(false);
   const [city, setCity] = useState(settings.city);
+  const [woodhouseUrl, setWoodhouseUrl] = useState(settings.woodhouseNodeUrl);
 
   const save = async () => {
     const ok = await onSaveCity(city);
@@ -69,6 +72,30 @@ export function SettingsDrawer({
                   onClick={() => void save()}
                 >
                   {saving ? "Saving…" : "Save location"}
+                </button>
+              </div>
+              <div className="border-t border-alfred-border pt-6">
+                <h3 className="text-sm font-medium mb-2">Easy Supply Co. (Woodhouse)</h3>
+                <p className="text-sm text-alfred-mist mb-3">
+                  Base URL of your Easy Supply command center. Alfred polls{" "}
+                  <code className="text-alfred-cream/90">/api/woodhouse/snapshot</code> every five minutes.
+                </p>
+                <input
+                  id="woodhouse-url"
+                  className="input-field"
+                  placeholder="https://your-easy-supply.netlify.app"
+                  value={woodhouseUrl}
+                  onChange={(e) => setWoodhouseUrl(e.target.value)}
+                  aria-label="Woodhouse node URL"
+                />
+                <button
+                  type="button"
+                  className="btn-gold mt-3 w-full"
+                  onClick={() => {
+                    onSaveWoodhouseUrl(woodhouseUrl);
+                  }}
+                >
+                  Save &amp; sync
                 </button>
               </div>
               <div className="border-t border-alfred-border pt-6">

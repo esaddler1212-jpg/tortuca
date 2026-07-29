@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import type { WeatherSnapshot } from "../types";
+import type { WoodhouseSnapshot } from "../types/woodhouse";
 import { weatherLabel } from "../lib/weather";
 
 interface Props {
@@ -8,6 +9,7 @@ interface Props {
   unreadEmails: number;
   nextEventTitle?: string;
   userName?: string;
+  woodhouse?: WoodhouseSnapshot | null;
 }
 
 export function MorningBriefing({
@@ -16,6 +18,7 @@ export function MorningBriefing({
   unreadEmails,
   nextEventTitle,
   userName,
+  woodhouse,
 }: Props) {
   const greeting = (() => {
     const h = new Date().getHours();
@@ -40,6 +43,16 @@ export function MorningBriefing({
   }
   if (nextEventTitle) {
     lines.push(`Next on your schedule: ${nextEventTitle}.`);
+  }
+  if (woodhouse) {
+    const { pendingApprovals, goalProgressPercent } = woodhouse.metrics;
+    if (pendingApprovals > 0) {
+      lines.push(
+        `Easy Supply Co. reports ${pendingApprovals} order${pendingApprovals === 1 ? "" : "s"} awaiting your approval.`,
+      );
+    } else {
+      lines.push(`Easy Supply Co. is at ${Math.round(goalProgressPercent)}% of the monthly revenue goal.`);
+    }
   }
 
   return (

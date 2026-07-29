@@ -30,6 +30,8 @@ export interface UserSettings {
   longitude: number;
   timezone: string;
   briefingHour: number;
+  /** Base URL of the Easy Supply Co / Woodhouse store node (no trailing slash). */
+  woodhouseNodeUrl: string;
 }
 
 export interface WeatherSnapshot {
@@ -48,4 +50,5 @@ export const DEFAULT_SETTINGS: UserSettings = {
   longitude: -74.006,
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   briefingHour: 8,
+  woodhouseNodeUrl: "",
 };

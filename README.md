@@ -9,6 +9,23 @@
 - **To-do list** — Stored in your browser
 - **Schedule** — Google Calendar (when connected) plus local events you add in the app
 - **Email** — Recent Gmail inbox messages (read-only) when Google is connected
+- **Easy Supply Co.** — Syncs with your Shopify command center via the **Woodhouse protocol** (`woodhouse/v1` snapshot)
+
+## Easy Supply Co. & Woodhouse sync
+
+Alfred polls the Easy Supply **store node** (see PR branch `cursor/easy-supply-shopify-b24f`) at:
+
+`GET {node}/api/woodhouse/snapshot`
+
+The snapshot includes MTD revenue, pending order approvals, and priority actions. Alfred shows them on the dashboard and weaves them into the daily briefing.
+
+**Configure sync**
+
+1. Deploy the Easy Supply command center (or run it locally with `npx netlify dev`).
+2. On Alfred’s Netlify site, set `WOODHOUSE_EASY_SUPPLY_URL` to the command center base URL (no trailing slash), **or** enter the URL in **Settings → Easy Supply Co. (Woodhouse)**.
+3. Alfred calls `GET /api/woodhouse` (Netlify proxy) every five minutes to avoid browser CORS issues.
+
+Without a node URL, Alfred shows **demo** Woodhouse data so the UI is usable immediately.
 
 ## Quick start
 
