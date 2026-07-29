@@ -1,39 +1,86 @@
-import type { WoodhouseSnapshot } from "../types/woodhouse";
-import { isWoodhouseSnapshot, WOODHOUSE_PROTOCOL } from "../types/woodhouse";
+import type { WoodhouseSnapshotV2 } from "../types/woodhouse";
+import {
+  isWoodhouseSnapshot,
+  upgradeWoodhouseSnapshot,
+  WOODHOUSE_V2,
+} from "../types/woodhouse";
 import { loadSettings } from "./storage";
 
 function apiBase(): string {
   return "/api";
 }
 
-export function demoWoodhouseSnapshot(): WoodhouseSnapshot {
+export function demoWoodhouseSnapshot(): WoodhouseSnapshotV2 {
+  const generatedAt = new Date().toISOString();
   return {
-    protocol: WOODHOUSE_PROTOCOL,
-    storeId: "easy-supply-co-demo",
-    storeName: "Easy Supply Co. (demo)",
-    generatedAt: new Date().toISOString(),
-    metrics: {
-      monthToDateRevenue: 2840,
-      monthToDateOrders: 18,
-      goalProgressPercent: 57,
-      pendingApprovals: 2,
+    protocol: WOODHOUSE_V2,
+    generatedAt,
+    store: {
+      storeId: "easy-supply-co-demo",
+      storeName: "Easy Supply Co. (demo)",
+      metrics: {
+        monthToDateRevenue: 2840,
+        monthToDateOrders: 18,
+        goalProgressPercent: 57,
+        pendingApprovals: 2,
+      },
+      pendingOrderIds: ["demo-1001", "demo-1002"],
+      priorityActions: [
+        "Approve 2 pending Shopify orders",
+        "Close $2160 gap to $5000/mo goal",
+      ],
     },
-    pendingOrderIds: ["demo-1001", "demo-1002"],
+    familyPurpose: {
+      nodeId: "family-purpose-demo",
+      appName: "Family Purpose",
+      schoolName: "Oak Grove Middle School",
+      groupName: "BOYS Group",
+      day: new Intl.DateTimeFormat("en-CA", { timeZone: "America/Los_Angeles" }).format(
+        new Date(),
+      ),
+      schoolDay: { isSchoolDay: true, label: "School day" },
+      stats: {
+        checkInsToday: 3,
+        followUpsDueToday: 1,
+        followUpsOverdue: 0,
+        groupMeetingsToday: 1,
+      },
+      calendar: [
+        {
+          id: "group-demo",
+          kind: "group_meeting",
+          title: "BOYS Group meeting",
+          start: generatedAt,
+          detail: "Weekly mentoring sign-in",
+        },
+        {
+          id: "follow-demo",
+          kind: "follow_up_due",
+          title: "Follow up: Andre Bell",
+          start: generatedAt,
+          detail: "Attendance / tardiness",
+        },
+      ],
+      priorityActions: ["1 follow-up due today"],
+    },
     priorityActions: [
       "Approve 2 pending Shopify orders",
-      "Close $2160 gap to $5000/mo goal",
+      "1 follow-up due today",
     ],
   };
 }
 
 export async function fetchWoodhouseSnapshot(): Promise<{
-  snapshot: WoodhouseSnapshot;
-  source: "live" | "demo" | "proxy";
+  snapshot: WoodhouseSnapshotV2;
+  source: "live" | "demo" | "proxy" | "backup";
 }> {
   const settings = loadSettings();
   const headers: HeadersInit = {};
   if (settings.woodhouseNodeUrl.trim()) {
     headers["X-Woodhouse-Node-Url"] = settings.woodhouseNodeUrl.trim().replace(/\/$/, "");
+  }
+  if (settings.familyPurposeNodeUrl.trim()) {
+    headers["X-Woodhouse-Family-Url"] = settings.familyPurposeNodeUrl.trim().replace(/\/$/, "");
   }
 
   try {
@@ -41,28 +88,22 @@ export async function fetchWoodhouseSnapshot(): Promise<{
     if (res.ok) {
       const body: unknown = await res.json();
       if (isWoodhouseSnapshot(body)) {
-        const source = res.headers.get("X-Woodhouse-Source") === "demo" ? "demo" : "proxy";
-        return { snapshot: body, source };
+        const snapshot = upgradeWoodhouseSnapshot(body);
+        const headerSource = res.headers.get("X-Woodhouse-Source");
+        const source =
+          headerSource === "demo"
+            ? "demo"
+            : headerSource === "backup"
+              ? "backup"
+              : "proxy";
+        return { snapshot, source };
       }
     }
   } catch {
     /* Netlify Functions unavailable in plain Vite dev */
   }
 
-  if (settings.woodhouseNodeUrl.trim()) {
-    try {
-      const url = `${settings.woodhouseNodeUrl.trim().replace(/\/$/, "")}/api/woodhouse/snapshot`;
-      const res = await fetch(url);
-      if (res.ok) {
-        const body: unknown = await res.json();
-        if (isWoodhouseSnapshot(body)) {
-          return { snapshot: body, source: "live" };
-        }
-      }
-    } catch {
-      /* CORS or network */
-    }
-  }
-
   return { snapshot: demoWoodhouseSnapshot(), source: "demo" };
 }
+
+export { WOODHOUSE_V2 };

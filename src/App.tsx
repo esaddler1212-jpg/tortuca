@@ -1,4 +1,5 @@
-import { EasySupplyPanel } from "./components/EasySupplyPanel";
+import { useMemo } from "react";
+import { WoodhouseDashboard } from "./components/WoodhouseDashboard";
 import { MorningBriefing } from "./components/MorningBriefing";
 import { WeatherPanel } from "./components/WeatherPanel";
 import { TodoPanel } from "./components/TodoPanel";
@@ -11,6 +12,7 @@ import { useTodos } from "./hooks/useTodos";
 import { useGoogleIntegration, useSchedule } from "./hooks/useGoogle";
 import { useEmails } from "./hooks/useEmails";
 import { useWoodhouse } from "./hooks/useWoodhouse";
+import { familyCalendarToEvents } from "./lib/familyCalendar";
 
 export default function App() {
   const { settings, persist, updateCity, saving, error, setError } = useSettings();
@@ -24,7 +26,19 @@ export default function App() {
   const { snapshot: woodhouse, source: woodhouseSource, loading: woodhouseLoading, error: woodhouseError, lastSync, refresh: refreshWoodhouse } =
     useWoodhouse();
 
-  const nextEvent = allEvents[0]?.title;
+  const familyScheduleEvents = useMemo(
+    () => (woodhouse?.familyPurpose ? familyCalendarToEvents(woodhouse.familyPurpose) : []),
+    [woodhouse?.familyPurpose],
+  );
+
+  const scheduleEvents = useMemo(() => {
+    const merged = [...familyScheduleEvents, ...allEvents].sort(
+      (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime(),
+    );
+    return merged.filter((e) => new Date(e.start) >= new Date()).slice(0, 16);
+  }, [allEvents, familyScheduleEvents]);
+
+  const nextEvent = scheduleEvents[0]?.title;
   const displayName = accountEmail?.split("@")[0];
 
   return (
@@ -51,7 +65,7 @@ export default function App() {
           woodhouse={woodhouse}
         />
 
-        <EasySupplyPanel
+        <WoodhouseDashboard
           snapshot={woodhouse}
           source={woodhouseSource}
           loading={woodhouseLoading}
@@ -71,7 +85,7 @@ export default function App() {
           />
           <TodoPanel pending={pending} done={done} onAdd={add} onToggle={toggle} onRemove={remove} />
           <SchedulePanel
-            events={allEvents}
+            events={scheduleEvents}
             loading={scheduleLoading}
             error={scheduleError}
             onAddLocal={addLocalEvent}
@@ -98,6 +112,10 @@ export default function App() {
         }}
         onSaveWoodhouseUrl={(url) => {
           persist({ ...settings, woodhouseNodeUrl: url.trim() });
+          void refreshWoodhouse();
+        }}
+        onSaveFamilyPurposeUrl={(url) => {
+          persist({ ...settings, familyPurposeNodeUrl: url.trim() });
           void refreshWoodhouse();
         }}
         onConnectGoogle={connect}

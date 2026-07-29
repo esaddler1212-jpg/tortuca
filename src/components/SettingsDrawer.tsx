@@ -8,6 +8,7 @@ interface Props {
   accountEmail?: string;
   onSaveCity: (city: string) => Promise<boolean>;
   onSaveWoodhouseUrl: (url: string) => void;
+  onSaveFamilyPurposeUrl: (url: string) => void;
   onConnectGoogle: () => void;
   onDisconnectGoogle: () => void;
   saving: boolean;
@@ -20,6 +21,7 @@ export function SettingsDrawer({
   accountEmail,
   onSaveCity,
   onSaveWoodhouseUrl,
+  onSaveFamilyPurposeUrl,
   onConnectGoogle,
   onDisconnectGoogle,
   saving,
@@ -28,6 +30,7 @@ export function SettingsDrawer({
   const [open, setOpen] = useState(false);
   const [city, setCity] = useState(settings.city);
   const [woodhouseUrl, setWoodhouseUrl] = useState(settings.woodhouseNodeUrl);
+  const [familyUrl, setFamilyUrl] = useState(settings.familyPurposeNodeUrl);
 
   const save = async () => {
     const ok = await onSaveCity(city);
@@ -75,10 +78,10 @@ export function SettingsDrawer({
                 </button>
               </div>
               <div className="border-t border-alfred-border pt-6">
-                <h3 className="text-sm font-medium mb-2">Easy Supply Co. (Woodhouse)</h3>
+                <h3 className="text-sm font-medium mb-2">Easy Supply Co. (store node)</h3>
                 <p className="text-sm text-alfred-mist mb-3">
-                  Base URL of your Easy Supply command center. Alfred polls{" "}
-                  <code className="text-alfred-cream/90">/api/woodhouse/snapshot</code> every five minutes.
+                  Base URL of your Shopify command center (
+                  <code className="text-alfred-cream/90">/api/woodhouse/snapshot</code>).
                 </p>
                 <input
                   id="woodhouse-url"
@@ -96,6 +99,29 @@ export function SettingsDrawer({
                   }}
                 >
                   Save &amp; sync
+                </button>
+              </div>
+              <div className="border-t border-alfred-border pt-6">
+                <h3 className="text-sm font-medium mb-2">Family Purpose (calendar node)</h3>
+                <p className="text-sm text-alfred-mist mb-3">
+                  Student check-ins and group meetings for today via{" "}
+                  <code className="text-alfred-cream/90">woodhouse/v2</code>. Leave blank to use the latest
+                  Family Purpose cloud backup on this Netlify site.
+                </p>
+                <input
+                  id="family-url"
+                  className="input-field"
+                  placeholder="https://your-family-purpose.netlify.app"
+                  value={familyUrl}
+                  onChange={(e) => setFamilyUrl(e.target.value)}
+                  aria-label="Family Purpose node URL"
+                />
+                <button
+                  type="button"
+                  className="btn-gold mt-3 w-full"
+                  onClick={() => onSaveFamilyPurposeUrl(familyUrl)}
+                >
+                  Save &amp; sync calendar
                 </button>
               </div>
               <div className="border-t border-alfred-border pt-6">

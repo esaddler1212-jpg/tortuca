@@ -13,19 +13,30 @@
 
 ## Easy Supply Co. & Woodhouse sync
 
-Alfred polls the Easy Supply **store node** (see PR branch `cursor/easy-supply-shopify-b24f`) at:
+Alfred aggregates **Woodhouse `woodhouse/v2`** snapshots from multiple nodes:
 
-`GET {node}/api/woodhouse/snapshot`
+| Node | Source | Endpoint |
+|------|--------|----------|
+| **Easy Supply Co.** | Shopify command center | `GET {node}/api/woodhouse/snapshot` (store metrics) |
+| **Family Purpose** | Student check-ins app | `GET {node}/api/woodhouse/snapshot` (today’s calendar) |
 
-The snapshot includes MTD revenue, pending order approvals, and priority actions. Alfred shows them on the dashboard and weaves them into the daily briefing.
+Alfred calls `GET /api/woodhouse` (Netlify aggregator) every five minutes. The response includes:
+
+- `store` — revenue, pending Shopify approvals
+- `familyPurpose` — school day, group meetings, follow-ups due, check-ins logged today
+- `calendar[]` — merged into Alfred’s **Schedule** panel
+- `priorityActions` — merged across nodes
 
 **Configure sync**
 
-1. Deploy the Easy Supply command center (or run it locally with `npx netlify dev`).
-2. On Alfred’s Netlify site, set `WOODHOUSE_EASY_SUPPLY_URL` to the command center base URL (no trailing slash), **or** enter the URL in **Settings → Easy Supply Co. (Woodhouse)**.
-3. Alfred calls `GET /api/woodhouse` (Netlify proxy) every five minutes to avoid browser CORS issues.
+1. Deploy Easy Supply and/or Family Purpose (see repo PR branches).
+2. On Alfred’s Netlify site:
+   - `WOODHOUSE_EASY_SUPPLY_URL` — Easy Supply base URL
+   - `WOODHOUSE_FAMILY_PURPOSE_URL` — Family Purpose base URL (optional)
+   - `FAMILY_PURPOSE_BACKUP_KEY` — same key as Family Purpose auto-backup uploads (Alfred reads the latest backup from Netlify Blobs when no Family URL is set)
+3. Or set URLs in **Settings** (store node + calendar node).
 
-Without a node URL, Alfred shows **demo** Woodhouse data so the UI is usable immediately.
+Without URLs, Alfred shows **demo** data for both nodes.
 
 ## Quick start
 

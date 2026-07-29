@@ -12,7 +12,7 @@ export interface CalendarEvent {
   start: string;
   end?: string;
   location?: string;
-  source: "google" | "local";
+  source: "google" | "local" | "family-purpose";
 }
 
 export interface EmailMessage {
@@ -32,6 +32,8 @@ export interface UserSettings {
   briefingHour: number;
   /** Base URL of the Easy Supply Co / Woodhouse store node (no trailing slash). */
   woodhouseNodeUrl: string;
+  /** Family Purpose app base URL for woodhouse/v2 calendar node. */
+  familyPurposeNodeUrl: string;
 }
 
 export interface WeatherSnapshot {
@@ -51,4 +53,5 @@ export const DEFAULT_SETTINGS: UserSettings = {
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   briefingHour: 8,
   woodhouseNodeUrl: "",
+  familyPurposeNodeUrl: "",
 };

@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import type { WeatherSnapshot } from "../types";
-import type { WoodhouseSnapshot } from "../types/woodhouse";
+import type { WoodhouseSnapshotV2 } from "../types/woodhouse";
 import { weatherLabel } from "../lib/weather";
 
 interface Props {
@@ -9,7 +9,7 @@ interface Props {
   unreadEmails: number;
   nextEventTitle?: string;
   userName?: string;
-  woodhouse?: WoodhouseSnapshot | null;
+  woodhouse?: WoodhouseSnapshotV2 | null;
 }
 
 export function MorningBriefing({
@@ -44,14 +44,34 @@ export function MorningBriefing({
   if (nextEventTitle) {
     lines.push(`Next on your schedule: ${nextEventTitle}.`);
   }
-  if (woodhouse) {
-    const { pendingApprovals, goalProgressPercent } = woodhouse.metrics;
+  if (woodhouse?.store) {
+    const { pendingApprovals, goalProgressPercent } = woodhouse.store.metrics;
     if (pendingApprovals > 0) {
       lines.push(
         `Easy Supply Co. reports ${pendingApprovals} order${pendingApprovals === 1 ? "" : "s"} awaiting your approval.`,
       );
     } else {
       lines.push(`Easy Supply Co. is at ${Math.round(goalProgressPercent)}% of the monthly revenue goal.`);
+    }
+  }
+  if (woodhouse?.familyPurpose) {
+    const fp = woodhouse.familyPurpose;
+    const meetings = fp.calendar.filter((c) => c.kind === "group_meeting");
+    if (fp.stats.followUpsOverdue > 0) {
+      lines.push(
+        `Family Purpose: ${fp.stats.followUpsOverdue} overdue follow-up${fp.stats.followUpsOverdue === 1 ? "" : "s"}.`,
+      );
+    } else if (fp.stats.followUpsDueToday > 0) {
+      lines.push(
+        `Family Purpose: ${fp.stats.followUpsDueToday} student follow-up${fp.stats.followUpsDueToday === 1 ? "" : "s"} due today.`,
+      );
+    }
+    if (meetings.length > 0) {
+      lines.push(
+        `You have ${meetings.length} ${fp.groupName} meeting${meetings.length === 1 ? "" : "s"} on today's calendar.`,
+      );
+    } else if (fp.schoolDay.isSchoolDay) {
+      lines.push(`${fp.schoolDay.label} at ${fp.schoolName}; ${fp.stats.checkInsToday} check-in${fp.stats.checkInsToday === 1 ? "" : "s"} logged so far.`);
     }
   }
 
