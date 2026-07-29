@@ -1,8 +1,12 @@
-import type { WoodhouseSnapshotV2 } from "../types/woodhouse";
+import type {
+  WoodhouseNodeSyncResult,
+  WoodhouseOrchestrationSnapshot,
+} from "../types/woodhouse";
 import {
   isWoodhouseSnapshot,
   upgradeWoodhouseSnapshot,
-  WOODHOUSE_V2,
+  WOODHOUSE_NODE,
+  WOODHOUSE_ORCHESTRATION,
 } from "../types/woodhouse";
 import { loadSettings } from "./storage";
 
@@ -10,77 +14,81 @@ function apiBase(): string {
   return "/api";
 }
 
-export function demoWoodhouseSnapshot(): WoodhouseSnapshotV2 {
+function demoOrchestration(): WoodhouseOrchestrationSnapshot {
   const generatedAt = new Date().toISOString();
-  return {
-    protocol: WOODHOUSE_V2,
-    generatedAt,
-    store: {
-      storeId: "easy-supply-co-demo",
-      storeName: "Easy Supply Co. (demo)",
-      metrics: {
-        monthToDateRevenue: 2840,
-        monthToDateOrders: 18,
-        goalProgressPercent: 57,
-        pendingApprovals: 2,
-      },
-      pendingOrderIds: ["demo-1001", "demo-1002"],
-      priorityActions: [
-        "Approve 2 pending Shopify orders",
-        "Close $2160 gap to $5000/mo goal",
+  const commerce: WoodhouseNodeSyncResult = {
+    registryId: "easy-supply-co",
+    displayName: "Easy Supply Co. (demo)",
+    nodeType: "commerce",
+    baseUrl: "",
+    ok: true,
+    source: "demo",
+    snapshot: {
+      protocol: WOODHOUSE_NODE,
+      nodeId: "easy-supply-co",
+      nodeType: "commerce",
+      displayName: "Easy Supply Co. (demo)",
+      generatedAt,
+      status: "ok",
+      summary: "2 orders need approval",
+      metrics: [
+        { key: "revenue", label: "MTD revenue", value: 2840 },
+        { key: "pending", label: "Pending approvals", value: 2, alert: true },
       ],
+      priorityActions: ["Approve 2 pending Shopify orders"],
     },
-    familyPurpose: {
-      nodeId: "family-purpose-demo",
-      appName: "Family Purpose",
-      schoolName: "Oak Grove Middle School",
-      groupName: "BOYS Group",
-      day: new Intl.DateTimeFormat("en-CA", { timeZone: "America/Los_Angeles" }).format(
-        new Date(),
-      ),
-      schoolDay: { isSchoolDay: true, label: "School day" },
-      stats: {
-        checkInsToday: 3,
-        followUpsDueToday: 1,
-        followUpsOverdue: 0,
-        groupMeetingsToday: 1,
-      },
+  };
+  const education: WoodhouseNodeSyncResult = {
+    registryId: "family-purpose",
+    displayName: "Family Purpose (demo)",
+    nodeType: "education",
+    baseUrl: "",
+    ok: true,
+    source: "demo",
+    snapshot: {
+      protocol: WOODHOUSE_NODE,
+      nodeId: "family-purpose",
+      nodeType: "education",
+      displayName: "Family Purpose",
+      generatedAt,
+      status: "ok",
+      summary: "1 follow-up due today · BOYS Group meeting",
+      metrics: [
+        { key: "checkins", label: "Check-ins today", value: 3 },
+        { key: "due", label: "Follow-ups due", value: 1, alert: true },
+      ],
       calendar: [
         {
-          id: "group-demo",
+          id: "g1",
           kind: "group_meeting",
           title: "BOYS Group meeting",
           start: generatedAt,
-          detail: "Weekly mentoring sign-in",
-        },
-        {
-          id: "follow-demo",
-          kind: "follow_up_due",
-          title: "Follow up: Andre Bell",
-          start: generatedAt,
-          detail: "Attendance / tardiness",
+          detail: "Weekly sign-in",
         },
       ],
       priorityActions: ["1 follow-up due today"],
     },
+  };
+  return {
+    protocol: WOODHOUSE_ORCHESTRATION,
+    generatedAt,
+    nodes: [commerce, education],
     priorityActions: [
       "Approve 2 pending Shopify orders",
       "1 follow-up due today",
     ],
+    calendar: education.snapshot?.calendar ?? [],
   };
 }
 
 export async function fetchWoodhouseSnapshot(): Promise<{
-  snapshot: WoodhouseSnapshotV2;
+  snapshot: WoodhouseOrchestrationSnapshot;
   source: "live" | "demo" | "proxy" | "backup";
 }> {
   const settings = loadSettings();
-  const headers: HeadersInit = {};
-  if (settings.woodhouseNodeUrl.trim()) {
-    headers["X-Woodhouse-Node-Url"] = settings.woodhouseNodeUrl.trim().replace(/\/$/, "");
-  }
-  if (settings.familyPurposeNodeUrl.trim()) {
-    headers["X-Woodhouse-Family-Url"] = settings.familyPurposeNodeUrl.trim().replace(/\/$/, "");
+  const headers: HeadersInit = { Accept: "application/json" };
+  if (settings.woodhouseNodes.length > 0) {
+    headers["X-Woodhouse-Registry"] = JSON.stringify(settings.woodhouseNodes);
   }
 
   try {
@@ -95,7 +103,7 @@ export async function fetchWoodhouseSnapshot(): Promise<{
             ? "demo"
             : headerSource === "backup"
               ? "backup"
-              : "proxy";
+              : "live";
         return { snapshot, source };
       }
     }
@@ -103,7 +111,7 @@ export async function fetchWoodhouseSnapshot(): Promise<{
     /* Netlify Functions unavailable in plain Vite dev */
   }
 
-  return { snapshot: demoWoodhouseSnapshot(), source: "demo" };
+  return { snapshot: demoOrchestration(), source: "demo" };
 }
 
-export { WOODHOUSE_V2 };
+export { WOODHOUSE_ORCHESTRATION };

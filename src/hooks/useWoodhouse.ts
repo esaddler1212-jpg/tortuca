@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import type { WoodhouseSnapshotV2 } from "../types/woodhouse";
+import type { WoodhouseOrchestrationSnapshot } from "../types/woodhouse";
 import { fetchWoodhouseSnapshot } from "../lib/woodhouse";
 
 const SYNC_MS = 5 * 60 * 1000;
 
 export function useWoodhouse() {
-  const [snapshot, setSnapshot] = useState<WoodhouseSnapshotV2 | null>(null);
+  const [snapshot, setSnapshot] = useState<WoodhouseOrchestrationSnapshot | null>(null);
   const [source, setSource] = useState<"live" | "demo" | "proxy" | "backup" | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

@@ -1,5 +1,6 @@
 import type { UserSettings } from "../types";
 import { DEFAULT_SETTINGS } from "../types";
+import { migrateWoodhouseNodes } from "./woodhouseRegistry";
 
 const SETTINGS_KEY = "alfred-settings";
 const SESSION_KEY = "alfred-session-id";
@@ -10,7 +11,9 @@ export function loadSettings(): UserSettings {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (!raw) return { ...DEFAULT_SETTINGS };
-    return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+    const parsed = { ...DEFAULT_SETTINGS, ...JSON.parse(raw) } as UserSettings;
+    parsed.woodhouseNodes = migrateWoodhouseNodes(parsed);
+    return parsed;
   } catch {
     return { ...DEFAULT_SETTINGS };
   }

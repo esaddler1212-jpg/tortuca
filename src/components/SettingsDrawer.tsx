@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { Settings, X } from "lucide-react";
 import type { UserSettings } from "../types";
+import type { WoodhouseRegistryEntry } from "../types/woodhouse";
+import { WoodhouseNodesEditor } from "./WoodhouseNodesEditor";
 
 interface Props {
   settings: UserSettings;
   googleConnected: boolean;
   accountEmail?: string;
   onSaveCity: (city: string) => Promise<boolean>;
-  onSaveWoodhouseUrl: (url: string) => void;
-  onSaveFamilyPurposeUrl: (url: string) => void;
+  onSaveWoodhouseNodes: (nodes: WoodhouseRegistryEntry[]) => void;
   onConnectGoogle: () => void;
   onDisconnectGoogle: () => void;
   saving: boolean;
@@ -20,8 +21,7 @@ export function SettingsDrawer({
   googleConnected,
   accountEmail,
   onSaveCity,
-  onSaveWoodhouseUrl,
-  onSaveFamilyPurposeUrl,
+  onSaveWoodhouseNodes,
   onConnectGoogle,
   onDisconnectGoogle,
   saving,
@@ -29,8 +29,7 @@ export function SettingsDrawer({
 }: Props) {
   const [open, setOpen] = useState(false);
   const [city, setCity] = useState(settings.city);
-  const [woodhouseUrl, setWoodhouseUrl] = useState(settings.woodhouseNodeUrl);
-  const [familyUrl, setFamilyUrl] = useState(settings.familyPurposeNodeUrl);
+  const [nodes, setNodes] = useState(settings.woodhouseNodes);
 
   const save = async () => {
     const ok = await onSaveCity(city);
@@ -78,50 +77,16 @@ export function SettingsDrawer({
                 </button>
               </div>
               <div className="border-t border-alfred-border pt-6">
-                <h3 className="text-sm font-medium mb-2">Easy Supply Co. (store node)</h3>
-                <p className="text-sm text-alfred-mist mb-3">
-                  Base URL of your Shopify command center (
-                  <code className="text-alfred-cream/90">/api/woodhouse/snapshot</code>).
-                </p>
-                <input
-                  id="woodhouse-url"
-                  className="input-field"
-                  placeholder="https://your-easy-supply.netlify.app"
-                  value={woodhouseUrl}
-                  onChange={(e) => setWoodhouseUrl(e.target.value)}
-                  aria-label="Woodhouse node URL"
-                />
+                <h3 className="text-sm font-medium mb-2 text-alfred-gold">Woodhouse apps</h3>
+                <WoodhouseNodesEditor nodes={nodes} onChange={setNodes} />
                 <button
                   type="button"
                   className="btn-gold mt-3 w-full"
                   onClick={() => {
-                    onSaveWoodhouseUrl(woodhouseUrl);
+                    onSaveWoodhouseNodes(nodes);
                   }}
                 >
-                  Save &amp; sync
-                </button>
-              </div>
-              <div className="border-t border-alfred-border pt-6">
-                <h3 className="text-sm font-medium mb-2">Family Purpose (calendar node)</h3>
-                <p className="text-sm text-alfred-mist mb-3">
-                  Student check-ins and group meetings for today via{" "}
-                  <code className="text-alfred-cream/90">woodhouse/v2</code>. Leave blank to use the latest
-                  Family Purpose cloud backup on this Netlify site.
-                </p>
-                <input
-                  id="family-url"
-                  className="input-field"
-                  placeholder="https://your-family-purpose.netlify.app"
-                  value={familyUrl}
-                  onChange={(e) => setFamilyUrl(e.target.value)}
-                  aria-label="Family Purpose node URL"
-                />
-                <button
-                  type="button"
-                  className="btn-gold mt-3 w-full"
-                  onClick={() => onSaveFamilyPurposeUrl(familyUrl)}
-                >
-                  Save &amp; sync calendar
+                  Save &amp; sync all nodes
                 </button>
               </div>
               <div className="border-t border-alfred-border pt-6">

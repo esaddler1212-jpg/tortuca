@@ -12,7 +12,7 @@ import { useTodos } from "./hooks/useTodos";
 import { useGoogleIntegration, useSchedule } from "./hooks/useGoogle";
 import { useEmails } from "./hooks/useEmails";
 import { useWoodhouse } from "./hooks/useWoodhouse";
-import { familyCalendarToEvents } from "./lib/familyCalendar";
+import { orchestrationToCalendarEvents } from "./lib/familyCalendar";
 
 export default function App() {
   const { settings, persist, updateCity, saving, error, setError } = useSettings();
@@ -27,8 +27,8 @@ export default function App() {
     useWoodhouse();
 
   const familyScheduleEvents = useMemo(
-    () => (woodhouse?.familyPurpose ? familyCalendarToEvents(woodhouse.familyPurpose) : []),
-    [woodhouse?.familyPurpose],
+    () => (woodhouse ? orchestrationToCalendarEvents(woodhouse) : []),
+    [woodhouse],
   );
 
   const scheduleEvents = useMemo(() => {
@@ -110,12 +110,8 @@ export default function App() {
           setError(null);
           return updateCity(city);
         }}
-        onSaveWoodhouseUrl={(url) => {
-          persist({ ...settings, woodhouseNodeUrl: url.trim() });
-          void refreshWoodhouse();
-        }}
-        onSaveFamilyPurposeUrl={(url) => {
-          persist({ ...settings, familyPurposeNodeUrl: url.trim() });
+        onSaveWoodhouseNodes={(nodes) => {
+          persist({ ...settings, woodhouseNodes: nodes });
           void refreshWoodhouse();
         }}
         onConnectGoogle={connect}

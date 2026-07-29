@@ -24,15 +24,19 @@ export interface EmailMessage {
   unread: boolean;
 }
 
+import type { WoodhouseRegistryEntry } from "./types/woodhouse";
+
 export interface UserSettings {
   city: string;
   latitude: number;
   longitude: number;
   timezone: string;
   briefingHour: number;
-  /** Base URL of the Easy Supply Co / Woodhouse store node (no trailing slash). */
+  /** Registered Woodhouse app nodes (Alfred syncs all of these). */
+  woodhouseNodes: WoodhouseRegistryEntry[];
+  /** @deprecated Use woodhouseNodes — migrated on load */
   woodhouseNodeUrl: string;
-  /** Family Purpose app base URL for woodhouse/v2 calendar node. */
+  /** @deprecated Use woodhouseNodes — migrated on load */
   familyPurposeNodeUrl: string;
 }
 
@@ -52,6 +56,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   longitude: -74.006,
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   briefingHour: 8,
+  woodhouseNodes: [],
   woodhouseNodeUrl: "",
   familyPurposeNodeUrl: "",
 };
