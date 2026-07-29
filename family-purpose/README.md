@@ -185,10 +185,10 @@ are online again.
 | Auto-backup on + upload URL | JSON POST to Family Purpose (or your Netlify site) |
 | Auto-backup off | Use **Download backup (JSON)** manually in Settings |
 
-Optional **upload URL** for Family Purpose: deploy this folder to Netlify and set
-`FAMILY_PURPOSE_BACKUP_KEY` in the site environment. Paste
-`https://your-site.netlify.app/api/family-purpose-backup` and the same key in
-Settings.
+Optional **upload URL** for Family Purpose: deploy on Netlify (see
+[NETLIFY.md](./NETLIFY.md)) and set `FAMILY_PURPOSE_BACKUP_KEY` in the site
+environment. Paste `https://your-site.netlify.app/api/family-purpose-backup`
+and the same key in Settings.
 
 ### Performance on slower Chromebooks
 - **Light first load** — only the Log tab code loads at startup; Reports, Debrief,
@@ -230,3 +230,7 @@ git push -u origin main
 ```
 
 To keep the commit history instead, use `git subtree split --prefix=family-purpose -b family-purpose-only` and push that branch to the new remote.
+
+## Deploy on Netlify
+
+Step-by-step (GitHub import, env vars, Chromebook Settings): **[NETLIFY.md](./NETLIFY.md)**.

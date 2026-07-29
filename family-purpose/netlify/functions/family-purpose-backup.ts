@@ -12,11 +12,14 @@ export default async (req: Request): Promise<Response> => {
   }
 
   const expected = process.env.FAMILY_PURPOSE_BACKUP_KEY;
-  if (expected) {
-    const key = req.headers.get("x-backup-key");
-    if (key !== expected) {
-      return new Response("Unauthorized", { status: 401 });
-    }
+  if (!expected) {
+    return new Response("Backup endpoint is not configured on the server", {
+      status: 503,
+    });
+  }
+  const key = req.headers.get("x-backup-key");
+  if (key !== expected) {
+    return new Response("Unauthorized", { status: 401 });
   }
 
   let body: {
