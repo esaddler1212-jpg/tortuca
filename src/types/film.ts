@@ -25,6 +25,10 @@ export interface Film {
   posterUrl: string;
   backdropUrl: string;
   videoUrl: string;
+  hlsManifestUrl?: string;
+  videoBlobKey?: string;
+  requiresPremium?: boolean;
+  allowedCountries?: string[] | null;
   featured?: boolean;
   trendingRank?: number;
   awardWinner?: boolean;

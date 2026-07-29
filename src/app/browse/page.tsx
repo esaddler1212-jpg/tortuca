@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { FilmPoster } from "@/components/FilmPoster";
-import { films } from "@/lib/catalog";
+import { getAllFilms } from "@/lib/film-repository";
 import type { Genre } from "@/types/film";
 
 const genres: Genre[] = [
@@ -14,13 +14,15 @@ const genres: Genre[] = [
   "Thriller",
 ];
 
-export default function BrowsePage() {
+export default async function BrowsePage() {
+  const films = await getAllFilms();
+
   return (
     <div className="mx-auto max-w-7xl px-4 pb-16 pt-24 sm:px-6 lg:px-8">
       <h1 className="font-display text-3xl font-bold text-white">Browse</h1>
       <p className="mt-2 max-w-2xl text-zinc-400">
-        Explore the full Tortuca catalog by genre. This is the foundation for
-        personalized rows, profiles, and recommendations like major streaming apps.
+        Explore the catalog by genre. Premium and regional titles are labeled on
+        each film&apos;s detail page.
       </p>
 
       <div className="mt-10 flex flex-wrap gap-2">

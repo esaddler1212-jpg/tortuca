@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { MyListButton } from "@/components/MyListButton";
-import { getFilmBySlug } from "@/lib/catalog";
+import { getFilmBySlug } from "@/lib/film-repository";
 import { formatDuration } from "@/lib/utils";
 
 interface PageProps {
@@ -12,7 +12,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const film = getFilmBySlug(slug);
+  const film = await getFilmBySlug(slug);
   if (!film) return { title: "Not found" };
   return {
     title: film.title,
@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function TitlePage({ params }: PageProps) {
   const { slug } = await params;
-  const film = getFilmBySlug(slug);
+  const film = await getFilmBySlug(slug);
   if (!film) notFound();
 
   return (
@@ -52,6 +52,18 @@ export default async function TitlePage({ params }: PageProps) {
             </div>
           </div>
           <div className="flex-1 space-y-4 pt-4 md:pt-8">
+            <div className="flex flex-wrap items-center gap-2">
+              {film.requiresPremium && (
+                <span className="rounded bg-accent/20 px-2 py-0.5 text-xs font-semibold text-accent">
+                  Premium
+                </span>
+              )}
+              {film.allowedCountries?.length ? (
+                <span className="rounded border border-zinc-600 px-2 py-0.5 text-xs text-zinc-400">
+                  Regional availability
+                </span>
+              ) : null}
+            </div>
             <h1 className="font-display text-3xl font-bold text-white md:text-4xl">
               {film.title}
             </h1>

@@ -26,6 +26,7 @@ export const films: Film[] = [
     trendingRank: 1,
     awardWinner: true,
     festival: "Sundance",
+    requiresPremium: false,
   },
   {
     id: "2",
@@ -113,6 +114,7 @@ export const films: Film[] = [
       "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
     awardWinner: true,
     festival: "Tribeca",
+    requiresPremium: true,
   },
   {
     id: "6",
@@ -175,6 +177,8 @@ export const films: Film[] = [
     videoUrl:
       "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
     trendingRank: 6,
+    requiresPremium: true,
+    allowedCountries: ["US", "CA", "GB"],
   },
 ];
 

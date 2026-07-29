@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
+import { ClerkShell } from "@/components/ClerkShell";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -20,9 +21,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen">
-        <SiteHeader />
-        <main>{children}</main>
-        <SiteFooter />
+        <ClerkShell>
+          <SiteHeader />
+          <main>{children}</main>
+          <SiteFooter />
+        </ClerkShell>
       </body>
     </html>
   );

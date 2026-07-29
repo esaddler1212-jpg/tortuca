@@ -4,12 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { AuthButtons } from "@/components/ClerkShell";
 
 const nav = [
   { href: "/", label: "Home" },
   { href: "/browse", label: "Browse" },
   { href: "/search", label: "Search" },
   { href: "/my-list", label: "My List" },
+  { href: "/pricing", label: "Plans" },
 ];
 
 export function SiteHeader() {
@@ -62,12 +64,7 @@ export function SiteHeader() {
           >
             Search
           </Link>
-          <button
-            type="button"
-            className="hidden rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-surface transition hover:bg-accent-muted sm:inline-flex"
-          >
-            Sign In
-          </button>
+          <AuthButtons />
         </div>
       </div>
     </header>

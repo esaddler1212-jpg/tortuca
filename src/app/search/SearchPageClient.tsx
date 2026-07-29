@@ -3,14 +3,28 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { FilmPoster } from "@/components/FilmPoster";
-import { films, searchFilms } from "@/lib/catalog";
+import type { Film } from "@/types/film";
 
-export default function SearchPageClient() {
+interface Props {
+  initialFilms: Film[];
+}
+
+export default function SearchPageClient({ initialFilms }: Props) {
   const searchParams = useSearchParams();
   const initial = searchParams.get("q") ?? "";
   const [query, setQuery] = useState(initial);
 
-  const results = useMemo(() => searchFilms(query), [query]);
+  const results = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return initialFilms;
+    return initialFilms.filter(
+      (f) =>
+        f.title.toLowerCase().includes(q) ||
+        f.synopsis.toLowerCase().includes(q) ||
+        f.director.toLowerCase().includes(q) ||
+        f.genres.some((g) => g.toLowerCase().includes(q)),
+    );
+  }, [query, initialFilms]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 pb-16 pt-24 sm:px-6 lg:px-8">
@@ -29,7 +43,7 @@ export default function SearchPageClient() {
       <p className="mt-4 text-sm text-zinc-500">
         {query.trim()
           ? `${results.length} result${results.length === 1 ? "" : "s"}`
-          : `Showing all ${films.length} titles`}
+          : `Showing all ${initialFilms.length} titles`}
       </p>
       <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {results.map((film) => (
