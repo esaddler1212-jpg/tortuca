@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-alfred-ink text-alfred-cream font-sans min-h-screen;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(201, 169, 98, 0.12), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 100%, rgba(42, 52, 65, 0.8), transparent);
+  }
+
+  ::selection {
+    @apply bg-alfred-gold/30 text-alfred-cream;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply bg-alfred-panel/90 border border-alfred-border rounded-xl shadow-panel backdrop-blur-sm;
+  }
+
+  .btn-gold {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-alfred-gold/50 bg-alfred-gold/10 px-4 py-2 text-sm font-medium text-alfred-gold transition hover:bg-alfred-gold/20 hover:border-alfred-gold;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm text-alfred-mist transition hover:bg-white/5 hover:text-alfred-cream;
+  }
+
+  .input-field {
+    @apply w-full rounded-lg border border-alfred-border bg-alfred-ink/60 px-3 py-2 text-sm text-alfred-cream placeholder:text-alfred-mist/60 focus:border-alfred-gold/50 focus:outline-none focus:ring-1 focus:ring-alfred-gold/30;
+  }
+}
