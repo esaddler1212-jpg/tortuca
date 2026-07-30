@@ -12,6 +12,8 @@ import { useTodos } from "./hooks/useTodos";
 import { useGoogleIntegration, useSchedule } from "./hooks/useGoogle";
 import { useEmails } from "./hooks/useEmails";
 import { useWoodhouse } from "./hooks/useWoodhouse";
+import { StocksPanel } from "./components/StocksPanel";
+import { useStocks } from "./hooks/useStocks";
 import { orchestrationToCalendarEvents } from "./lib/familyCalendar";
 
 export default function App() {
@@ -25,6 +27,9 @@ export default function App() {
     useEmails(connected);
   const { snapshot: woodhouse, source: woodhouseSource, loading: woodhouseLoading, error: woodhouseError, lastSync, refresh: refreshWoodhouse } =
     useWoodhouse();
+
+  const { snapshot: stocks, loading: stocksLoading, error: stocksError, refresh: refreshStocks } =
+    useStocks();
 
   const familyScheduleEvents = useMemo(
     () => (woodhouse ? orchestrationToCalendarEvents(woodhouse) : []),
@@ -63,6 +68,14 @@ export default function App() {
           nextEventTitle={nextEvent}
           userName={displayName}
           woodhouse={woodhouse}
+          stocks={stocks}
+        />
+
+        <StocksPanel
+          snapshot={stocks}
+          loading={stocksLoading}
+          error={stocksError}
+          onRefresh={() => void refreshStocks()}
         />
 
         <WoodhouseDashboard

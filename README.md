@@ -10,6 +10,7 @@
 - **To-do list** — browser storage
 - **Schedule** — Google Calendar + local events + Woodhouse `calendar` items
 - **Email** — Gmail (read-only OAuth)
+- **Markets** — AI & drone watchlist, tech IPO radar (Finnhub; demo without API key)
 
 ## Woodhouse — backend for your apps
 

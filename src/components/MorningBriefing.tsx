@@ -1,7 +1,9 @@
 import { format } from "date-fns";
 import type { WeatherSnapshot } from "../types";
 import type { WoodhouseOrchestrationSnapshot } from "../types/woodhouse";
+import type { StocksSnapshot } from "../types/stocks";
 import { woodhouseBriefingLines } from "../lib/woodhouseBriefing";
+import { stocksBriefingLines } from "../lib/stocksBriefing";
 import { weatherLabel } from "../lib/weather";
 
 interface Props {
@@ -11,6 +13,7 @@ interface Props {
   nextEventTitle?: string;
   userName?: string;
   woodhouse?: WoodhouseOrchestrationSnapshot | null;
+  stocks?: StocksSnapshot | null;
 }
 
 export function MorningBriefing({
@@ -20,6 +23,7 @@ export function MorningBriefing({
   nextEventTitle,
   userName,
   woodhouse,
+  stocks,
 }: Props) {
   const greeting = (() => {
     const h = new Date().getHours();
@@ -46,6 +50,7 @@ export function MorningBriefing({
     lines.push(`Next on your schedule: ${nextEventTitle}.`);
   }
   lines.push(...woodhouseBriefingLines(woodhouse));
+  lines.push(...stocksBriefingLines(stocks ?? null));
 
   return (
     <section className="panel p-6 border-alfred-gold/20">
