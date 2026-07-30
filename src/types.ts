@@ -38,6 +38,13 @@ export interface UserSettings {
   woodhouseNodeUrl: string;
   /** @deprecated Use woodhouseNodes — migrated on load */
   familyPurposeNodeUrl: string;
+  /** Minutes to drive to school / first commitment */
+  commuteMinutes: number;
+  /** Extra minutes before arrival */
+  arriveBufferMinutes: number;
+  /** Local HH:MM first bell / arrival target on school days */
+  schoolStartTime: string;
+  schoolName: string;
 }
 
 export interface WeatherSnapshot {
@@ -59,4 +66,8 @@ export const DEFAULT_SETTINGS: UserSettings = {
   woodhouseNodes: [],
   woodhouseNodeUrl: "",
   familyPurposeNodeUrl: "",
+  commuteMinutes: 25,
+  arriveBufferMinutes: 5,
+  schoolStartTime: "08:00",
+  schoolName: "Oak Grove Middle School",
 };

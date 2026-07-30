@@ -1,10 +1,5 @@
 import { useMemo } from "react";
-import { WoodhouseDashboard } from "./components/WoodhouseDashboard";
-import { MorningBriefing } from "./components/MorningBriefing";
-import { WeatherPanel } from "./components/WeatherPanel";
-import { TodoPanel } from "./components/TodoPanel";
-import { SchedulePanel } from "./components/SchedulePanel";
-import { EmailPanel } from "./components/EmailPanel";
+import { TodayCommandCenter } from "./components/TodayCommandCenter";
 import { SettingsDrawer } from "./components/SettingsDrawer";
 import { useSettings } from "./hooks/useSettings";
 import { useWeather } from "./hooks/useWeather";
@@ -12,38 +7,47 @@ import { useTodos } from "./hooks/useTodos";
 import { useGoogleIntegration, useSchedule } from "./hooks/useGoogle";
 import { useEmails } from "./hooks/useEmails";
 import { useWoodhouse } from "./hooks/useWoodhouse";
-import { StocksPanel } from "./components/StocksPanel";
 import { useStocks } from "./hooks/useStocks";
 import { orchestrationToCalendarEvents } from "./lib/familyCalendar";
+import { computeLeaveBy, filterTodayTimeline } from "./lib/leaveBy";
+import { buildTodayQueue } from "./lib/todayQueue";
 
 export default function App() {
   const { settings, persist, updateCity, saving, error, setError } = useSettings();
-  const { weather, loading: weatherLoading, error: weatherError, refresh } = useWeather(settings);
-  const { pending, done, add, toggle, remove } = useTodos();
+  const { weather } = useWeather(settings);
+  const { pending, add, toggle } = useTodos();
   const { connected, accountEmail, connect, disconnect } = useGoogleIntegration();
-  const { allEvents, loading: scheduleLoading, error: scheduleError, addLocalEvent, removeLocalEvent } =
-    useSchedule(connected);
-  const { messages, loading: emailLoading, error: emailError, refresh: refreshEmail, unread } =
-    useEmails(connected);
-  const { snapshot: woodhouse, source: woodhouseSource, loading: woodhouseLoading, error: woodhouseError, lastSync, refresh: refreshWoodhouse } =
-    useWoodhouse();
-
-  const { snapshot: stocks, loading: stocksLoading, error: stocksError, refresh: refreshStocks } =
-    useStocks();
+  const { allEvents } = useSchedule(connected);
+  const { messages, unread } = useEmails(connected);
+  const { snapshot: woodhouse } = useWoodhouse();
+  const { snapshot: stocks } = useStocks();
 
   const familyScheduleEvents = useMemo(
     () => (woodhouse ? orchestrationToCalendarEvents(woodhouse) : []),
     [woodhouse],
   );
 
-  const scheduleEvents = useMemo(() => {
-    const merged = [...familyScheduleEvents, ...allEvents].sort(
+  const allSchedule = useMemo(() => {
+    return [...familyScheduleEvents, ...allEvents].sort(
       (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime(),
     );
-    return merged.filter((e) => new Date(e.start) >= new Date()).slice(0, 16);
   }, [allEvents, familyScheduleEvents]);
 
-  const nextEvent = scheduleEvents[0]?.title;
+  const todayTimeline = useMemo(
+    () => filterTodayTimeline(allSchedule, settings.timezone),
+    [allSchedule, settings.timezone],
+  );
+
+  const leaveBy = useMemo(
+    () => computeLeaveBy(settings, woodhouse, allSchedule),
+    [settings, woodhouse, allSchedule],
+  );
+
+  const todayActions = useMemo(
+    () => buildTodayQueue(pending, woodhouse),
+    [pending, woodhouse],
+  );
+
   const displayName = accountEmail?.split("@")[0];
 
   return (
@@ -60,59 +64,24 @@ export default function App() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-8 space-y-6">
-        <MorningBriefing
+      <main className="mx-auto max-w-6xl px-4 py-6">
+        <TodayCommandCenter
+          settings={settings}
           weather={weather}
-          pendingTodos={pending.length}
+          leaveBy={leaveBy}
+          displayName={displayName}
           unreadEmails={unread}
-          nextEventTitle={nextEvent}
-          userName={displayName}
+          actions={todayActions}
+          todayTimeline={todayTimeline}
           woodhouse={woodhouse}
           stocks={stocks}
+          messages={messages}
+          googleConnected={connected}
+          onConnectGoogle={connect}
+          onToggleTodo={toggle}
+          onAddTodo={add}
+          pendingTodos={pending}
         />
-
-        <StocksPanel
-          snapshot={stocks}
-          loading={stocksLoading}
-          error={stocksError}
-          onRefresh={() => void refreshStocks()}
-        />
-
-        <WoodhouseDashboard
-          snapshot={woodhouse}
-          source={woodhouseSource}
-          loading={woodhouseLoading}
-          error={woodhouseError}
-          lastSync={lastSync}
-          onRefresh={() => void refreshWoodhouse()}
-          onImportAction={(title) => add(title)}
-        />
-
-        <div className="grid gap-6 lg:grid-cols-2">
-          <WeatherPanel
-            city={settings.city}
-            weather={weather}
-            loading={weatherLoading}
-            error={weatherError}
-            onRefresh={() => void refresh()}
-          />
-          <TodoPanel pending={pending} done={done} onAdd={add} onToggle={toggle} onRemove={remove} />
-          <SchedulePanel
-            events={scheduleEvents}
-            loading={scheduleLoading}
-            error={scheduleError}
-            onAddLocal={addLocalEvent}
-            onRemoveLocal={removeLocalEvent}
-          />
-          <EmailPanel
-            messages={messages}
-            loading={emailLoading}
-            error={emailError}
-            connected={connected}
-            onConnect={connect}
-            onRefresh={() => void refreshEmail()}
-          />
-        </div>
       </main>
 
       <SettingsDrawer
@@ -125,7 +94,9 @@ export default function App() {
         }}
         onSaveWoodhouseNodes={(nodes) => {
           persist({ ...settings, woodhouseNodes: nodes });
-          void refreshWoodhouse();
+        }}
+        onSaveCommute={(patch) => {
+          persist({ ...settings, ...patch });
         }}
         onConnectGoogle={connect}
         onDisconnectGoogle={() => void disconnect()}

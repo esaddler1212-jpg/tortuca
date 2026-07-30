@@ -10,6 +10,7 @@ interface Props {
   accountEmail?: string;
   onSaveCity: (city: string) => Promise<boolean>;
   onSaveWoodhouseNodes: (nodes: WoodhouseRegistryEntry[]) => void;
+  onSaveCommute: (patch: Partial<Pick<UserSettings, "commuteMinutes" | "arriveBufferMinutes" | "schoolStartTime" | "schoolName">>) => void;
   onConnectGoogle: () => void;
   onDisconnectGoogle: () => void;
   saving: boolean;
@@ -22,6 +23,7 @@ export function SettingsDrawer({
   accountEmail,
   onSaveCity,
   onSaveWoodhouseNodes,
+  onSaveCommute,
   onConnectGoogle,
   onDisconnectGoogle,
   saving,
@@ -30,6 +32,10 @@ export function SettingsDrawer({
   const [open, setOpen] = useState(false);
   const [city, setCity] = useState(settings.city);
   const [nodes, setNodes] = useState(settings.woodhouseNodes);
+  const [commute, setCommute] = useState(String(settings.commuteMinutes));
+  const [buffer, setBuffer] = useState(String(settings.arriveBufferMinutes));
+  const [schoolStart, setSchoolStart] = useState(settings.schoolStartTime);
+  const [schoolName, setSchoolName] = useState(settings.schoolName);
 
   const save = async () => {
     const ok = await onSaveCity(city);
@@ -74,6 +80,36 @@ export function SettingsDrawer({
                   onClick={() => void save()}
                 >
                   {saving ? "Saving…" : "Save location"}
+                </button>
+              </div>
+              <div className="border-t border-alfred-border pt-6">
+                <h3 className="text-sm font-medium mb-2 text-alfred-gold">Leave-by time</h3>
+                <p className="text-sm text-alfred-mist mb-3">
+                  Alfred calculates when to leave for school or your first calendar event.
+                </p>
+                <div className="space-y-2">
+                  <label className="text-xs text-alfred-mist" htmlFor="school-name">School name</label>
+                  <input id="school-name" className="input-field" value={schoolName} onChange={(e) => setSchoolName(e.target.value)} />
+                  <label className="text-xs text-alfred-mist" htmlFor="school-start">First bell (HH:MM)</label>
+                  <input id="school-start" className="input-field" value={schoolStart} onChange={(e) => setSchoolStart(e.target.value)} placeholder="08:00" />
+                  <label className="text-xs text-alfred-mist" htmlFor="commute">Commute (minutes)</label>
+                  <input id="commute" type="number" min={1} className="input-field" value={commute} onChange={(e) => setCommute(e.target.value)} />
+                  <label className="text-xs text-alfred-mist" htmlFor="buffer">Arrival buffer (minutes)</label>
+                  <input id="buffer" type="number" min={0} className="input-field" value={buffer} onChange={(e) => setBuffer(e.target.value)} />
+                </div>
+                <button
+                  type="button"
+                  className="btn-gold mt-3 w-full"
+                  onClick={() =>
+                    onSaveCommute({
+                      schoolName: schoolName.trim(),
+                      schoolStartTime: schoolStart.trim() || "08:00",
+                      commuteMinutes: Math.max(1, Number(commute) || 25),
+                      arriveBufferMinutes: Math.max(0, Number(buffer) || 5),
+                    })
+                  }
+                >
+                  Save leave-by settings
                 </button>
               </div>
               <div className="border-t border-alfred-border pt-6">
