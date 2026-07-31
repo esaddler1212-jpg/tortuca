@@ -1,11 +1,11 @@
 {
-  "name": "Alfred — Personal Assistant",
+  "name": "Alfred — Operator Interface",
   "short_name": "Alfred",
-  "description": "Your personal command center: schedule, todos, weather, Woodhouse apps, and markets.",
+  "description": "Personal command center: schedule, todos, commute, Woodhouse apps, and markets.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0c0a09",
-  "theme_color": "#c9a227",
+  "background_color": "#020617",
+  "theme_color": "#22d3ee",
   "icons": [
     {
       "src": "/icon.svg",

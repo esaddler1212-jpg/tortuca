@@ -49,8 +49,8 @@ export function MorningRitualModal({ settings, fitness, leaveBy, onLogWorkout }:
       <div className="panel w-full max-w-lg p-6 border-alfred-gold/30 shadow-panel">
         <div className="flex items-start justify-between gap-3 mb-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-alfred-gold">Morning ritual</p>
-            <h2 className="font-display text-2xl font-semibold mt-1">Rise and operate</h2>
+            <p className="hud-label mb-1">Morning protocol</p>
+            <h2 className="font-display text-2xl font-semibold tracking-wide mt-1">RISE AND OPERATE</h2>
           </div>
           <button type="button" className="btn-ghost p-2" onClick={dismiss} aria-label="Close">
             <X className="h-5 w-5" />

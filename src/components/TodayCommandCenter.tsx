@@ -109,11 +109,11 @@ export function TodayCommandCenter({
   return (
     <div className="space-y-4">
       {/* Hero — leave by + status chips */}
-      <section className="panel p-5 md:p-6 border-alfred-gold/25">
+      <section className="panel-hud p-5 md:p-6">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-alfred-gold mb-1">Today</p>
-            <h2 className="font-display text-3xl md:text-4xl font-semibold">
+            <p className="hud-label mb-1">Status · Today</p>
+            <h2 className="font-display text-3xl md:text-4xl font-semibold tracking-wide">
               {greeting}{displayName ? `, ${displayName}` : ""}
             </h2>
             {weatherLoading && (
@@ -132,8 +132,8 @@ export function TodayCommandCenter({
                 {format(parseISO(weather.sunset), "h:mm a")} · {settings.city}
               </p>
             )}
-            <blockquote className="mt-4 border-l-2 border-alfred-gold/40 pl-4 max-w-xl">
-              <p className="text-sm text-alfred-cream/90 italic leading-relaxed flex gap-2">
+            <blockquote className="mt-4 border-l-2 border-cyan-400/50 pl-4 max-w-xl">
+              <p className="text-sm text-alfred-cream/90 leading-relaxed flex gap-2 font-mono">
                 <Quote className="h-4 w-4 text-alfred-gold/70 shrink-0 mt-0.5" aria-hidden />
                 <span>&ldquo;{dailyQuote.text}&rdquo;</span>
               </p>
@@ -141,11 +141,11 @@ export function TodayCommandCenter({
             </blockquote>
           </div>
           {leaveBy && (
-            <div className="panel border-alfred-gold/40 bg-alfred-gold/5 px-5 py-4 rounded-xl shrink-0">
-              <p className="text-xs uppercase tracking-wider text-alfred-gold flex items-center gap-1">
-                <Clock className="h-3.5 w-3.5" /> Leave by
+            <div className="panel-hud px-5 py-4 shrink-0 animate-hud-pulse">
+              <p className="hud-label flex items-center gap-1">
+                <Clock className="h-3.5 w-3.5" /> Departure window
               </p>
-              <p className="font-display text-4xl font-semibold text-alfred-cream mt-1">
+              <p className="font-mono text-4xl font-semibold text-alfred-cream mt-1 hud-glow-text">
                 {format(leaveBy.leaveBy, "h:mm a")}
               </p>
               <p className="text-sm text-alfred-mist mt-1">
@@ -212,9 +212,9 @@ export function TodayCommandCenter({
       </section>
 
       {eveningMode && (
-        <section className="panel p-5 border-alfred-gold/20 bg-gradient-to-br from-alfred-ink/80 to-alfred-panel/40">
-          <h3 className="font-display text-lg text-alfred-gold mb-3 flex items-center gap-2">
-            <Moon className="h-4 w-4" /> {eveningWrap.headline}
+        <section className="panel p-5 border-cyan-500/25 bg-gradient-to-br from-cyan-950/40 to-alfred-panel/30">
+          <h3 className="font-display text-lg text-alfred-gold mb-3 flex items-center gap-2 tracking-wide">
+            <Moon className="h-4 w-4" /> {eveningWrap.headline.toUpperCase()}
           </h3>
           <blockquote className="border-l-2 border-alfred-gold/40 pl-4 mb-4">
             <p className="text-sm text-alfred-cream/90 italic">&ldquo;{eveningWrap.quote.text}&rdquo;</p>
@@ -441,10 +441,10 @@ function BedtimeCard({ bedtime }: { bedtime: BedtimePlan }) {
             : "border-alfred-border/60"
       }`}
     >
-      <p className="text-xs uppercase tracking-wider text-alfred-mist flex items-center gap-1">
-        <Moon className="h-3.5 w-3.5" /> Suggested bedtime
+      <p className="hud-label flex items-center gap-1">
+        <Moon className="h-3.5 w-3.5" /> Sleep protocol
       </p>
-      <p className="font-display text-2xl font-semibold text-alfred-cream mt-1">
+      <p className="font-mono text-2xl font-semibold text-alfred-cream mt-1 hud-glow-text">
         {format(bedtime.lightsOut, "h:mm a")}
       </p>
       <p className="text-xs text-alfred-mist/80 mt-1">

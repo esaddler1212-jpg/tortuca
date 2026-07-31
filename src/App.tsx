@@ -29,6 +29,7 @@ import { buildTodayQueue } from "./lib/todayQueue";
 import { buildWeeklyReview, isWeeklyReviewTime } from "./lib/weeklyReview";
 import { buildFitnessStatus } from "./lib/fitness";
 import { assessOvercommitment } from "./lib/overcommitment";
+import { HudRing } from "./components/HudRing";
 
 export default function App() {
   const { settings, persist, updateCity, saving, error, setError } = useSettings();
@@ -132,16 +133,18 @@ export default function App() {
   const displayName = accountEmail?.split("@")[0];
 
   return (
-    <div className="min-h-screen pb-20">
-      <header className="border-b border-alfred-border/80 bg-alfred-panel/50 backdrop-blur-md sticky top-0 z-10">
+    <div className="min-h-screen pb-20 relative">
+      <div className="hud-vignette" aria-hidden />
+      <div className="hud-scanline" aria-hidden />
+      <header className="border-b border-cyan-500/20 bg-alfred-panel/40 backdrop-blur-xl sticky top-0 z-10">
         <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-alfred-gold">Personal assistant</p>
-            <h1 className="font-display text-3xl font-semibold">Alfred</h1>
+            <p className="hud-label mb-1">Operator interface</p>
+            <h1 className="font-display text-3xl font-bold tracking-[0.15em] text-alfred-cream hud-glow-text">
+              ALFRED
+            </h1>
           </div>
-          <span className="text-4xl" aria-hidden>
-            🎩
-          </span>
+          <HudRing className="h-11 w-11" />
         </div>
       </header>
 

@@ -56,9 +56,9 @@ export function CommandBar({
   };
 
   return (
-    <section className="panel p-4 border-alfred-gold/25">
-      <label className="text-xs uppercase tracking-wider text-alfred-gold flex items-center gap-1.5 mb-2" htmlFor="alfred-command">
-        <MessageSquare className="h-3.5 w-3.5" /> Alfred, ...
+    <section className="panel-hud p-4">
+      <label className="hud-label flex items-center gap-1.5 mb-2" htmlFor="alfred-command">
+        <MessageSquare className="h-3.5 w-3.5" /> Voice command
       </label>
       <form
         className="flex gap-2"
@@ -79,7 +79,9 @@ export function CommandBar({
         </button>
       </form>
       {feedback && (
-        <p className="text-sm text-alfred-mist mt-2 italic font-display">— {feedback}</p>
+        <p className="text-sm text-alfred-mist mt-2 font-mono border-l-2 border-cyan-400/40 pl-3">
+          ALFRED: {feedback}
+        </p>
       )}
     </section>
   );

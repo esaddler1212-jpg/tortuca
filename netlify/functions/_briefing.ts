@@ -97,14 +97,14 @@ export async function buildMorningDigest(
 
   const html = `
     <div style="font-family: Georgia, serif; max-width: 560px; color: #1a1a1a;">
-      <p style="color: #9a7b2f; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase;">Alfred</p>
+      <p style="color: #22d3ee; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase;">Alfred</p>
       <h1 style="font-size: 24px;">Good morning</h1>
-      <blockquote style="border-left: 3px solid #c9a227; padding-left: 16px; color: #444; font-style: italic;">
+      <blockquote style="border-left: 3px solid #22d3ee; padding-left: 16px; color: #444; font-style: italic;">
         "${quote.text}"<br/><span style="font-size: 13px;">— ${quote.author}</span>
       </blockquote>
       ${weather ? `<p>Weather in ${settings.city}: ${Math.round(weather.temp)}° (${weather.label}). High ${Math.round(weather.high)}°.</p>` : ""}
       ${leavePlan ? `<p><strong>Leave by ${formatTime(leavePlan.leaveBy, tz)}</strong> for ${leavePlan.destination}.</p>` : `<p>Wake alarm: ${settings.wakeTime}</p>`}
-      <h2 style="font-size: 16px; color: #9a7b2f;">Today's focus</h2>
+      <h2 style="font-size: 16px; color: #22d3ee;">Today's focus</h2>
       <ul>${topTasks.length ? topTasks.map((t) => `<li>${t}</li>`).join("") : "<li>All clear</li>"}</ul>
       ${urgent.length ? `<p><strong>${urgent.length}</strong> due today.</p>` : ""}
       <p style="color: #666; font-size: 13px;">Commute: ${settings.commuteMinutes} min drive + ${settings.arriveBufferMinutes} min buffer${settings.useLiveCommute ? " (live traffic when available)" : ""}.</p>
