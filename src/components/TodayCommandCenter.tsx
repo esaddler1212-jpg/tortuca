@@ -8,8 +8,10 @@ import type { WoodhouseOrchestrationSnapshot } from "../types/woodhouse";
 import type { WeatherSnapshot } from "../types";
 import type { TodoItem } from "../types";
 import type { LeaveByPlan } from "../lib/leaveBy";
+import type { BedtimePlan } from "../lib/bedtime";
 import type { TodayAction } from "../lib/todayQueue";
 import type { EveningWrap } from "../lib/eveningWrap";
+import { isPastLightsOut, isWindDownTime } from "../lib/bedtime";
 import { getDailyQuote } from "../lib/dailyQuote";
 import { weatherLabel } from "../lib/weather";
 import type { FitnessLog } from "../types";
@@ -143,18 +145,25 @@ export function TodayCommandCenter({
               )}
             </div>
           )}
-          {!leaveBy && tomorrowLeaveBy && eveningMode && (
-            <div className="panel border-alfred-border/60 px-5 py-4 rounded-xl shrink-0">
-              <p className="text-xs uppercase tracking-wider text-alfred-mist flex items-center gap-1">
-                <Clock className="h-3.5 w-3.5" /> Tomorrow
-              </p>
-              <p className="font-display text-2xl font-semibold text-alfred-cream mt-1">
-                Leave by {format(tomorrowLeaveBy.leaveBy, "h:mm a")}
-              </p>
-              <p className="text-xs text-alfred-mist/80 mt-1">
-                {tomorrowLeaveBy.scheduleLabel ?? tomorrowLeaveBy.reason}
-                {tomorrowLeaveBy.dismissal ? ` · ${tomorrowLeaveBy.dismissal}` : ""}
-              </p>
+          {!leaveBy && eveningMode && (tomorrowLeaveBy || eveningWrap.bedtime) && (
+            <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+              {tomorrowLeaveBy && (
+                <div className="panel border-alfred-border/60 px-5 py-4 rounded-xl">
+                  <p className="text-xs uppercase tracking-wider text-alfred-mist flex items-center gap-1">
+                    <Clock className="h-3.5 w-3.5" /> Tomorrow
+                  </p>
+                  <p className="font-display text-2xl font-semibold text-alfred-cream mt-1">
+                    Leave by {format(tomorrowLeaveBy.leaveBy, "h:mm a")}
+                  </p>
+                  <p className="text-xs text-alfred-mist/80 mt-1">
+                    {tomorrowLeaveBy.scheduleLabel ?? tomorrowLeaveBy.reason}
+                    {tomorrowLeaveBy.dismissal ? ` · ${tomorrowLeaveBy.dismissal}` : ""}
+                  </p>
+                </div>
+              )}
+              {eveningWrap.bedtime && (
+                <BedtimeCard bedtime={eveningWrap.bedtime} />
+              )}
             </div>
           )}
         </div>
@@ -189,6 +198,12 @@ export function TodayCommandCenter({
             <Chip label={`${eveningWrap.remainingTasks} open`} alert={eveningWrap.remainingTasks > 0} />
             {eveningWrap.stillUrgent > 0 && (
               <Chip label={`${eveningWrap.stillUrgent} urgent`} alert />
+            )}
+            {eveningWrap.bedtime && (
+              <Chip
+                label={`Lights out ${format(eveningWrap.bedtime.lightsOut, "h:mm a")}`}
+                alert={isPastLightsOut(eveningWrap.bedtime)}
+              />
             )}
           </div>
         </section>
@@ -361,6 +376,44 @@ export function TodayCommandCenter({
           </section>
         </div>
       </div>
+    </div>
+  );
+}
+
+function BedtimeCard({ bedtime }: { bedtime: BedtimePlan }) {
+  const now = new Date();
+  const pastLights = isPastLightsOut(bedtime, now);
+  const windingDown = isWindDownTime(bedtime, now) && !pastLights;
+
+  return (
+    <div
+      className={`panel px-5 py-4 rounded-xl ${
+        pastLights
+          ? "border-amber-400/40 bg-amber-400/5"
+          : windingDown
+            ? "border-alfred-gold/50 bg-alfred-gold/10"
+            : "border-alfred-border/60"
+      }`}
+    >
+      <p className="text-xs uppercase tracking-wider text-alfred-mist flex items-center gap-1">
+        <Moon className="h-3.5 w-3.5" /> Suggested bedtime
+      </p>
+      <p className="font-display text-2xl font-semibold text-alfred-cream mt-1">
+        {format(bedtime.lightsOut, "h:mm a")}
+      </p>
+      <p className="text-xs text-alfred-mist/80 mt-1">
+        Wind down {format(bedtime.windDownStart, "h:mm a")} · Wake {format(bedtime.wakeUp, "h:mm a")}
+      </p>
+      <p className="text-xs text-alfred-mist/70 mt-1">{bedtime.reason}</p>
+      {bedtime.earlyWake && (
+        <p className="text-xs text-alfred-gold/90 mt-2">Early alarm tomorrow based on your schedule</p>
+      )}
+      {windingDown && (
+        <p className="text-xs text-alfred-gold mt-2">Wind-down time — start your evening routine</p>
+      )}
+      {pastLights && (
+        <p className="text-xs text-amber-300/90 mt-2">Past lights-out — rest when you can</p>
+      )}
     </div>
   );
 }

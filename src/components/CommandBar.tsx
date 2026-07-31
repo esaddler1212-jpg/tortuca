@@ -2,12 +2,14 @@ import { useState } from "react";
 import { MessageSquare, Send } from "lucide-react";
 import type { UserSettings } from "../types";
 import type { LeaveByPlan } from "../lib/leaveBy";
+import type { BedtimePlan } from "../lib/bedtime";
 import { parseCommand } from "../lib/commandParser";
 import type { WorkoutType } from "../lib/fitness";
 
 interface Props {
   settings: UserSettings;
   leaveBy: LeaveByPlan | null;
+  bedtime: BedtimePlan | null;
   onAddTodo: (title: string, dueDate?: string) => void;
   onLogWorkout: (type: WorkoutType) => void;
   onAddEvent: (title: string, start: string, end?: string) => void;
@@ -17,6 +19,7 @@ interface Props {
 export function CommandBar({
   settings,
   leaveBy,
+  bedtime,
   onAddTodo,
   onLogWorkout,
   onAddEvent,
@@ -26,7 +29,7 @@ export function CommandBar({
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const run = () => {
-    const cmd = parseCommand(text, settings, leaveBy);
+    const cmd = parseCommand(text, settings, leaveBy, bedtime);
     switch (cmd.kind) {
       case "todo":
         onAddTodo(cmd.title, cmd.dueDate);
@@ -67,7 +70,7 @@ export function CommandBar({
         <input
           id="alfred-command"
           className="input-field flex-1"
-          placeholder='“buy chicken”, “log legs”, “leave by”, “what can I make”'
+          placeholder='“buy chicken”, “log legs”, “leave by”, “bedtime”, “what can I make”'
           value={text}
           onChange={(e) => setText(e.target.value)}
         />

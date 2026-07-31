@@ -20,6 +20,7 @@ import { useShoppingList } from "./hooks/useShoppingList";
 import { MealPrepPanel } from "./components/MealPrepPanel";
 import { orchestrationToCalendarEvents } from "./lib/familyCalendar";
 import { computeLeaveBy, filterTodayTimeline } from "./lib/leaveBy";
+import { computeSuggestedBedtime } from "./lib/bedtime";
 import { buildEveningWrap, isEveningMode } from "./lib/eveningWrap";
 import { buildTodayQueue } from "./lib/todayQueue";
 import { buildWeeklyReview, isWeeklyReviewTime } from "./lib/weeklyReview";
@@ -66,6 +67,11 @@ export default function App() {
     tomorrow.setDate(tomorrow.getDate() + 1);
     return computeLeaveBy(settings, woodhouse, allSchedule, new Date(), tomorrow, effectiveMinutes);
   }, [settings, woodhouse, allSchedule, effectiveMinutes]);
+
+  const bedtime = useMemo(
+    () => computeSuggestedBedtime(settings, tomorrowLeaveBy),
+    [settings, tomorrowLeaveBy],
+  );
 
   const todayActions = useMemo(
     () => buildTodayQueue(pending, woodhouse),
@@ -129,6 +135,7 @@ export default function App() {
         <CommandBar
           settings={settings}
           leaveBy={leaveBy}
+          bedtime={bedtime}
           onAddTodo={add}
           onLogWorkout={logWorkout}
           onAddEvent={addLocalEvent}

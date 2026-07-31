@@ -20,6 +20,10 @@ export interface SyncedUserSettings {
   wakeTime: string;
   morningWorkoutDeadlineHour: number;
   fitnessSuggestTime: string;
+  targetSleepHours: number;
+  windDownMinutes: number;
+  morningRoutineMinutes: number;
+  weekendWakeTime: string;
 }
 
 export type WorkoutType = "arms" | "body" | "legs" | "cardio";

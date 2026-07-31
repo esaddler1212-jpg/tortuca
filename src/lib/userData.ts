@@ -24,6 +24,10 @@ export function toSyncedSettings(settings: UserSettings): SyncedUserSettings {
     wakeTime: settings.wakeTime,
     morningWorkoutDeadlineHour: settings.morningWorkoutDeadlineHour,
     fitnessSuggestTime: settings.fitnessSuggestTime,
+    targetSleepHours: settings.targetSleepHours,
+    windDownMinutes: settings.windDownMinutes,
+    morningRoutineMinutes: settings.morningRoutineMinutes,
+    weekendWakeTime: settings.weekendWakeTime,
   };
 }
 

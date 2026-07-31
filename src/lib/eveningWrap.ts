@@ -5,6 +5,8 @@ import type { WeatherSnapshot } from "../types";
 import type { LeaveByPlan } from "./leaveBy";
 import type { TodayAction } from "./todayQueue";
 import { getDailyQuote } from "./dailyQuote";
+import { computeSuggestedBedtime } from "./bedtime";
+import type { BedtimePlan } from "./bedtime";
 
 export interface EveningWrap {
   headline: string;
@@ -14,6 +16,7 @@ export interface EveningWrap {
   stillUrgent: number;
   tomorrowPreview?: string;
   quote: { text: string; author: string };
+  bedtime: BedtimePlan | null;
 }
 
 function tomorrowKey(timeZone: string): string {
@@ -97,6 +100,13 @@ export function buildEveningWrap(
       : "Looking ahead";
 
   const quote = getDailyQuote(tz, now);
+  const bedtime = computeSuggestedBedtime(settings, tomorrowLeaveBy, now);
+
+  if (bedtime) {
+    lines.push(
+      `Suggested bedtime: lights out ${format(bedtime.lightsOut, "h:mm a")} (wind down ${format(bedtime.windDownStart, "h:mm a")}) — ${bedtime.reason}.`,
+    );
+  }
 
   return {
     headline,
@@ -106,6 +116,7 @@ export function buildEveningWrap(
     stillUrgent,
     tomorrowPreview,
     quote,
+    bedtime,
   };
 }
 

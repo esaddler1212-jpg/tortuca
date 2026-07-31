@@ -68,6 +68,14 @@ export interface UserSettings {
   morningWorkoutDeadlineHour: number;
   /** Fallback afternoon workout suggestion HH:MM */
   fitnessSuggestTime: string;
+  /** Target sleep duration (hours) */
+  targetSleepHours: number;
+  /** Minutes before lights-out to start winding down */
+  windDownMinutes: number;
+  /** Minutes from wake to out-the-door (before commute) */
+  morningRoutineMinutes: number;
+  /** Weekend wake when tomorrow has no commitments */
+  weekendWakeTime: string;
 }
 
 export type WorkoutType = "arms" | "body" | "legs" | "cardio";
@@ -122,4 +130,8 @@ export const DEFAULT_SETTINGS: UserSettings = {
   wakeTime: "04:15",
   morningWorkoutDeadlineHour: 9,
   fitnessSuggestTime: "17:00",
+  targetSleepHours: 7.5,
+  windDownMinutes: 30,
+  morningRoutineMinutes: 45,
+  weekendWakeTime: "08:00",
 };

@@ -1,5 +1,7 @@
 import type { UserSettings } from "../types";
 import type { LeaveByPlan } from "./leaveBy";
+import type { BedtimePlan } from "./bedtime";
+import { isPastLightsOut, isWindDownTime } from "./bedtime";
 import { parseWorkoutType, type WorkoutType } from "./fitness";
 import { format } from "date-fns";
 
@@ -58,6 +60,7 @@ export function parseCommand(
   raw: string,
   settings: UserSettings,
   leaveBy: LeaveByPlan | null,
+  bedtime: BedtimePlan | null = null,
 ): CommandAction {
   const text = raw.trim();
   if (!text) return { kind: "noop", message: "I'm listening, sir." };
@@ -76,6 +79,22 @@ export function parseCommand(
       };
     }
     return { kind: "reply", message: "No leave-by window right now — calendar looks clear." };
+  }
+
+  if (/bedtime|when (do i|should i) sleep|lights out|wind down/.test(lower)) {
+    if (bedtime) {
+      const now = new Date();
+      const status = isPastLightsOut(bedtime, now)
+        ? "You're past lights-out — rest when you can."
+        : isWindDownTime(bedtime, now)
+          ? "Wind-down time now."
+          : "";
+      return {
+        kind: "reply",
+        message: `Lights out ${format(bedtime.lightsOut, "h:mm a")}, wind down ${format(bedtime.windDownStart, "h:mm a")}. Wake ${format(bedtime.wakeUp, "h:mm a")}. ${bedtime.reason}${status ? ` ${status}` : ""}`,
+      };
+    }
+    return { kind: "reply", message: "Set your wake time in Settings — I'll suggest bedtime from tomorrow's schedule." };
   }
 
   const workout =
@@ -152,7 +171,7 @@ export function parseCommand(
     return {
       kind: "reply",
       message:
-        "Try: “buy chicken”, “log legs”, “leave by”, “add task review deck”, or “what can I make”.",
+        "Try: “buy chicken”, “log legs”, “leave by”, “bedtime”, “add task review deck”, or “what can I make”.",
     };
   }
 

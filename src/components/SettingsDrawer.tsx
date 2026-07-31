@@ -36,6 +36,10 @@ interface Props {
         | "wakeTime"
         | "morningWorkoutDeadlineHour"
         | "fitnessSuggestTime"
+        | "targetSleepHours"
+        | "windDownMinutes"
+        | "morningRoutineMinutes"
+        | "weekendWakeTime"
       >
     >,
   ) => void;
@@ -81,6 +85,10 @@ export function SettingsDrawer({
   const [wakeTime, setWakeTime] = useState(settings.wakeTime);
   const [workoutDeadline, setWorkoutDeadline] = useState(String(settings.morningWorkoutDeadlineHour));
   const [fitnessTime, setFitnessTime] = useState(settings.fitnessSuggestTime);
+  const [targetSleep, setTargetSleep] = useState(String(settings.targetSleepHours));
+  const [windDown, setWindDown] = useState(String(settings.windDownMinutes));
+  const [morningRoutine, setMorningRoutine] = useState(String(settings.morningRoutineMinutes));
+  const [weekendWake, setWeekendWake] = useState(settings.weekendWakeTime);
 
   const save = async () => {
     const ok = await onSaveCity(city);
@@ -205,6 +213,65 @@ export function SettingsDrawer({
                   }
                 >
                   Save training schedule
+                </button>
+              </div>
+              <div className="border-t border-alfred-border pt-6">
+                <h3 className="text-sm font-medium mb-2 text-alfred-gold">Sleep &amp; bedtime</h3>
+                <p className="text-sm text-alfred-mist mb-3">
+                  Alfred suggests lights-out from tomorrow&apos;s schedule, your wake alarm, and target sleep hours.
+                </p>
+                <label className="text-xs text-alfred-mist" htmlFor="target-sleep">Target sleep (hours)</label>
+                <input
+                  id="target-sleep"
+                  type="number"
+                  min={5}
+                  max={10}
+                  step={0.5}
+                  className="input-field mb-2"
+                  value={targetSleep}
+                  onChange={(e) => setTargetSleep(e.target.value)}
+                />
+                <label className="text-xs text-alfred-mist" htmlFor="wind-down">Wind-down buffer (minutes)</label>
+                <input
+                  id="wind-down"
+                  type="number"
+                  min={10}
+                  max={90}
+                  className="input-field mb-2"
+                  value={windDown}
+                  onChange={(e) => setWindDown(e.target.value)}
+                />
+                <label className="text-xs text-alfred-mist" htmlFor="morning-routine">Morning routine before leave (minutes)</label>
+                <input
+                  id="morning-routine"
+                  type="number"
+                  min={15}
+                  max={120}
+                  className="input-field mb-2"
+                  value={morningRoutine}
+                  onChange={(e) => setMorningRoutine(e.target.value)}
+                />
+                <label className="text-xs text-alfred-mist" htmlFor="weekend-wake">Weekend wake (HH:MM, open mornings)</label>
+                <input
+                  id="weekend-wake"
+                  className="input-field mb-2"
+                  value={weekendWake}
+                  onChange={(e) => setWeekendWake(e.target.value)}
+                  placeholder="08:00"
+                />
+                <button
+                  type="button"
+                  className="btn-gold w-full"
+                  onClick={() =>
+                    onSaveCommute({
+                      targetSleepHours: Math.min(10, Math.max(5, Number(targetSleep) || 7.5)),
+                      windDownMinutes: Math.min(90, Math.max(10, Number(windDown) || 30)),
+                      morningRoutineMinutes: Math.min(120, Math.max(15, Number(morningRoutine) || 45)),
+                      weekendWakeTime: weekendWake.trim() || "08:00",
+                    })
+                  }
+                >
+                  Save sleep settings
                 </button>
               </div>
               <div className="border-t border-alfred-border pt-6">
