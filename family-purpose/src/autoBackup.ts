@@ -3,7 +3,18 @@ import {
   downloadBackup,
   type Backup,
 } from "./backup";
+import {
+  countNewCheckIns,
+  isBackupPayload,
+  mergeBackups,
+} from "./backupMerge";
 import type { DebriefSettings } from "./types";
+import {
+  clearCheckInCache,
+  saveAllCheckIns,
+  saveGroupMembers,
+  saveGroupSessions,
+} from "./storage";
 
 const STATE_KEY = "familypurpose_backup_state";
 
@@ -68,18 +79,90 @@ export interface AutoBackupResult {
   skipped?: boolean;
   downloaded?: boolean;
   uploaded?: boolean;
+  merged?: number;
   error?: string;
+}
+
+export interface PullMergeResult {
+  merged?: boolean;
+  addedCheckIns?: number;
+  error?: string;
+}
+
+function backupHeaders(settings: DebriefSettings): Record<string, string> {
+  const key = settings.backupUploadKey.trim();
+  return key ? { "X-Backup-Key": key } : {};
+}
+
+/** Pull merged cloud data and combine with this device (phone ↔ computer sync). */
+export async function pullAndMergeFromCloud(
+  settings: DebriefSettings,
+): Promise<PullMergeResult> {
+  const uploadUrl = settings.backupUploadUrl.trim();
+  if (!uploadUrl) {
+    return { error: "Add a backup upload URL in Settings to sync across devices." };
+  }
+
+  try {
+    const response = await fetch(uploadUrl, {
+      method: "GET",
+      headers: backupHeaders(settings),
+    });
+    if (response.status === 404) {
+      return { merged: false, addedCheckIns: 0 };
+    }
+    if (!response.ok) {
+      return {
+        error: `Could not download sync data (${response.status}). Check your URL and key.`,
+      };
+    }
+
+    const remote: unknown = await response.json();
+    if (!isBackupPayload(remote)) {
+      return { error: "The server returned data that is not a valid backup." };
+    }
+
+    const local = buildBackup();
+    const added = countNewCheckIns(local, remote);
+    if (added === 0 && remote.checkIns.length <= local.checkIns.length) {
+      return { merged: false, addedCheckIns: 0 };
+    }
+
+    const merged = mergeBackups(local, remote);
+    saveAllCheckIns(merged.checkIns);
+    saveGroupMembers(merged.groupMembers);
+    saveGroupSessions(merged.groupSessions);
+    clearCheckInCache();
+    return { merged: true, addedCheckIns: added };
+  } catch {
+    return {
+      error: "Could not reach the backup server. Check your internet connection.",
+    };
+  }
 }
 
 export async function runAutoBackup(
   settings: DebriefSettings,
 ): Promise<AutoBackupResult> {
   if (!settings.autoBackupEnabled) return { skipped: true };
-  if (!needsBackup()) return { skipped: true };
+
+  const uploadUrl = settings.backupUploadUrl.trim();
+  let mergedCount = 0;
+
+  if (uploadUrl) {
+    const pull = await pullAndMergeFromCloud(settings);
+    if (pull.error && pull.error.includes("Could not")) {
+      return { error: pull.error };
+    }
+    if (pull.merged && pull.addedCheckIns) {
+      mergedCount = pull.addedCheckIns;
+    }
+  }
+
+  if (!needsBackup() && mergedCount === 0) return { skipped: true };
 
   const fingerprint = dataFingerprint();
   const backup = buildBackup();
-  const uploadUrl = settings.backupUploadUrl.trim();
 
   if (uploadUrl) {
     try {
@@ -87,12 +170,10 @@ export async function runAutoBackup(
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(settings.backupUploadKey.trim()
-            ? { "X-Backup-Key": settings.backupUploadKey.trim() }
-            : {}),
+          ...backupHeaders(settings),
         },
         body: JSON.stringify({
-          deviceLabel: settings.deviceLabel.trim() || "Chromebook",
+          deviceLabel: settings.deviceLabel.trim() || "device",
           exportedAt: backup.exportedAt,
           backup,
         }),
@@ -100,21 +181,32 @@ export async function runAutoBackup(
       if (!response.ok) {
         return {
           error: `Upload failed (${response.status}). Will try again when you are online.`,
+          merged: mergedCount > 0 ? mergedCount : undefined,
         };
       }
       markBackedUp(fingerprint, "upload");
-      return { uploaded: true };
+      return {
+        uploaded: true,
+        merged: mergedCount > 0 ? mergedCount : undefined,
+      };
     } catch {
       return {
-        error: "Could not reach the backup server. Will try again when you are online.",
+        error:
+          "Could not reach the backup server. Will try again when you are online.",
+        merged: mergedCount > 0 ? mergedCount : undefined,
       };
     }
   }
 
+  if (!needsBackup()) return { skipped: true, merged: mergedCount > 0 ? mergedCount : undefined };
+
   try {
     downloadBackup();
     markBackedUp(fingerprint, "download");
-    return { downloaded: true };
+    return {
+      downloaded: true,
+      merged: mergedCount > 0 ? mergedCount : undefined,
+    };
   } catch {
     return { error: "Could not save the backup file." };
   }

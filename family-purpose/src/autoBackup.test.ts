@@ -68,7 +68,10 @@ describe("runAutoBackup", () => {
   });
 
   it("uploads when a URL is configured", async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ status: 404 })
+      .mockResolvedValueOnce({ ok: true });
     vi.stubGlobal("fetch", fetchMock);
 
     const result = await runAutoBackup({
@@ -80,7 +83,17 @@ describe("runAutoBackup", () => {
     });
 
     expect(result.uploaded).toBe(true);
-    expect(fetchMock).toHaveBeenCalledWith(
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "https://example.com/api/family-purpose-backup",
+      expect.objectContaining({
+        method: "GET",
+        headers: expect.objectContaining({ "X-Backup-Key": "secret" }),
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
       "https://example.com/api/family-purpose-backup",
       expect.objectContaining({
         method: "POST",

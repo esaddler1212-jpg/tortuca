@@ -13,6 +13,7 @@ import {
   needsBackup,
 } from "./autoBackup";
 import SchoolScheduleCard from "./SchoolScheduleCard";
+import { DeviceSyncHint, SyncNowButton } from "./DeviceSync";
 
 function DataBackup({ onRestored }: { onRestored: () => void }) {
   const fileInput = useRef<HTMLInputElement>(null);
@@ -94,12 +95,15 @@ export default function SettingsTab({
   settings,
   onSave,
   onRestored,
+  onSynced,
 }: {
   settings: DebriefSettings;
   onSave: (s: DebriefSettings) => void;
   onRestored: () => void;
+  onSynced: () => void;
 }) {
   const [form, setForm] = useState(settings);
+  const [syncNote, setSyncNote] = useState("");
 
   useEffect(() => {
     setForm(settings);
@@ -258,6 +262,22 @@ export default function SettingsTab({
     </form>
     <SchoolScheduleCard />
     <DataBackup onRestored={onRestored} />
+    <div className="card">
+      <h2>Sync across devices</h2>
+      <DeviceSyncHint settings={form} />
+      <div className="btn-row section-actions">
+        <SyncNowButton
+          settings={form}
+          onMessage={setSyncNote}
+          onDataChange={onSynced}
+        />
+      </div>
+      {syncNote && <p className="hint">{syncNote}</p>}
+      <p className="hint">
+        Label each device in Offline &amp; auto-backup (e.g. &quot;Work laptop&quot;,
+        &quot;My phone&quot;) so backups in the cloud stay separate until they merge.
+      </p>
+    </div>
     </>
   );
 }

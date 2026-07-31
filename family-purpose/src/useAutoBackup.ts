@@ -30,6 +30,7 @@ export function useOnlineStatus(): boolean {
 export function useAutoBackupOnReconnect(
   settings: DebriefSettings,
   onResult: (message: string) => void,
+  onDataChange?: () => void,
 ): void {
   const inFlight = useRef(false);
   const sawOffline = useRef(!navigator.onLine);
@@ -46,9 +47,21 @@ export function useAutoBackupOnReconnect(
       if (result.downloaded) {
         onResult("Backup saved to Downloads — new check-ins are backed up");
       } else if (result.uploaded) {
-        onResult("Backup uploaded — new check-ins are saved off this Chromebook");
+        if (result.merged) {
+          onDataChange?.();
+          onResult(
+            `Synced ${result.merged} check-in${result.merged === 1 ? "" : "s"} from another device and uploaded`,
+          );
+        } else {
+          onResult("Backup uploaded — new check-ins are saved off this device");
+        }
       } else if (result.error) {
         onResult(result.error);
+      } else if (result.merged) {
+        onDataChange?.();
+        onResult(
+          `Synced ${result.merged} check-in${result.merged === 1 ? "" : "s"} from another device`,
+        );
       }
     } finally {
       inFlight.current = false;

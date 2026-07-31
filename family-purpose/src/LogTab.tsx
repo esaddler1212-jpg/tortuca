@@ -516,15 +516,19 @@ export default function LogTab({
   );
 
   return (
-    <>
-      <CheckInForm
-        roster={roster}
-        recentPeriods={recentPeriods}
-        reasonOrder={reasonOrder}
-        todayNames={todayNames}
-        onSaved={() => onChanged("Check-in saved")}
-      />
-      <TodayList checkIns={todayCheckIns} onDelete={() => onChanged()} />
-    </>
+    <div className="log-layout">
+      <div className="log-form-col">
+        <CheckInForm
+          roster={roster}
+          recentPeriods={recentPeriods}
+          reasonOrder={reasonOrder}
+          todayNames={todayNames}
+          onSaved={() => onChanged("Check-in saved")}
+        />
+      </div>
+      <div className="log-list-col">
+        <TodayList checkIns={todayCheckIns} onDelete={() => onChanged()} />
+      </div>
+    </div>
   );
 }

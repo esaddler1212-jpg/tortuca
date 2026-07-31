@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useMemo, useState } from "react";
+import type { Tab } from "./appTabs";
 import type { DebriefSettings } from "./types";
 import {
   getOrCreateSession,
@@ -15,6 +16,8 @@ import LogTab from "./LogTab";
 import { buildFollowUpQueue, needsOutcome } from "./followups";
 import { ConnectivityBannerLive } from "./ConnectivityBanner";
 import { useAutoBackupOnReconnect } from "./useAutoBackup";
+import AppNav from "./AppNav";
+import { DeviceSyncHint } from "./DeviceSync";
 
 const FollowUpTab = lazy(() => import("./FollowUpTab"));
 const GroupTab = lazy(() => import("./GroupTab"));
@@ -32,27 +35,9 @@ function TabLoading() {
   );
 }
 
-type Tab =
-  | "log"
-  | "followup"
-  | "group"
-  | "debrief"
-  | "reports"
-  | "impact"
-  | "settings";
-
-const TABS: { id: Tab; label: string }[] = [
-  { id: "log", label: "Log" },
-  { id: "followup", label: "Follow-up" },
-  { id: "group", label: "Group" },
-  { id: "debrief", label: "Debrief" },
-  { id: "reports", label: "Reports" },
-  { id: "impact", label: "Impact" },
-  { id: "settings", label: "Settings" },
-];
-
 export default function App() {
   const [tab, setTab] = useState<Tab>("log");
+  const [moreOpen, setMoreOpen] = useState(false);
   const [revision, setRevision] = useState(0);
   const [settings, setSettings] = useState<DebriefSettings>(() =>
     loadDebriefSettings(),
@@ -64,15 +49,18 @@ export default function App() {
     setTimeout(() => setToast(""), 3500);
   }, []);
 
-  useAutoBackupOnReconnect(settings, showToast);
+  const refreshData = useCallback(() => {
+    setRevision((r) => r + 1);
+  }, []);
 
-  /** Bumped whenever stored data changes so the derived views recompute. */
+  useAutoBackupOnReconnect(settings, showToast, refreshData);
+
   const onChanged = useCallback(
     (message?: string) => {
-      setRevision((r) => r + 1);
+      refreshData();
       if (message) showToast(message);
     },
-    [showToast],
+    [refreshData, showToast],
   );
 
   const history = useMemo(() => loadAllCheckIns(), [revision]);
@@ -89,12 +77,12 @@ export default function App() {
   const recentPeriods = useMemo(() => buildRecentPeriods(history), [history]);
   const reasonOrder = useMemo(() => orderReasonsByUse(history), [history]);
 
-  /** Anything owed: shown on the tab so it is visible without going looking. */
   const outstanding = useMemo(() => {
     const queue = buildFollowUpQueue(history);
     return queue.overdue.length + queue.dueToday.length;
   }, [history]);
   const awaitingOutcome = useMemo(() => needsOutcome(history).length, [history]);
+  const followUpBadge = outstanding + awaitingOutcome;
 
   return (
     <div className="app-shell">
@@ -109,102 +97,99 @@ export default function App() {
             </p>
           </div>
         </div>
+        <DeviceSyncHint settings={settings} />
       </header>
 
       <ConnectivityBannerLive />
 
-      <div className="tabs-wrap">
-        <nav className="tabs" aria-label="Main">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              className={`tab ${tab === t.id ? "active" : ""}`}
-              aria-current={tab === t.id ? "page" : undefined}
-              onClick={() => setTab(t.id)}
-            >
-              {t.label}
-              {t.id === "followup" && outstanding + awaitingOutcome > 0 && (
-                <span className="tab-badge">
-                  {outstanding + awaitingOutcome}
-                </span>
-              )}
-            </button>
-          ))}
-        </nav>
+      <div className="app-layout">
+        <AppNav
+          tab={tab}
+          followUpBadge={followUpBadge}
+          onSelect={setTab}
+          moreOpen={moreOpen}
+          onMoreToggle={setMoreOpen}
+        />
+
+        <main className="app-main" id="main-content">
+          {tab === "log" && (
+            <LogTab
+              roster={roster}
+              recentPeriods={recentPeriods}
+              reasonOrder={reasonOrder}
+              todayCheckIns={todayCheckIns}
+              onChanged={onChanged}
+            />
+          )}
+
+          <Suspense fallback={<TabLoading />}>
+            {tab === "followup" && (
+              <FollowUpTab checkIns={history} onChanged={onChanged} />
+            )}
+
+            {tab === "group" && (
+              <GroupTab
+                settings={settings}
+                members={members}
+                sessions={sessions}
+                roster={roster}
+                onChanged={onChanged}
+              />
+            )}
+
+            {tab === "debrief" && (
+              <DebriefTab
+                checkIns={todayCheckIns}
+                allCheckIns={history}
+                sessions={sessions}
+                session={todaySession}
+                settings={settings}
+                onCopied={() => showToast("Debrief copied")}
+                onPdfDownloaded={() => showToast("PDF downloaded")}
+              />
+            )}
+
+            {tab === "reports" && (
+              <ReportsTab
+                checkIns={history}
+                sessions={sessions}
+                settings={settings}
+                onCopied={() => showToast("Summary copied")}
+                onPdfDownloaded={() => showToast("PDF downloaded")}
+              />
+            )}
+
+            {tab === "impact" && (
+              <ImpactTab
+                checkIns={history}
+                sessions={sessions}
+                settings={settings}
+                onCopied={() => showToast("Impact summary copied")}
+                onPdfDownloaded={() => showToast("PDF downloaded")}
+              />
+            )}
+
+            {tab === "settings" && (
+              <SettingsTab
+                settings={settings}
+                onSave={(s) => {
+                  setSettings(s);
+                  showToast("Settings saved");
+                }}
+                onRestored={() => {
+                  setSettings(loadDebriefSettings());
+                  onChanged("Backup restored");
+                }}
+                onSynced={() => onChanged()}
+              />
+            )}
+          </Suspense>
+        </main>
       </div>
 
-      {tab === "log" && (
-        <LogTab
-          roster={roster}
-          recentPeriods={recentPeriods}
-          reasonOrder={reasonOrder}
-          todayCheckIns={todayCheckIns}
-          onChanged={onChanged}
-        />
-      )}
-
-      <Suspense fallback={<TabLoading />}>
-        {tab === "followup" && (
-          <FollowUpTab checkIns={history} onChanged={onChanged} />
-        )}
-
-        {tab === "group" && (
-          <GroupTab
-            settings={settings}
-            members={members}
-            sessions={sessions}
-            roster={roster}
-            onChanged={onChanged}
-          />
-        )}
-
-        {tab === "debrief" && (
-          <DebriefTab
-            checkIns={todayCheckIns}
-            allCheckIns={history}
-            sessions={sessions}
-            session={todaySession}
-            settings={settings}
-            onCopied={() => showToast("Debrief copied")}
-            onPdfDownloaded={() => showToast("PDF downloaded")}
-          />
-        )}
-
-        {tab === "reports" && (
-          <ReportsTab
-            checkIns={history}
-            sessions={sessions}
-            settings={settings}
-            onCopied={() => showToast("Summary copied")}
-            onPdfDownloaded={() => showToast("PDF downloaded")}
-          />
-        )}
-
-        {tab === "impact" && (
-          <ImpactTab
-            checkIns={history}
-            sessions={sessions}
-            settings={settings}
-            onCopied={() => showToast("Impact summary copied")}
-            onPdfDownloaded={() => showToast("PDF downloaded")}
-          />
-        )}
-
-        {tab === "settings" && (
-          <SettingsTab
-            settings={settings}
-            onSave={(s) => {
-              setSettings(s);
-              showToast("Settings saved");
-            }}
-            onRestored={() => {
-              setSettings(loadDebriefSettings());
-              onChanged("Backup restored");
-            }}
-          />
-        )}
-      </Suspense>
+      <p className="mobile-install-hint">
+        On your phone: open this site in Chrome → menu → <strong>Install app</strong> or <strong>Add to Home Screen</strong>.
+      </p>
 
       {toast && (
         <div className="toast" role="status">
