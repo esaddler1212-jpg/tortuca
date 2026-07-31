@@ -20,7 +20,7 @@ export function useWoodhouse() {
       setSource(result.source);
       setLastSync(new Date());
     } catch {
-      setError("Could not sync with Easy Supply Co.");
+      setError("Could not sync Woodhouse apps.");
     } finally {
       setLoading(false);
     }

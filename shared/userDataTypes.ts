@@ -64,6 +64,7 @@ export interface AlfredUserData {
   lastDigestDate?: string;
   lastLeaveReminderKey?: string;
   lastUrgentReminderKey?: string;
+  lastWindDownReminderKey?: string;
   fitnessLogs?: SyncedFitnessLog[];
   shoppingList?: SyncedShoppingItem[];
   updatedAt: string;

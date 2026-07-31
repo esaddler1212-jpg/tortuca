@@ -37,8 +37,11 @@ import {
 interface Props {
   settings: UserSettings;
   weather: WeatherSnapshot | null;
+  weatherLoading?: boolean;
+  weatherError?: string | null;
   leaveBy: LeaveByPlan | null;
   tomorrowLeaveBy: LeaveByPlan | null;
+  bedtime: BedtimePlan;
   eveningWrap: EveningWrap;
   eveningMode: boolean;
   displayName?: string;
@@ -47,7 +50,10 @@ interface Props {
   todayTimeline: CalendarEvent[];
   allSchedule: CalendarEvent[];
   woodhouse: WoodhouseOrchestrationSnapshot | null;
+  woodhouseLoading?: boolean;
+  woodhouseError?: string | null;
   stocks: StocksSnapshot | null;
+  stocksLoading?: boolean;
   messages: EmailMessage[];
   googleConnected: boolean;
   fitnessLogs: FitnessLog[];
@@ -61,8 +67,11 @@ interface Props {
 export function TodayCommandCenter({
   settings,
   weather,
+  weatherLoading,
+  weatherError,
   leaveBy,
   tomorrowLeaveBy,
+  bedtime,
   eveningWrap,
   eveningMode,
   displayName,
@@ -71,7 +80,10 @@ export function TodayCommandCenter({
   todayTimeline,
   allSchedule,
   woodhouse,
+  woodhouseLoading,
+  woodhouseError,
   stocks,
+  stocksLoading,
   messages,
   googleConnected,
   fitnessLogs,
@@ -104,6 +116,15 @@ export function TodayCommandCenter({
             <h2 className="font-display text-3xl md:text-4xl font-semibold">
               {greeting}{displayName ? `, ${displayName}` : ""}
             </h2>
+            {weatherLoading && (
+              <p className="text-alfred-mist mt-2 flex items-center gap-2 text-sm">
+                <CloudSun className="h-4 w-4 text-alfred-gold/50 shrink-0 animate-pulse" />
+                Loading forecast…
+              </p>
+            )}
+            {weatherError && !weather && (
+              <p className="text-alfred-mist/80 mt-2 text-sm">{weatherError}</p>
+            )}
             {weather && (
               <p className="text-alfred-mist mt-2 flex items-center gap-2 text-sm">
                 <CloudSun className="h-4 w-4 text-alfred-gold shrink-0" />
@@ -145,6 +166,9 @@ export function TodayCommandCenter({
               )}
             </div>
           )}
+          {!leaveBy && !eveningMode && isWindDownTime(bedtime) && (
+            <BedtimeCard bedtime={bedtime} />
+          )}
           {!leaveBy && eveningMode && (tomorrowLeaveBy || eveningWrap.bedtime) && (
             <div className="flex flex-col sm:flex-row gap-3 shrink-0">
               {tomorrowLeaveBy && (
@@ -164,6 +188,14 @@ export function TodayCommandCenter({
               {eveningWrap.bedtime && (
                 <BedtimeCard bedtime={eveningWrap.bedtime} />
               )}
+            </div>
+          )}
+          {!leaveBy && !eveningMode && !isWindDownTime(bedtime) && (
+            <div className="panel border-alfred-border/40 px-5 py-4 rounded-xl shrink-0">
+              <p className="text-xs uppercase tracking-wider text-alfred-mist flex items-center gap-1">
+                <Clock className="h-3.5 w-3.5" /> Schedule
+              </p>
+              <p className="text-sm text-alfred-mist mt-1">No leave-by window right now — calendar looks clear.</p>
             </div>
           )}
         </div>
@@ -283,6 +315,17 @@ export function TodayCommandCenter({
           <section className="panel p-5">
             <h3 className="font-display text-lg text-alfred-gold mb-3">Your apps</h3>
             <div className="space-y-2">
+              {woodhouseLoading && !woodhouse && (
+                <p className="text-sm text-alfred-mist animate-pulse">Syncing Woodhouse apps…</p>
+              )}
+              {woodhouseError && !woodhouse && (
+                <p className="text-sm text-amber-300/90">{woodhouseError}</p>
+              )}
+              {!woodhouseLoading && (!woodhouse || woodhouse.nodes.length === 0) && (
+                <p className="text-sm text-alfred-mist">
+                  No apps registered yet — open Settings → Woodhouse apps to connect Easy Supply, Family Purpose, and more.
+                </p>
+              )}
               {woodhouse?.nodes.map((node) => (
                 <div
                   key={node.registryId}
@@ -313,7 +356,10 @@ export function TodayCommandCenter({
 
           <section className="panel p-5">
             <h3 className="font-display text-lg text-alfred-gold mb-3">Markets</h3>
-            {movers.length === 0 && <p className="text-sm text-alfred-mist">No market data.</p>}
+            {stocksLoading && !stocks && (
+              <p className="text-sm text-alfred-mist animate-pulse">Loading markets…</p>
+            )}
+            {!stocksLoading && movers.length === 0 && <p className="text-sm text-alfred-mist">No market data.</p>}
             <ul className="space-y-2">
               {movers.map((q) => (
                 <li key={q.symbol} className="flex justify-between text-sm">

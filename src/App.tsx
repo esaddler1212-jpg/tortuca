@@ -1,5 +1,8 @@
 import { useMemo } from "react";
 import { OvernightDeltaBanner } from "./components/OvernightDeltaBanner";
+import { OvercommitmentBanner } from "./components/OvercommitmentBanner";
+import { MorningRitualModal } from "./components/MorningRitualModal";
+import { WindDownBanner } from "./components/WindDownBanner";
 import { CommandBar } from "./components/CommandBar";
 import { TodayCommandCenter } from "./components/TodayCommandCenter";
 import { WeeklyReview } from "./components/WeeklyReview";
@@ -20,20 +23,22 @@ import { useShoppingList } from "./hooks/useShoppingList";
 import { MealPrepPanel } from "./components/MealPrepPanel";
 import { orchestrationToCalendarEvents } from "./lib/familyCalendar";
 import { computeLeaveBy, filterTodayTimeline } from "./lib/leaveBy";
-import { computeSuggestedBedtime } from "./lib/bedtime";
+import { computeSuggestedBedtime, isWindDownTime } from "./lib/bedtime";
 import { buildEveningWrap, isEveningMode } from "./lib/eveningWrap";
 import { buildTodayQueue } from "./lib/todayQueue";
 import { buildWeeklyReview, isWeeklyReviewTime } from "./lib/weeklyReview";
+import { buildFitnessStatus } from "./lib/fitness";
+import { assessOvercommitment } from "./lib/overcommitment";
 
 export default function App() {
   const { settings, persist, updateCity, saving, error, setError } = useSettings();
-  const { weather } = useWeather(settings);
+  const { weather, loading: weatherLoading, error: weatherError } = useWeather(settings);
   const { todos, pending, done, add, toggle, setTodos } = useTodos();
   const { connected, accountEmail, connect, disconnect } = useGoogleIntegration();
   const { allEvents, addLocalEvent } = useSchedule(connected);
   const { messages, unread } = useEmails(connected);
-  const { snapshot: woodhouse } = useWoodhouse();
-  const { snapshot: stocks } = useStocks();
+  const { snapshot: woodhouse, loading: woodhouseLoading, error: woodhouseError } = useWoodhouse();
+  const { snapshot: stocks, loading: stocksLoading } = useStocks();
   const { effectiveMinutes, loading: commuteLoading, error: commuteError } = useCommute(settings);
   const { logs: fitnessLogs, logWorkout, loadRemote: loadFitness } = useFitness(settings);
   const { items: shoppingItems, add: addShopping, togglePantry, remove: removeShopping, loadRemote: loadShopping } = useShoppingList();
@@ -80,6 +85,16 @@ export default function App() {
 
   const urgentCount = todayActions.filter((a) => a.urgent).length;
 
+  const fitnessStatus = useMemo(
+    () => buildFitnessStatus(settings, fitnessLogs, allSchedule),
+    [settings, fitnessLogs, allSchedule],
+  );
+
+  const overcommitment = useMemo(
+    () => assessOvercommitment(pending, urgentCount, todayTimeline),
+    [pending, urgentCount, todayTimeline],
+  );
+
   const overnightDelta = useOvernightDelta(
     unread,
     pending,
@@ -107,6 +122,7 @@ export default function App() {
   );
 
   const eveningMode = isEveningMode(settings);
+  const showWindDown = bedtime && isWindDownTime(bedtime) && !eveningMode;
   const weeklyReview = useMemo(
     () => buildWeeklyReview(settings, pending, done, allSchedule, woodhouse, shoppingItems),
     [settings, pending, done, allSchedule, woodhouse, shoppingItems],
@@ -132,6 +148,8 @@ export default function App() {
       <main className="mx-auto max-w-6xl px-4 py-6 space-y-4">
         {showWeeklyReview && <WeeklyReview review={weeklyReview} />}
         <OvernightDeltaBanner delta={overnightDelta} />
+        {overcommitment && <OvercommitmentBanner warning={overcommitment} />}
+        {showWindDown && <WindDownBanner bedtime={bedtime} />}
         <CommandBar
           settings={settings}
           leaveBy={leaveBy}
@@ -157,8 +175,11 @@ export default function App() {
         <TodayCommandCenter
           settings={settings}
           weather={weather}
+          weatherLoading={weatherLoading}
+          weatherError={weatherError}
           leaveBy={leaveBy}
           tomorrowLeaveBy={tomorrowLeaveBy}
+          bedtime={bedtime}
           eveningWrap={eveningWrap}
           eveningMode={eveningMode}
           displayName={displayName}
@@ -167,7 +188,10 @@ export default function App() {
           todayTimeline={todayTimeline}
           allSchedule={allSchedule}
           woodhouse={woodhouse}
+          woodhouseLoading={woodhouseLoading}
+          woodhouseError={woodhouseError}
           stocks={stocks}
+          stocksLoading={stocksLoading}
           messages={messages}
           googleConnected={connected}
           fitnessLogs={fitnessLogs}
@@ -178,6 +202,13 @@ export default function App() {
           pendingTodos={pending}
         />
       </main>
+
+      <MorningRitualModal
+        settings={settings}
+        fitness={fitnessStatus}
+        leaveBy={leaveBy}
+        onLogWorkout={logWorkout}
+      />
 
       <SettingsDrawer
         settings={settings}

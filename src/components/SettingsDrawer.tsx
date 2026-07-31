@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Settings, X } from "lucide-react";
 import type { UserSettings } from "../types";
 import type { WoodhouseRegistryEntry } from "../types/woodhouse";
@@ -89,6 +89,31 @@ export function SettingsDrawer({
   const [windDown, setWindDown] = useState(String(settings.windDownMinutes));
   const [morningRoutine, setMorningRoutine] = useState(String(settings.morningRoutineMinutes));
   const [weekendWake, setWeekendWake] = useState(settings.weekendWakeTime);
+
+  useEffect(() => {
+    setCity(settings.city);
+    setNodes(settings.woodhouseNodes);
+    setCommute(String(settings.commuteMinutes));
+    setBuffer(String(settings.arriveBufferMinutes));
+    setSchoolStart(settings.schoolStartTime);
+    setSchoolName(settings.schoolName);
+    setSchoolGrade(settings.schoolGrade);
+    setEveningHour(String(settings.eveningWrapHour));
+    setWeeklyHour(String(settings.weeklyReviewHour));
+    setHomeAddress(settings.homeAddress);
+    setSchoolAddress(settings.schoolAddress);
+    setUseLiveCommute(settings.useLiveCommute);
+    setBriefingHour(String(settings.briefingHour));
+    setMorningDigest(settings.morningDigestEnabled);
+    setPushEnabled(settings.pushNotificationsEnabled);
+    setWakeTime(settings.wakeTime);
+    setWorkoutDeadline(String(settings.morningWorkoutDeadlineHour));
+    setFitnessTime(settings.fitnessSuggestTime);
+    setTargetSleep(String(settings.targetSleepHours));
+    setWindDown(String(settings.windDownMinutes));
+    setMorningRoutine(String(settings.morningRoutineMinutes));
+    setWeekendWake(settings.weekendWakeTime);
+  }, [settings]);
 
   const save = async () => {
     const ok = await onSaveCity(city);
@@ -347,7 +372,7 @@ export function SettingsDrawer({
                 </label>
                 <label className="flex items-center gap-2 text-sm text-alfred-mist mb-2">
                   <input type="checkbox" checked={pushEnabled} onChange={(e) => setPushEnabled(e.target.checked)} />
-                  Push: leave in 10 min &amp; urgent items
+                  Push: leave-by, wind-down &amp; urgent items
                 </label>
                 {push.error && <p className="text-sm text-red-300/90 mb-2">{push.error}</p>}
                 {push.subscribed && <p className="text-xs text-emerald-400/80 mb-2">Push notifications active</p>}

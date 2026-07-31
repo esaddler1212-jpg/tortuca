@@ -1,6 +1,7 @@
 import { getDailyQuote } from "../../shared/dailyQuote";
 import type { AlfredUserData } from "../../shared/userDataTypes";
 import type { StoredSession } from "./_shared";
+import { computeServerLeaveBy } from "../../shared/leaveByLite";
 
 export interface DigestContent {
   subject: string;
@@ -64,6 +65,7 @@ export async function buildMorningDigest(
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(new Date());
   const urgent = pending.filter((t) => t.dueDate === today);
   const weather = await fetchWeather(settings.latitude, settings.longitude);
+  const leavePlan = computeServerLeaveBy(settings, new Date());
 
   const lines: string[] = [];
   lines.push("Good morning.");
@@ -72,6 +74,13 @@ export async function buildMorningDigest(
     lines.push(
       `Weather in ${settings.city}: ${Math.round(weather.temp)}° and ${weather.label}. High around ${Math.round(weather.high)}°.`,
     );
+  }
+  if (leavePlan) {
+    lines.push(
+      `Leave by ${formatTime(leavePlan.leaveBy, tz)} for ${leavePlan.destination} (arrive ${formatTime(leavePlan.arriveBy, tz)}).`,
+    );
+  } else {
+    lines.push(`Wake alarm ${settings.wakeTime}.`);
   }
   if (topTasks.length > 0) {
     lines.push(`Top tasks: ${topTasks.join("; ")}.`);
@@ -94,6 +103,7 @@ export async function buildMorningDigest(
         "${quote.text}"<br/><span style="font-size: 13px;">— ${quote.author}</span>
       </blockquote>
       ${weather ? `<p>Weather in ${settings.city}: ${Math.round(weather.temp)}° (${weather.label}). High ${Math.round(weather.high)}°.</p>` : ""}
+      ${leavePlan ? `<p><strong>Leave by ${formatTime(leavePlan.leaveBy, tz)}</strong> for ${leavePlan.destination}.</p>` : `<p>Wake alarm: ${settings.wakeTime}</p>`}
       <h2 style="font-size: 16px; color: #9a7b2f;">Today's focus</h2>
       <ul>${topTasks.length ? topTasks.map((t) => `<li>${t}</li>`).join("") : "<li>All clear</li>"}</ul>
       ${urgent.length ? `<p><strong>${urgent.length}</strong> due today.</p>` : ""}
@@ -120,5 +130,17 @@ export function buildUrgentReminder(urgentCount: number): { title: string; body:
   return {
     title: "Urgent items before school",
     body: `${urgentCount} urgent item${urgentCount === 1 ? "" : "s"} need attention today.`,
+  };
+}
+
+export function buildWindDownReminder(
+  settings: AlfredUserData["settings"],
+  windDownStart: Date,
+  lightsOut: Date,
+): { title: string; body: string } {
+  const tz = settings?.timezone ?? "America/Los_Angeles";
+  return {
+    title: "Wind-down time",
+    body: `Start your evening routine. Lights out ${formatTime(lightsOut, tz)} (wind down ${formatTime(windDownStart, tz)}).`,
   };
 }
