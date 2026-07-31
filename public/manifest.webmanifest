@@ -4,8 +4,10 @@
   "description": "Personal command center: schedule, todos, commute, Woodhouse apps, and markets.",
   "start_url": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#000000",
   "theme_color": "#4ade80",
+  "categories": ["productivity", "utilities"],
   "icons": [
     {
       "src": "/icon.svg",

@@ -81,7 +81,23 @@ Netlify runs these automatically when deployed:
 
 Morning digest requires Gmail **send** scope — reconnect Google in Settings after enabling.
 
-### Sleep & bedtime settings
+### Install on your phone (PWA)
+
+Alfred is a **Progressive Web App** — no App Store needed. Once deployed on **HTTPS** (Netlify):
+
+**iPhone (Safari)**
+1. Open your Alfred URL
+2. Tap **Share** (square with arrow)
+3. Tap **Add to Home Screen**
+4. Alfred opens full-screen with the green HUD icon
+
+**Android (Chrome)**
+1. Open your Alfred URL
+2. Tap **Install app** when prompted, or Menu → **Add to Home Screen** / **Install**
+
+Enable **push notifications** in Settings after install for leave-by and wind-down alerts.
+
+Requires **HTTPS** — works automatically on Netlify, not on plain `localhost` from another device.
 
 In **Settings → Sleep & bedtime**:
 

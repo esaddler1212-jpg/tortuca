@@ -30,6 +30,7 @@ import { buildWeeklyReview, isWeeklyReviewTime } from "./lib/weeklyReview";
 import { buildFitnessStatus } from "./lib/fitness";
 import { assessOvercommitment } from "./lib/overcommitment";
 import { HudRing } from "./components/HudRing";
+import { InstallAppBanner } from "./components/InstallAppBanner";
 
 export default function App() {
   const { settings, persist, updateCity, saving, error, setError } = useSettings();
@@ -150,6 +151,7 @@ export default function App() {
 
       <main className="mx-auto max-w-6xl px-4 py-6 space-y-4">
         {showWeeklyReview && <WeeklyReview review={weeklyReview} />}
+        <InstallAppBanner />
         <OvernightDeltaBanner delta={overnightDelta} />
         {overcommitment && <OvercommitmentBanner warning={overcommitment} />}
         {showWindDown && <WindDownBanner bedtime={bedtime} />}
