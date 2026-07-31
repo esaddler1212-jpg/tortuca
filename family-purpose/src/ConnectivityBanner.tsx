@@ -6,7 +6,7 @@ export default function ConnectivityBanner({ online }: { online: boolean }) {
   return (
     <div className="connectivity-banner" role="status">
       <strong>Offline</strong>
-      <span className="hint" style={{ margin: 0 }}>
+      <span className="hint">
         Check-ins are saved on this Chromebook. When you connect your hotspot,
         new data will back up automatically.
       </span>

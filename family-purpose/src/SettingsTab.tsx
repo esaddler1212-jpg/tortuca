@@ -41,19 +41,19 @@ function DataBackup({ onRestored }: { onRestored: () => void }) {
   return (
     <div className="card">
       <h2>Data backup</h2>
-      <p className="hint" style={{ marginBottom: "1rem" }}>
+      <p className="hint hint-block">
         Check-ins live on this Chromebook. Install the app once while you have
         internet, then log students all day offline. When your hotspot connects,
         new data backs up automatically (see Offline &amp; auto-backup below).
       </p>
       {pending && (
-        <p className="hint" style={{ marginBottom: "1rem" }}>
+        <p className="hint hint-block">
           <strong>Not backed up yet</strong> — connect to the internet or tap
           Download backup below.
         </p>
       )}
       {lastBackup && (
-        <p className="hint" style={{ marginBottom: "1rem" }}>{lastBackup}</p>
+        <p className="hint hint-block">{lastBackup}</p>
       )}
       <div className="btn-row">
         <button
@@ -76,17 +76,15 @@ function DataBackup({ onRestored }: { onRestored: () => void }) {
         type="file"
         accept="application/json,.json"
         aria-label="Backup file"
-        style={{ display: "none" }}
+        className="hidden-input"
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) void restore(file);
           e.target.value = "";
         }}
       />
-      {message && <p className="hint">{message}</p>}
-      {error && (
-        <p style={{ color: "var(--danger)", marginTop: "0.5rem" }}>{error}</p>
-      )}
+      {message && <p className="form-success">{message}</p>}
+      {error && <p className="form-error" role="alert">{error}</p>}
       <p className="hint">Restoring replaces the data currently on this device.</p>
     </div>
   );
@@ -122,7 +120,7 @@ export default function SettingsTab({
       }}
     >
       <h2>Debrief &amp; profile</h2>
-      <p className="hint" style={{ marginBottom: "1rem" }}>
+      <p className="hint hint-block">
         These appear on your daily debrief and reports, and pre-fill email
         recipients.
       </p>
@@ -203,10 +201,8 @@ export default function SettingsTab({
           CARE team referrals go here and nowhere else.
         </p>
       </div>
-      <h3 style={{ marginTop: "1.25rem", marginBottom: "0.35rem" }}>
-        Offline &amp; auto-backup
-      </h3>
-      <p className="hint" style={{ marginBottom: "1rem" }}>
+      <h3>Offline &amp; auto-backup</h3>
+      <p className="hint hint-block">
         At school without Wi‑Fi, the app keeps working after you open it once
         with internet. Turn on your phone hotspot later and new check-ins back up
         on their own — usually as a file in Downloads, or to a URL if Family
@@ -256,7 +252,7 @@ export default function SettingsTab({
           autoComplete="off"
         />
       </div>
-      <button type="submit" className="btn btn-primary">
+      <button type="submit" className="btn btn-primary btn-block">
         Save settings
       </button>
     </form>

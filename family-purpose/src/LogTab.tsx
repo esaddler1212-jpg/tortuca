@@ -311,7 +311,7 @@ function CheckInForm({
           onKeyDown={clearOnEscape(() => setClassPeriod(""))}
           placeholder="e.g. Period 3 — Algebra"
           autoComplete="off"
-          style={{ marginTop: "0.5rem" }}
+          className="field-tight"
         />
         <p className="hint">
           {schedule.label}. The period in session is filled in for you — tap
@@ -319,10 +319,9 @@ function CheckInForm({
         </p>
         {customPeriods.length > 0 && (
           <div
-            className="pill-row"
+            className="pill-row field-tight"
             role="group"
             aria-label="Recent periods"
-            style={{ marginTop: "0.5rem" }}
           >
             {customPeriods.map((p) => (
               <button
@@ -413,11 +412,9 @@ function CheckInForm({
         />
       </div>
 
-      {error && (
-        <p style={{ color: "var(--danger)", marginBottom: "1rem" }}>{error}</p>
-      )}
+      {error && <p className="form-error" role="alert">{error}</p>}
 
-      <button type="submit" className="btn btn-primary">
+      <button type="submit" className="btn btn-primary btn-block">
         Save check-in
       </button>
       <p className="hint">
@@ -438,6 +435,7 @@ function TodayList({
   if (checkIns.length === 0) {
     return (
       <div className="card empty-state">
+        <span className="empty-state-icon" aria-hidden="true">✎</span>
         No check-ins yet today. Log your first student above.
       </div>
     );
@@ -470,19 +468,26 @@ function TodayList({
                 minute: "2-digit",
               })}
             </p>
-            {c.followUp && (
-              <p className="checkin-meta">
-                <span className="tag">{formatDueLabel(c.followUp)}</span>
-              </p>
+            {(c.followUp || c.outcome) && (
+              <div className="tag-row">
+                {c.outcome && (
+                  <span className="tag tag-outcome">{c.outcome}</span>
+                )}
+                {c.followUp && (
+                  <span className="tag">{formatDueLabel(c.followUp)}</span>
+                )}
+              </div>
             )}
             <div className="checkin-reasons">
               {c.reasons.length > 0 && (
-                <p style={{ margin: "0 0 0.25rem" }}>{c.reasons.join(" · ")}</p>
+                <div className="tag-row">
+                  {c.reasons.map((r) => (
+                    <span key={r} className="tag tag-reason">{r}</span>
+                  ))}
+                </div>
               )}
               {c.reasonNotes && (
-                <p style={{ margin: 0, color: "var(--text-muted)" }}>
-                  {c.reasonNotes}
-                </p>
+                <p className="checkin-notes">{c.reasonNotes}</p>
               )}
             </div>
           </li>

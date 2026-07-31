@@ -25,7 +25,8 @@ const SettingsTab = lazy(() => import("./SettingsTab"));
 
 function TabLoading() {
   return (
-    <div className="card hint" role="status">
+    <div className="card loading-card" role="status">
+      <span className="spinner" aria-hidden="true" />
       Loading…
     </div>
   );
@@ -98,28 +99,40 @@ export default function App() {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <h1>Family Purpose</h1>
-        <p>{getTodayDateLabel()} — student check-in log</p>
+        <div className="brand-row">
+          <div className="brand-mark" aria-hidden="true">FP</div>
+          <div>
+            <h1>Family Purpose</h1>
+            <p>
+              {getTodayDateLabel()} · {todayCheckIns.length} check-in
+              {todayCheckIns.length === 1 ? "" : "s"} today
+            </p>
+          </div>
+        </div>
       </header>
 
       <ConnectivityBannerLive />
 
-      <nav className="tabs" aria-label="Main">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            className={`tab ${tab === t.id ? "active" : ""}`}
-            aria-current={tab === t.id ? "page" : undefined}
-            onClick={() => setTab(t.id)}
-          >
-            {t.label}
-            {t.id === "followup" && outstanding + awaitingOutcome > 0 && (
-              <span className="tab-badge">{outstanding + awaitingOutcome}</span>
-            )}
-          </button>
-        ))}
-      </nav>
+      <div className="tabs-wrap">
+        <nav className="tabs" aria-label="Main">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className={`tab ${tab === t.id ? "active" : ""}`}
+              aria-current={tab === t.id ? "page" : undefined}
+              onClick={() => setTab(t.id)}
+            >
+              {t.label}
+              {t.id === "followup" && outstanding + awaitingOutcome > 0 && (
+                <span className="tab-badge">
+                  {outstanding + awaitingOutcome}
+                </span>
+              )}
+            </button>
+          ))}
+        </nav>
+      </div>
 
       {tab === "log" && (
         <LogTab

@@ -285,11 +285,15 @@ export default function FollowUpTab({
           list, and point students toward services or the CARE team.
         </p>
         <div className="stat-grid">
-          <div className="stat">
+          <div
+            className={`stat ${queue.overdue.length > 0 ? "stat-alert" : ""}`}
+          >
             <span className="stat-value">{queue.overdue.length}</span>
             <span className="stat-label">Overdue</span>
           </div>
-          <div className="stat">
+          <div
+            className={`stat ${queue.dueToday.length > 0 ? "stat-accent" : ""}`}
+          >
             <span className="stat-value">{queue.dueToday.length}</span>
             <span className="stat-label">Due today</span>
           </div>
@@ -304,6 +308,7 @@ export default function FollowUpTab({
         </div>
         {nothingToDo && (
           <p className="empty-state">
+            <span className="empty-state-icon" aria-hidden="true">✓</span>
             Nothing outstanding. Follow-ups you schedule on a check-in show up
             here, due 48 hours later.
           </p>

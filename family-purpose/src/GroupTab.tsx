@@ -113,9 +113,7 @@ function MemberManager({
             </select>
           </div>
         </div>
-        {error && (
-          <p style={{ color: "var(--danger)", marginBottom: "1rem" }}>{error}</p>
-        )}
+        {error && <p className="form-error" role="alert">{error}</p>}
         <button type="submit" className="btn btn-secondary">
           Add to roster
         </button>
