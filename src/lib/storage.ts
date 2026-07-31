@@ -7,12 +7,31 @@ const SESSION_KEY = "alfred-session-id";
 const TODOS_KEY = "alfred-todos";
 const LOCAL_EVENTS_KEY = "alfred-local-events";
 
+const VALLEJO_COMMUTE_DEFAULTS: Partial<UserSettings> = {
+  city: "Vallejo",
+  latitude: 38.1041,
+  longitude: -122.2566,
+  timezone: "America/Los_Angeles",
+  homeAddress: "Vallejo, CA",
+  schoolAddress: "2050 Minert Rd, Concord, CA 94518",
+  commuteMinutes: 35,
+  useLiveCommute: true,
+};
+
 export function loadSettings(): UserSettings {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (!raw) return { ...DEFAULT_SETTINGS };
     const parsed = { ...DEFAULT_SETTINGS, ...JSON.parse(raw) } as UserSettings;
     parsed.woodhouseNodes = migrateWoodhouseNodes(parsed);
+    // One-time upgrade from generic NYC defaults → Vallejo → Concord commute
+    if (
+      parsed.city === "New York" &&
+      !parsed.homeAddress &&
+      parsed.latitude === 40.7128
+    ) {
+      return { ...parsed, ...VALLEJO_COMMUTE_DEFAULTS };
+    }
     return parsed;
   } catch {
     return { ...DEFAULT_SETTINGS };
