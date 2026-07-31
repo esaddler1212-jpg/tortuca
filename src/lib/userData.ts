@@ -21,6 +21,9 @@ export function toSyncedSettings(settings: UserSettings): SyncedUserSettings {
     useLiveCommute: settings.useLiveCommute,
     morningDigestEnabled: settings.morningDigestEnabled,
     pushNotificationsEnabled: settings.pushNotificationsEnabled,
+    wakeTime: settings.wakeTime,
+    morningWorkoutDeadlineHour: settings.morningWorkoutDeadlineHour,
+    fitnessSuggestTime: settings.fitnessSuggestTime,
   };
 }
 
@@ -48,6 +51,10 @@ export async function syncSettings(settings: UserSettings): Promise<void> {
 
 export async function syncTodos(todos: TodoItem[]): Promise<void> {
   await saveUserDataRemote({ todos });
+}
+
+export async function syncFitness(logs: import("../types").FitnessLog[]): Promise<void> {
+  await saveUserDataRemote({ fitnessLogs: logs });
 }
 
 export async function fetchLiveCommuteMinutes(

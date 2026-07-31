@@ -25,7 +25,7 @@ export const handler: Handler = async () => {
   let sent = 0;
   const errors: string[] = [];
 
-  for (const { sessionId, session } of sessions) {
+  for (const { sessionId } of sessions) {
     const userData = dataBySession.get(sessionId);
     if (!userData?.settings?.morningDigestEnabled) continue;
 

@@ -1,4 +1,6 @@
 import { useMemo } from "react";
+import { OvernightDeltaBanner } from "./components/OvernightDeltaBanner";
+import { CommandBar } from "./components/CommandBar";
 import { TodayCommandCenter } from "./components/TodayCommandCenter";
 import { WeeklyReview } from "./components/WeeklyReview";
 import { SettingsDrawer } from "./components/SettingsDrawer";
@@ -12,6 +14,8 @@ import { useStocks } from "./hooks/useStocks";
 import { useCommute } from "./hooks/useCommute";
 import { useUserDataSync } from "./hooks/useUserDataSync";
 import { usePushNotifications } from "./hooks/usePushNotifications";
+import { useOvernightDelta } from "./hooks/useOvernightDelta";
+import { useFitness } from "./hooks/useFitness";
 import { orchestrationToCalendarEvents } from "./lib/familyCalendar";
 import { computeLeaveBy, filterTodayTimeline } from "./lib/leaveBy";
 import { buildEveningWrap, isEveningMode } from "./lib/eveningWrap";
@@ -23,13 +27,14 @@ export default function App() {
   const { weather } = useWeather(settings);
   const { todos, pending, done, add, toggle, setTodos } = useTodos();
   const { connected, accountEmail, connect, disconnect } = useGoogleIntegration();
-  const { allEvents } = useSchedule(connected);
+  const { allEvents, addLocalEvent } = useSchedule(connected);
   const { messages, unread } = useEmails(connected);
   const { snapshot: woodhouse } = useWoodhouse();
   const { snapshot: stocks } = useStocks();
   const { effectiveMinutes, loading: commuteLoading, error: commuteError } = useCommute(settings);
+  const { logs: fitnessLogs, logWorkout, loadRemote: loadFitness } = useFitness(settings);
 
-  useUserDataSync(settings, persist, todos, setTodos);
+  useUserDataSync(settings, persist, todos, setTodos, loadFitness);
   const push = usePushNotifications(settings.pushNotificationsEnabled);
 
   const familyScheduleEvents = useMemo(
@@ -62,6 +67,19 @@ export default function App() {
   const todayActions = useMemo(
     () => buildTodayQueue(pending, woodhouse),
     [pending, woodhouse],
+  );
+
+  const urgentCount = todayActions.filter((a) => a.urgent).length;
+
+  const overnightDelta = useOvernightDelta(
+    unread,
+    pending,
+    done,
+    urgentCount,
+    stocks,
+    woodhouse,
+    todayTimeline.length,
+    messages,
   );
 
   const eveningWrap = useMemo(
@@ -104,6 +122,14 @@ export default function App() {
 
       <main className="mx-auto max-w-6xl px-4 py-6 space-y-4">
         {showWeeklyReview && <WeeklyReview review={weeklyReview} />}
+        <OvernightDeltaBanner delta={overnightDelta} />
+        <CommandBar
+          settings={settings}
+          leaveBy={leaveBy}
+          onAddTodo={add}
+          onLogWorkout={logWorkout}
+          onAddEvent={addLocalEvent}
+        />
         {commuteError && settings.useLiveCommute && (
           <p className="text-sm text-amber-300/90 panel px-4 py-2">{commuteError}</p>
         )}
@@ -121,13 +147,16 @@ export default function App() {
           unreadEmails={unread}
           actions={todayActions}
           todayTimeline={todayTimeline}
+          allSchedule={allSchedule}
           woodhouse={woodhouse}
           stocks={stocks}
           messages={messages}
           googleConnected={connected}
+          fitnessLogs={fitnessLogs}
           onConnectGoogle={connect}
           onToggleTodo={toggle}
           onAddTodo={add}
+          onLogWorkout={logWorkout}
           pendingTodos={pending}
         />
       </main>

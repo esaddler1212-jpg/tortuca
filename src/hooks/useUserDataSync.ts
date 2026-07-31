@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
-import type { UserSettings, TodoItem } from "../types";
+import type { UserSettings, TodoItem, FitnessLog } from "../types";
 import { fetchUserData, syncSettings, syncTodos } from "../lib/userData";
 import { saveJson, TODOS_KEY } from "../lib/storage";
 
@@ -8,6 +8,7 @@ export function useUserDataSync(
   persist: (next: UserSettings) => void,
   todos: TodoItem[],
   setTodos: Dispatch<SetStateAction<TodoItem[]>>,
+  onFitnessLoad?: (logs: FitnessLog[]) => void,
 ) {
   const [synced, setSynced] = useState(false);
   const settingsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -26,6 +27,9 @@ export function useUserDataSync(
       }
       if (remote.settings) {
         persist({ ...settings, ...remote.settings });
+      }
+      if (remote.fitnessLogs?.length) {
+        onFitnessLoad?.(remote.fitnessLogs);
       }
       setSynced(true);
     })();

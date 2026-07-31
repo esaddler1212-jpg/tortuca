@@ -7,6 +7,9 @@
 - **Today command center** — one screen: leave-by time, unified actions, timeline, apps, markets, inbox
 - **School bell schedules** — Wednesday early release, minimum days, grade-aware (via Family Purpose / Woodhouse)
 - **Evening wrap** — day summary + tomorrow preview after configurable hour
+- **Overnight delta** — “Since you last checked…” briefing banner (email, tasks, markets, apps)
+- **Command bar** — natural-language commands: tasks, workouts, leave-by, time blocks
+- **Fitness tracker** — log arms, body, legs, or cardio; weekly counts; afternoon suggestion if you skip the morning
 - **Daily motivation** — a fresh quote each day (classic wisdom + Alfred flair)
 - **Morning digest email** — scheduled Gmail briefing with quote, weather, tasks (Settings → enable)
 - **Push notifications** — leave-by and urgent reminders (PWA + VAPID keys)

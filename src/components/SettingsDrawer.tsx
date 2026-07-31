@@ -33,6 +33,9 @@ interface Props {
         | "schoolAddress"
         | "useLiveCommute"
         | "briefingHour"
+        | "wakeTime"
+        | "morningWorkoutDeadlineHour"
+        | "fitnessSuggestTime"
       >
     >,
   ) => void;
@@ -75,6 +78,9 @@ export function SettingsDrawer({
   const [briefingHour, setBriefingHour] = useState(String(settings.briefingHour));
   const [morningDigest, setMorningDigest] = useState(settings.morningDigestEnabled);
   const [pushEnabled, setPushEnabled] = useState(settings.pushNotificationsEnabled);
+  const [wakeTime, setWakeTime] = useState(settings.wakeTime);
+  const [workoutDeadline, setWorkoutDeadline] = useState(String(settings.morningWorkoutDeadlineHour));
+  const [fitnessTime, setFitnessTime] = useState(settings.fitnessSuggestTime);
 
   const save = async () => {
     const ok = await onSaveCity(city);
@@ -177,6 +183,31 @@ export function SettingsDrawer({
                 </button>
               </div>
               <div className="border-t border-alfred-border pt-6">
+                <h3 className="text-sm font-medium mb-2 text-alfred-gold">Wake &amp; training</h3>
+                <p className="text-sm text-alfred-mist mb-3">
+                  Weekday alarm 4:15 AM — Alfred prompts for arms, body, legs, or cardio, then suggests a slot if you skip the morning.
+                </p>
+                <label className="text-xs text-alfred-mist" htmlFor="wake-time">Wake time (HH:MM)</label>
+                <input id="wake-time" className="input-field mb-2" value={wakeTime} onChange={(e) => setWakeTime(e.target.value)} placeholder="04:15" />
+                <label className="text-xs text-alfred-mist" htmlFor="workout-deadline">Morning workout deadline (hour)</label>
+                <input id="workout-deadline" type="number" min={5} max={12} className="input-field mb-2" value={workoutDeadline} onChange={(e) => setWorkoutDeadline(e.target.value)} />
+                <label className="text-xs text-alfred-mist" htmlFor="fitness-time">Afternoon fallback (HH:MM)</label>
+                <input id="fitness-time" className="input-field mb-2" value={fitnessTime} onChange={(e) => setFitnessTime(e.target.value)} placeholder="17:00" />
+                <button
+                  type="button"
+                  className="btn-gold w-full"
+                  onClick={() =>
+                    onSaveCommute({
+                      wakeTime: wakeTime.trim() || "04:15",
+                      morningWorkoutDeadlineHour: Math.min(12, Math.max(5, Number(workoutDeadline) || 9)),
+                      fitnessSuggestTime: fitnessTime.trim() || "17:00",
+                    })
+                  }
+                >
+                  Save training schedule
+                </button>
+              </div>
+              <div className="border-t border-alfred-border pt-6">
                 <h3 className="text-sm font-medium mb-2 text-alfred-gold">Evening wrap</h3>
                 <p className="text-sm text-alfred-mist mb-3">
                   After this hour, Alfred shows your day summary and tomorrow preview.
@@ -233,11 +264,11 @@ export function SettingsDrawer({
                 <p className="text-sm text-alfred-mist mb-3">
                   Daily email at your briefing hour (requires Google reconnect for send permission).
                 </p>
-                <label className="text-xs text-alfred-mist" htmlFor="briefing-hour">Briefing hour (0–23)</label>
+                <label className="text-xs text-alfred-mist" htmlFor="briefing-hour">Briefing hour (4–11)</label>
                 <input
                   id="briefing-hour"
                   type="number"
-                  min={5}
+                  min={4}
                   max={11}
                   className="input-field mb-2"
                   value={briefingHour}
@@ -259,7 +290,7 @@ export function SettingsDrawer({
                   disabled={push.loading}
                   onClick={() =>
                     void onSaveNotifications({
-                      briefingHour: Math.min(11, Math.max(5, Number(briefingHour) || 8)),
+                      briefingHour: Math.min(11, Math.max(4, Number(briefingHour) || 4)),
                       morningDigestEnabled: morningDigest,
                       pushNotificationsEnabled: pushEnabled,
                     })

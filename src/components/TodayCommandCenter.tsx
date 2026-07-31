@@ -12,6 +12,9 @@ import type { TodayAction } from "../lib/todayQueue";
 import type { EveningWrap } from "../lib/eveningWrap";
 import { getDailyQuote } from "../lib/dailyQuote";
 import { weatherLabel } from "../lib/weather";
+import type { FitnessLog } from "../types";
+import type { WorkoutType } from "../lib/fitness";
+import { FitnessPanel } from "./FitnessPanel";
 import {
   AlertCircle,
   Bot,
@@ -40,13 +43,16 @@ interface Props {
   unreadEmails: number;
   actions: TodayAction[];
   todayTimeline: CalendarEvent[];
+  allSchedule: CalendarEvent[];
   woodhouse: WoodhouseOrchestrationSnapshot | null;
   stocks: StocksSnapshot | null;
   messages: EmailMessage[];
   googleConnected: boolean;
+  fitnessLogs: FitnessLog[];
   onConnectGoogle: () => void;
   onToggleTodo: (id: string) => void;
   onAddTodo: (title: string) => void;
+  onLogWorkout: (type: WorkoutType) => void;
   pendingTodos: TodoItem[];
 }
 
@@ -61,13 +67,16 @@ export function TodayCommandCenter({
   unreadEmails,
   actions,
   todayTimeline,
+  allSchedule,
   woodhouse,
   stocks,
   messages,
   googleConnected,
+  fitnessLogs,
   onConnectGoogle,
   onToggleTodo,
   onAddTodo,
+  onLogWorkout,
   pendingTodos,
 }: Props) {
   const greeting = (() => {
@@ -220,6 +229,13 @@ export function TodayCommandCenter({
             </ul>
             <QuickAdd onAdd={onAddTodo} />
           </section>
+
+          <FitnessPanel
+            settings={settings}
+            logs={fitnessLogs}
+            events={allSchedule}
+            onLog={onLogWorkout}
+          />
 
           <section className="panel p-5">
             <h3 className="font-display text-lg text-alfred-gold mb-3 flex items-center gap-2">

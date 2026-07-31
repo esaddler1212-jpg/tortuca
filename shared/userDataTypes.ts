@@ -17,6 +17,19 @@ export interface SyncedUserSettings {
   useLiveCommute: boolean;
   morningDigestEnabled: boolean;
   pushNotificationsEnabled: boolean;
+  wakeTime: string;
+  morningWorkoutDeadlineHour: number;
+  fitnessSuggestTime: string;
+}
+
+export type WorkoutType = "arms" | "body" | "legs" | "cardio";
+
+export interface SyncedFitnessLog {
+  id: string;
+  type: WorkoutType;
+  date: string;
+  loggedAt: string;
+  slot: "morning" | "afternoon" | "evening";
 }
 
 export interface SyncedTodo {
@@ -40,5 +53,6 @@ export interface AlfredUserData {
   lastDigestDate?: string;
   lastLeaveReminderKey?: string;
   lastUrgentReminderKey?: string;
+  fitnessLogs?: SyncedFitnessLog[];
   updatedAt: string;
 }

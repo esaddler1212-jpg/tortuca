@@ -62,6 +62,22 @@ export interface UserSettings {
   morningDigestEnabled: boolean;
   /** Web push for leave-by and urgent reminders */
   pushNotificationsEnabled: boolean;
+  /** Weekday alarm / wake time HH:MM */
+  wakeTime: string;
+  /** Hour by which morning workout should be logged */
+  morningWorkoutDeadlineHour: number;
+  /** Fallback afternoon workout suggestion HH:MM */
+  fitnessSuggestTime: string;
+}
+
+export type WorkoutType = "arms" | "body" | "legs" | "cardio";
+
+export interface FitnessLog {
+  id: string;
+  type: WorkoutType;
+  date: string;
+  loggedAt: string;
+  slot: "morning" | "afternoon" | "evening";
 }
 
 export interface WeatherSnapshot {
@@ -79,7 +95,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   latitude: 40.7128,
   longitude: -74.006,
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  briefingHour: 8,
+  briefingHour: 4,
   woodhouseNodes: [],
   woodhouseNodeUrl: "",
   familyPurposeNodeUrl: "",
@@ -95,4 +111,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   useLiveCommute: false,
   morningDigestEnabled: false,
   pushNotificationsEnabled: false,
+  wakeTime: "04:15",
+  morningWorkoutDeadlineHour: 9,
+  fitnessSuggestTime: "17:00",
 };
