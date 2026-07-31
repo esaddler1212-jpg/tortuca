@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "netlify database migrations apply"
+    "db:migrate": "netlify database migrations apply",
+    "cloud-install": "bash scripts/cloud-install.sh"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.6.2",
