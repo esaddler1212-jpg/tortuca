@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
 import type { CalendarEvent } from "../types";
 import type { EmailMessage } from "../types";
@@ -10,6 +10,7 @@ import type { TodoItem } from "../types";
 import type { LeaveByPlan } from "../lib/leaveBy";
 import type { TodayAction } from "../lib/todayQueue";
 import type { EveningWrap } from "../lib/eveningWrap";
+import { getDailyQuote } from "../lib/dailyQuote";
 import { weatherLabel } from "../lib/weather";
 import {
   AlertCircle,
@@ -23,6 +24,7 @@ import {
   Moon,
   Package,
   Plane,
+  Quote,
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
@@ -79,6 +81,8 @@ export function TodayCommandCenter({
     .sort((a, b) => Math.abs(b.changePercent) - Math.abs(a.changePercent))
     .slice(0, 3);
 
+  const dailyQuote = useMemo(() => getDailyQuote(settings.timezone), [settings.timezone]);
+
   return (
     <div className="space-y-4">
       {/* Hero — leave by + status chips */}
@@ -96,6 +100,13 @@ export function TodayCommandCenter({
                 {format(parseISO(weather.sunset), "h:mm a")} · {settings.city}
               </p>
             )}
+            <blockquote className="mt-4 border-l-2 border-alfred-gold/40 pl-4 max-w-xl">
+              <p className="text-sm text-alfred-cream/90 italic leading-relaxed flex gap-2">
+                <Quote className="h-4 w-4 text-alfred-gold/70 shrink-0 mt-0.5" aria-hidden />
+                <span>&ldquo;{dailyQuote.text}&rdquo;</span>
+              </p>
+              <footer className="text-xs text-alfred-mist mt-1.5 pl-6">— {dailyQuote.author}</footer>
+            </blockquote>
           </div>
           {leaveBy && (
             <div className="panel border-alfred-gold/40 bg-alfred-gold/5 px-5 py-4 rounded-xl shrink-0">
