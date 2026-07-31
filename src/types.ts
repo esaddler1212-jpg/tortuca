@@ -122,7 +122,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   schoolGrade: "78",
   eveningWrapHour: 17,
   weeklyReviewHour: 18,
-  homeAddress: "Vallejo, CA",
+  homeAddress: "1001 North Regatta Dr, Vallejo, CA 94591",
   schoolAddress: "2050 Minert Rd, Concord, CA 94518",
   useLiveCommute: true,
   morningDigestEnabled: false,

@@ -186,7 +186,7 @@ export function SettingsDrawer({
                   <label className="text-xs text-alfred-mist" htmlFor="commute">Commute fallback (minutes)</label>
                   <input id="commute" type="number" min={1} className="input-field" value={commute} onChange={(e) => setCommute(e.target.value)} />
                   <label className="text-xs text-alfred-mist" htmlFor="home-address">Home address</label>
-                  <input id="home-address" className="input-field" value={homeAddress} onChange={(e) => setHomeAddress(e.target.value)} placeholder="Vallejo, CA" />
+                  <input id="home-address" className="input-field" value={homeAddress} onChange={(e) => setHomeAddress(e.target.value)} placeholder="1001 North Regatta Dr, Vallejo, CA" />
                   <label className="text-xs text-alfred-mist" htmlFor="school-address">School / destination address</label>
                   <input id="school-address" className="input-field" value={schoolAddress} onChange={(e) => setSchoolAddress(e.target.value)} placeholder="2050 Minert Rd, Concord, CA" />
                   <label className="flex items-center gap-2 text-sm text-alfred-mist mt-2">
