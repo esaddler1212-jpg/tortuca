@@ -136,7 +136,7 @@ export default function App() {
     <div className="min-h-screen pb-20 relative">
       <div className="hud-vignette" aria-hidden />
       <div className="hud-scanline" aria-hidden />
-      <header className="border-b border-cyan-500/20 bg-alfred-panel/40 backdrop-blur-xl sticky top-0 z-10">
+      <header className="border-b border-green-500/20 bg-alfred-panel/40 backdrop-blur-xl sticky top-0 z-10">
         <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
           <div>
             <p className="hud-label mb-1">Operator interface</p>

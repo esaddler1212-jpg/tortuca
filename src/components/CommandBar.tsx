@@ -79,7 +79,7 @@ export function CommandBar({
         </button>
       </form>
       {feedback && (
-        <p className="text-sm text-alfred-mist mt-2 font-mono border-l-2 border-cyan-400/40 pl-3">
+        <p className="text-sm text-alfred-mist mt-2 font-mono border-l-2 border-green-400/40 pl-3">
           ALFRED: {feedback}
         </p>
       )}

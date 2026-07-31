@@ -132,7 +132,7 @@ export function TodayCommandCenter({
                 {format(parseISO(weather.sunset), "h:mm a")} · {settings.city}
               </p>
             )}
-            <blockquote className="mt-4 border-l-2 border-cyan-400/50 pl-4 max-w-xl">
+            <blockquote className="mt-4 border-l-2 border-green-400/50 pl-4 max-w-xl">
               <p className="text-sm text-alfred-cream/90 leading-relaxed flex gap-2 font-mono">
                 <Quote className="h-4 w-4 text-alfred-gold/70 shrink-0 mt-0.5" aria-hidden />
                 <span>&ldquo;{dailyQuote.text}&rdquo;</span>
@@ -212,7 +212,7 @@ export function TodayCommandCenter({
       </section>
 
       {eveningMode && (
-        <section className="panel p-5 border-cyan-500/25 bg-gradient-to-br from-cyan-950/40 to-alfred-panel/30">
+        <section className="panel p-5 border-green-500/25 bg-gradient-to-br from-green-950/40 to-alfred-panel/30">
           <h3 className="font-display text-lg text-alfred-gold mb-3 flex items-center gap-2 tracking-wide">
             <Moon className="h-4 w-4" /> {eveningWrap.headline.toUpperCase()}
           </h3>

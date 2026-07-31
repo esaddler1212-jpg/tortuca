@@ -9,18 +9,18 @@
 
   body {
     @apply bg-alfred-ink text-alfred-cream font-sans min-h-screen;
-    background-color: #020617;
+    background-color: #000000;
     background-image:
-      linear-gradient(rgba(34, 211, 238, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(34, 211, 238, 0.03) 1px, transparent 1px),
-      radial-gradient(ellipse 90% 60% at 50% -30%, rgba(34, 211, 238, 0.14), transparent 55%),
-      radial-gradient(ellipse 50% 40% at 100% 80%, rgba(8, 145, 178, 0.12), transparent),
-      radial-gradient(ellipse 40% 30% at 0% 60%, rgba(6, 182, 212, 0.08), transparent);
+      linear-gradient(rgba(74, 222, 128, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(74, 222, 128, 0.04) 1px, transparent 1px),
+      radial-gradient(ellipse 90% 60% at 50% -30%, rgba(34, 197, 94, 0.12), transparent 55%),
+      radial-gradient(ellipse 50% 40% at 100% 80%, rgba(22, 101, 52, 0.15), transparent),
+      radial-gradient(ellipse 40% 30% at 0% 60%, rgba(34, 197, 94, 0.06), transparent);
     background-size: 48px 48px, 48px 48px, auto, auto, auto;
   }
 
   ::selection {
-    @apply bg-cyan-400/25 text-alfred-cream;
+    @apply bg-green-400/25 text-alfred-cream;
   }
 }
 
@@ -34,8 +34,8 @@
       0deg,
       transparent,
       transparent 2px,
-      rgba(34, 211, 238, 0.015) 2px,
-      rgba(34, 211, 238, 0.015) 4px
+      rgba(74, 222, 128, 0.02) 2px,
+      rgba(74, 222, 128, 0.02) 4px
     );
   }
 
@@ -44,15 +44,15 @@
     position: fixed;
     inset: 0;
     z-index: 49;
-    background: radial-gradient(ellipse at center, transparent 40%, rgba(2, 6, 23, 0.65) 100%);
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.75) 100%);
   }
 
   .panel {
-    @apply bg-alfred-panel/85 border border-alfred-border/60 rounded-lg shadow-panel backdrop-blur-md;
+    @apply bg-alfred-panel/90 border border-alfred-border/60 rounded-lg shadow-panel backdrop-blur-md;
     background: linear-gradient(
       135deg,
-      rgba(10, 22, 40, 0.92) 0%,
-      rgba(6, 14, 28, 0.88) 100%
+      rgba(10, 18, 10, 0.95) 0%,
+      rgba(4, 8, 4, 0.92) 100%
     );
   }
 
@@ -65,25 +65,25 @@
   }
 
   .hud-glow-text {
-    text-shadow: 0 0 12px rgba(34, 211, 238, 0.55), 0 0 24px rgba(34, 211, 238, 0.2);
+    text-shadow: 0 0 12px rgba(74, 222, 128, 0.55), 0 0 24px rgba(74, 222, 128, 0.2);
   }
 
   .btn-gold {
-    @apply inline-flex items-center justify-center gap-2 rounded-md border border-alfred-gold/50 bg-cyan-400/10 px-4 py-2 text-sm font-semibold font-mono uppercase tracking-wider text-alfred-gold transition;
-    box-shadow: 0 0 12px rgba(34, 211, 238, 0.15), inset 0 1px 0 rgba(34, 211, 238, 0.2);
+    @apply inline-flex items-center justify-center gap-2 rounded-md border border-alfred-gold/50 bg-green-400/10 px-4 py-2 text-sm font-semibold font-mono uppercase tracking-wider text-alfred-gold transition;
+    box-shadow: 0 0 12px rgba(74, 222, 128, 0.15), inset 0 1px 0 rgba(74, 222, 128, 0.2);
   }
 
   .btn-gold:hover {
-    @apply bg-cyan-400/20 border-alfred-gold;
-    box-shadow: 0 0 20px rgba(34, 211, 238, 0.35), inset 0 1px 0 rgba(34, 211, 238, 0.3);
+    @apply bg-green-400/20 border-alfred-gold;
+    box-shadow: 0 0 20px rgba(74, 222, 128, 0.35), inset 0 1px 0 rgba(74, 222, 128, 0.3);
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm text-alfred-mist transition hover:bg-cyan-400/5 hover:text-alfred-cream;
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm text-alfred-mist transition hover:bg-green-400/5 hover:text-alfred-cream;
   }
 
   .input-field {
-    @apply w-full rounded-md border border-alfred-border/70 bg-alfred-ink/70 px-3 py-2 text-sm font-mono text-alfred-cream placeholder:text-alfred-mist/50 focus:border-alfred-gold/60 focus:outline-none focus:ring-1 focus:ring-cyan-400/30;
-    box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.35);
+    @apply w-full rounded-md border border-alfred-border/70 bg-black/80 px-3 py-2 text-sm font-mono text-alfred-cream placeholder:text-alfred-mist/50 focus:border-alfred-gold/60 focus:outline-none focus:ring-1 focus:ring-green-400/30;
+    box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.5);
   }
 }
