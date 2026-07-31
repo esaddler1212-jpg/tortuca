@@ -166,6 +166,10 @@ export function TodayCommandCenter({
           <h3 className="font-display text-lg text-alfred-gold mb-3 flex items-center gap-2">
             <Moon className="h-4 w-4" /> {eveningWrap.headline}
           </h3>
+          <blockquote className="border-l-2 border-alfred-gold/40 pl-4 mb-4">
+            <p className="text-sm text-alfred-cream/90 italic">&ldquo;{eveningWrap.quote.text}&rdquo;</p>
+            <footer className="text-xs text-alfred-mist mt-1">— {eveningWrap.quote.author}</footer>
+          </blockquote>
           <ul className="space-y-2 text-sm text-alfred-mist">
             {eveningWrap.lines.map((line, i) => (
               <li key={i}>{line}</li>

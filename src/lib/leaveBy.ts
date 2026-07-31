@@ -67,10 +67,11 @@ export function computeLeaveBy(
   scheduleEvents: CalendarEvent[],
   now = new Date(),
   forDate = now,
+  commuteMinutesOverride?: number,
 ): LeaveByPlan | null {
   const tz = settings.timezone;
   const day = dayKey(tz, forDate);
-  const commute = settings.commuteMinutes;
+  const commute = commuteMinutesOverride ?? settings.commuteMinutes;
   const buffer = settings.arriveBufferMinutes;
 
   const schoolName = settings.schoolName || "Oak Grove Middle School";

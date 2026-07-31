@@ -4,6 +4,7 @@ import type { WoodhouseOrchestrationSnapshot } from "../types/woodhouse";
 import type { WeatherSnapshot } from "../types";
 import type { LeaveByPlan } from "./leaveBy";
 import type { TodayAction } from "./todayQueue";
+import { getDailyQuote } from "./dailyQuote";
 
 export interface EveningWrap {
   headline: string;
@@ -12,6 +13,7 @@ export interface EveningWrap {
   remainingTasks: number;
   stillUrgent: number;
   tomorrowPreview?: string;
+  quote: { text: string; author: string };
 }
 
 function tomorrowKey(timeZone: string): string {
@@ -94,6 +96,8 @@ export function buildEveningWrap(
       ? "Evening wrap"
       : "Looking ahead";
 
+  const quote = getDailyQuote(tz, now);
+
   return {
     headline,
     lines,
@@ -101,6 +105,7 @@ export function buildEveningWrap(
     remainingTasks,
     stillUrgent,
     tomorrowPreview,
+    quote,
   };
 }
 

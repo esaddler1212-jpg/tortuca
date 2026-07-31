@@ -9,6 +9,7 @@ export interface StoredSession {
 
 const SCOPES = [
   "https://www.googleapis.com/auth/gmail.readonly",
+  "https://www.googleapis.com/auth/gmail.send",
   "https://www.googleapis.com/auth/calendar.readonly",
   "openid",
   "email",
@@ -83,6 +84,63 @@ export async function getValidSession(sessionId: string): Promise<StoredSession 
     await saveSession(sessionId, refreshed);
   }
   return refreshed;
+}
+
+export async function listConnectedSessions(): Promise<Array<{ sessionId: string; session: StoredSession }>> {
+  const store = await getSessionStore();
+  const { blobs } = await store.list();
+  const results: Array<{ sessionId: string; session: StoredSession }> = [];
+  for (const blob of blobs) {
+    const session = await store.get(blob.key, { type: "json" });
+    const parsed = session as StoredSession | null;
+    if (parsed?.refreshToken) {
+      results.push({ sessionId: blob.key, session: parsed });
+    }
+  }
+  return results;
+}
+
+export async function sendGmail(
+  session: StoredSession,
+  to: string,
+  subject: string,
+  html: string,
+  text: string,
+): Promise<boolean> {
+  const raw = [
+    `To: ${to}`,
+    `Subject: ${subject}`,
+    "MIME-Version: 1.0",
+    'Content-Type: multipart/alternative; boundary="alfred-boundary"',
+    "",
+    "--alfred-boundary",
+    "Content-Type: text/plain; charset=utf-8",
+    "",
+    text,
+    "",
+    "--alfred-boundary",
+    "Content-Type: text/html; charset=utf-8",
+    "",
+    html,
+    "",
+    "--alfred-boundary--",
+  ].join("\r\n");
+
+  const encoded = Buffer.from(raw)
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+
+  const res = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${session.accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ raw: encoded }),
+  });
+  return res.ok;
 }
 
 export { SCOPES };

@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { TodayCommandCenter } from "./components/TodayCommandCenter";
+import { WeeklyReview } from "./components/WeeklyReview";
 import { SettingsDrawer } from "./components/SettingsDrawer";
 import { useSettings } from "./hooks/useSettings";
 import { useWeather } from "./hooks/useWeather";
@@ -8,20 +9,28 @@ import { useGoogleIntegration, useSchedule } from "./hooks/useGoogle";
 import { useEmails } from "./hooks/useEmails";
 import { useWoodhouse } from "./hooks/useWoodhouse";
 import { useStocks } from "./hooks/useStocks";
+import { useCommute } from "./hooks/useCommute";
+import { useUserDataSync } from "./hooks/useUserDataSync";
+import { usePushNotifications } from "./hooks/usePushNotifications";
 import { orchestrationToCalendarEvents } from "./lib/familyCalendar";
 import { computeLeaveBy, filterTodayTimeline } from "./lib/leaveBy";
 import { buildEveningWrap, isEveningMode } from "./lib/eveningWrap";
 import { buildTodayQueue } from "./lib/todayQueue";
+import { buildWeeklyReview, isWeeklyReviewTime } from "./lib/weeklyReview";
 
 export default function App() {
   const { settings, persist, updateCity, saving, error, setError } = useSettings();
   const { weather } = useWeather(settings);
-  const { pending, done, add, toggle } = useTodos();
+  const { todos, pending, done, add, toggle, setTodos } = useTodos();
   const { connected, accountEmail, connect, disconnect } = useGoogleIntegration();
   const { allEvents } = useSchedule(connected);
   const { messages, unread } = useEmails(connected);
   const { snapshot: woodhouse } = useWoodhouse();
   const { snapshot: stocks } = useStocks();
+  const { effectiveMinutes, loading: commuteLoading, error: commuteError } = useCommute(settings);
+
+  useUserDataSync(settings, persist, todos, setTodos);
+  const push = usePushNotifications(settings.pushNotificationsEnabled);
 
   const familyScheduleEvents = useMemo(
     () => (woodhouse ? orchestrationToCalendarEvents(woodhouse) : []),
@@ -40,15 +49,15 @@ export default function App() {
   );
 
   const leaveBy = useMemo(
-    () => computeLeaveBy(settings, woodhouse, allSchedule),
-    [settings, woodhouse, allSchedule],
+    () => computeLeaveBy(settings, woodhouse, allSchedule, new Date(), new Date(), effectiveMinutes),
+    [settings, woodhouse, allSchedule, effectiveMinutes],
   );
 
   const tomorrowLeaveBy = useMemo(() => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    return computeLeaveBy(settings, woodhouse, allSchedule, new Date(), tomorrow);
-  }, [settings, woodhouse, allSchedule]);
+    return computeLeaveBy(settings, woodhouse, allSchedule, new Date(), tomorrow, effectiveMinutes);
+  }, [settings, woodhouse, allSchedule, effectiveMinutes]);
 
   const todayActions = useMemo(
     () => buildTodayQueue(pending, woodhouse),
@@ -71,6 +80,11 @@ export default function App() {
   );
 
   const eveningMode = isEveningMode(settings);
+  const weeklyReview = useMemo(
+    () => buildWeeklyReview(settings, pending, done, allSchedule, woodhouse),
+    [settings, pending, done, allSchedule, woodhouse],
+  );
+  const showWeeklyReview = isWeeklyReviewTime(settings);
 
   const displayName = accountEmail?.split("@")[0];
 
@@ -88,7 +102,14 @@ export default function App() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-6">
+      <main className="mx-auto max-w-6xl px-4 py-6 space-y-4">
+        {showWeeklyReview && <WeeklyReview review={weeklyReview} />}
+        {commuteError && settings.useLiveCommute && (
+          <p className="text-sm text-amber-300/90 panel px-4 py-2">{commuteError}</p>
+        )}
+        {commuteLoading && settings.useLiveCommute && (
+          <p className="text-xs text-alfred-mist">Updating live commute…</p>
+        )}
         <TodayCommandCenter
           settings={settings}
           weather={weather}
@@ -115,6 +136,7 @@ export default function App() {
         settings={settings}
         googleConnected={connected}
         accountEmail={accountEmail}
+        push={push}
         onSaveCity={async (city) => {
           setError(null);
           return updateCity(city);
@@ -124,6 +146,12 @@ export default function App() {
         }}
         onSaveCommute={(patch) => {
           persist({ ...settings, ...patch });
+        }}
+        onSaveNotifications={async (patch) => {
+          persist({ ...settings, ...patch });
+          if (patch.pushNotificationsEnabled) {
+            await push.enable();
+          }
         }}
         onConnectGoogle={connect}
         onDisconnectGoogle={() => void disconnect()}

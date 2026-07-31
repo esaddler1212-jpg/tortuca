@@ -49,5 +49,5 @@ export function useTodos() {
   const pending = todos.filter((t) => !t.done);
   const done = todos.filter((t) => t.done);
 
-  return { todos, pending, done, add, toggle, remove };
+  return { todos, pending, done, add, toggle, remove, setTodos };
 }

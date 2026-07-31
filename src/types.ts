@@ -50,6 +50,18 @@ export interface UserSettings {
   schoolGrade: "6" | "78";
   /** Hour (0–23) when evening wrap is emphasized */
   eveningWrapHour: number;
+  /** Hour (0–23) when weekly review shows on Sundays */
+  weeklyReviewHour: number;
+  /** Street address for live commute origin */
+  homeAddress: string;
+  /** School or destination address for live commute */
+  schoolAddress: string;
+  /** Use Google Distance Matrix instead of manual minutes */
+  useLiveCommute: boolean;
+  /** Email morning briefing via Gmail */
+  morningDigestEnabled: boolean;
+  /** Web push for leave-by and urgent reminders */
+  pushNotificationsEnabled: boolean;
 }
 
 export interface WeatherSnapshot {
@@ -77,4 +89,10 @@ export const DEFAULT_SETTINGS: UserSettings = {
   schoolName: "Oak Grove Middle School",
   schoolGrade: "78",
   eveningWrapHour: 17,
+  weeklyReviewHour: 18,
+  homeAddress: "",
+  schoolAddress: "",
+  useLiveCommute: false,
+  morningDigestEnabled: false,
+  pushNotificationsEnabled: false,
 };

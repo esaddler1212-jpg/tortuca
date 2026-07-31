@@ -4,10 +4,18 @@ import type { UserSettings } from "../types";
 import type { WoodhouseRegistryEntry } from "../types/woodhouse";
 import { WoodhouseNodesEditor } from "./WoodhouseNodesEditor";
 
+interface PushState {
+  subscribed: boolean;
+  error: string | null;
+  loading: boolean;
+  enable: () => Promise<boolean>;
+}
+
 interface Props {
   settings: UserSettings;
   googleConnected: boolean;
   accountEmail?: string;
+  push: PushState;
   onSaveCity: (city: string) => Promise<boolean>;
   onSaveWoodhouseNodes: (nodes: WoodhouseRegistryEntry[]) => void;
   onSaveCommute: (
@@ -20,9 +28,17 @@ interface Props {
         | "schoolName"
         | "schoolGrade"
         | "eveningWrapHour"
+        | "weeklyReviewHour"
+        | "homeAddress"
+        | "schoolAddress"
+        | "useLiveCommute"
+        | "briefingHour"
       >
     >,
   ) => void;
+  onSaveNotifications: (
+    patch: Partial<Pick<UserSettings, "morningDigestEnabled" | "pushNotificationsEnabled" | "briefingHour">>,
+  ) => Promise<void>;
   onConnectGoogle: () => void;
   onDisconnectGoogle: () => void;
   saving: boolean;
@@ -33,9 +49,11 @@ export function SettingsDrawer({
   settings,
   googleConnected,
   accountEmail,
+  push,
   onSaveCity,
   onSaveWoodhouseNodes,
   onSaveCommute,
+  onSaveNotifications,
   onConnectGoogle,
   onDisconnectGoogle,
   saving,
@@ -50,6 +68,13 @@ export function SettingsDrawer({
   const [schoolName, setSchoolName] = useState(settings.schoolName);
   const [schoolGrade, setSchoolGrade] = useState(settings.schoolGrade);
   const [eveningHour, setEveningHour] = useState(String(settings.eveningWrapHour));
+  const [weeklyHour, setWeeklyHour] = useState(String(settings.weeklyReviewHour));
+  const [homeAddress, setHomeAddress] = useState(settings.homeAddress);
+  const [schoolAddress, setSchoolAddress] = useState(settings.schoolAddress);
+  const [useLiveCommute, setUseLiveCommute] = useState(settings.useLiveCommute);
+  const [briefingHour, setBriefingHour] = useState(String(settings.briefingHour));
+  const [morningDigest, setMorningDigest] = useState(settings.morningDigestEnabled);
+  const [pushEnabled, setPushEnabled] = useState(settings.pushNotificationsEnabled);
 
   const save = async () => {
     const ok = await onSaveCity(city);
@@ -119,8 +144,16 @@ export function SettingsDrawer({
                   <p className="text-xs text-alfred-mist/70">
                     Bell schedule auto-detects Wednesday early release and minimum days from Family Purpose.
                   </p>
-                  <label className="text-xs text-alfred-mist" htmlFor="commute">Commute (minutes)</label>
+                  <label className="text-xs text-alfred-mist" htmlFor="commute">Commute fallback (minutes)</label>
                   <input id="commute" type="number" min={1} className="input-field" value={commute} onChange={(e) => setCommute(e.target.value)} />
+                  <label className="text-xs text-alfred-mist" htmlFor="home-address">Home address</label>
+                  <input id="home-address" className="input-field" value={homeAddress} onChange={(e) => setHomeAddress(e.target.value)} placeholder="123 Main St, City" />
+                  <label className="text-xs text-alfred-mist" htmlFor="school-address">School address</label>
+                  <input id="school-address" className="input-field" value={schoolAddress} onChange={(e) => setSchoolAddress(e.target.value)} placeholder="Oak Grove Middle School, City" />
+                  <label className="flex items-center gap-2 text-sm text-alfred-mist mt-2">
+                    <input type="checkbox" checked={useLiveCommute} onChange={(e) => setUseLiveCommute(e.target.checked)} />
+                    Use live Google Maps commute (requires GOOGLE_MAPS_API_KEY)
+                  </label>
                   <label className="text-xs text-alfred-mist" htmlFor="buffer">Arrival buffer (minutes)</label>
                   <input id="buffer" type="number" min={0} className="input-field" value={buffer} onChange={(e) => setBuffer(e.target.value)} />
                 </div>
@@ -134,6 +167,9 @@ export function SettingsDrawer({
                       schoolGrade,
                       commuteMinutes: Math.max(1, Number(commute) || 25),
                       arriveBufferMinutes: Math.max(0, Number(buffer) || 5),
+                      homeAddress: homeAddress.trim(),
+                      schoolAddress: schoolAddress.trim(),
+                      useLiveCommute,
                     })
                   }
                 >
@@ -168,6 +204,71 @@ export function SettingsDrawer({
                 </button>
               </div>
               <div className="border-t border-alfred-border pt-6">
+                <h3 className="text-sm font-medium mb-2 text-alfred-gold">Weekly review</h3>
+                <p className="text-sm text-alfred-mist mb-3">Sunday summary: tasks, school schedule, Woodhouse apps.</p>
+                <label className="text-xs text-alfred-mist" htmlFor="weekly-hour">Sunday start hour (0–23)</label>
+                <input
+                  id="weekly-hour"
+                  type="number"
+                  min={12}
+                  max={22}
+                  className="input-field"
+                  value={weeklyHour}
+                  onChange={(e) => setWeeklyHour(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="btn-gold mt-3 w-full"
+                  onClick={() =>
+                    onSaveCommute({
+                      weeklyReviewHour: Math.min(22, Math.max(12, Number(weeklyHour) || 18)),
+                    })
+                  }
+                >
+                  Save weekly review
+                </button>
+              </div>
+              <div className="border-t border-alfred-border pt-6">
+                <h3 className="text-sm font-medium mb-2 text-alfred-gold">Morning digest &amp; push</h3>
+                <p className="text-sm text-alfred-mist mb-3">
+                  Daily email at your briefing hour (requires Google reconnect for send permission).
+                </p>
+                <label className="text-xs text-alfred-mist" htmlFor="briefing-hour">Briefing hour (0–23)</label>
+                <input
+                  id="briefing-hour"
+                  type="number"
+                  min={5}
+                  max={11}
+                  className="input-field mb-2"
+                  value={briefingHour}
+                  onChange={(e) => setBriefingHour(e.target.value)}
+                />
+                <label className="flex items-center gap-2 text-sm text-alfred-mist mb-2">
+                  <input type="checkbox" checked={morningDigest} onChange={(e) => setMorningDigest(e.target.checked)} />
+                  Email morning digest to connected Gmail
+                </label>
+                <label className="flex items-center gap-2 text-sm text-alfred-mist mb-2">
+                  <input type="checkbox" checked={pushEnabled} onChange={(e) => setPushEnabled(e.target.checked)} />
+                  Push: leave in 10 min &amp; urgent items
+                </label>
+                {push.error && <p className="text-sm text-red-300/90 mb-2">{push.error}</p>}
+                {push.subscribed && <p className="text-xs text-emerald-400/80 mb-2">Push notifications active</p>}
+                <button
+                  type="button"
+                  className="btn-gold w-full"
+                  disabled={push.loading}
+                  onClick={() =>
+                    void onSaveNotifications({
+                      briefingHour: Math.min(11, Math.max(5, Number(briefingHour) || 8)),
+                      morningDigestEnabled: morningDigest,
+                      pushNotificationsEnabled: pushEnabled,
+                    })
+                  }
+                >
+                  {push.loading ? "Enabling…" : "Save notifications"}
+                </button>
+              </div>
+              <div className="border-t border-alfred-border pt-6">
                 <h3 className="text-sm font-medium mb-2 text-alfred-gold">Woodhouse apps</h3>
                 <WoodhouseNodesEditor nodes={nodes} onChange={setNodes} />
                 <button
@@ -183,7 +284,7 @@ export function SettingsDrawer({
               <div className="border-t border-alfred-border pt-6">
                 <h3 className="text-sm font-medium mb-2">Google account</h3>
                 <p className="text-sm text-alfred-mist mb-3">
-                  Read-only access to Gmail and Calendar. Tokens stay on the server.
+                  Gmail (read + send digest), Calendar (read-only). Tokens stay on the server.
                 </p>
                 {googleConnected ? (
                   <div className="space-y-2">

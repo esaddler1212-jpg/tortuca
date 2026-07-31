@@ -8,6 +8,11 @@
 - **School bell schedules** — Wednesday early release, minimum days, grade-aware (via Family Purpose / Woodhouse)
 - **Evening wrap** — day summary + tomorrow preview after configurable hour
 - **Daily motivation** — a fresh quote each day (classic wisdom + Alfred flair)
+- **Morning digest email** — scheduled Gmail briefing with quote, weather, tasks (Settings → enable)
+- **Push notifications** — leave-by and urgent reminders (PWA + VAPID keys)
+- **Weekly review** — Sunday evening rollup: tasks, school schedule, Woodhouse apps
+- **Live commute** — Google Maps Distance Matrix when addresses are set
+- **Server-synced todos** — follow you across devices via Netlify Blobs
 - **Woodhouse dashboard** — one card per app: metrics, summary, online/offline
 - **Weather & sunset** — [Open-Meteo](https://open-meteo.com/)
 - **To-do list** — browser storage
