@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Digital Fidget Spinner</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <h1>Digital Fidget Spinner</h1>
+      <p class="subtitle">Drag to spin · Release to let it coast</p>
+    </header>
+
+    <main class="spinner-stage">
+      <canvas id="spinner" aria-label="Interactive fidget spinner"></canvas>
+      <div class="glow-ring" aria-hidden="true"></div>
+    </main>
+
+    <section class="stats" aria-live="polite">
+      <div class="stat">
+        <span class="stat-value" id="rpm">0</span>
+        <span class="stat-label">RPM</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="spins">0</span>
+        <span class="stat-label">Total Spins</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="best">0</span>
+        <span class="stat-label">Best RPM</span>
+      </div>
+    </section>
+
+    <div class="controls">
+      <button type="button" id="theme-btn" class="btn" aria-label="Change color theme">
+        <span class="btn-icon">◐</span> Theme
+      </button>
+      <button type="button" id="reset-btn" class="btn" aria-label="Reset spin counter">
+        <span class="btn-icon">↺</span> Reset
+      </button>
+    </div>
+
+    <footer class="footer">
+      <p>Tip: Fast flicks build more momentum</p>
+    </footer>
+  </div>
+
+  <script src="js/spinner.js"></script>
+</body>
+</html>
