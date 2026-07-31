@@ -15,7 +15,7 @@
 - **Push notifications** — leave-by and urgent reminders (PWA + VAPID keys)
 - **Weekly review** — Sunday evening rollup: tasks, school schedule, Woodhouse apps
 - **Live commute** — Google Maps Distance Matrix when addresses are set
-- **Server-synced todos** — follow you across devices via Netlify Blobs
+- **Shopping & meal prep** — checklist groceries; check off to build pantry; Alfred suggests recipes you can make Sunday
 - **Woodhouse dashboard** — one card per app: metrics, summary, online/offline
 - **Weather & sunset** — [Open-Meteo](https://open-meteo.com/)
 - **To-do list** — browser storage

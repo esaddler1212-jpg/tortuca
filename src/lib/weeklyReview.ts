@@ -1,8 +1,9 @@
 import { format } from "date-fns";
-import type { CalendarEvent, TodoItem, UserSettings } from "../types";
+import type { CalendarEvent, TodoItem, UserSettings, ShoppingItem } from "../types";
 import type { WoodhouseOrchestrationSnapshot } from "../types/woodhouse";
 import { MINIMUM_DAYS } from "./schoolBell";
 import { getDailyQuote } from "./dailyQuote";
+import { buildMealPrepPlan, isMealPrepDay } from "./mealPrep";
 
 export interface WeeklyReview {
   headline: string;
@@ -45,6 +46,7 @@ export function buildWeeklyReview(
   done: TodoItem[],
   allSchedule: CalendarEvent[],
   woodhouse: WoodhouseOrchestrationSnapshot | null,
+  shoppingItems: ShoppingItem[] = [],
   now = new Date(),
 ): WeeklyReview {
   const tz = settings.timezone;
@@ -92,6 +94,17 @@ export function buildWeeklyReview(
   const weekEvents = allSchedule.filter((e) => inWeek(e.start, start, tz));
   if (weekEvents.length > 0) {
     lines.push(`${weekEvents.length} calendar event${weekEvents.length === 1 ? "" : "s"} on the books this week.`);
+  }
+
+  if (isMealPrepDay(settings, now)) {
+    const meal = buildMealPrepPlan(shoppingItems);
+    if (meal.readyCount > 0) {
+      lines.push(
+        `Meal prep: ${meal.readyCount} recipe${meal.readyCount === 1 ? "" : "s"} ready with your pantry (${meal.toBuy.length} items still to buy).`,
+      );
+    } else if (meal.toBuy.length > 0) {
+      lines.push(`Meal prep: ${meal.toBuy.length} grocery item${meal.toBuy.length === 1 ? "" : "s"} on your list — check them off to unlock recipes.`);
+    }
   }
 
   return {

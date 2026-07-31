@@ -6,6 +6,7 @@ import { format } from "date-fns";
 export type CommandAction =
   | { kind: "todo"; title: string; dueDate?: string; message: string }
   | { kind: "fitness"; type: WorkoutType; message: string }
+  | { kind: "shopping"; name: string; inPantry: boolean; message: string }
   | { kind: "event"; title: string; start: string; message: string }
   | { kind: "reply"; message: string }
   | { kind: "noop"; message: string };
@@ -42,6 +43,14 @@ function extractTitle(text: string): string {
   return text
     .replace(/^(add|task|todo|remind me to|remember to)\s+/i, "")
     .replace(/\b(for today|today|tomorrow)\b/gi, "")
+    .trim();
+}
+
+function extractShoppingItem(text: string): string {
+  return text
+    .replace(/^(buy|get|pick up)\s+/i, "")
+    .replace(/\b(to shopping list|on shopping list|for meal prep)\b/gi, "")
+    .replace(/^add\s+/i, "")
     .trim();
 }
 
@@ -88,6 +97,31 @@ export function parseCommand(
     return { kind: "reply", message: "Tap Arms, Body, Legs, or Cardio in the fitness panel — or say “log legs”." };
   }
 
+  if (/meal prep|what can i (make|cook)|recipes?/.test(lower)) {
+    return {
+      kind: "reply",
+      message: "See the meal prep panel — recipes update as you check off your shopping list.",
+    };
+  }
+
+  if (/\b(in pantry|already have|have at home)\b/.test(lower)) {
+    const name = extractShoppingItem(lower.replace(/\b(in pantry|already have|have at home)\b/g, ""));
+    if (name.length > 1) {
+      return { kind: "shopping", name, inPantry: true, message: `Added ${name} to your pantry.` };
+    }
+  }
+
+  if (
+    /\b(shopping list|grocery|groceries)\b/.test(lower) ||
+    /^buy\s+/.test(lower) ||
+    /^get\s+/.test(lower)
+  ) {
+    const name = extractShoppingItem(text);
+    if (name.length > 1) {
+      return { kind: "shopping", name, inPantry: false, message: `Added ${name} to your shopping list.` };
+    }
+  }
+
   const blockMatch = lower.match(/block\s+(\d+(?:\.\d+)?)\s*h(?:our)?s?\s+(?:for\s+)?(.+)/);
   if (blockMatch) {
     const hours = Number(blockMatch[1]);
@@ -103,7 +137,7 @@ export function parseCommand(
     };
   }
 
-  if (/^(add|task|todo|remind|remember)\b/.test(lower) || lower.startsWith("buy ")) {
+  if (/^(add|task|todo|remind|remember)\b/.test(lower)) {
     const title = extractTitle(text);
     const dueDate = parseDueDate(lower, settings.timezone);
     return {
@@ -115,7 +149,11 @@ export function parseCommand(
   }
 
   if (lower.endsWith("?")) {
-    return { kind: "reply", message: "Try: “leave by”, “log cardio”, “add call dentist Friday”, or “block 2 hours for deep work”." };
+    return {
+      kind: "reply",
+      message:
+        "Try: “buy chicken”, “log legs”, “leave by”, “add task review deck”, or “what can I make”.",
+    };
   }
 
   return {

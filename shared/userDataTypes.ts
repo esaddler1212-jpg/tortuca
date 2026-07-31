@@ -46,6 +46,13 @@ export interface PushSubscriptionPayload {
   keys: { p256dh: string; auth: string };
 }
 
+export interface SyncedShoppingItem {
+  id: string;
+  name: string;
+  inPantry: boolean;
+  createdAt: string;
+}
+
 export interface AlfredUserData {
   settings?: SyncedUserSettings;
   todos?: SyncedTodo[];
@@ -54,5 +61,6 @@ export interface AlfredUserData {
   lastLeaveReminderKey?: string;
   lastUrgentReminderKey?: string;
   fitnessLogs?: SyncedFitnessLog[];
+  shoppingList?: SyncedShoppingItem[];
   updatedAt: string;
 }

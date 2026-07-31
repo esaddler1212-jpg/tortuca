@@ -16,6 +16,8 @@ import { useUserDataSync } from "./hooks/useUserDataSync";
 import { usePushNotifications } from "./hooks/usePushNotifications";
 import { useOvernightDelta } from "./hooks/useOvernightDelta";
 import { useFitness } from "./hooks/useFitness";
+import { useShoppingList } from "./hooks/useShoppingList";
+import { MealPrepPanel } from "./components/MealPrepPanel";
 import { orchestrationToCalendarEvents } from "./lib/familyCalendar";
 import { computeLeaveBy, filterTodayTimeline } from "./lib/leaveBy";
 import { buildEveningWrap, isEveningMode } from "./lib/eveningWrap";
@@ -33,8 +35,9 @@ export default function App() {
   const { snapshot: stocks } = useStocks();
   const { effectiveMinutes, loading: commuteLoading, error: commuteError } = useCommute(settings);
   const { logs: fitnessLogs, logWorkout, loadRemote: loadFitness } = useFitness(settings);
+  const { items: shoppingItems, add: addShopping, togglePantry, remove: removeShopping, loadRemote: loadShopping } = useShoppingList();
 
-  useUserDataSync(settings, persist, todos, setTodos, loadFitness);
+  useUserDataSync(settings, persist, todos, setTodos, loadFitness, loadShopping);
   const push = usePushNotifications(settings.pushNotificationsEnabled);
 
   const familyScheduleEvents = useMemo(
@@ -99,8 +102,8 @@ export default function App() {
 
   const eveningMode = isEveningMode(settings);
   const weeklyReview = useMemo(
-    () => buildWeeklyReview(settings, pending, done, allSchedule, woodhouse),
-    [settings, pending, done, allSchedule, woodhouse],
+    () => buildWeeklyReview(settings, pending, done, allSchedule, woodhouse, shoppingItems),
+    [settings, pending, done, allSchedule, woodhouse, shoppingItems],
   );
   const showWeeklyReview = isWeeklyReviewTime(settings);
 
@@ -129,6 +132,14 @@ export default function App() {
           onAddTodo={add}
           onLogWorkout={logWorkout}
           onAddEvent={addLocalEvent}
+          onAddShopping={addShopping}
+        />
+        <MealPrepPanel
+          settings={settings}
+          items={shoppingItems}
+          onAdd={addShopping}
+          onToggle={togglePantry}
+          onRemove={removeShopping}
         />
         {commuteError && settings.useLiveCommute && (
           <p className="text-sm text-amber-300/90 panel px-4 py-2">{commuteError}</p>

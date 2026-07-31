@@ -80,6 +80,14 @@ export interface FitnessLog {
   slot: "morning" | "afternoon" | "evening";
 }
 
+export interface ShoppingItem {
+  id: string;
+  name: string;
+  /** true = bought / already have — counts toward recipes */
+  inPantry: boolean;
+  createdAt: string;
+}
+
 export interface WeatherSnapshot {
   temperature: number;
   weatherCode: number;

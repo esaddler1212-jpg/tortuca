@@ -11,6 +11,7 @@ interface Props {
   onAddTodo: (title: string, dueDate?: string) => void;
   onLogWorkout: (type: WorkoutType) => void;
   onAddEvent: (title: string, start: string, end?: string) => void;
+  onAddShopping: (name: string, inPantry?: boolean) => void;
 }
 
 export function CommandBar({
@@ -19,6 +20,7 @@ export function CommandBar({
   onAddTodo,
   onLogWorkout,
   onAddEvent,
+  onAddShopping,
 }: Props) {
   const [text, setText] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -31,6 +33,9 @@ export function CommandBar({
         break;
       case "fitness":
         onLogWorkout(cmd.type);
+        break;
+      case "shopping":
+        onAddShopping(cmd.name, cmd.inPantry);
         break;
       case "event": {
         const start = new Date(cmd.start);
@@ -62,7 +67,7 @@ export function CommandBar({
         <input
           id="alfred-command"
           className="input-field flex-1"
-          placeholder='“log legs”, “leave by”, “add review deck Friday”, “block 2 hours deep work”'
+          placeholder='“buy chicken”, “log legs”, “leave by”, “what can I make”'
           value={text}
           onChange={(e) => setText(e.target.value)}
         />
