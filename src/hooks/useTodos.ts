@@ -30,7 +30,15 @@ export function useTodos() {
 
   const toggle = useCallback((id: string) => {
     setTodos((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t)),
+      prev.map((t) => {
+        if (t.id !== id) return t;
+        const done = !t.done;
+        return {
+          ...t,
+          done,
+          completedAt: done ? new Date().toISOString() : undefined,
+        };
+      }),
     );
   }, []);
 

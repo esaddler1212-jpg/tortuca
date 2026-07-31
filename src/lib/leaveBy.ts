@@ -1,6 +1,7 @@
 import type { CalendarEvent } from "../types";
 import type { UserSettings } from "../types";
 import type { WoodhouseOrchestrationSnapshot } from "../types/woodhouse";
+import { resolveSchoolSchedule, schoolDismissalHint } from "./schoolBell";
 
 export interface LeaveByPlan {
   leaveBy: Date;
@@ -9,10 +10,11 @@ export interface LeaveByPlan {
   reason: string;
   commuteMinutes: number;
   bufferMinutes: number;
+  scheduleLabel?: string;
+  dismissal?: string;
 }
 
-/** Build a Date for a wall-clock time on a calendar day in an IANA timezone. */
-function zonedDateTime(day: string, hhmm: string, timeZone: string): Date {
+export function zonedDateTime(day: string, hhmm: string, timeZone: string): Date {
   const [hour, minute] = hhmm.split(":").map(Number);
   let guess = new Date(
     `${day}T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00.000Z`,
@@ -40,12 +42,12 @@ function zonedDateTime(day: string, hhmm: string, timeZone: string): Date {
   return guess;
 }
 
-function todayKey(timeZone: string): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone }).format(new Date());
+export function dayKey(timeZone: string, date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone }).format(date);
 }
 
-function eventsToday(events: CalendarEvent[], timeZone: string): CalendarEvent[] {
-  const day = todayKey(timeZone);
+function eventsToday(events: CalendarEvent[], timeZone: string, date = new Date()): CalendarEvent[] {
+  const day = dayKey(timeZone, date);
   return events
     .filter((e) => {
       const d = new Intl.DateTimeFormat("en-CA", { timeZone }).format(new Date(e.start));
@@ -54,15 +56,9 @@ function eventsToday(events: CalendarEvent[], timeZone: string): CalendarEvent[]
     .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
 }
 
-function isSchoolDay(woodhouse: WoodhouseOrchestrationSnapshot | null): boolean {
+function schoolDayLabel(woodhouse: WoodhouseOrchestrationSnapshot | null): string | undefined {
   const edu = woodhouse?.nodes.find((n) => n.nodeType === "education");
-  const school = edu?.snapshot?.calendar?.find((c) => c.kind === "school_day");
-  if (!school) {
-    const wd = new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(new Date());
-    return wd !== "Sat" && wd !== "Sun";
-  }
-  const label = school.title.toLowerCase();
-  return !label.includes("no school") && !label.includes("weekend") && !label.includes("recess");
+  return edu?.snapshot?.calendar?.find((c) => c.kind === "school_day")?.title;
 }
 
 export function computeLeaveBy(
@@ -70,27 +66,37 @@ export function computeLeaveBy(
   woodhouse: WoodhouseOrchestrationSnapshot | null,
   scheduleEvents: CalendarEvent[],
   now = new Date(),
+  forDate = now,
 ): LeaveByPlan | null {
   const tz = settings.timezone;
-  const day = todayKey(tz);
+  const day = dayKey(tz, forDate);
   const commute = settings.commuteMinutes;
   const buffer = settings.arriveBufferMinutes;
 
-  const edu = woodhouse?.nodes.find((n) => n.nodeType === "education");
-  const schoolName = settings.schoolName || edu?.snapshot?.displayName || "School";
+  const schoolName = settings.schoolName || "Oak Grove Middle School";
 
-  const todayEvents = eventsToday(scheduleEvents, tz);
+  const todayEvents = eventsToday(scheduleEvents, tz, forDate);
   const upcomingToday = todayEvents.filter((e) => new Date(e.start) > now);
 
   let arriveBy: Date | null = null;
   let reason = "";
   let destination = schoolName;
+  let scheduleLabel: string | undefined;
+  let dismissal: string | undefined;
 
-  if (isSchoolDay(woodhouse)) {
-    const schoolStart = settings.schoolStartTime || "08:00";
-    arriveBy = zonedDateTime(day, schoolStart, tz);
-    reason = `First bell ${schoolStart}`;
-    destination = settings.schoolName || "Oak Grove Middle School";
+  const bell = resolveSchoolSchedule(
+    forDate,
+    tz,
+    schoolDayLabel(woodhouse),
+    settings.schoolGrade,
+  );
+
+  if (bell) {
+    arriveBy = zonedDateTime(day, bell.firstBell, tz);
+    reason = bell.firstPeriod;
+    scheduleLabel = bell.label;
+    dismissal = schoolDismissalHint(bell.id);
+    destination = schoolName;
   } else if (upcomingToday.length > 0) {
     const next = upcomingToday[0];
     arriveBy = new Date(next.start);
@@ -101,9 +107,9 @@ export function computeLeaveBy(
   if (!arriveBy) return null;
 
   const leaveBy = new Date(arriveBy.getTime() - (commute + buffer) * 60_000);
-  const late = leaveBy < now && arriveBy > now;
+  const late = forDate.toDateString() === now.toDateString() && leaveBy < now && arriveBy > now;
 
-  if (arriveBy <= now && !late) return null;
+  if (forDate.toDateString() === now.toDateString() && arriveBy <= now && !late) return null;
 
   return {
     leaveBy,
@@ -112,6 +118,8 @@ export function computeLeaveBy(
     reason: late ? `${reason} — leave now` : reason,
     commuteMinutes: commute,
     bufferMinutes: buffer,
+    scheduleLabel,
+    dismissal,
   };
 }
 
@@ -119,8 +127,18 @@ export function filterTodayTimeline(
   events: CalendarEvent[],
   timeZone: string,
 ): CalendarEvent[] {
-  const day = todayKey(timeZone);
+  return eventsOnDay(events, timeZone, new Date());
+}
+
+function eventsOnDay(events: CalendarEvent[], timeZone: string, date: Date): CalendarEvent[] {
+  const day = dayKey(timeZone, date);
   return events
     .filter((e) => new Intl.DateTimeFormat("en-CA", { timeZone }).format(new Date(e.start)) === day)
     .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+}
+
+export function filterTomorrowTimeline(events: CalendarEvent[], timeZone: string): CalendarEvent[] {
+  const t = new Date();
+  t.setDate(t.getDate() + 1);
+  return eventsOnDay(events, timeZone, t);
 }

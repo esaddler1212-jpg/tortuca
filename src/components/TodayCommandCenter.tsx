@@ -9,6 +9,7 @@ import type { WeatherSnapshot } from "../types";
 import type { TodoItem } from "../types";
 import type { LeaveByPlan } from "../lib/leaveBy";
 import type { TodayAction } from "../lib/todayQueue";
+import type { EveningWrap } from "../lib/eveningWrap";
 import { weatherLabel } from "../lib/weather";
 import {
   AlertCircle,
@@ -17,7 +18,9 @@ import {
   Check,
   Clock,
   CloudSun,
+  ListPlus,
   Mail,
+  Moon,
   Package,
   Plane,
   TrendingDown,
@@ -28,6 +31,9 @@ interface Props {
   settings: UserSettings;
   weather: WeatherSnapshot | null;
   leaveBy: LeaveByPlan | null;
+  tomorrowLeaveBy: LeaveByPlan | null;
+  eveningWrap: EveningWrap;
+  eveningMode: boolean;
   displayName?: string;
   unreadEmails: number;
   actions: TodayAction[];
@@ -46,6 +52,9 @@ export function TodayCommandCenter({
   settings,
   weather,
   leaveBy,
+  tomorrowLeaveBy,
+  eveningWrap,
+  eveningMode,
   displayName,
   unreadEmails,
   actions,
@@ -99,15 +108,33 @@ export function TodayCommandCenter({
               <p className="text-sm text-alfred-mist mt-1">
                 → {leaveBy.destination}
               </p>
+              {leaveBy.scheduleLabel && (
+                <p className="text-xs text-alfred-gold/90 mt-1">{leaveBy.scheduleLabel}</p>
+              )}
               <p className="text-xs text-alfred-mist/80">
                 Arrive {format(leaveBy.arriveBy, "h:mm a")} ({leaveBy.reason}) · {leaveBy.commuteMinutes}
                 min drive + {leaveBy.bufferMinutes} min buffer
+                {leaveBy.dismissal ? ` · ${leaveBy.dismissal}` : ""}
               </p>
               {leaveBy.reason.includes("leave now") && (
                 <p className="text-xs text-amber-300/90 mt-2 flex items-center gap-1">
                   <AlertCircle className="h-3.5 w-3.5" /> Running late — adjust in Settings
                 </p>
               )}
+            </div>
+          )}
+          {!leaveBy && tomorrowLeaveBy && eveningMode && (
+            <div className="panel border-alfred-border/60 px-5 py-4 rounded-xl shrink-0">
+              <p className="text-xs uppercase tracking-wider text-alfred-mist flex items-center gap-1">
+                <Clock className="h-3.5 w-3.5" /> Tomorrow
+              </p>
+              <p className="font-display text-2xl font-semibold text-alfred-cream mt-1">
+                Leave by {format(tomorrowLeaveBy.leaveBy, "h:mm a")}
+              </p>
+              <p className="text-xs text-alfred-mist/80 mt-1">
+                {tomorrowLeaveBy.scheduleLabel ?? tomorrowLeaveBy.reason}
+                {tomorrowLeaveBy.dismissal ? ` · ${tomorrowLeaveBy.dismissal}` : ""}
+              </p>
             </div>
           )}
         </div>
@@ -122,6 +149,26 @@ export function TodayCommandCenter({
           <Chip label={`${woodhouse?.nodes.filter((n) => n.ok).length ?? 0}/${woodhouse?.nodes.length ?? 0} apps online`} />
         </div>
       </section>
+
+      {eveningMode && (
+        <section className="panel p-5 border-alfred-gold/20 bg-gradient-to-br from-alfred-ink/80 to-alfred-panel/40">
+          <h3 className="font-display text-lg text-alfred-gold mb-3 flex items-center gap-2">
+            <Moon className="h-4 w-4" /> {eveningWrap.headline}
+          </h3>
+          <ul className="space-y-2 text-sm text-alfred-mist">
+            {eveningWrap.lines.map((line, i) => (
+              <li key={i}>{line}</li>
+            ))}
+          </ul>
+          <div className="flex flex-wrap gap-2 mt-4">
+            <Chip label={`${eveningWrap.completedToday} done today`} />
+            <Chip label={`${eveningWrap.remainingTasks} open`} alert={eveningWrap.remainingTasks > 0} />
+            {eveningWrap.stillUrgent > 0 && (
+              <Chip label={`${eveningWrap.stillUrgent} urgent`} alert />
+            )}
+          </div>
+        </section>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-12">
         {/* Actions + timeline — main column */}
@@ -263,8 +310,20 @@ export function TodayCommandCenter({
                     m.unread ? "border-alfred-gold/30 bg-alfred-gold/5" : "border-alfred-border/50"
                   }`}
                 >
-                  <p className="font-medium truncate">{m.subject}</p>
-                  <p className="text-xs text-alfred-mist truncate">{m.from}</p>
+                  <div className="flex items-start gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium truncate">{m.subject}</p>
+                      <p className="text-xs text-alfred-mist truncate">{m.from}</p>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn-ghost p-1.5 shrink-0 border border-alfred-border/60 rounded"
+                      title="Add as task"
+                      onClick={() => onAddTodo(`Reply: ${m.subject}`)}
+                    >
+                      <ListPlus className="h-3.5 w-3.5 text-alfred-gold" />
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>

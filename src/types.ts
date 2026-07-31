@@ -4,6 +4,7 @@ export interface TodoItem {
   done: boolean;
   dueDate?: string;
   createdAt: string;
+  completedAt?: string;
 }
 
 export interface CalendarEvent {
@@ -45,6 +46,10 @@ export interface UserSettings {
   /** Local HH:MM first bell / arrival target on school days */
   schoolStartTime: string;
   schoolName: string;
+  /** 6th vs 7th/8th — affects lunch schedule label; same first bell */
+  schoolGrade: "6" | "78";
+  /** Hour (0–23) when evening wrap is emphasized */
+  eveningWrapHour: number;
 }
 
 export interface WeatherSnapshot {
@@ -70,4 +75,6 @@ export const DEFAULT_SETTINGS: UserSettings = {
   arriveBufferMinutes: 5,
   schoolStartTime: "08:00",
   schoolName: "Oak Grove Middle School",
+  schoolGrade: "78",
+  eveningWrapHour: 17,
 };

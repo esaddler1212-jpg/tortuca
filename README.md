@@ -4,7 +4,10 @@
 
 ## Features
 
-- **Daily briefing** — weather, sunset, inbox, tasks, schedule, and **all Woodhouse apps**
+- **Today command center** — one screen: leave-by time, unified actions, timeline, apps, markets, inbox
+- **School bell schedules** — Wednesday early release, minimum days, grade-aware (via Family Purpose / Woodhouse)
+- **Evening wrap** — day summary + tomorrow preview after configurable hour
+- **Add email to tasks** — one tap from inbox snippets
 - **Woodhouse dashboard** — one card per app: metrics, summary, online/offline
 - **Weather & sunset** — [Open-Meteo](https://open-meteo.com/)
 - **To-do list** — browser storage

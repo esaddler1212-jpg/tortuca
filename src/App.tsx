@@ -10,12 +10,13 @@ import { useWoodhouse } from "./hooks/useWoodhouse";
 import { useStocks } from "./hooks/useStocks";
 import { orchestrationToCalendarEvents } from "./lib/familyCalendar";
 import { computeLeaveBy, filterTodayTimeline } from "./lib/leaveBy";
+import { buildEveningWrap, isEveningMode } from "./lib/eveningWrap";
 import { buildTodayQueue } from "./lib/todayQueue";
 
 export default function App() {
   const { settings, persist, updateCity, saving, error, setError } = useSettings();
   const { weather } = useWeather(settings);
-  const { pending, add, toggle } = useTodos();
+  const { pending, done, add, toggle } = useTodos();
   const { connected, accountEmail, connect, disconnect } = useGoogleIntegration();
   const { allEvents } = useSchedule(connected);
   const { messages, unread } = useEmails(connected);
@@ -43,10 +44,33 @@ export default function App() {
     [settings, woodhouse, allSchedule],
   );
 
+  const tomorrowLeaveBy = useMemo(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return computeLeaveBy(settings, woodhouse, allSchedule, new Date(), tomorrow);
+  }, [settings, woodhouse, allSchedule]);
+
   const todayActions = useMemo(
     () => buildTodayQueue(pending, woodhouse),
     [pending, woodhouse],
   );
+
+  const eveningWrap = useMemo(
+    () =>
+      buildEveningWrap(
+        settings,
+        weather,
+        pending,
+        done,
+        todayActions,
+        allSchedule,
+        woodhouse,
+        tomorrowLeaveBy,
+      ),
+    [settings, weather, pending, done, todayActions, allSchedule, woodhouse, tomorrowLeaveBy],
+  );
+
+  const eveningMode = isEveningMode(settings);
 
   const displayName = accountEmail?.split("@")[0];
 
@@ -69,6 +93,9 @@ export default function App() {
           settings={settings}
           weather={weather}
           leaveBy={leaveBy}
+          tomorrowLeaveBy={tomorrowLeaveBy}
+          eveningWrap={eveningWrap}
+          eveningMode={eveningMode}
           displayName={displayName}
           unreadEmails={unread}
           actions={todayActions}
