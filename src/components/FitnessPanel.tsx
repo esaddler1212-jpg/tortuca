@@ -21,6 +21,11 @@ export function FitnessPanel({ settings, logs, events, onLog }: Props) {
       <h3 className="font-display text-lg text-alfred-gold mb-2 flex items-center gap-2">
         <Dumbbell className="h-4 w-4" /> Training
       </h3>
+      {status.scheduledLabel && (
+        <p className="text-xs text-alfred-gold mb-2 font-mono uppercase tracking-wider">
+          2026 schedule · {status.scheduledLabel} today
+        </p>
+      )}
       {status.prompt && (
         <p className="text-sm text-alfred-cream/90 mb-3 italic border-l-2 border-alfred-gold/40 pl-3">
           {status.prompt}

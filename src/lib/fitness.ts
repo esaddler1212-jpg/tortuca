@@ -62,6 +62,21 @@ export function suggestNextType(logs: FitnessLog[], timeZone: string): WorkoutTy
   return neglected[0] ?? nextInRotation;
 }
 
+/** 2026 gym schedule from whiteboard: Tue arms+chest, Thu legs, Sun cardio */
+export function scheduledWorkoutForDay(timeZone: string, now = new Date()): WorkoutType | null {
+  const wd = new Intl.DateTimeFormat("en-US", { timeZone, weekday: "short" }).format(now);
+  if (wd === "Tue") return "arms";
+  if (wd === "Thu") return "legs";
+  if (wd === "Sun") return "cardio";
+  return null;
+}
+
+export function scheduledWorkoutLabel(type: WorkoutType, timeZone: string, now = new Date()): string {
+  const wd = new Intl.DateTimeFormat("en-US", { timeZone, weekday: "short" }).format(now);
+  if (wd === "Tue" && type === "arms") return "Arms & chest";
+  return WORKOUT_LABELS[type];
+}
+
 function parseTime(hhmm: string): { hour: number; minute: number } {
   const [h, m] = hhmm.split(":").map(Number);
   return { hour: h || 0, minute: m || 0 };
@@ -116,6 +131,8 @@ export interface FitnessStatus {
   loggedToday: FitnessLog | null;
   weekCounts: Record<WorkoutType, number>;
   suggestType: WorkoutType;
+  scheduledToday: WorkoutType | null;
+  scheduledLabel: string | null;
   needsMorningCheck: boolean;
   suggestLaterTime: string | null;
   prompt: string | null;
@@ -130,7 +147,11 @@ export function buildFitnessStatus(
   const tz = settings.timezone;
   const loggedToday = todayLog(logs, tz, now);
   const counts = weekCounts(logs, tz, now);
-  const suggestType = suggestNextType(logs, tz);
+  const scheduledToday = scheduledWorkoutForDay(tz, now);
+  const suggestType = scheduledToday ?? suggestNextType(logs, tz);
+  const scheduledLabel = scheduledToday
+    ? scheduledWorkoutLabel(scheduledToday, tz, now)
+    : null;
   const hour = Number(
     new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", hour12: false }).format(now),
   );
@@ -141,15 +162,21 @@ export function buildFitnessStatus(
 
   let prompt: string | null = null;
   if (!loggedToday && needsMorningCheck) {
-    prompt = `Good morning, sir. Did you train yet — arms, body, legs, or cardio?`;
+    const label = scheduledLabel ?? WORKOUT_LABELS[suggestType];
+    prompt = scheduledToday
+      ? `2026 schedule: ${label} today. Did you train yet?`
+      : `Good morning, sir. Did you train yet — arms, body, legs, or cardio?`;
   } else if (!loggedToday && pastMorningWindow) {
-    prompt = `No workout logged this morning. I'd suggest ${WORKOUT_LABELS[suggestType]} around ${suggestLaterTime}.`;
+    const label = scheduledLabel ?? WORKOUT_LABELS[suggestType];
+    prompt = `No workout logged. I'd suggest ${label} around ${suggestLaterTime}.`;
   }
 
   return {
     loggedToday,
     weekCounts: counts,
     suggestType,
+    scheduledToday,
+    scheduledLabel,
     needsMorningCheck,
     suggestLaterTime,
     prompt,

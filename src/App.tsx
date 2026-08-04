@@ -29,6 +29,8 @@ import { buildTodayQueue } from "./lib/todayQueue";
 import { buildWeeklyReview, isWeeklyReviewTime } from "./lib/weeklyReview";
 import { buildFitnessStatus } from "./lib/fitness";
 import { assessOvercommitment } from "./lib/overcommitment";
+import { useGoals2026 } from "./hooks/useGoals2026";
+import { Goals2026Panel } from "./components/Goals2026Panel";
 import { HudRing } from "./components/HudRing";
 import { InstallAppBanner } from "./components/InstallAppBanner";
 
@@ -44,6 +46,7 @@ export default function App() {
   const { effectiveMinutes, loading: commuteLoading, error: commuteError } = useCommute(settings);
   const { logs: fitnessLogs, logWorkout, loadRemote: loadFitness } = useFitness(settings);
   const { items: shoppingItems, add: addShopping, togglePantry, remove: removeShopping, loadRemote: loadShopping } = useShoppingList();
+  const { progress: goalsProgress, toggleTrip, toggleMwfs, toggleAiAgents } = useGoals2026();
 
   useUserDataSync(settings, persist, todos, setTodos, loadFitness, loadShopping);
   const push = usePushNotifications(settings.pushNotificationsEnabled);
@@ -126,8 +129,8 @@ export default function App() {
   const eveningMode = isEveningMode(settings);
   const showWindDown = bedtime && isWindDownTime(bedtime) && !eveningMode;
   const weeklyReview = useMemo(
-    () => buildWeeklyReview(settings, pending, done, allSchedule, woodhouse, shoppingItems),
-    [settings, pending, done, allSchedule, woodhouse, shoppingItems],
+    () => buildWeeklyReview(settings, pending, done, allSchedule, woodhouse, shoppingItems, goalsProgress),
+    [settings, pending, done, allSchedule, woodhouse, shoppingItems, goalsProgress],
   );
   const showWeeklyReview = isWeeklyReviewTime(settings);
 
@@ -152,6 +155,13 @@ export default function App() {
       <main className="mx-auto max-w-6xl px-4 py-6 space-y-4">
         {showWeeklyReview && <WeeklyReview review={weeklyReview} />}
         <InstallAppBanner />
+        <Goals2026Panel
+          settings={settings}
+          progress={goalsProgress}
+          onToggleTrip={toggleTrip}
+          onToggleMwfs={toggleMwfs}
+          onToggleAiAgents={toggleAiAgents}
+        />
         <OvernightDeltaBanner delta={overnightDelta} />
         {overcommitment && <OvercommitmentBanner warning={overcommitment} />}
         {showWindDown && <WindDownBanner bedtime={bedtime} />}

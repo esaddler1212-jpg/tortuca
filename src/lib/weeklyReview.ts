@@ -4,6 +4,7 @@ import type { WoodhouseOrchestrationSnapshot } from "../types/woodhouse";
 import { MINIMUM_DAYS } from "./schoolBell";
 import { getDailyQuote } from "./dailyQuote";
 import { buildMealPrepPlan, isMealPrepDay } from "./mealPrep";
+import { buildGoalsSummary, type Goals2026Progress } from "./goals2026";
 
 export interface WeeklyReview {
   headline: string;
@@ -47,6 +48,7 @@ export function buildWeeklyReview(
   allSchedule: CalendarEvent[],
   woodhouse: WoodhouseOrchestrationSnapshot | null,
   shoppingItems: ShoppingItem[] = [],
+  goalsProgress?: Goals2026Progress,
   now = new Date(),
 ): WeeklyReview {
   const tz = settings.timezone;
@@ -105,6 +107,10 @@ export function buildWeeklyReview(
     } else if (meal.toBuy.length > 0) {
       lines.push(`Meal prep: ${meal.toBuy.length} grocery item${meal.toBuy.length === 1 ? "" : "s"} on your list — check them off to unlock recipes.`);
     }
+  }
+
+  if (goalsProgress) {
+    lines.push(...buildGoalsSummary(goalsProgress, tz));
   }
 
   return {
