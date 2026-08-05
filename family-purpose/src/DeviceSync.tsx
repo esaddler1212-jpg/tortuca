@@ -34,7 +34,7 @@ export function DeviceSyncHint({ settings }: { settings: DebriefSettings }) {
       <strong>Sync enabled</strong>
       <p className="hint">
         {online
-          ? "When you go online, this device pulls check-ins from your other devices and uploads its own."
+          ? "Opening the app pulls check-ins from the cloud. Full backup runs once daily at 2:30 PM Pacific."
           : "Offline now — new entries stay on this device until you reconnect."}
       </p>
     </div>

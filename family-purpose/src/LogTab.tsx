@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CHECK_IN_OUTCOMES,
   GRADES,
+  DEFAULT_GRADE,
   type CheckIn,
   type CheckInOutcome,
   type CheckInReason,
@@ -46,7 +47,7 @@ function CheckInForm({
 }) {
   const [studentName, setStudentName] = useState("");
   const [studentId, setStudentId] = useState("");
-  const [grade, setGrade] = useState<string>("9");
+  const [grade, setGrade] = useState<string>(DEFAULT_GRADE);
   const [classPeriod, setClassPeriod] = useState("");
   const [reasons, setReasons] = useState<CheckInReason[]>([]);
   const [outcome, setOutcome] = useState<CheckInOutcome | null>(null);

@@ -14,7 +14,7 @@ function historyEntry(overrides: Partial<CheckIn> = {}): CheckIn {
   return {
     id: crypto.randomUUID(),
     studentName: "Maria Lopez",
-    grade: "10",
+    grade: "7",
     classPeriod: "Period 3 — Algebra",
     reasons: ["Academic support / tutoring"],
     reasonNotes: "",
@@ -50,7 +50,7 @@ describe("quick check-in entry", () => {
     seed([
       historyEntry({
         studentName: "Maria Lopez",
-        grade: "10",
+        grade: "7",
         classPeriod: "Period 3 — Algebra",
       }),
     ]);
@@ -60,7 +60,7 @@ describe("quick check-in entry", () => {
     await user.click(recentStudentPill("Maria Lopez"));
 
     expect(nameField()).toHaveValue("Maria Lopez");
-    expect(gradeField()).toHaveValue("10");
+    expect(gradeField()).toHaveValue("7");
     expect(periodField()).toHaveValue("Period 3 — Algebra");
   });
 
@@ -68,7 +68,7 @@ describe("quick check-in entry", () => {
     seed([
       historyEntry({
         studentName: "Andre Bell",
-        grade: "11",
+        grade: "8",
         classPeriod: "Period 5 — Biology",
       }),
     ]);
@@ -77,7 +77,7 @@ describe("quick check-in entry", () => {
 
     await user.type(nameField(), "andre bell");
 
-    expect(gradeField()).toHaveValue("11");
+    expect(gradeField()).toHaveValue("8");
     expect(periodField()).toHaveValue("Period 5 — Biology");
   });
 
@@ -85,7 +85,7 @@ describe("quick check-in entry", () => {
     seed([
       historyEntry({
         studentName: "Andre Bell",
-        grade: "11",
+        grade: "8",
         classPeriod: "Period 5 — Biology",
       }),
     ]);
@@ -97,7 +97,7 @@ describe("quick check-in entry", () => {
     await user.click(within(matches).getByRole("button", { name: /Andre Bell/ }));
 
     expect(nameField()).toHaveValue("Andre Bell");
-    expect(gradeField()).toHaveValue("11");
+    expect(gradeField()).toHaveValue("8");
     expect(periodField()).toHaveValue("Period 5 — Biology");
   });
 
@@ -106,7 +106,7 @@ describe("quick check-in entry", () => {
     render(<App />);
 
     await user.type(nameField(), "Maria Lopez");
-    await user.selectOptions(gradeField(), "10");
+    await user.selectOptions(gradeField(), "7");
     await user.type(periodField(), "Period 3 — Algebra");
     await user.click(
       screen.getByRole("button", { name: "Academic support / tutoring" }),
@@ -114,7 +114,7 @@ describe("quick check-in entry", () => {
     await user.click(screen.getByRole("button", { name: "Save check-in" }));
 
     expect(nameField()).toHaveValue("");
-    expect(gradeField()).toHaveValue("10");
+    expect(gradeField()).toHaveValue("7");
     expect(periodField()).toHaveValue("Period 3 — Algebra");
 
     await user.type(nameField(), "Devon Carter");
@@ -126,7 +126,7 @@ describe("quick check-in entry", () => {
     const list = screen.getByRole("list", { name: "Today's check-ins" });
     expect(within(list).getByText("Devon Carter")).toBeInTheDocument();
     expect(
-      within(list).getAllByText(/Grade 10 · Period 3 — Algebra/),
+      within(list).getAllByText(/Grade 7 · Period 3 — Algebra/),
     ).toHaveLength(2);
   });
 

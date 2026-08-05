@@ -140,8 +140,10 @@ export interface DebriefSettings {
   yourRole: string;
   schoolName: string;
   groupName: string;
-  /** When true, new data is backed up after the device comes back online. */
+  /** When true, new data is backed up once daily at 2:30 PM Pacific. */
   autoBackupEnabled: boolean;
+  /** Chromebook: save a JSON file to Downloads at backup time. Phone: leave off. */
+  backupSaveToDownloads: boolean;
   /** Shown on uploaded backups, e.g. "Jordan Chromebook". */
   deviceLabel: string;
   /** Optional POST URL (Family Purpose or Netlify) to upload JSON instead of downloading. */
@@ -160,23 +162,13 @@ export const DEFAULT_DEBRIEF_SETTINGS: DebriefSettings = {
   schoolName: "",
   groupName: "BOYS Group",
   autoBackupEnabled: true,
+  backupSaveToDownloads: false,
   deviceLabel: "",
   backupUploadUrl: "",
   backupUploadKey: "",
 };
 
-export const GRADES = [
-  "K",
-  "1",
-  "2",
-  "3",
-  "4",
-  "5",
-  "6",
-  "7",
-  "8",
-  "9",
-  "10",
-  "11",
-  "12",
-] as const;
+/** Middle school grades only (Oak Grove). */
+export const GRADES = ["6", "7", "8"] as const;
+
+export const DEFAULT_GRADE = "7";

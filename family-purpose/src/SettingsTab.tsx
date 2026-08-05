@@ -9,6 +9,7 @@ import {
 } from "./backup";
 import {
   formatLastBackupLabel,
+  formatNextBackupHint,
   loadBackupState,
   needsBackup,
 } from "./autoBackup";
@@ -43,14 +44,14 @@ function DataBackup({ onRestored }: { onRestored: () => void }) {
     <div className="card">
       <h2>Data backup</h2>
       <p className="hint hint-block">
-        Check-ins live on this Chromebook. Install the app once while you have
-        internet, then log students all day offline. When your hotspot connects,
-        new data backs up automatically (see Offline &amp; auto-backup below).
+        Automatic backup runs once daily at 2:30 PM Pacific — not on every app
+        open. Use the buttons below anytime for a manual copy.
       </p>
+      <p className="hint hint-block">{formatNextBackupHint()}</p>
       {pending && (
         <p className="hint hint-block">
-          <strong>Not backed up yet</strong> — connect to the internet or tap
-          Download backup below.
+          <strong>New check-ins not in today&apos;s backup yet</strong> — they
+          will be included at 2:30 PM Pacific or when you download manually.
         </p>
       )}
       {lastBackup && (
@@ -205,12 +206,12 @@ export default function SettingsTab({
           CARE team referrals go here and nowhere else.
         </p>
       </div>
-      <h3>Offline &amp; auto-backup</h3>
+      <h3>Offline &amp; daily backup</h3>
       <p className="hint hint-block">
-        At school without Wi‑Fi, the app keeps working after you open it once
-        with internet. Turn on your phone hotspot later and new check-ins back up
-        on their own — usually as a file in Downloads, or to a URL if Family
-        Purpose gives you one.
+        The app works offline after you open it once with internet. Check-ins
+        from your phone sync in the background when you open the app. A full
+        backup runs once per day at <strong>2:30 PM Pacific</strong> (not every
+        time you open the app).
       </p>
       <div className="field">
         <label className="checkbox">
@@ -219,16 +220,26 @@ export default function SettingsTab({
             checked={form.autoBackupEnabled}
             onChange={(e) => update("autoBackupEnabled", e.target.checked)}
           />
-          <span>Back up automatically when the internet comes back</span>
+          <span>Daily backup at 2:30 PM Pacific (when online)</span>
         </label>
       </div>
       <div className="field">
-        <label htmlFor="deviceLabel">This Chromebook (optional)</label>
+        <label className="checkbox">
+          <input
+            type="checkbox"
+            checked={form.backupSaveToDownloads}
+            onChange={(e) => update("backupSaveToDownloads", e.target.checked)}
+          />
+          <span>Save backup file to Downloads (Chromebook — turn off on phone)</span>
+        </label>
+      </div>
+      <div className="field">
+        <label htmlFor="deviceLabel">This device (optional)</label>
         <input
           id="deviceLabel"
           value={form.deviceLabel}
           onChange={(e) => update("deviceLabel", e.target.value)}
-          placeholder="e.g. Jordan work Chromebook"
+          placeholder="e.g. Work Chromebook or My phone"
         />
       </div>
       <div className="field">
@@ -241,8 +252,8 @@ export default function SettingsTab({
           placeholder="https://your-site.netlify.app/api/family-purpose-backup"
         />
         <p className="hint">
-          Leave blank to save a JSON file to Downloads when you are online. If
-          Family Purpose hosts a backup endpoint, paste it here instead.
+          Phone + laptop: paste your Netlify backup URL on both devices. Cloud
+          sync happens when you open the app; upload runs at 2:30 PM Pacific.
         </p>
       </div>
       <div className="field">

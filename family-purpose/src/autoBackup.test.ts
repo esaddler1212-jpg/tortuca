@@ -6,6 +6,7 @@ import {
   markBackedUp,
   needsBackup,
   runAutoBackup,
+  runScheduledBackup,
 } from "./autoBackup";
 import { CHECKINS_KEY, clearCheckInCache } from "./storage";
 import { DEFAULT_DEBRIEF_SETTINGS } from "./types";
@@ -59,6 +60,7 @@ describe("runAutoBackup", () => {
     const result = await runAutoBackup({
       ...DEFAULT_DEBRIEF_SETTINGS,
       autoBackupEnabled: true,
+      backupSaveToDownloads: true,
     });
 
     expect(result.downloaded).toBe(true);
@@ -109,5 +111,57 @@ describe("runAutoBackup", () => {
       autoBackupEnabled: false,
     });
     expect(result.skipped).toBe(true);
+  });
+
+  it("scheduled backup skips before 2:30 PM Pacific", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-05T21:00:00.000Z")); // 2 PM PDT
+    const result = await runScheduledBackup({
+      ...DEFAULT_DEBRIEF_SETTINGS,
+      autoBackupEnabled: true,
+      backupSaveToDownloads: true,
+    });
+    expect(result.skipped).toBe(true);
+    vi.useRealTimers();
+  });
+
+  it("scheduled backup downloads after 2:30 PM Pacific when enabled", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-05T21:30:00.000Z")); // 2:30 PM PDT
+    const download = vi.spyOn(backup, "downloadBackup").mockImplementation(() => {});
+    const result = await runScheduledBackup({
+      ...DEFAULT_DEBRIEF_SETTINGS,
+      autoBackupEnabled: true,
+      backupSaveToDownloads: true,
+    });
+    expect(result.downloaded).toBe(true);
+    expect(download).toHaveBeenCalled();
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
+  it("scheduled backup uploads without download on phone", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-05T21:30:00.000Z"));
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ status: 404 })
+      .mockResolvedValueOnce({ ok: true });
+    vi.stubGlobal("fetch", fetchMock);
+    const download = vi.spyOn(backup, "downloadBackup").mockImplementation(() => {});
+
+    const result = await runScheduledBackup({
+      ...DEFAULT_DEBRIEF_SETTINGS,
+      autoBackupEnabled: true,
+      backupSaveToDownloads: false,
+      backupUploadUrl: "https://example.com/api/family-purpose-backup",
+      backupUploadKey: "secret",
+    });
+
+    expect(result.uploaded).toBe(true);
+    expect(download).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+    vi.useRealTimers();
   });
 });

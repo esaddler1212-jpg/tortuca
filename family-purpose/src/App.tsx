@@ -15,7 +15,7 @@ import { buildRecentPeriods, buildRoster, orderReasonsByUse } from "./roster";
 import LogTab from "./LogTab";
 import { buildFollowUpQueue, needsOutcome } from "./followups";
 import { ConnectivityBannerLive } from "./ConnectivityBanner";
-import { useAutoBackupOnReconnect } from "./useAutoBackup";
+import { useScheduledBackup } from "./useAutoBackup";
 import AppNav from "./AppNav";
 import { DeviceSyncHint } from "./DeviceSync";
 
@@ -53,7 +53,7 @@ export default function App() {
     setRevision((r) => r + 1);
   }, []);
 
-  useAutoBackupOnReconnect(settings, showToast, refreshData);
+  useScheduledBackup(settings, showToast, refreshData);
 
   const onChanged = useCallback(
     (message?: string) => {

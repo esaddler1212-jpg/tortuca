@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { DebriefSettings } from "./types";
 import { loadDebriefSettings } from "./storage";
-import { needsBackup, runAutoBackup } from "./autoBackup";
+import {
+  pullAndMergeFromCloud,
+  runScheduledBackup,
+} from "./autoBackup";
 
 export function useOnlineStatus(): boolean {
   const [online, setOnline] = useState(
@@ -23,73 +26,79 @@ export function useOnlineStatus(): boolean {
 }
 
 /**
- * Backs up when the device comes back online, or on first load if there is
- * already new data and a connection (e.g. you logged offline and opened the
- * app on your phone hotspot).
+ * On open: pull cloud check-ins only (no file download).
+ * Daily at 2:30 PM Pacific: upload and/or Chromebook download when there is new data.
  */
-export function useAutoBackupOnReconnect(
+export function useScheduledBackup(
   settings: DebriefSettings,
   onResult: (message: string) => void,
   onDataChange?: () => void,
 ): void {
   const inFlight = useRef(false);
-  const sawOffline = useRef(!navigator.onLine);
 
-  const attempt = useCallback(async () => {
+  const syncPullOnly = useCallback(async () => {
     const current = loadDebriefSettings();
-    if (!current.autoBackupEnabled || !needsBackup()) return;
-    if (inFlight.current) return;
-    if (!navigator.onLine) return;
+    if (!current.backupUploadUrl.trim() || !navigator.onLine) return;
+    const pull = await pullAndMergeFromCloud(current);
+    if (pull.error && pull.error.includes("Could not")) {
+      onResult(pull.error);
+      return;
+    }
+    if (pull.merged && pull.addedCheckIns) {
+      onDataChange?.();
+      onResult(
+        `Synced ${pull.addedCheckIns} check-in${pull.addedCheckIns === 1 ? "" : "s"} from another device`,
+      );
+    }
+  }, [onDataChange, onResult]);
 
+  const runScheduled = useCallback(async () => {
+    const current = loadDebriefSettings();
+    if (!current.autoBackupEnabled || inFlight.current || !navigator.onLine) {
+      return;
+    }
     inFlight.current = true;
     try {
-      const result = await runAutoBackup(current);
+      const result = await runScheduledBackup(current);
       if (result.downloaded) {
-        onResult("Backup saved to Downloads — new check-ins are backed up");
+        onResult("Daily backup saved to Downloads (2:30 PM Pacific)");
       } else if (result.uploaded) {
         if (result.merged) {
           onDataChange?.();
           onResult(
-            `Synced ${result.merged} check-in${result.merged === 1 ? "" : "s"} from another device and uploaded`,
+            `Daily backup: synced ${result.merged} check-in${result.merged === 1 ? "" : "s"} and uploaded`,
           );
         } else {
-          onResult("Backup uploaded — new check-ins are saved off this device");
+          onResult("Daily backup uploaded (2:30 PM Pacific)");
         }
       } else if (result.error) {
         onResult(result.error);
-      } else if (result.merged) {
-        onDataChange?.();
-        onResult(
-          `Synced ${result.merged} check-in${result.merged === 1 ? "" : "s"} from another device`,
-        );
       }
     } finally {
       inFlight.current = false;
     }
-  }, [onResult]);
+  }, [onDataChange, onResult]);
+
+  useEffect(() => {
+    void syncPullOnly();
+  }, [syncPullOnly]);
 
   useEffect(() => {
     const onOnline = () => {
-      if (sawOffline.current) {
-        sawOffline.current = false;
-        window.setTimeout(() => void attempt(), 1500);
-      }
-    };
-    const onOffline = () => {
-      sawOffline.current = true;
+      void syncPullOnly();
+      window.setTimeout(() => void runScheduled(), 2000);
     };
     window.addEventListener("online", onOnline);
-    window.addEventListener("offline", onOffline);
-    return () => {
-      window.removeEventListener("online", onOnline);
-      window.removeEventListener("offline", onOffline);
-    };
-  }, [attempt]);
+    return () => window.removeEventListener("online", onOnline);
+  }, [syncPullOnly, runScheduled]);
 
   useEffect(() => {
-    if (!navigator.onLine || !settings.autoBackupEnabled) return;
-    if (!needsBackup()) return;
-    const timer = window.setTimeout(() => void attempt(), 2000);
-    return () => window.clearTimeout(timer);
-  }, [attempt, settings.autoBackupEnabled]);
+    if (!settings.autoBackupEnabled) return;
+    void runScheduled();
+    const id = window.setInterval(() => void runScheduled(), 60_000);
+    return () => window.clearInterval(id);
+  }, [runScheduled, settings.autoBackupEnabled]);
 }
+
+/** @deprecated Use useScheduledBackup */
+export const useAutoBackupOnReconnect = useScheduledBackup;

@@ -8,6 +8,10 @@ import {
   isBackupPayload,
   mergeBackups,
 } from "./backupMerge";
+import {
+  isPastDailyBackupTime,
+  pacificDateKey,
+} from "./backupSchedule";
 import type { DebriefSettings } from "./types";
 import {
   clearCheckInCache,
@@ -22,6 +26,8 @@ interface BackupState {
   fingerprint: string;
   backedUpAt: string;
   method: "download" | "upload";
+  /** Pacific YYYY-MM-DD when the daily 2:30 PM backup last ran. */
+  lastScheduledPacificDay?: string;
 }
 
 export function dataFingerprint(): string {
@@ -58,13 +64,17 @@ export function loadBackupState(): BackupState | null {
 export function markBackedUp(
   fingerprint: string,
   method: BackupState["method"],
+  opts?: { scheduledPacificDay?: string },
 ): void {
+  const prev = loadBackupState();
   localStorage.setItem(
     STATE_KEY,
     JSON.stringify({
       fingerprint,
       backedUpAt: new Date().toISOString(),
       method,
+      lastScheduledPacificDay:
+        opts?.scheduledPacificDay ?? prev?.lastScheduledPacificDay,
     }),
   );
 }
@@ -73,6 +83,16 @@ export function needsBackup(): boolean {
   const fingerprint = dataFingerprint();
   const state = loadBackupState();
   return state?.fingerprint !== fingerprint;
+}
+
+/** Daily 2:30 PM Pacific backup when there is new data and we have not run today. */
+export function needsScheduledBackupRun(now = new Date()): boolean {
+  if (!isPastDailyBackupTime(now)) return false;
+  if (!needsBackup()) return false;
+  const day = pacificDateKey(now);
+  const state = loadBackupState();
+  if (state?.lastScheduledPacificDay === day) return false;
+  return true;
 }
 
 export interface AutoBackupResult {
@@ -141,11 +161,10 @@ export async function pullAndMergeFromCloud(
   }
 }
 
-export async function runAutoBackup(
+async function runBackupCore(
   settings: DebriefSettings,
+  options: { allowDownload: boolean; scheduledPacificDay?: string },
 ): Promise<AutoBackupResult> {
-  if (!settings.autoBackupEnabled) return { skipped: true };
-
   const uploadUrl = settings.backupUploadUrl.trim();
   let mergedCount = 0;
 
@@ -159,10 +178,15 @@ export async function runAutoBackup(
     }
   }
 
-  if (!needsBackup() && mergedCount === 0) return { skipped: true };
+  if (!needsBackup() && mergedCount === 0) {
+    return { skipped: true, merged: undefined };
+  }
 
   const fingerprint = dataFingerprint();
   const backup = buildBackup();
+  const markOpts = options.scheduledPacificDay
+    ? { scheduledPacificDay: options.scheduledPacificDay }
+    : undefined;
 
   if (uploadUrl) {
     try {
@@ -180,29 +204,33 @@ export async function runAutoBackup(
       });
       if (!response.ok) {
         return {
-          error: `Upload failed (${response.status}). Will try again when you are online.`,
+          error: `Upload failed (${response.status}). Will try again later.`,
           merged: mergedCount > 0 ? mergedCount : undefined,
         };
       }
-      markBackedUp(fingerprint, "upload");
+      markBackedUp(fingerprint, "upload", markOpts);
       return {
         uploaded: true,
         merged: mergedCount > 0 ? mergedCount : undefined,
       };
     } catch {
       return {
-        error:
-          "Could not reach the backup server. Will try again when you are online.",
+        error: "Could not reach the backup server. Will try again later.",
         merged: mergedCount > 0 ? mergedCount : undefined,
       };
     }
   }
 
-  if (!needsBackup()) return { skipped: true, merged: mergedCount > 0 ? mergedCount : undefined };
+  if (!options.allowDownload) {
+    return {
+      skipped: true,
+      merged: mergedCount > 0 ? mergedCount : undefined,
+    };
+  }
 
   try {
     downloadBackup();
-    markBackedUp(fingerprint, "download");
+    markBackedUp(fingerprint, "download", markOpts);
     return {
       downloaded: true,
       merged: mergedCount > 0 ? mergedCount : undefined,
@@ -210,6 +238,33 @@ export async function runAutoBackup(
   } catch {
     return { error: "Could not save the backup file." };
   }
+}
+
+/** Once-daily backup at 2:30 PM Pacific when online and there is new data. */
+export async function runScheduledBackup(
+  settings: DebriefSettings,
+): Promise<AutoBackupResult> {
+  if (!settings.autoBackupEnabled) return { skipped: true };
+  const now = new Date();
+  if (!needsScheduledBackupRun(now)) return { skipped: true };
+
+  return runBackupCore(settings, {
+    allowDownload: settings.backupSaveToDownloads,
+    scheduledPacificDay: pacificDateKey(now),
+  });
+}
+
+/** Manual or test backup — not tied to the daily schedule. */
+export async function runAutoBackup(
+  settings: DebriefSettings,
+): Promise<AutoBackupResult> {
+  if (!settings.autoBackupEnabled) return { skipped: true };
+  if (!needsBackup()) return { skipped: true };
+
+  return runBackupCore(settings, {
+    allowDownload:
+      settings.backupSaveToDownloads || !settings.backupUploadUrl.trim(),
+  });
 }
 
 export function formatLastBackupLabel(state: BackupState | null): string | null {
@@ -223,6 +278,16 @@ export function formatLastBackupLabel(state: BackupState | null): string | null 
   return state.method === "upload"
     ? `Last upload: ${when}`
     : `Last backup file: ${when}`;
+}
+
+export function formatNextBackupHint(): string {
+  if (needsScheduledBackupRun()) {
+    return "Daily backup is due now (2:30 PM Pacific) — will run when you are online.";
+  }
+  if (isPastDailyBackupTime(new Date())) {
+    return "Today's 2:30 PM Pacific backup is done (or there was nothing new to save).";
+  }
+  return "Next automatic backup: 2:30 PM Pacific today.";
 }
 
 /** For tests — reset backup tracking. */

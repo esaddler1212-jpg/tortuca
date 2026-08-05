@@ -94,7 +94,7 @@ describe("group sign-in", () => {
 
     await user.click(screen.getByRole("button", { name: "Manage roster" }));
     await user.type(screen.getByLabelText("Add a student"), "Priya Raman");
-    await user.selectOptions(screen.getByLabelText("Grade"), "12");
+    await user.selectOptions(screen.getByLabelText("Grade"), "8");
     await user.click(screen.getByRole("button", { name: "Add to roster" }));
 
     const signIn = screen.getByLabelText("Tap a name to sign in");

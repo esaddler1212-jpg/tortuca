@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   GRADES,
+  DEFAULT_GRADE,
   type DebriefSettings,
   type GroupMember,
   type GroupSession,
@@ -26,7 +27,7 @@ function MemberManager({
   onChange: (members: GroupMember[]) => void;
 }) {
   const [name, setName] = useState("");
-  const [grade, setGrade] = useState("9");
+  const [grade, setGrade] = useState(DEFAULT_GRADE);
   const [error, setError] = useState("");
 
   const memberKeys = useMemo(
