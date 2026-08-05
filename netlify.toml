@@ -1,0 +1,20 @@
+# Monorepo: the Family Purpose app lives in family-purpose/
+# Netlify must build from that folder (not the repo root).
+
+[build]
+  base = "family-purpose"
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# SPA fallback — static assets and functions are served first.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
