@@ -58,7 +58,11 @@ npx netlify dev   # Woodhouse aggregator + Google OAuth
 
 Build: `npm run build` · Publish: `dist` · Functions: `netlify/functions`
 
+<<<<<<< Updated upstream
 Enable **Netlify Blobs** for Google OAuth and optional cloud sync.
+=======
+**Netlify Blobs** is built in — no extension to install. Stores are created automatically when your functions run (e.g. when you connect Google). To browse data later: Netlify site → **Blobs** in the left sidebar (stores appear after first use).
+>>>>>>> Stashed changes
 
 ### Environment variables
 
