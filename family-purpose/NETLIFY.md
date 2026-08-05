@@ -12,13 +12,15 @@ Use this if the app lives in GitHub (e.g. repo `tortuca` with this app in `famil
 
 1. Sign in at [https://app.netlify.com](https://app.netlify.com).
 2. **Add new site → Import an existing project** → choose GitHub → authorize → select the repo.
-3. **Build settings** (important if the repo root is not this folder):
+3. **Build settings** — the repo root has a `netlify.toml` that sets **base directory** to `family-purpose`, so you usually do **not** need to change anything in the UI. Confirm it shows:
 
    | Setting | Value |
    | --- | --- |
-   | Base directory | `family-purpose` |
+   | Base directory | `family-purpose` (from `netlify.toml`) |
    | Build command | `npm run build` |
    | Publish directory | `dist` |
+
+   If Netlify ignores the root config, set **Base directory** to `family-purpose` manually under **Build & deploy → Build settings**.
 
 4. **Deploy site**. Wait for the build; you’ll get a URL like `https://something-random.netlify.app`.
 5. **Site configuration → Environment variables** → add:
