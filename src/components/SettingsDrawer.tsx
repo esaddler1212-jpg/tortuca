@@ -15,6 +15,7 @@ interface Props {
   settings: UserSettings;
   googleConnected: boolean;
   accountEmail?: string;
+  googleConnectionError?: string | null;
   push: PushState;
   onSaveCity: (city: string) => Promise<boolean>;
   onSaveWoodhouseNodes: (nodes: WoodhouseRegistryEntry[]) => void;
@@ -56,6 +57,7 @@ export function SettingsDrawer({
   settings,
   googleConnected,
   accountEmail,
+  googleConnectionError,
   push,
   onSaveCity,
   onSaveWoodhouseNodes,
@@ -409,6 +411,11 @@ export function SettingsDrawer({
                 <p className="text-sm text-alfred-mist mb-3">
                   Gmail (read + send digest), Calendar (read-only). Tokens stay on the server.
                 </p>
+                {googleConnectionError ? (
+                  <p className="text-sm text-red-400 mb-3" role="alert">
+                    {googleConnectionError}
+                  </p>
+                ) : null}
                 {googleConnected ? (
                   <div className="space-y-2">
                     <p className="text-sm text-alfred-cream">{accountEmail}</p>
@@ -417,9 +424,51 @@ export function SettingsDrawer({
                     </button>
                   </div>
                 ) : (
-                  <button type="button" className="btn-gold w-full" onClick={onConnectGoogle}>
-                    Connect Google
-                  </button>
+                  <div className="space-y-3">
+                    <details className="google-setup-checklist rounded-md border border-alfred-border/60 bg-black/40 p-3">
+                      <summary className="cursor-pointer text-sm text-alfred-gold">
+                        Google setup checklist (if connect fails)
+                      </summary>
+                      <ol className="mt-3 space-y-2 text-xs text-alfred-mist list-decimal list-inside">
+                        <li>
+                          <a
+                            className="text-alfred-gold underline"
+                            href="https://console.cloud.google.com/apis/credentials"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            Google Cloud → Credentials
+                          </a>
+                          : create a <strong>Web application</strong> OAuth client
+                        </li>
+                        <li>
+                          Authorized redirect URI (copy exactly):{" "}
+                          <code className="block mt-1 break-all rounded bg-black/60 px-2 py-1 text-alfred-cream">
+                            {`${window.location.origin}/api/auth-callback`}
+                          </code>
+                        </li>
+                        <li>API Library: enable <strong>Gmail API</strong> and <strong>Google Calendar API</strong></li>
+                        <li>
+                          OAuth consent screen → add your Gmail as a <strong>Test user</strong> (required while app is in Testing)
+                        </li>
+                        <li>
+                          Netlify → Site configuration → Environment variables:{" "}
+                          <code>GOOGLE_CLIENT_ID</code>, <code>GOOGLE_CLIENT_SECRET</code>
+                        </li>
+                        <li>Save env vars, then <strong>Trigger deploy</strong> (changes don&apos;t apply until redeploy)</li>
+                        <li>
+                          Verify:{" "}
+                          <a className="text-alfred-gold underline" href="/api/google-oauth-status" target="_blank" rel="noopener noreferrer">
+                            /api/google-oauth-status
+                          </a>{" "}
+                          → <code>configured: true</code> and matching <code>redirectUri</code>
+                        </li>
+                      </ol>
+                    </details>
+                    <button type="button" className="btn-gold w-full" onClick={onConnectGoogle}>
+                      Connect Google
+                    </button>
+                  </div>
                 )}
               </div>
             </div>

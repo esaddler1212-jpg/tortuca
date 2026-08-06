@@ -4,6 +4,12 @@ function apiBase(): string {
   return "/api";
 }
 
+export type GoogleOAuthStatus = {
+  configured?: boolean;
+  redirectUri?: string;
+  hint?: string;
+};
+
 export async function ensureSession(): Promise<string> {
   let id = getSessionId();
   if (id) return id;
@@ -27,9 +33,38 @@ export function authHeaders(): HeadersInit {
   return id ? { "X-Alfred-Session": id } : {};
 }
 
-export async function startGoogleConnect(): Promise<void> {
+export async function fetchGoogleOAuthStatus(): Promise<GoogleOAuthStatus> {
+  try {
+    const res = await fetch(`${apiBase()}/google-oauth-status`);
+    if (!res.ok) return {};
+    return (await res.json()) as GoogleOAuthStatus;
+  } catch {
+    return {};
+  }
+}
+
+export async function startGoogleConnect(): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const status = await fetchGoogleOAuthStatus();
+    if (status.configured === false) {
+      return {
+        ok: false,
+        error:
+          status.hint ??
+          "Google OAuth is not configured on Netlify yet. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET, then redeploy.",
+      };
+    }
+  } catch {
+    return {
+      ok: false,
+      error:
+        "Cannot reach Alfred's server functions. Are you on your Netlify URL (not localhost)? Try opening the deployed site.",
+    };
+  }
+
   const sessionId = await ensureSession();
   window.location.href = `${apiBase()}/auth-start?session=${encodeURIComponent(sessionId)}`;
+  return { ok: true };
 }
 
 export async function fetchGoogleStatus(): Promise<{ connected: boolean; email?: string }> {
