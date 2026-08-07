@@ -454,6 +454,9 @@ export function SettingsDrawer({
                         <li>
                           Netlify → Site configuration → Environment variables:{" "}
                           <code>GOOGLE_CLIENT_ID</code>, <code>GOOGLE_CLIENT_SECRET</code>
+                          <span className="block mt-1 text-alfred-mist/80">
+                            Scope must be <strong>Functions</strong> or <strong>All</strong> (not Builds only). Then Trigger deploy.
+                          </span>
                         </li>
                         <li>Save env vars, then <strong>Trigger deploy</strong> (changes don&apos;t apply until redeploy)</li>
                         <li>
