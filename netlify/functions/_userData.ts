@@ -4,7 +4,7 @@ import type { AlfredUserData } from "../../shared/userDataTypes";
 const STORE = "alfred-user-data";
 
 export async function getUserDataStore() {
-  return getStore({ name: STORE, consistency: "strong" });
+  return getStore({ name: STORE });
 }
 
 export async function loadUserData(sessionId: string): Promise<AlfredUserData | null> {

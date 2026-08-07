@@ -31,7 +31,7 @@ export function sessionHeader(event: { headers: Record<string, string | undefine
 }
 
 export async function getSessionStore() {
-  return getStore({ name: "alfred-sessions", consistency: "strong" });
+  return getStore({ name: "alfred-sessions" });
 }
 
 export async function loadSession(sessionId: string): Promise<StoredSession | null> {

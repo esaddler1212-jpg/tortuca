@@ -40,7 +40,7 @@ export function demoEducationSnapshot(): NodeSnapshot {
 
 async function familyFromBackup(): Promise<NodeSnapshot | null> {
   try {
-    const store = getStore({ name: "family-purpose-backups", consistency: "strong" });
+    const store = getStore({ name: "family-purpose-backups" });
     const { blobs } = await store.list();
     if (!blobs.length) return null;
     const sorted = [...blobs].sort(
