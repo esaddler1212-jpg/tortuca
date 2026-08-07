@@ -240,6 +240,16 @@ async function runBackupCore(
   }
 }
 
+/** Pull from cloud, merge, and upload local changes — no Downloads file. */
+export async function runCloudSync(
+  settings: DebriefSettings,
+): Promise<AutoBackupResult> {
+  if (!settings.backupUploadUrl.trim()) {
+    return { skipped: true };
+  }
+  return runBackupCore(settings, { allowDownload: false });
+}
+
 /** Once-daily backup at 2:30 PM Pacific when online and there is new data. */
 export async function runScheduledBackup(
   settings: DebriefSettings,

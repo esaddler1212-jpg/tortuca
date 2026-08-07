@@ -107,6 +107,7 @@ describe("quick check-in entry", () => {
 
     await user.type(nameField(), "Maria Lopez");
     await user.selectOptions(gradeField(), "7");
+    await user.clear(periodField());
     await user.type(periodField(), "Period 3 — Algebra");
     await user.click(
       screen.getByRole("button", { name: "Academic support / tutoring" }),

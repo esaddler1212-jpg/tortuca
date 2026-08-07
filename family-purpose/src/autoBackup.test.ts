@@ -5,6 +5,7 @@ import {
   dataFingerprint,
   markBackedUp,
   needsBackup,
+  runCloudSync,
   runAutoBackup,
   runScheduledBackup,
 } from "./autoBackup";
@@ -103,6 +104,27 @@ describe("runAutoBackup", () => {
       }),
     );
     vi.unstubAllGlobals();
+  });
+
+  it("cloud sync pulls and uploads without download", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ status: 404 })
+      .mockResolvedValueOnce({ ok: true });
+    vi.stubGlobal("fetch", fetchMock);
+    const download = vi.spyOn(backup, "downloadBackup").mockImplementation(() => {});
+
+    const result = await runCloudSync({
+      ...DEFAULT_DEBRIEF_SETTINGS,
+      backupUploadUrl: "https://example.com/api/family-purpose-backup",
+      backupUploadKey: "secret",
+      deviceLabel: "My phone",
+    });
+
+    expect(result.uploaded).toBe(true);
+    expect(download).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it("skips when auto-backup is off", async () => {

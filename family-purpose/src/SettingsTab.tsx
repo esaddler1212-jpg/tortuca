@@ -252,8 +252,8 @@ export default function SettingsTab({
           placeholder="https://your-site.netlify.app/api/family-purpose-backup"
         />
         <p className="hint">
-          Phone + laptop: paste your Netlify backup URL on both devices. Cloud
-          sync happens when you open the app; upload runs at 2:30 PM Pacific.
+          Phone + laptop: paste your Netlify backup URL on both devices with the
+          same key. Check-ins sync both ways whenever you are online.
         </p>
       </div>
       <div className="field">

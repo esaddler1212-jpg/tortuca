@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { DebriefSettings } from "./types";
 import { loadDebriefSettings } from "./storage";
-import {
-  pullAndMergeFromCloud,
-  runScheduledBackup,
-} from "./autoBackup";
+import { runCloudSync, runScheduledBackup } from "./autoBackup";
 
 export function useOnlineStatus(): boolean {
   const [online, setOnline] = useState(
@@ -25,30 +22,40 @@ export function useOnlineStatus(): boolean {
   return online;
 }
 
+const SYNC_INTERVAL_MS = 3 * 60 * 1000;
+
 /**
- * On open: pull cloud check-ins only (no file download).
- * Daily at 2:30 PM Pacific: upload and/or Chromebook download when there is new data.
+ * Phone ↔ computer: pull + upload when online (open, reconnect, after edits).
+ * Chromebook Downloads file only at 2:30 PM Pacific when enabled.
  */
 export function useScheduledBackup(
   settings: DebriefSettings,
+  dataRevision: number,
   onResult: (message: string) => void,
   onDataChange?: () => void,
 ): void {
   const inFlight = useRef(false);
 
-  const syncPullOnly = useCallback(async () => {
+  const cloudSync = useCallback(async () => {
     const current = loadDebriefSettings();
     if (!current.backupUploadUrl.trim() || !navigator.onLine) return;
-    const pull = await pullAndMergeFromCloud(current);
-    if (pull.error && pull.error.includes("Could not")) {
-      onResult(pull.error);
-      return;
-    }
-    if (pull.merged && pull.addedCheckIns) {
-      onDataChange?.();
-      onResult(
-        `Synced ${pull.addedCheckIns} check-in${pull.addedCheckIns === 1 ? "" : "s"} from another device`,
-      );
+    if (inFlight.current) return;
+
+    inFlight.current = true;
+    try {
+      const result = await runCloudSync(current);
+      if (result.error) {
+        onResult(result.error);
+        return;
+      }
+      if (result.merged) {
+        onDataChange?.();
+        onResult(
+          `Synced ${result.merged} check-in${result.merged === 1 ? "" : "s"} from another device`,
+        );
+      }
+    } finally {
+      inFlight.current = false;
     }
   }, [onDataChange, onResult]);
 
@@ -80,17 +87,37 @@ export function useScheduledBackup(
   }, [onDataChange, onResult]);
 
   useEffect(() => {
-    void syncPullOnly();
-  }, [syncPullOnly]);
+    void cloudSync();
+  }, [cloudSync]);
+
+  useEffect(() => {
+    if (!settings.backupUploadUrl.trim() || dataRevision === 0) return;
+    const timer = window.setTimeout(() => void cloudSync(), 1500);
+    return () => window.clearTimeout(timer);
+  }, [dataRevision, cloudSync, settings.backupUploadUrl]);
 
   useEffect(() => {
     const onOnline = () => {
-      void syncPullOnly();
-      window.setTimeout(() => void runScheduled(), 2000);
+      window.setTimeout(() => void cloudSync(), 1500);
     };
     window.addEventListener("online", onOnline);
     return () => window.removeEventListener("online", onOnline);
-  }, [syncPullOnly, runScheduled]);
+  }, [cloudSync]);
+
+  useEffect(() => {
+    if (!settings.backupUploadUrl.trim()) return;
+    const id = window.setInterval(() => void cloudSync(), SYNC_INTERVAL_MS);
+    return () => window.clearInterval(id);
+  }, [cloudSync, settings.backupUploadUrl]);
+
+  useEffect(() => {
+    if (!settings.backupUploadUrl.trim()) return;
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void cloudSync();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [cloudSync, settings.backupUploadUrl]);
 
   useEffect(() => {
     if (!settings.autoBackupEnabled) return;

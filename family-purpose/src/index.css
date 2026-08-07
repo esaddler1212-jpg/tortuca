@@ -413,6 +413,11 @@ label {
   background: var(--success-soft);
 }
 
+.device-hint-alert {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+}
+
 .mobile-install-hint {
   display: none;
   margin: 0;

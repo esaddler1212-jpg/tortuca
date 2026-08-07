@@ -53,7 +53,7 @@ export default function App() {
     setRevision((r) => r + 1);
   }, []);
 
-  useScheduledBackup(settings, showToast, refreshData);
+  useScheduledBackup(settings, revision, showToast, refreshData);
 
   const onChanged = useCallback(
     (message?: string) => {
