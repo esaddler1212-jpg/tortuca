@@ -1,7 +1,9 @@
 import type { Handler } from "@netlify/functions";
-import { deleteSession, loadSession, saveSession, sessionHeader } from "./_shared";
+import { deleteSession, initBlobs, loadSession, saveSession, sessionHeader } from "./_shared";
 
 export const handler: Handler = async (event) => {
+  initBlobs(event);
+
   if (event.httpMethod === "POST") {
     const sessionId = crypto.randomUUID();
     await saveSession(sessionId, {

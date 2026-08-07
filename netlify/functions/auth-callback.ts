@@ -1,7 +1,9 @@
 import type { Handler } from "@netlify/functions";
-import { saveSession, siteUrl } from "./_shared";
+import { initBlobs, saveSession, siteUrl } from "./_shared";
 
 export const handler: Handler = async (event) => {
+  initBlobs(event);
+
   const code = event.queryStringParameters?.code;
   const sessionId = event.queryStringParameters?.state;
   const error = event.queryStringParameters?.error;
