@@ -1,9 +1,11 @@
 import type { Handler } from "@netlify/functions";
-import { getValidSession, sessionHeader } from "./_shared";
+import { getValidSession, initBlobs, sessionHeader } from "./_shared";
 import { loadUserData, saveUserData } from "./_userData";
 import type { AlfredUserData } from "../../shared/userDataTypes";
 
 export const handler: Handler = async (event) => {
+  initBlobs(event);
+
   const sessionId = sessionHeader(event);
   if (!sessionId) {
     return { statusCode: 401, body: JSON.stringify({ error: "Unauthorized" }) };

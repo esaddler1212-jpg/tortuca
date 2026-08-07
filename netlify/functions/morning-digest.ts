@@ -1,7 +1,7 @@
 import type { Config, Handler } from "@netlify/functions";
 import { buildMorningDigest } from "./_briefing";
 import { listAllUserData, saveUserData } from "./_userData";
-import { getValidSession, listConnectedSessions, sendGmail } from "./_shared";
+import { getValidSession, initBlobs, listConnectedSessions, sendGmail } from "./_shared";
 
 export const config: Config = {
   schedule: "0 * * * *",
@@ -17,7 +17,9 @@ function localDayKey(timeZone: string, now = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone }).format(now);
 }
 
-export const handler: Handler = async () => {
+export const handler: Handler = async (event) => {
+  initBlobs(event);
+
   const sessions = await listConnectedSessions();
   const userDataList = await listAllUserData();
   const dataBySession = new Map(userDataList.map((u) => [u.sessionId, u.data]));

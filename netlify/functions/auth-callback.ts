@@ -1,15 +1,18 @@
 import type { Handler } from "@netlify/functions";
-import { saveSession, siteUrl } from "./_shared";
+import { initBlobs, saveSession, siteUrl } from "./_shared";
 
 export const handler: Handler = async (event) => {
+  initBlobs(event);
+
   const code = event.queryStringParameters?.code;
   const sessionId = event.queryStringParameters?.state;
   const error = event.queryStringParameters?.error;
 
   if (error || !code || !sessionId) {
+    const reason = error === "access_denied" ? "denied" : !code ? "missing" : "state";
     return {
       statusCode: 302,
-      headers: { Location: `${siteUrl(event)}/?connected=0` },
+      headers: { Location: `${siteUrl(event)}/?connected=0&oauth_error=${reason}` },
       body: "",
     };
   }
@@ -30,9 +33,17 @@ export const handler: Handler = async (event) => {
   });
 
   if (!tokenRes.ok) {
+    let reason = "token";
+    try {
+      const err = (await tokenRes.json()) as { error?: string };
+      if (err.error === "redirect_uri_mismatch") reason = "redirect";
+      else if (err.error === "invalid_client") reason = "client";
+    } catch {
+      /* ignore parse errors */
+    }
     return {
       statusCode: 302,
-      headers: { Location: `${siteUrl(event)}/?connected=0` },
+      headers: { Location: `${siteUrl(event)}/?connected=0&oauth_error=${reason}` },
       body: "",
     };
   }

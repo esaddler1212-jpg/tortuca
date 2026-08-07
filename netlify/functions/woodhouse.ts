@@ -1,4 +1,5 @@
 import type { Handler } from "@netlify/functions";
+import { initBlobs } from "./_shared";
 import { syncRegistryEntry } from "./_woodhouse-sync";
 import {
   demoRegistry,
@@ -22,6 +23,8 @@ function mergeRegistry(
 }
 
 export const handler: Handler = async (event) => {
+  initBlobs(event);
+
   if (event.httpMethod !== "GET") {
     return { statusCode: 405, body: "Method not allowed" };
   }

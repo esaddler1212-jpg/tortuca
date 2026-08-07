@@ -38,7 +38,7 @@ export default function App() {
   const { settings, persist, updateCity, saving, error, setError } = useSettings();
   const { weather, loading: weatherLoading, error: weatherError } = useWeather(settings);
   const { todos, pending, done, add, toggle, setTodos } = useTodos();
-  const { connected, accountEmail, connect, disconnect } = useGoogleIntegration();
+  const { connected, accountEmail, connect, disconnect, connectionError } = useGoogleIntegration();
   const { allEvents, addLocalEvent } = useSchedule(connected);
   const { messages, unread } = useEmails(connected);
   const { snapshot: woodhouse, loading: woodhouseLoading, error: woodhouseError } = useWoodhouse();
@@ -210,7 +210,7 @@ export default function App() {
           messages={messages}
           googleConnected={connected}
           fitnessLogs={fitnessLogs}
-          onConnectGoogle={connect}
+          onConnectGoogle={() => void connect()}
           onToggleTodo={toggle}
           onAddTodo={add}
           onLogWorkout={logWorkout}
@@ -229,6 +229,7 @@ export default function App() {
         settings={settings}
         googleConnected={connected}
         accountEmail={accountEmail}
+        googleConnectionError={connectionError}
         push={push}
         onSaveCity={async (city) => {
           setError(null);
@@ -246,7 +247,7 @@ export default function App() {
             await push.enable();
           }
         }}
-        onConnectGoogle={connect}
+        onConnectGoogle={() => void connect()}
         onDisconnectGoogle={() => void disconnect()}
         saving={saving}
         error={error}

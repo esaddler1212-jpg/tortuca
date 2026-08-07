@@ -2,6 +2,7 @@ import type { Config, Handler } from "@netlify/functions";
 import { buildLeaveReminder, buildUrgentReminder, buildWindDownReminder } from "./_briefing";
 import { listAllUserData, saveUserData } from "./_userData";
 import { sendPush } from "./_push";
+import { initBlobs } from "./_shared";
 import type { SyncedTodo } from "../../shared/userDataTypes";
 import { computeSuggestedBedtime } from "../../shared/bedtime";
 import { computeServerLeaveBy } from "../../shared/leaveByLite";
@@ -16,7 +17,9 @@ function countUrgent(todos: SyncedTodo[], timeZone: string): number {
   return todos.filter((t) => !t.done && t.dueDate === today).length;
 }
 
-export const handler: Handler = async () => {
+export const handler: Handler = async (event) => {
+  initBlobs(event);
+
   const users = await listAllUserData();
   const now = new Date();
   let sent = 0;

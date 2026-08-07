@@ -1,4 +1,5 @@
 import type { Handler } from "@netlify/functions";
+import { initBlobs } from "./_shared";
 import { getStore } from "@netlify/blobs";
 import {
   buildFamilyPurposeWoodhouseNode,
@@ -34,6 +35,8 @@ function familyNodeUrl(event: { headers: Record<string, string | undefined> }): 
 }
 
 export const handler: Handler = async (event) => {
+  initBlobs(event);
+
   if (event.httpMethod !== "GET") {
     return { statusCode: 405, body: "Method not allowed" };
   }

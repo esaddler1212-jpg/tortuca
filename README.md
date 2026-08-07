@@ -58,11 +58,7 @@ npx netlify dev   # Woodhouse aggregator + Google OAuth
 
 Build: `npm run build` · Publish: `dist` · Functions: `netlify/functions`
 
-<<<<<<< Updated upstream
-Enable **Netlify Blobs** for Google OAuth and optional cloud sync.
-=======
 **Netlify Blobs** is built in — no extension to install. Stores are created automatically when your functions run (e.g. when you connect Google). To browse data later: Netlify site → **Blobs** in the left sidebar (stores appear after first use).
->>>>>>> Stashed changes
 
 ### Environment variables
 
@@ -84,6 +80,36 @@ Netlify runs these automatically when deployed:
 | `reminder-check` | Every 10 min | Push: leave-by, wind-down, urgent tasks |
 
 Morning digest requires Gmail **send** scope — reconnect Google in Settings after enabling.
+
+### Google OAuth (Gmail + Calendar)
+
+This is the #1 deploy gotcha. Work through it in order:
+
+1. **Google Cloud Console** → APIs & Services → **OAuth consent screen** (External) → add your Gmail under **Test users**
+2. **Credentials** → Create **OAuth client ID** → type **Web application**
+3. **Authorized redirect URIs** — must match *exactly* (one character off = fail):
+
+   `https://YOUR-SITE.netlify.app/api/auth-callback`
+
+   If you use a custom domain too, add a second redirect URI for that domain.
+
+4. **API Library** — enable **Gmail API** and **Google Calendar API**
+5. **Netlify** → Site configuration → Environment variables:
+   - `GOOGLE_CLIENT_ID`
+   - `GOOGLE_CLIENT_SECRET`
+6. **Redeploy** after saving env vars (Deploys → Trigger deploy)
+7. **Verify** on your live site: open `/api/google-oauth-status` — should show `"configured": true` and a `redirectUri` that matches step 3
+8. In Alfred → **Settings** → **Connect Google**
+
+**Common failures**
+
+| Symptom | Fix |
+|---------|-----|
+| `configured: false` | Env vars missing or site not redeployed after adding them |
+| Redirect URI mismatch | Copy URI from Settings checklist or `/api/google-oauth-status` into Google Cloud |
+| "Access blocked" / app not verified | Add yourself as a **Test user** on the consent screen |
+| Connect works locally but not on phone | Use the **Netlify HTTPS URL**, not `localhost` |
+| Token error after picking account | Wrong `GOOGLE_CLIENT_SECRET` — re-copy from Google Cloud, redeploy |
 
 ### Install on your phone (PWA)
 

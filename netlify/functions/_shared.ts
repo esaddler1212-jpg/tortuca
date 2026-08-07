@@ -1,4 +1,14 @@
-import { getStore } from "@netlify/blobs";
+import { connectLambda, getStore } from "@netlify/blobs";
+import type { HandlerEvent } from "@netlify/functions";
+
+export type BlobRequest = HandlerEvent & { blobs?: string };
+
+/** Required for Netlify Functions v1 (Lambda compat) before any getStore() call. */
+export function initBlobs(event: BlobRequest): void {
+  if (event.blobs) {
+    connectLambda(event);
+  }
+}
 
 export interface StoredSession {
   refreshToken: string;
