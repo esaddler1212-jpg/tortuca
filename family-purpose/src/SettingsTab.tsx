@@ -164,6 +164,20 @@ export default function SettingsTab({
         />
       </div>
       <div className="field">
+        <label htmlFor="boysClassCode">BOYS student app class code</label>
+        <input
+          id="boysClassCode"
+          value={form.boysClassCode}
+          onChange={(e) => update("boysClassCode", e.target.value.toUpperCase())}
+          placeholder="PURPOSE-A, PURPOSE-B, or PURPOSE-C"
+          autoComplete="off"
+        />
+        <p className="hint">
+          Matches the code your students enter on the BOYS student app. Used on
+          the Group tab to see warm-up and exit ticket completion.
+        </p>
+      </div>
+      <div className="field">
         <label htmlFor="staffEmail">School staff email</label>
         <input
           id="staffEmail"

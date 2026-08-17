@@ -1100,6 +1100,19 @@ label {
   }
 }
 
+.boys-done {
+  color: var(--success);
+}
+
+.boys-pending {
+  color: var(--text-muted);
+}
+
+.boys-active {
+  color: var(--accent);
+  margin-left: 0.35rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

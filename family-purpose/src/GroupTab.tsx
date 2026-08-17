@@ -14,6 +14,154 @@ import {
   todayKey,
 } from "./storage";
 import { normalizeName, type StudentProfile } from "./roster";
+import { fetchBoysGroupStatus } from "./boysApi";
+import type { BoysGroupStatus } from "../../shared/boys/types";
+
+function CurriculumPanel({
+  settings,
+  members,
+  onAddMember,
+}: {
+  settings: DebriefSettings;
+  members: GroupMember[];
+  onAddMember: (member: GroupMember) => void;
+}) {
+  const [status, setStatus] = useState<BoysGroupStatus | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const classCode = settings.boysClassCode.trim().toUpperCase();
+
+  useEffect(() => {
+    if (!classCode) {
+      setStatus(null);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    setError("");
+    void fetchBoysGroupStatus(classCode)
+      .then((data) => {
+        if (!cancelled) setStatus(data);
+      })
+      .catch(() => {
+        if (!cancelled) setError("Could not load curriculum status.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [classCode]);
+
+  const memberKeys = useMemo(
+    () => new Set(members.map((m) => normalizeName(m.name))),
+    [members],
+  );
+
+  if (!classCode) {
+    return (
+      <div className="card">
+        <h2>Curriculum responses</h2>
+        <p className="hint">
+          Add your BOYS class code in Settings (PURPOSE-A, PURPOSE-B, or
+          PURPOSE-C) to see who completed the warm-up and exit ticket.
+        </p>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="card">
+        <h2>Curriculum responses</h2>
+        <p className="hint" role="status">Loading student responses…</p>
+      </div>
+    );
+  }
+
+  if (error || !status) {
+    return (
+      <div className="card">
+        <h2>Curriculum responses</h2>
+        <p className="form-error" role="alert">{error || "No data yet."}</p>
+      </div>
+    );
+  }
+
+  const activeToday = status.students.filter((s) => s.activeToday);
+  const notOnRoster = status.students.filter(
+    (s) => !memberKeys.has(normalizeName(s.name)),
+  );
+
+  return (
+    <div className="card">
+      <h2>Curriculum responses</h2>
+      <p className="hint" style={{ marginBottom: "0.75rem" }}>
+        {status.weekLabel}
+        {status.theme ? ` · ${status.theme}` : ""}
+      </p>
+
+      {activeToday.length > 0 && (
+        <p className="hint hint-block">
+          <strong>{activeToday.length} student{activeToday.length === 1 ? "" : "s"}</strong>{" "}
+          logged in today — excused from period {status.group.period}.
+        </p>
+      )}
+
+      {notOnRoster.length > 0 && (
+        <div className="field">
+          <label>Joined via student app (add to roster)</label>
+          <div className="pill-row">
+            {notOnRoster.map((s) => (
+              <button
+                key={s.studentId}
+                type="button"
+                className="pill"
+                onClick={() => onAddMember({ name: s.name, grade: s.grade })}
+              >
+                + {s.name}
+                <span className="pill-meta">Gr {s.grade}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {status.students.length === 0 ? (
+        <p className="empty-state">
+          No students have joined with code <strong>{classCode}</strong> yet.
+        </p>
+      ) : (
+        <ul className="checkin-list" aria-label="Curriculum completion">
+          {status.students.map((s) => (
+            <li key={s.studentId} className="checkin-item">
+              <div className="checkin-item-header">
+                <h3>
+                  {s.name}{" "}
+                  <span className="pill-meta">Grade {s.grade}</span>
+                  {s.activeToday && (
+                    <span className="pill-meta boys-active">In app today</span>
+                  )}
+                </h3>
+              </div>
+              <p className="checkin-meta">
+                <span className={s.warmUpDone ? "boys-done" : "boys-pending"}>
+                  {s.warmUpDone ? "✓" : "○"} Warm-up
+                </span>
+                {" · "}
+                <span className={s.exitTicketDone ? "boys-done" : "boys-pending"}>
+                  {s.exitTicketDone ? "✓" : "○"} Exit ticket
+                </span>
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 function MemberManager({
   groupName,
@@ -201,8 +349,21 @@ export default function GroupTab({
     [sessions, session.date],
   );
 
+  const addMember = (member: GroupMember) => {
+    const key = normalizeName(member.name);
+    if (members.some((m) => normalizeName(m.name) === key)) return;
+    saveGroupMembers([...members, member]);
+    onChanged(`${member.name} added to roster`);
+  };
+
   return (
     <>
+      <CurriculumPanel
+        settings={settings}
+        members={members}
+        onAddMember={addMember}
+      />
+
       <div className="card">
         <h2>{groupName} sign-in</h2>
         <p className="hint" style={{ marginBottom: "1rem" }}>

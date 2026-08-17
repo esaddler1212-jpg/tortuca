@@ -150,6 +150,8 @@ export interface DebriefSettings {
   backupUploadUrl: string;
   /** Optional shared secret sent as X-Backup-Key when uploading. */
   backupUploadKey: string;
+  /** BOYS student app class code for this mentoring group (PURPOSE-A, PURPOSE-B, PURPOSE-C). */
+  boysClassCode: string;
 }
 
 export const DEFAULT_DEBRIEF_SETTINGS: DebriefSettings = {
@@ -166,6 +168,7 @@ export const DEFAULT_DEBRIEF_SETTINGS: DebriefSettings = {
   deviceLabel: "",
   backupUploadUrl: "",
   backupUploadKey: "",
+  boysClassCode: "",
 };
 
 /** Middle school grades only (Oak Grove). */
