@@ -1,5 +1,5 @@
 import { getStore } from "@netlify/blobs";
-import type { BoysStudent, BoysWeekResponse } from "../../../shared/boys/types";
+import type { BoysMonthResponse, BoysStudent } from "../../../shared/boys/types";
 import { normalizeName } from "../../../shared/boys/normalize";
 
 const STORE_NAME = "boys-curriculum";
@@ -67,20 +67,32 @@ export async function findStudentInGroup(
   return roster.find((s) => normalizeName(s.name) === key) ?? null;
 }
 
-function responseKey(studentId: string, weekNumber: number): string {
-  return `response:${studentId}:${weekNumber}`;
+function responseKey(studentId: string, monthKey: string): string {
+  return `response:${studentId}:${monthKey}`;
 }
 
-export async function loadWeekResponse(
+export async function loadMonthResponse(
+  studentId: string,
+  monthKey: string,
+): Promise<BoysMonthResponse | null> {
+  const raw = await store().get(responseKey(studentId, monthKey), { type: "json" });
+  return (raw as BoysMonthResponse | null) ?? null;
+}
+
+/** @deprecated Legacy week-number keys from earlier builds. */
+export async function loadLegacyWeekResponse(
   studentId: string,
   weekNumber: number,
-): Promise<BoysWeekResponse | null> {
-  const raw = await store().get(responseKey(studentId, weekNumber), { type: "json" });
-  return (raw as BoysWeekResponse | null) ?? null;
+): Promise<BoysMonthResponse | null> {
+  const raw = await store().get(`response:${studentId}:${weekNumber}`, { type: "json" });
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as BoysMonthResponse & { weekNumber?: number };
+  if ("monthKey" in r && r.monthKey) return r;
+  return null;
 }
 
-export async function saveWeekResponse(response: BoysWeekResponse): Promise<void> {
-  await store().setJSON(responseKey(response.studentId, response.weekNumber), response);
+export async function saveMonthResponse(response: BoysMonthResponse): Promise<void> {
+  await store().setJSON(responseKey(response.studentId, response.monthKey), response);
 }
 
 export function sessionTokenFromRequest(req: Request): string | null {

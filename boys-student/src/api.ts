@@ -43,7 +43,7 @@ export async function fetchCurriculum(token: string): Promise<CurriculumResult> 
 
 export async function submitResponses(
   token: string,
-  payload: { warmUp?: string; exitTicket?: string; weekNumber?: number },
+  payload: { warmUp?: string; exitTicket?: string; monthKey?: string },
 ): Promise<{ responses: CurriculumResult["responses"] }> {
   const res = await fetch(`${apiBase()}/api/boys/responses`, {
     method: "POST",

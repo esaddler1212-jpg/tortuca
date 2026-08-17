@@ -1,7 +1,7 @@
 import type { Config } from "@netlify/functions";
 import { findGroupByCode, findGroupById } from "../../../shared/boys/groups";
-import { getCurriculumWeek } from "../../../shared/boys/curriculum";
-import { getCurrentWeekNumber, weekStatusLabel } from "../../../shared/boys/weekSchedule";
+import { getCurriculumMonth } from "../../../shared/boys/curriculum";
+import { getActiveCurriculumMonth, getCurrentMonthKey, getWeekOfMonth, isGroupSessionWeek, monthStatusLabel } from "../../../shared/boys/monthSchedule";
 import type { BoysGroupStatus, BoysGroupStatusStudent } from "../../../shared/boys/types";
 import {
   corsHeaders,
@@ -9,7 +9,7 @@ import {
   isActiveToday,
   jsonResponse,
   loadGroupRoster,
-  loadWeekResponse,
+  loadMonthResponse,
 } from "./_boys-store";
 
 export default async (req: Request): Promise<Response> => {
@@ -23,8 +23,7 @@ export default async (req: Request): Promise<Response> => {
   const url = new URL(req.url);
   const groupId = url.searchParams.get("groupId")?.trim();
   const classCode = url.searchParams.get("classCode")?.trim();
-  const weekParam = url.searchParams.get("week");
-  const weekNumber = weekParam ? Number(weekParam) : getCurrentWeekNumber();
+  const monthParam = url.searchParams.get("month")?.trim();
 
   const group =
     (groupId ? findGroupById(groupId) : undefined) ??
@@ -34,12 +33,21 @@ export default async (req: Request): Promise<Response> => {
     return errorResponse("Provide groupId or classCode.", 400);
   }
 
+  const nowDate = new Date();
+  const month = monthParam
+    ? getCurriculumMonth(monthParam)
+    : getActiveCurriculumMonth(nowDate);
+  const monthKey = month?.monthKey ?? monthParam ?? getCurrentMonthKey(nowDate);
+
   const roster = await loadGroupRoster(group.id);
   const students: BoysGroupStatusStudent[] = [];
 
   for (const student of roster) {
-    const response =
-      weekNumber > 0 ? await loadWeekResponse(student.id, weekNumber) : null;
+    const response = month
+      ? await loadMonthResponse(student.id, month.monthKey)
+      : monthKey
+        ? await loadMonthResponse(student.id, monthKey)
+        : null;
     students.push({
       studentId: student.id,
       name: student.name,
@@ -51,12 +59,14 @@ export default async (req: Request): Promise<Response> => {
     });
   }
 
-  const week = weekNumber > 0 ? getCurriculumWeek(weekNumber) : null;
   const status: BoysGroupStatus = {
     group,
-    weekNumber,
-    weekLabel: weekStatusLabel(weekNumber),
-    theme: week ? `${week.theme}: ${week.subtitle}` : "",
+    monthKey,
+    monthLabel: month?.monthLabel ?? monthStatusLabel(nowDate),
+    theme: month ? `${month.theme}: ${month.subtitle}` : "",
+    sessionWeekOfMonth: group.sessionWeekOfMonth,
+    weekOfMonth: getWeekOfMonth(nowDate),
+    isSessionWeek: isGroupSessionWeek(group, nowDate),
     students,
   };
 

@@ -1,13 +1,21 @@
 import type { Config } from "@netlify/functions";
 import { findGroupById } from "../../../shared/boys/groups";
-import { getCurriculumWeek } from "../../../shared/boys/curriculum";
-import { getCurrentWeekNumber, weekStatusLabel } from "../../../shared/boys/weekSchedule";
+import { getCurriculumMonth } from "../../../shared/boys/curriculum";
+import {
+  getActiveCurriculumMonth,
+  getCurrentMonthKey,
+  isBeforeCurriculum,
+  canSubmitResponses,
+  isGroupSessionWeek,
+  monthStatusLabel,
+  sessionWeekHint,
+} from "../../../shared/boys/monthSchedule";
 import {
   corsHeaders,
   errorResponse,
   jsonResponse,
+  loadMonthResponse,
   loadStudentByToken,
-  loadWeekResponse,
   saveStudent,
   sessionTokenFromRequest,
 } from "./_boys-store";
@@ -30,23 +38,25 @@ export default async (req: Request): Promise<Response> => {
   student.lastActiveAt = now;
   await saveStudent(student);
 
+  const nowDate = new Date();
   const url = new URL(req.url);
-  const requestedWeek = Number(url.searchParams.get("week"));
-  const weekNumber =
-    Number.isFinite(requestedWeek) && requestedWeek > 0
-      ? requestedWeek
-      : getCurrentWeekNumber();
-
-  const week = weekNumber > 0 ? getCurriculumWeek(weekNumber) : null;
-  const responses =
-    weekNumber > 0 ? await loadWeekResponse(student.id, weekNumber) : null;
+  const requestedMonth = url.searchParams.get("month")?.trim();
+  const monthKey = requestedMonth || getCurrentMonthKey(nowDate);
+  const month = requestedMonth
+    ? getCurriculumMonth(requestedMonth)
+    : getActiveCurriculumMonth(nowDate);
 
   const group = findGroupById(student.groupId);
+  const responses = month ? await loadMonthResponse(student.id, month.monthKey) : null;
 
   return jsonResponse({
-    weekNumber,
-    weekLabel: weekStatusLabel(weekNumber),
-    week,
+    monthKey: month?.monthKey ?? monthKey,
+    monthLabel: month?.monthLabel ?? monthStatusLabel(nowDate),
+    month,
+    beforeCurriculum: isBeforeCurriculum(nowDate),
+    isSessionWeek: group ? isGroupSessionWeek(group, nowDate) : false,
+    canSubmit: group ? canSubmitResponses(group, nowDate) : false,
+    sessionHint: group ? sessionWeekHint(group, nowDate) : "",
     responses: responses
       ? {
           warmUp: responses.warmUp ?? "",
@@ -67,6 +77,7 @@ export default async (req: Request): Promise<Response> => {
           name: group.name,
           classCode: group.classCode,
           period: group.period,
+          sessionWeekOfMonth: group.sessionWeekOfMonth,
         }
       : null,
   });

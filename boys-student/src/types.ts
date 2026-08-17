@@ -5,6 +5,7 @@ export interface BoysGroup {
   name: string;
   classCode: string;
   period: string;
+  sessionWeekOfMonth: 1 | 2 | 3;
 }
 
 export interface BoysStudent {
@@ -14,8 +15,9 @@ export interface BoysStudent {
   groupId: string;
 }
 
-export interface BoysCurriculumWeek {
-  weekNumber: number;
+export interface BoysCurriculumMonth {
+  monthKey: string;
+  monthLabel: string;
   theme: string;
   subtitle: string;
   warmUpPrompt: string;
@@ -37,14 +39,22 @@ export interface JoinResult {
   sessionToken: string;
   student: BoysStudent;
   group: BoysGroup;
-  weekNumber: number;
-  week: BoysCurriculumWeek | null;
+  monthKey: string | null;
+  monthLabel: string;
+  month: BoysCurriculumMonth | null;
+  beforeCurriculum: boolean;
+  isSessionWeek: boolean;
+  sessionHint: string;
 }
 
 export interface CurriculumResult {
-  weekNumber: number;
-  weekLabel: string;
-  week: BoysCurriculumWeek | null;
+  monthKey: string;
+  monthLabel: string;
+  month: BoysCurriculumMonth | null;
+  beforeCurriculum: boolean;
+  isSessionWeek: boolean;
+  canSubmit: boolean;
+  sessionHint: string;
   responses: BoysResponses | null;
   student: BoysStudent;
   group: BoysGroup | null;

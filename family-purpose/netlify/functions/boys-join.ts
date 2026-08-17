@@ -1,9 +1,14 @@
 import type { Config } from "@netlify/functions";
 import { findGroupByCode } from "../../../shared/boys/groups";
+import { getActiveCurriculumMonth } from "../../../shared/boys/monthSchedule";
 import type { BoysGrade } from "../../../shared/boys/types";
 import { displayName } from "../../../shared/boys/normalize";
-import { getCurrentWeekNumber } from "../../../shared/boys/weekSchedule";
-import { getCurriculumWeek } from "../../../shared/boys/curriculum";
+import {
+  isGroupSessionWeek,
+  isBeforeCurriculum,
+  monthStatusLabel,
+  sessionWeekHint,
+} from "../../../shared/boys/monthSchedule";
 import {
   corsHeaders,
   errorResponse,
@@ -71,8 +76,8 @@ export default async (req: Request): Promise<Response> => {
 
   await saveStudent(student);
 
-  const weekNumber = getCurrentWeekNumber();
-  const week = weekNumber > 0 ? getCurriculumWeek(weekNumber) : null;
+  const month = getActiveCurriculumMonth();
+  const nowDate = new Date();
 
   return jsonResponse({
     sessionToken: student.sessionToken,
@@ -87,9 +92,14 @@ export default async (req: Request): Promise<Response> => {
       name: group.name,
       classCode: group.classCode,
       period: group.period,
+      sessionWeekOfMonth: group.sessionWeekOfMonth,
     },
-    weekNumber,
-    week,
+    monthKey: month?.monthKey ?? null,
+    monthLabel: monthStatusLabel(nowDate),
+    month,
+    isSessionWeek: isGroupSessionWeek(group, nowDate),
+    sessionHint: sessionWeekHint(group, nowDate),
+    beforeCurriculum: isBeforeCurriculum(nowDate),
   });
 };
 

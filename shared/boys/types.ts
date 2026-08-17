@@ -6,6 +6,8 @@ export interface BoysGroup {
   classCode: string;
   /** Class period students are excused from during BOYS session. */
   period: string;
+  /** Which week of the month this group meets (1, 2, or 3). */
+  sessionWeekOfMonth: 1 | 2 | 3;
 }
 
 export interface BoysStudent {
@@ -18,19 +20,22 @@ export interface BoysStudent {
   sessionToken: string;
 }
 
-export interface BoysWeekResponse {
+export interface BoysMonthResponse {
   id: string;
   studentId: string;
   groupId: string;
-  weekNumber: number;
+  /** YYYY-MM */
+  monthKey: string;
   warmUp?: string;
   warmUpAt?: string;
   exitTicket?: string;
   exitTicketAt?: string;
 }
 
-export interface BoysCurriculumWeek {
-  weekNumber: number;
+export interface BoysCurriculumMonth {
+  /** YYYY-MM */
+  monthKey: string;
+  monthLabel: string;
   theme: string;
   subtitle: string;
   warmUpPrompt: string;
@@ -53,8 +58,11 @@ export interface BoysGroupStatusStudent {
 
 export interface BoysGroupStatus {
   group: BoysGroup;
-  weekNumber: number;
-  weekLabel: string;
+  monthKey: string;
+  monthLabel: string;
   theme: string;
+  sessionWeekOfMonth: number;
+  weekOfMonth: number;
+  isSessionWeek: boolean;
   students: BoysGroupStatusStudent[];
 }

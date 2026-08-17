@@ -1,22 +1,39 @@
 # BOYS Student App
 
-Student-facing app for the **B.O.Y.S.** weekly curriculum (grades 6–8). Students join with a class code, enter their name and grade, then complete the warm-up and exit ticket for each week.
+Student-facing app for the **B.O.Y.S.** monthly curriculum (grades 6–8). Students join with a class code, enter their name and grade, then complete the warm-up and exit ticket during their group's week each month.
 
-## Class codes
+## Monthly schedule
 
-| Group | Code | Excused period |
-|-------|------|----------------|
-| BOYS Group A | `PURPOSE-A` | 4 |
-| BOYS Group B | `PURPOSE-B` | 5 |
-| BOYS Group C | `PURPOSE-C` | 6 |
+Each month has **one theme** (September through June). Within each month:
 
-Week 1 starts **Monday, August 24, 2026**.
+| Group | Code | Meets | Excused period |
+|-------|------|-------|----------------|
+| BOYS Group A | `PURPOSE-A` | Week 1 | 4 |
+| BOYS Group B | `PURPOSE-B` | Week 2 | 5 |
+| BOYS Group C | `PURPOSE-C` | Week 3 | 6 |
+
+Curriculum themes start **September 2026**.
+
+## School year themes
+
+| Month | Theme |
+|-------|-------|
+| September | Identity — Who Am I? |
+| October | Respect |
+| November | Confidence |
+| December | Peer Pressure |
+| January | Leadership |
+| February | Communication |
+| March | Accountability |
+| April | Resilience |
+| May | Decision Making |
+| June | Purpose — I Move With Purpose |
 
 ## Deploy on Netlify
 
 1. Create a new Netlify site from this repo with **Base directory** = `boys-student`
 2. Set environment variable:
-   - `VITE_BOYS_API_URL` = your Family Purpose site URL (where the BOYS API functions run), e.g. `https://your-family-purpose.netlify.app`
+   - `VITE_BOYS_API_URL` = your Family Purpose site URL (where the BOYS API functions run)
 3. Build command: `npm run build` · Publish: `dist`
 
 ## Local development
@@ -33,12 +50,6 @@ npm install
 BOYS_API_PROXY=http://127.0.0.1:8888 npm run dev
 ```
 
-Open the student app (usually `http://localhost:5173`). API calls proxy to Netlify dev on port 8888.
-
 ## Family Purpose integration
 
-In **Family Purpose → Settings**, set **BOYS student app class code** to match your group (`PURPOSE-A`, `PURPOSE-B`, or `PURPOSE-C`). The **Group** tab then shows:
-
-- Who logged in today (for class excusal)
-- Warm-up and exit ticket completion per student
-- One-tap add to roster for students who joined via the app
+In **Family Purpose → Settings**, set **BOYS student app class code** to match your group. The **Group** tab shows monthly theme, session week, and warm-up/exit ticket completion.

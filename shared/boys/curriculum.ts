@@ -1,8 +1,10 @@
-import type { BoysCurriculumWeek } from "./types";
+import type { BoysCurriculumMonth } from "./types";
 
-export const BOYS_CURRICULUM: BoysCurriculumWeek[] = [
+/** One theme per school month; each group meets one week (groups A/B/C = weeks 1/2/3). */
+export const BOYS_CURRICULUM: BoysCurriculumMonth[] = [
   {
-    weekNumber: 1,
+    monthKey: "2026-09",
+    monthLabel: "September 2026",
     theme: "Identity",
     subtitle: "Who Am I?",
     warmUpPrompt: "What are three things that make you who you are?",
@@ -14,7 +16,8 @@ export const BOYS_CURRICULUM: BoysCurriculumWeek[] = [
       "What did you learn about yourself? What is one strength you bring to others?",
   },
   {
-    weekNumber: 2,
+    monthKey: "2026-10",
+    monthLabel: "October 2026",
     theme: "Respect",
     subtitle: "Earned, Given, or Demanded?",
     warmUpPrompt: "What makes you respect someone?",
@@ -22,7 +25,7 @@ export const BOYS_CURRICULUM: BoysCurriculumWeek[] = [
     activityTitle: "Socratic Seminar",
     activityDescription:
       "Is respect earned or automatic? Can you respect someone you disagree with? What does respect look like when nobody is watching?",
-    exitTicketPrompt: "What is one way you can show more respect this week?",
+    exitTicketPrompt: "What is one way you can show more respect this month?",
     gradePrompts: {
       "6": "What does respect look like in your classroom?",
       "7": "Can you respect someone you disagree with? How?",
@@ -30,7 +33,8 @@ export const BOYS_CURRICULUM: BoysCurriculumWeek[] = [
     },
   },
   {
-    weekNumber: 3,
+    monthKey: "2026-11",
+    monthLabel: "November 2026",
     theme: "Confidence",
     subtitle: "Knowing Your Worth",
     warmUpPrompt:
@@ -43,7 +47,8 @@ export const BOYS_CURRICULUM: BoysCurriculumWeek[] = [
       "What is one thing you are more confident about after today?",
   },
   {
-    weekNumber: 4,
+    monthKey: "2026-12",
+    monthLabel: "December 2026",
     theme: "Peer Pressure",
     subtitle: "Stand on Business",
     warmUpPrompt: "Why is it hard to say no when friends are doing something?",
@@ -60,7 +65,8 @@ export const BOYS_CURRICULUM: BoysCurriculumWeek[] = [
     },
   },
   {
-    weekNumber: 5,
+    monthKey: "2027-01",
+    monthLabel: "January 2027",
     theme: "Leadership",
     subtitle: "Everybody Doesn't Have to Be the Loudest",
     warmUpPrompt: "What makes someone a good leader?",
@@ -71,7 +77,8 @@ export const BOYS_CURRICULUM: BoysCurriculumWeek[] = [
     exitTicketPrompt: "What kind of leader are you?",
   },
   {
-    weekNumber: 6,
+    monthKey: "2027-02",
+    monthLabel: "February 2027",
     theme: "Communication",
     subtitle: "Say What You Mean",
     warmUpPrompt: "What makes someone a good listener?",
@@ -83,7 +90,8 @@ export const BOYS_CURRICULUM: BoysCurriculumWeek[] = [
       "What is one thing you can do to become a better communicator?",
   },
   {
-    weekNumber: 7,
+    monthKey: "2027-03",
+    monthLabel: "March 2027",
     theme: "Accountability",
     subtitle: "Own Your Actions",
     warmUpPrompt: "What does it mean to take responsibility?",
@@ -100,7 +108,8 @@ export const BOYS_CURRICULUM: BoysCurriculumWeek[] = [
     },
   },
   {
-    weekNumber: 8,
+    monthKey: "2027-04",
+    monthLabel: "April 2027",
     theme: "Resilience",
     subtitle: "Keep Going",
     warmUpPrompt: "What was hard at first but got easier?",
@@ -110,7 +119,8 @@ export const BOYS_CURRICULUM: BoysCurriculumWeek[] = [
     exitTicketPrompt: "What do you do when something doesn't go your way?",
   },
   {
-    weekNumber: 9,
+    monthKey: "2027-05",
+    monthLabel: "May 2027",
     theme: "Decision Making",
     subtitle: "Think Before You Move",
     warmUpPrompt: "What decision had a bigger impact than you expected?",
@@ -122,52 +132,35 @@ export const BOYS_CURRICULUM: BoysCurriculumWeek[] = [
       "What question should you ask yourself before making a big decision?",
     gradePrompts: {
       "6": "What helps you think before you act?",
-      "7": "How can one decision change your week?",
+      "7": "How can one decision change your month?",
       "8": "What should you consider before a big decision?",
     },
   },
   {
-    weekNumber: 10,
-    theme: "Goals",
-    subtitle: "Where Are You Going?",
-    warmUpPrompt:
-      "If you could accomplish one thing this school year, what would it be?",
-    sessionType: "impact",
-    activityTitle: "Goal Builder",
-    activityDescription:
-      "Goal, why, first step, obstacles, support, deadline.",
-    exitTicketPrompt: "What is the first step toward your goal?",
-  },
-  {
-    weekNumber: 11,
-    theme: "Brotherhood",
-    subtitle: "We All Win",
-    warmUpPrompt: "What does being a good friend or teammate look like?",
-    sessionType: "impact",
-    activityTitle: "Team Challenge",
-    activityDescription:
-      "Everyone must contribute for the team to succeed.",
-    exitTicketPrompt: "What can you do to make the people around you better?",
-  },
-  {
-    weekNumber: 12,
+    monthKey: "2027-06",
+    monthLabel: "June 2027",
     theme: "Purpose",
     subtitle: "I Move With Purpose",
     warmUpPrompt: "What does it mean to move with purpose?",
     sessionType: "socratic",
     activityTitle: "Socratic Seminar",
     activityDescription:
-      "What do you want your life to stand for? What influences your choices? What does moving with purpose look like at school, home, and with friends?",
+      "What do you want your life to stand for? How do brotherhood and teamwork help you move with purpose at school, home, and with friends?",
     exitTicketPrompt:
       '"I move with purpose when I…" and "One thing I will do differently is…"',
     gradePrompts: {
       "6": "What does moving with purpose mean to you?",
-      "7": "What influences the choices you make?",
+      "7": "What can you do to make the people around you better?",
       "8": "What do you want your life to stand for?",
     },
   },
 ];
 
-export function getCurriculumWeek(weekNumber: number): BoysCurriculumWeek | undefined {
-  return BOYS_CURRICULUM.find((w) => w.weekNumber === weekNumber);
+export function getCurriculumMonth(
+  monthKey: string,
+): BoysCurriculumMonth | undefined {
+  return BOYS_CURRICULUM.find((m) => m.monthKey === monthKey);
 }
+
+export const LAST_CURRICULUM_MONTH =
+  BOYS_CURRICULUM[BOYS_CURRICULUM.length - 1]?.monthKey ?? "2027-06";

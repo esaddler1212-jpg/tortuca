@@ -99,8 +99,11 @@ function CurriculumPanel({
     <div className="card">
       <h2>Curriculum responses</h2>
       <p className="hint" style={{ marginBottom: "0.75rem" }}>
-        {status.weekLabel}
+        {status.monthLabel}
         {status.theme ? ` · ${status.theme}` : ""}
+        {status.isSessionWeek
+          ? " · Your group's session week"
+          : ` · Week ${status.weekOfMonth} of month (Group meets week ${status.sessionWeekOfMonth})`}
       </p>
 
       {activeToday.length > 0 && (

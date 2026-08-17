@@ -1,19 +1,25 @@
 import type { Config } from "@netlify/functions";
-import { getCurrentWeekNumber } from "../../../shared/boys/weekSchedule";
-import type { BoysWeekResponse } from "../../../shared/boys/types";
+import {
+  getActiveCurriculumMonth,
+  getCurrentMonthKey,
+  isBeforeCurriculum,
+  canSubmitResponses,
+} from "../../../shared/boys/monthSchedule";
+import type { BoysMonthResponse } from "../../../shared/boys/types";
+import { findGroupById } from "../../../shared/boys/groups";
 import {
   corsHeaders,
   errorResponse,
   jsonResponse,
+  loadMonthResponse,
   loadStudentByToken,
-  loadWeekResponse,
+  saveMonthResponse,
   saveStudent,
-  saveWeekResponse,
   sessionTokenFromRequest,
 } from "./_boys-store";
 
 interface ResponseBody {
-  weekNumber?: number;
+  monthKey?: string;
   warmUp?: string;
   exitTicket?: string;
 }
@@ -39,17 +45,27 @@ export default async (req: Request): Promise<Response> => {
     return errorResponse("Invalid JSON", 400);
   }
 
-  const currentWeek = getCurrentWeekNumber();
-  if (currentWeek === 0) {
-    return errorResponse("Curriculum starts next week. Check back then!", 403);
+  const nowDate = new Date();
+  if (isBeforeCurriculum(nowDate)) {
+    return errorResponse("Curriculum starts in September. Check back then!", 403);
   }
-  if (currentWeek > 12) {
+
+  const activeMonth = getActiveCurriculumMonth(nowDate);
+  if (!activeMonth) {
     return errorResponse("This year's curriculum is complete.", 403);
   }
 
-  const weekNumber = body.weekNumber ?? currentWeek;
-  if (weekNumber !== currentWeek) {
-    return errorResponse("You can only submit responses for this week's lesson.", 403);
+  const monthKey = body.monthKey ?? getCurrentMonthKey(nowDate);
+  if (monthKey !== activeMonth.monthKey) {
+    return errorResponse("You can only submit responses for this month's lesson.", 403);
+  }
+
+  const group = findGroupById(student.groupId);
+  if (group && !canSubmitResponses(group, nowDate)) {
+    return errorResponse(
+      `Your group meets during week ${group.sessionWeekOfMonth} of each month. Come back then to submit.`,
+      403,
+    );
   }
 
   const warmUp = body.warmUp?.trim();
@@ -60,15 +76,15 @@ export default async (req: Request): Promise<Response> => {
 
   const now = new Date().toISOString();
   const existing =
-    (await loadWeekResponse(student.id, weekNumber)) ??
+    (await loadMonthResponse(student.id, monthKey)) ??
     ({
       id: crypto.randomUUID(),
       studentId: student.id,
       groupId: student.groupId,
-      weekNumber,
-    } satisfies BoysWeekResponse);
+      monthKey,
+    } satisfies BoysMonthResponse);
 
-  const next: BoysWeekResponse = { ...existing };
+  const next: BoysMonthResponse = { ...existing };
   if (warmUp) {
     next.warmUp = warmUp;
     next.warmUpAt = now;
@@ -78,7 +94,7 @@ export default async (req: Request): Promise<Response> => {
     next.exitTicketAt = now;
   }
 
-  await saveWeekResponse(next);
+  await saveMonthResponse(next);
   student.lastActiveAt = now;
   await saveStudent(student);
 

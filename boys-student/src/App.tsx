@@ -7,7 +7,7 @@ import {
   saveProfile,
   saveSessionToken,
 } from "./session";
-import type { BoysCurriculumWeek, BoysGroup, BoysResponses, BoysStudent } from "./types";
+import type { BoysCurriculumMonth, BoysGroup, BoysResponses, BoysStudent } from "./types";
 
 function LoginScreen({
   onJoined,
@@ -125,9 +125,11 @@ function LessonScreen({
   group: BoysGroup;
   onSignOut: () => void;
 }) {
-  const [weekLabel, setWeekLabel] = useState("");
-  const [weekNumber, setWeekNumber] = useState(0);
-  const [week, setWeek] = useState<BoysCurriculumWeek | null>(null);
+  const [monthLabel, setMonthLabel] = useState("");
+  const [month, setMonth] = useState<BoysCurriculumMonth | null>(null);
+  const [beforeCurriculum, setBeforeCurriculum] = useState(true);
+  const [canSubmit, setCanSubmit] = useState(false);
+  const [sessionHint, setSessionHint] = useState("");
   const [warmUp, setWarmUp] = useState("");
   const [exitTicket, setExitTicket] = useState("");
   const [status, setStatus] = useState<BoysResponses | null>(null);
@@ -141,9 +143,11 @@ function LessonScreen({
     setError("");
     try {
       const data = await fetchCurriculum(token);
-      setWeekLabel(data.weekLabel);
-      setWeekNumber(data.weekNumber);
-      setWeek(data.week);
+      setMonthLabel(data.monthLabel);
+      setMonth(data.month);
+      setBeforeCurriculum(data.beforeCurriculum);
+      setCanSubmit(data.canSubmit);
+      setSessionHint(data.sessionHint);
       setWarmUp(data.responses?.warmUp ?? "");
       setExitTicket(data.responses?.exitTicket ?? "");
       setStatus(data.responses);
@@ -200,7 +204,9 @@ function LessonScreen({
   };
 
   const gradePrompt =
-    week?.gradePrompts?.[student.grade as "6" | "7" | "8"];
+    month?.gradePrompts?.[student.grade as "6" | "7" | "8"];
+
+  const canSubmitForm = Boolean(month) && canSubmit;
 
   if (loading) {
     return (
@@ -216,27 +222,28 @@ function LessonScreen({
         <div>
           <p className="eyebrow">{group.name}</p>
           <h1>{student.name} · Grade {student.grade}</h1>
-          <p className="hint">Excused from period {group.period} during BOYS</p>
+          <p className="hint">Excused from period {group.period} during BOYS (week {group.sessionWeekOfMonth} each month)</p>
         </div>
         <button type="button" className="btn btn-ghost" onClick={onSignOut}>
           Sign out
         </button>
       </header>
 
-      {weekNumber === 0 ? (
+      {beforeCurriculum ? (
         <div className="card">
-          <h2>Week 1 starts next week</h2>
+          <h2>Starts in September</h2>
           <p className="hint">
-            You&apos;re signed in and ready. Come back when your mentor starts the
-            curriculum to complete your warm-up and exit ticket.
+            You&apos;re signed in and ready. Monthly themes begin in September —
+            your group meets during week {group.sessionWeekOfMonth} of each month.
           </p>
           <p className="chant">Who are we? <strong>BOYS!</strong> How do we move? <strong>With purpose!</strong></p>
         </div>
-      ) : week ? (
+      ) : month ? (
         <>
           <div className="card week-banner">
-            <p className="week-label">{weekLabel}</p>
-            <h2>{week.theme}: {week.subtitle}</h2>
+            <p className="week-label">{monthLabel}</p>
+            <h2>{month.theme}: {month.subtitle}</h2>
+            <p className="hint">{sessionHint}</p>
             <div className="progress-row">
               <span className={status?.warmUpDone ? "done" : ""}>
                 {status?.warmUpDone ? "✓" : "○"} Warm-up
@@ -247,56 +254,69 @@ function LessonScreen({
             </div>
           </div>
 
-          <div className="card">
-            <h3>Warm-up</h3>
-            <p className="prompt">{week.warmUpPrompt}</p>
-            <textarea
-              rows={4}
-              value={warmUp}
-              onChange={(e) => setWarmUp(e.target.value)}
-              placeholder="Type your answer here…"
-            />
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={saving === "warmup"}
-              onClick={() => void saveWarmUp()}
-            >
-              {saving === "warmup" ? "Saving…" : status?.warmUpDone ? "Update warm-up" : "Save warm-up"}
-            </button>
-          </div>
-
-          <div className="card">
-            <h3>{week.activityTitle}</h3>
-            <p className="session-type">
-              {week.sessionType === "socratic" ? "Socratic seminar" : "Impact activity"}
-            </p>
-            <p className="hint">{week.activityDescription}</p>
-            {gradePrompt && (
-              <p className="grade-prompt">
-                <strong>Grade {student.grade} focus:</strong> {gradePrompt}
+          {!canSubmitForm ? (
+            <div className="card">
+              <h3>Preview this month&apos;s theme</h3>
+              <p className="hint">{month.activityDescription}</p>
+              <p className="hint">
+                You can submit your warm-up and exit ticket when it&apos;s your
+                group&apos;s week (week {group.sessionWeekOfMonth}).
               </p>
-            )}
-          </div>
+            </div>
+          ) : (
+            <>
+              <div className="card">
+                <h3>Warm-up</h3>
+                <p className="prompt">{month.warmUpPrompt}</p>
+                <textarea
+                  rows={4}
+                  value={warmUp}
+                  onChange={(e) => setWarmUp(e.target.value)}
+                  placeholder="Type your answer here…"
+                />
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={saving === "warmup"}
+                  onClick={() => void saveWarmUp()}
+                >
+                  {saving === "warmup" ? "Saving…" : status?.warmUpDone ? "Update warm-up" : "Save warm-up"}
+                </button>
+              </div>
 
-          <div className="card">
-            <h3>Exit ticket</h3>
-            <p className="prompt">{week.exitTicketPrompt}</p>
-            <textarea
-              rows={4}
-              value={exitTicket}
-              onChange={(e) => setExitTicket(e.target.value)}
-              placeholder="Type your answer here…"
-            />
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={saving === "exit"}
-              onClick={() => void saveExit()}
-            >
-              {saving === "exit" ? "Saving…" : status?.exitTicketDone ? "Update exit ticket" : "Save exit ticket"}
-            </button>
-          </div>
+              <div className="card">
+                <h3>{month.activityTitle}</h3>
+                <p className="session-type">
+                  {month.sessionType === "socratic" ? "Socratic seminar" : "Impact activity"}
+                </p>
+                <p className="hint">{month.activityDescription}</p>
+                {gradePrompt && (
+                  <p className="grade-prompt">
+                    <strong>Grade {student.grade} focus:</strong> {gradePrompt}
+                  </p>
+                )}
+              </div>
+
+              <div className="card">
+                <h3>Exit ticket</h3>
+                <p className="prompt">{month.exitTicketPrompt}</p>
+                <textarea
+                  rows={4}
+                  value={exitTicket}
+                  onChange={(e) => setExitTicket(e.target.value)}
+                  placeholder="Type your answer here…"
+                />
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={saving === "exit"}
+                  onClick={() => void saveExit()}
+                >
+                  {saving === "exit" ? "Saving…" : status?.exitTicketDone ? "Update exit ticket" : "Save exit ticket"}
+                </button>
+              </div>
+            </>
+          )}
 
           <div className="card closing">
             <p className="chant">Who are we? <strong>BOYS!</strong></p>
@@ -305,8 +325,8 @@ function LessonScreen({
         </>
       ) : (
         <div className="card">
-          <h2>{weekLabel}</h2>
-          <p className="hint">No lesson is available for this week.</p>
+          <h2>{monthLabel}</h2>
+          <p className="hint">No lesson is available this month.</p>
         </div>
       )}
 
@@ -340,6 +360,7 @@ export default function App() {
             name: loadProfile()?.groupName ?? "BOYS Group",
             classCode: "",
             period: "",
+            sessionWeekOfMonth: 1,
           });
         }
       })
