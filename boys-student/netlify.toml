@@ -1,0 +1,14 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# API lives on the Family Purpose Netlify site — set in Netlify env:
+# VITE_BOYS_API_URL = https://your-family-purpose-site.netlify.app
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
