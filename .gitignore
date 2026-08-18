@@ -3,6 +3,7 @@ dist
 .vite
 tsconfig.tsbuildinfo
 *.tsbuildinfo
-
-# Local Netlify folder
 .netlify
+.env
+.env.local
+*.local
