@@ -8,9 +8,9 @@ Each month has **one theme** (September through June). Within each month:
 
 | Group | Code | Meets | Excused period |
 |-------|------|-------|----------------|
-| BOYS Group A | `PURPOSE-A` | Week 1 | 4 |
-| BOYS Group B | `PURPOSE-B` | Week 2 | 5 |
-| BOYS Group C | `PURPOSE-C` | Week 3 | 6 |
+| BOYS Group A | `PURPOSE-A` | Week 1 | 7 |
+| BOYS Group B | `PURPOSE-B` | Week 2 | 7 |
+| BOYS Group C | `PURPOSE-C` | Week 3 | 7 |
 
 Curriculum themes start **September 2026**.
 
