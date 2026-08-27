@@ -10,8 +10,10 @@ import {
   weekRange,
 } from "./documents";
 import { careTeamReferrals } from "./followups";
+import { dayKeyOf } from "./reports";
 import { PDF_PREP_HINT } from "./lowPowerHint";
 import { yieldToMain } from "./yieldMain";
+import { useReportData } from "./useReportData";
 
 type DocumentId = "debrief" | "attendance" | "weekly" | "care";
 
@@ -49,11 +51,12 @@ function careRange(id: CareWindowId): {
 }
 
 export default function DebriefTab({
-  checkIns,
-  allCheckIns,
-  sessions,
-  session,
+  checkIns: localTodayCheckIns,
+  allCheckIns: localAllCheckIns,
+  sessions: localSessions,
+  session: localSession,
   settings,
+  dataRevision,
   onCopied,
   onPdfDownloaded,
 }: {
@@ -62,6 +65,7 @@ export default function DebriefTab({
   sessions: GroupSession[];
   session: GroupSession | null;
   settings: DebriefSettings;
+  dataRevision: number;
   onCopied: () => void;
   onPdfDownloaded: () => void;
 }) {
@@ -69,6 +73,25 @@ export default function DebriefTab({
   const [weeksBack, setWeeksBack] = useState(0);
   const [careWindow, setCareWindow] = useState<CareWindowId>("week");
   const [pdfBusy, setPdfBusy] = useState(false);
+
+  const report = useReportData(settings, dataRevision);
+  const today = todayKey();
+  const allCheckIns = report.loading ? localAllCheckIns : report.checkIns;
+  const sessions = report.loading ? localSessions : report.sessions;
+  const checkIns = useMemo(
+    () =>
+      report.loading
+        ? localTodayCheckIns
+        : allCheckIns.filter((c) => dayKeyOf(c.createdAt) === today),
+    [report.loading, localTodayCheckIns, allCheckIns, today],
+  );
+  const session = useMemo(
+    () =>
+      report.loading
+        ? localSession
+        : (sessions.find((s) => s.date === today) ?? localSession),
+    [report.loading, localSession, sessions, today],
+  );
 
   const week = useMemo(
     () => weekRange(todayKey(), weeksBack),
@@ -216,8 +239,15 @@ export default function DebriefTab({
       )}
 
       <div className="debrief-preview" aria-label={`${active.label} preview`}>
-        {text}
+        {report.loading ? "Loading check-ins from all devices…" : text}
       </div>
+
+      {report.cloudIncluded && !report.loading && (
+        <p className="hint">Includes check-ins uploaded from all linked devices.</p>
+      )}
+      {report.hint && !report.loading && (
+        <p className="hint">{report.hint}</p>
+      )}
 
       <div className="btn-row">
         <button

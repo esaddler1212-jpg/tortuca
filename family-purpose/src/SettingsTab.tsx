@@ -96,12 +96,10 @@ export default function SettingsTab({
   settings,
   onSave,
   onRestored,
-  onSynced,
 }: {
   settings: DebriefSettings;
   onSave: (s: DebriefSettings) => void;
   onRestored: () => void;
-  onSynced: () => void;
 }) {
   const [form, setForm] = useState(settings);
   const [syncNote, setSyncNote] = useState("");
@@ -267,7 +265,8 @@ export default function SettingsTab({
         />
         <p className="hint">
           Phone + laptop: paste your Netlify backup URL on both devices with the
-          same key. Check-ins sync both ways whenever you are online.
+          same key. Each device uploads at 2:30 PM Pacific; debrief and weekly
+          reports combine everyone&apos;s check-ins when you open them online.
         </p>
       </div>
       <div className="field">
@@ -288,19 +287,16 @@ export default function SettingsTab({
     <SchoolScheduleCard />
     <DataBackup onRestored={onRestored} />
     <div className="card">
-      <h2>Sync across devices</h2>
+      <h2>Upload across devices</h2>
       <DeviceSyncHint settings={form} />
       <div className="btn-row section-actions">
-        <SyncNowButton
-          settings={form}
-          onMessage={setSyncNote}
-          onDataChange={onSynced}
-        />
+        <SyncNowButton settings={form} onMessage={setSyncNote} />
       </div>
       {syncNote && <p className="hint">{syncNote}</p>}
       <p className="hint">
         Label each device in Offline &amp; auto-backup (e.g. &quot;Work laptop&quot;,
-        &quot;My phone&quot;) so backups in the cloud stay separate until they merge.
+        &quot;My phone&quot;). That name appears on the debrief for check-ins logged on
+        that device.
       </p>
     </div>
     </>

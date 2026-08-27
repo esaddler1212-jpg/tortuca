@@ -144,3 +144,10 @@ export function studentLabel(checkIn: CheckIn): string {
   const id = checkIn.studentId?.trim();
   return id ? `${checkIn.studentName} (ID ${id})` : checkIn.studentName;
 }
+
+/** Student label plus device name when the check-in was logged on another device. */
+export function studentLabelWithDevice(checkIn: CheckIn): string {
+  const device = checkIn.loggedOnDevice?.trim();
+  if (!device) return studentLabel(checkIn);
+  return `${studentLabel(checkIn)} — logged on ${device}`;
+}

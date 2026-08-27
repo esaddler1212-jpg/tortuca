@@ -53,7 +53,7 @@ export default function App() {
     setRevision((r) => r + 1);
   }, []);
 
-  useScheduledBackup(settings, revision, showToast, refreshData);
+  useScheduledBackup(settings, revision, showToast);
 
   const onChanged = useCallback(
     (message?: string) => {
@@ -144,6 +144,7 @@ export default function App() {
                 sessions={sessions}
                 session={todaySession}
                 settings={settings}
+                dataRevision={revision}
                 onCopied={() => showToast("Debrief copied")}
                 onPdfDownloaded={() => showToast("PDF downloaded")}
               />
@@ -154,6 +155,7 @@ export default function App() {
                 checkIns={history}
                 sessions={sessions}
                 settings={settings}
+                dataRevision={revision}
                 onCopied={() => showToast("Summary copied")}
                 onPdfDownloaded={() => showToast("PDF downloaded")}
               />
@@ -164,6 +166,7 @@ export default function App() {
                 checkIns={history}
                 sessions={sessions}
                 settings={settings}
+                dataRevision={revision}
                 onCopied={() => showToast("Impact summary copied")}
                 onPdfDownloaded={() => showToast("PDF downloaded")}
               />
@@ -180,7 +183,6 @@ export default function App() {
                   setSettings(loadDebriefSettings());
                   onChanged("Backup restored");
                 }}
-                onSynced={() => onChanged()}
               />
             )}
           </Suspense>
