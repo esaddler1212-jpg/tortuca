@@ -71,6 +71,14 @@ describe("buildDebriefText", () => {
     expect(text.indexOf("Andre Bell")).toBeLessThan(text.indexOf("Zoe Nunez"));
   });
 
+  it("shows which device logged the check-in", () => {
+    const text = buildDebriefText(
+      [makeCheckIn({ loggedOnDevice: "My phone" })],
+      settings,
+    );
+    expect(text).toContain("Logged on: My phone");
+  });
+
   it("credits the preparer and school", () => {
     const text = buildDebriefText([makeCheckIn()], settings);
     expect(text).toContain("School: Riverside High");

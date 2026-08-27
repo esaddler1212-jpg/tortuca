@@ -112,6 +112,8 @@ export interface CheckIn {
   outcomeNotes?: string;
   followUp?: FollowUp;
   createdAt: string;
+  /** Device name from Settings when the check-in was logged. */
+  loggedOnDevice?: string;
 }
 
 /** A student on the group's standing roster. */

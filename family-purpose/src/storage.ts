@@ -101,8 +101,14 @@ export function loadTodayCheckIns(): CheckIn[] {
 }
 
 export function addCheckIn(entry: Omit<CheckIn, "id" | "createdAt">): CheckIn {
+  const settings = loadDebriefSettings();
+  const device =
+    entry.loggedOnDevice?.trim() ||
+    settings.deviceLabel.trim() ||
+    "This device";
   const newEntry: CheckIn = {
     ...entry,
+    loggedOnDevice: device,
     id: crypto.randomUUID(),
     createdAt: new Date().toISOString(),
   };
