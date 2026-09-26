@@ -41,7 +41,12 @@ export default function App() {
   const { connected, accountEmail, connect, disconnect, connectionError } = useGoogleIntegration();
   const { allEvents, addLocalEvent } = useSchedule(connected);
   const { messages, unread } = useEmails(connected);
-  const { snapshot: woodhouse, loading: woodhouseLoading, error: woodhouseError } = useWoodhouse();
+  const {
+    snapshot: woodhouse,
+    loading: woodhouseLoading,
+    error: woodhouseError,
+    refresh: refreshWoodhouse,
+  } = useWoodhouse();
   const { snapshot: stocks, loading: stocksLoading } = useStocks();
   const { effectiveMinutes, loading: commuteLoading, error: commuteError } = useCommute(settings);
   const { logs: fitnessLogs, logWorkout, loadRemote: loadFitness } = useFitness(settings);
@@ -205,6 +210,7 @@ export default function App() {
           woodhouse={woodhouse}
           woodhouseLoading={woodhouseLoading}
           woodhouseError={woodhouseError}
+          onRefreshWoodhouse={() => void refreshWoodhouse()}
           stocks={stocks}
           stocksLoading={stocksLoading}
           messages={messages}
