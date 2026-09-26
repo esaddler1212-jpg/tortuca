@@ -17,6 +17,7 @@ import { weatherLabel } from "../lib/weather";
 import type { FitnessLog } from "../types";
 import type { WorkoutType } from "../lib/fitness";
 import { FitnessPanel } from "./FitnessPanel";
+import { WoodhouseStation } from "./WoodhouseStation";
 import {
   AlertCircle,
   Bot,
@@ -52,6 +53,7 @@ interface Props {
   woodhouse: WoodhouseOrchestrationSnapshot | null;
   woodhouseLoading?: boolean;
   woodhouseError?: string | null;
+  onRefreshWoodhouse?: () => void;
   stocks: StocksSnapshot | null;
   stocksLoading?: boolean;
   messages: EmailMessage[];
@@ -82,6 +84,7 @@ export function TodayCommandCenter({
   woodhouse,
   woodhouseLoading,
   woodhouseError,
+  onRefreshWoodhouse,
   stocks,
   stocksLoading,
   messages,
@@ -312,6 +315,12 @@ export function TodayCommandCenter({
 
         {/* Right rail — apps, markets, inbox */}
         <div className="lg:col-span-5 space-y-4">
+          <WoodhouseStation
+            snapshot={woodhouse}
+            loading={woodhouseLoading}
+            error={woodhouseError}
+            onRefresh={onRefreshWoodhouse}
+          />
           <section className="panel p-5">
             <h3 className="font-display text-lg text-alfred-gold mb-3">Your apps</h3>
             <div className="space-y-2">
