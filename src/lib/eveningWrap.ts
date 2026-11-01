@@ -1,3 +1,4 @@
+import { localHour } from "../../shared/timezone";
 import { format } from "date-fns";
 import type { CalendarEvent, TodoItem, UserSettings } from "../types";
 import type { WoodhouseOrchestrationSnapshot } from "../types/woodhouse";
@@ -91,9 +92,7 @@ export function buildEveningWrap(
     lines.push("Tomorrow’s calendar looks open so far.");
   }
 
-  const hour = Number(
-    new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", hour12: false }).format(now),
-  );
+  const hour = localHour(tz, now);
   const headline =
     hour >= settings.eveningWrapHour
       ? "Evening wrap"
@@ -121,12 +120,6 @@ export function buildEveningWrap(
 }
 
 export function isEveningMode(settings: UserSettings, now = new Date()): boolean {
-  const hour = Number(
-    new Intl.DateTimeFormat("en-US", {
-      timeZone: settings.timezone,
-      hour: "numeric",
-      hour12: false,
-    }).format(now),
-  );
+  const hour = localHour(settings.timezone, now);
   return hour >= settings.eveningWrapHour;
 }

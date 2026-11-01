@@ -140,7 +140,7 @@ else
     echo "    skipped (re-run with ALFRED_URL=https://... to enable)"
 fi
 
-say "Morning briefing (6:15 AM) + weekly agents (always on)"
+say "Morning briefing (6:15 weekdays / 8:15 weekends) + weekly agents (always on)"
 "$PY" "$HERE/scripts/install_jobs.py" || echo "    (couldn't install jobs; run: $PY $HERE/scripts/install_jobs.py)"
 
 say "Index knowledge"
@@ -159,6 +159,7 @@ Next:
   2. jarvis connect gdrive          (one Google sign-in covers Gmail, Calendar, and Tasks)
   3. jarvis doctor                  (check engines and connectors)
   4. jarvis digest --fresh          (hear a briefing now)
-  The 6:15 AM briefing and weekly agents now run on their own (launchd).
-  Keep the iMac awake for them:  sudo pmset repeat wakeorpoweron MTWRFSU 06:10:00
+  The briefing (6:15 AM weekdays, 8:15 AM weekends) and weekly agents now run on their own.
+  Wake the iMac for them: System Preferences → Energy Saver → Schedule →
+  "Start up or wake" Weekdays 6:10 AM (and 8:10 AM on weekends if you like).
 EOF

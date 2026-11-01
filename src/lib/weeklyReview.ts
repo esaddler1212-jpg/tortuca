@@ -1,3 +1,4 @@
+import { localHour } from "../../shared/timezone";
 import { format } from "date-fns";
 import type { CalendarEvent, TodoItem, UserSettings, ShoppingItem } from "../types";
 import type { WoodhouseOrchestrationSnapshot } from "../types/woodhouse";
@@ -35,9 +36,7 @@ function inWeek(iso: string, start: Date, timeZone: string): boolean {
 export function isWeeklyReviewTime(settings: UserSettings, now = new Date()): boolean {
   const tz = settings.timezone;
   const weekday = new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "short" }).format(now);
-  const hour = Number(
-    new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", hour12: false }).format(now),
-  );
+  const hour = localHour(tz, now);
   return weekday === "Sun" && hour >= settings.weeklyReviewHour;
 }
 

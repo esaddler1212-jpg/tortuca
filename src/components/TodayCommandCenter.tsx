@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
+import { localHour } from "../../shared/timezone";
 import { format, parseISO } from "date-fns";
 import type { CalendarEvent } from "../types";
 import type { EmailMessage } from "../types";
@@ -97,7 +98,7 @@ export function TodayCommandCenter({
   pendingTodos,
 }: Props) {
   const greeting = (() => {
-    const h = new Date().getHours();
+    const h = localHour(settings.timezone);
     if (h < 12) return "Good morning";
     if (h < 17) return "Good afternoon";
     return "Good evening";

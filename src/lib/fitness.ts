@@ -1,3 +1,4 @@
+import { localHour, zonedDateTime } from "../../shared/timezone";
 import type { CalendarEvent, UserSettings } from "../types";
 
 export type WorkoutType = "arms" | "body" | "legs" | "cardio";
@@ -26,9 +27,7 @@ export function dayKey(timeZone: string, date = new Date()): string {
 
 export function workoutSlot(settings: UserSettings, now = new Date()): FitnessLog["slot"] {
   const tz = settings.timezone;
-  const hour = Number(
-    new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", hour12: false }).format(now),
-  );
+  const hour = localHour(tz, now);
   if (hour < settings.morningWorkoutDeadlineHour) return "morning";
   if (hour < 17) return "afternoon";
   return "evening";
@@ -82,10 +81,8 @@ function parseTime(hhmm: string): { hour: number; minute: number } {
   return { hour: h || 0, minute: m || 0 };
 }
 
-function formatTime12(hour: number, minute: number): string {
-  const d = new Date();
-  d.setHours(hour, minute, 0, 0);
-  return new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(d);
+function formatInTz(date: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat("en-US", { timeZone, hour: "numeric", minute: "2-digit" }).format(date);
 }
 
 /** Find a gap in today's calendar or fall back to settings.fitnessSuggestTime */
@@ -101,8 +98,8 @@ export function suggestWorkoutTime(
     .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
 
   const { hour: targetH, minute: targetM } = parseTime(settings.fitnessSuggestTime);
-  const target = new Date(now);
-  target.setHours(targetH, targetM, 0, 0);
+  const hhmm = `${String(targetH).padStart(2, "0")}:${String(targetM).padStart(2, "0")}`;
+  const target = zonedDateTime(day, hhmm, tz);
 
   if (target > now) {
     const conflict = todayEvents.some((e) => {
@@ -110,7 +107,7 @@ export function suggestWorkoutTime(
       const end = e.end ? new Date(e.end) : new Date(start.getTime() + 60 * 60_000);
       return target >= start && target < end;
     });
-    if (!conflict) return formatTime12(targetH, targetM);
+    if (!conflict) return formatInTz(target, tz);
   }
 
   for (let i = 0; i < todayEvents.length - 1; i++) {
@@ -120,11 +117,11 @@ export function suggestWorkoutTime(
     const nextStart = new Date(todayEvents[i + 1].start);
     const gapMs = nextStart.getTime() - end.getTime();
     if (gapMs >= 45 * 60_000 && end > now) {
-      return formatTime12(end.getHours(), end.getMinutes());
+      return formatInTz(end, tz);
     }
   }
 
-  return formatTime12(targetH, targetM);
+  return formatInTz(target, tz);
 }
 
 export interface FitnessStatus {
@@ -152,9 +149,7 @@ export function buildFitnessStatus(
   const scheduledLabel = scheduledToday
     ? scheduledWorkoutLabel(scheduledToday, tz, now)
     : null;
-  const hour = Number(
-    new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", hour12: false }).format(now),
-  );
+  const hour = localHour(tz, now);
 
   const needsMorningCheck = !loggedToday && hour >= 4 && hour < settings.morningWorkoutDeadlineHour;
   const pastMorningWindow = !loggedToday && hour >= settings.morningWorkoutDeadlineHour;

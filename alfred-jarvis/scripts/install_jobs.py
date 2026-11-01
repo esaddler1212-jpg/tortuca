@@ -1,6 +1,7 @@
 """Install Alfred's always-on macOS jobs (launchd):
 
-- com.ecs.alfred.briefing   runs `jarvis digest --fresh` at 6:15 AM daily
+- com.ecs.alfred.briefing   runs `jarvis digest --fresh` at 6:15 AM on weekdays
+                            and 8:15 AM on weekends (matches the 8 AM weekend wake)
 - com.ecs.alfred.scheduler  keeps `jarvis scheduler start` running (weekly agents)
 
 launchd jobs don't read ~/.zshrc, so each job starts zsh, loads ~/.zshrc (for
@@ -29,7 +30,12 @@ def _shell(cmd: str) -> list[str]:
 JOBS = {
     "com.ecs.alfred.briefing": {
         "ProgramArguments": _shell("exec jarvis digest --fresh"),
-        "StartCalendarInterval": {"Hour": 6, "Minute": 15},
+        # launchd Weekday: 0/7 = Sunday, 1 = Monday ... 6 = Saturday
+        "StartCalendarInterval": [
+            *({"Weekday": d, "Hour": 6, "Minute": 15} for d in range(1, 6)),
+            {"Weekday": 6, "Hour": 8, "Minute": 15},
+            {"Weekday": 0, "Hour": 8, "Minute": 15},
+        ],
     },
     "com.ecs.alfred.scheduler": {
         "ProgramArguments": _shell("exec jarvis scheduler start"),

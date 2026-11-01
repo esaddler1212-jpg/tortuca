@@ -1,5 +1,6 @@
 import type { SyncedUserSettings } from "./userDataTypes";
 import { dayKey, isWeekend, zonedDateTime } from "./timezone";
+import { NO_SCHOOL_DAYS } from "./schoolCalendar";
 
 export interface LeaveByLite {
   leaveBy: Date;
@@ -16,6 +17,7 @@ export function computeServerLeaveBy(
   if (isWeekend(forDate, tz)) return null;
 
   const day = dayKey(tz, forDate);
+  if (NO_SCHOOL_DAYS.has(day)) return null;
   const arriveBy = zonedDateTime(day, settings.schoolStartTime || "08:00", tz);
   const commute = settings.commuteMinutes;
   const buffer = settings.arriveBufferMinutes;

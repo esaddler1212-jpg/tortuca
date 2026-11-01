@@ -1,4 +1,7 @@
 import { useMemo } from "react";
+import { useNow } from "./hooks/useNow";
+import { nextWakeDay } from "../shared/bedtime";
+import { zonedDateTime } from "../shared/timezone";
 import { OvernightDeltaBanner } from "./components/OvernightDeltaBanner";
 import { OvercommitmentBanner } from "./components/OvercommitmentBanner";
 import { MorningRitualModal } from "./components/MorningRitualModal";
@@ -45,6 +48,8 @@ import { InstallAppBanner } from "./components/InstallAppBanner";
 
 export default function App() {
   const { settings, persist, updateCity, saving, error, setError } = useSettings();
+  // Re-evaluates all time-of-day logic every minute and when the app is reopened.
+  const now = useNow();
   const { weather, loading: weatherLoading, error: weatherError } = useWeather(settings);
   const { todos, pending, done, add, toggle, setTodos } = useTodos();
   const { connected, accountEmail, connect, disconnect, connectionError } = useGoogleIntegration();
@@ -71,25 +76,30 @@ export default function App() {
     );
   }, [allEvents, familyScheduleEvents]);
 
+  // Calendar day of the next wake-up (today if it's after midnight but before the alarm).
+  const wakeDay = nextWakeDay(settings, now);
+
   const todayTimeline = useMemo(
     () => filterTodayTimeline(allSchedule, settings.timezone),
-    [allSchedule, settings.timezone],
+    // `now` keeps "today" correct after midnight.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [allSchedule, settings.timezone, wakeDay],
   );
 
   const leaveBy = useMemo(
-    () => computeLeaveBy(settings, woodhouse, allSchedule, new Date(), new Date(), effectiveMinutes),
-    [settings, woodhouse, allSchedule, effectiveMinutes],
+    () => computeLeaveBy(settings, woodhouse, allSchedule, now, now, effectiveMinutes),
+    [settings, woodhouse, allSchedule, effectiveMinutes, now],
   );
 
+  // Leave-by for the next wake-up morning (drives bedtime and the "tomorrow" preview).
   const tomorrowLeaveBy = useMemo(() => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return computeLeaveBy(settings, woodhouse, allSchedule, new Date(), tomorrow, effectiveMinutes);
-  }, [settings, woodhouse, allSchedule, effectiveMinutes]);
+    const wakeMorning = zonedDateTime(wakeDay, "12:00", settings.timezone);
+    return computeLeaveBy(settings, woodhouse, allSchedule, now, wakeMorning, effectiveMinutes);
+  }, [settings, woodhouse, allSchedule, effectiveMinutes, now, wakeDay]);
 
   const bedtime = useMemo(
-    () => computeSuggestedBedtime(settings, tomorrowLeaveBy),
-    [settings, tomorrowLeaveBy],
+    () => computeSuggestedBedtime(settings, tomorrowLeaveBy, now),
+    [settings, tomorrowLeaveBy, now],
   );
 
   const todayActions = useMemo(
@@ -100,8 +110,8 @@ export default function App() {
   const urgentCount = todayActions.filter((a) => a.urgent).length;
 
   const fitnessStatus = useMemo(
-    () => buildFitnessStatus(settings, fitnessLogs, allSchedule),
-    [settings, fitnessLogs, allSchedule],
+    () => buildFitnessStatus(settings, fitnessLogs, allSchedule, now),
+    [settings, fitnessLogs, allSchedule, now],
   );
 
   const overcommitment = useMemo(
@@ -131,17 +141,18 @@ export default function App() {
         allSchedule,
         woodhouse,
         tomorrowLeaveBy,
+        now,
       ),
-    [settings, weather, pending, done, todayActions, allSchedule, woodhouse, tomorrowLeaveBy],
+    [settings, weather, pending, done, todayActions, allSchedule, woodhouse, tomorrowLeaveBy, now],
   );
 
-  const eveningMode = isEveningMode(settings);
-  const showWindDown = bedtime && isWindDownTime(bedtime) && !eveningMode;
+  const eveningMode = isEveningMode(settings, now);
+  const showWindDown = bedtime && isWindDownTime(bedtime, now) && !eveningMode;
   const weeklyReview = useMemo(
     () => buildWeeklyReview(settings, pending, done, allSchedule, woodhouse, shoppingItems, goalsProgress),
     [settings, pending, done, allSchedule, woodhouse, shoppingItems, goalsProgress],
   );
-  const showWeeklyReview = isWeeklyReviewTime(settings);
+  const showWeeklyReview = isWeeklyReviewTime(settings, now);
 
   const displayName = settings.preferredName?.trim() || accountEmail?.split("@")[0];
 
