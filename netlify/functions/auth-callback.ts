@@ -5,16 +5,20 @@ export const handler: Handler = async (event) => {
   initBlobs(event);
 
   const code = event.queryStringParameters?.code;
-  const sessionId = event.queryStringParameters?.state;
+  const rawState = event.queryStringParameters?.state ?? "";
+  const fromApp = rawState.endsWith("~app");
+  const sessionId = fromApp ? rawState.slice(0, -"~app".length) : rawState;
   const error = event.queryStringParameters?.error;
+
+  // Sign-ins started from the installed app finish on a "go back to Alfred" page.
+  const doneUrl = (ok: boolean, reason?: string) =>
+    fromApp
+      ? `${siteUrl(event)}/oauth-done.html?ok=${ok ? 1 : 0}${reason ? `&oauth_error=${reason}` : ""}`
+      : `${siteUrl(event)}/?connected=${ok ? 1 : 0}${reason ? `&oauth_error=${reason}` : ""}`;
 
   if (error || !code || !sessionId) {
     const reason = error === "access_denied" ? "denied" : !code ? "missing" : "state";
-    return {
-      statusCode: 302,
-      headers: { Location: `${siteUrl(event)}/?connected=0&oauth_error=${reason}` },
-      body: "",
-    };
+    return { statusCode: 302, headers: { Location: doneUrl(false, reason) }, body: "" };
   }
 
   const redirectUri = `${siteUrl(event)}/api/auth-callback`;
@@ -41,11 +45,7 @@ export const handler: Handler = async (event) => {
     } catch {
       /* ignore parse errors */
     }
-    return {
-      statusCode: 302,
-      headers: { Location: `${siteUrl(event)}/?connected=0&oauth_error=${reason}` },
-      body: "",
-    };
+    return { statusCode: 302, headers: { Location: doneUrl(false, reason) }, body: "" };
   }
 
   const tokens = (await tokenRes.json()) as {
@@ -75,7 +75,7 @@ export const handler: Handler = async (event) => {
 
   return {
     statusCode: 302,
-    headers: { Location: `${siteUrl(event)}/?connected=1` },
+    headers: { Location: doneUrl(true) },
     body: "",
   };
 };

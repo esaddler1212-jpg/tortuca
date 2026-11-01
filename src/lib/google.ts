@@ -63,8 +63,23 @@ export async function startGoogleConnect(): Promise<{ ok: boolean; error?: strin
   }
 
   const sessionId = await ensureSession();
-  window.location.href = `${apiBase()}/auth-start?session=${encodeURIComponent(sessionId)}`;
+  const base = `${apiBase()}/auth-start?session=${encodeURIComponent(sessionId)}`;
+  if (isStandaloneApp()) {
+    // Home Screen app: Google's pages open in Safari, outside the app. Finish on a
+    // "go back to Alfred" page there; the app re-checks when you switch back.
+    const win = window.open(`${base}&return=app`, "_blank");
+    if (win) return { ok: true };
+  }
+  window.location.href = base;
   return { ok: true };
+}
+
+/** True when running as an installed Home Screen / desktop app. */
+export function isStandaloneApp(): boolean {
+  return (
+    window.matchMedia?.("(display-mode: standalone)").matches ||
+    (navigator as Navigator & { standalone?: boolean }).standalone === true
+  );
 }
 
 export async function fetchGoogleStatus(): Promise<{ connected: boolean; email?: string }> {

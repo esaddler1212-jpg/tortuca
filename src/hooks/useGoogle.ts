@@ -59,6 +59,19 @@ export function useGoogleIntegration() {
     }
   }, [refreshStatus]);
 
+  // Sign-in may finish in Safari (iPhone Home Screen app): re-check on return.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void refreshStatus();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
+  }, [refreshStatus]);
+
   const connect = useCallback(async () => {
     setConnectionError(null);
     const result = await startGoogleConnect();
