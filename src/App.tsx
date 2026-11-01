@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useNow } from "./hooks/useNow";
 import { nextWakeDay } from "../shared/bedtime";
 import { zonedDateTime } from "../shared/timezone";
+import { applyDayMode, dayMode, DAY_MODE_LABEL } from "../shared/dayMode";
 import { OvernightDeltaBanner } from "./components/OvernightDeltaBanner";
 import { OvercommitmentBanner } from "./components/OvercommitmentBanner";
 import { MorningRitualModal } from "./components/MorningRitualModal";
@@ -55,7 +56,10 @@ export default function App() {
   const { connected, accountEmail, connect, disconnect, connectionError } = useGoogleIntegration();
   const { allEvents, addLocalEvent } = useSchedule(connected);
   const { messages, unread } = useEmails(connected);
-  const { snapshot: woodhouse, loading: woodhouseLoading, error: woodhouseError } = useWoodhouse();
+  const { snapshot: rawWoodhouse, loading: woodhouseLoading, error: woodhouseError } = useWoodhouse();
+  // Workday vs off duty: Family Purpose tasks hide on weekends, holidays and after 7 PM.
+  const mode = dayMode(settings.timezone, now);
+  const woodhouse = useMemo(() => applyDayMode(rawWoodhouse, mode), [rawWoodhouse, mode]);
   const { snapshot: stocks, loading: stocksLoading } = useStocks();
   const { effectiveMinutes, loading: commuteLoading, error: commuteError } = useCommute(settings);
   const { logs: fitnessLogs, logWorkout, loadRemote: loadFitness } = useFitness(settings);
@@ -87,15 +91,15 @@ export default function App() {
   );
 
   const leaveBy = useMemo(
-    () => computeLeaveBy(settings, woodhouse, allSchedule, now, now, effectiveMinutes),
-    [settings, woodhouse, allSchedule, effectiveMinutes, now],
+    () => computeLeaveBy(settings, rawWoodhouse, allSchedule, now, now, effectiveMinutes),
+    [settings, rawWoodhouse, allSchedule, effectiveMinutes, now],
   );
 
   // Leave-by for the next wake-up morning (drives bedtime and the "tomorrow" preview).
   const tomorrowLeaveBy = useMemo(() => {
     const wakeMorning = zonedDateTime(wakeDay, "12:00", settings.timezone);
-    return computeLeaveBy(settings, woodhouse, allSchedule, now, wakeMorning, effectiveMinutes);
-  }, [settings, woodhouse, allSchedule, effectiveMinutes, now, wakeDay]);
+    return computeLeaveBy(settings, rawWoodhouse, allSchedule, now, wakeMorning, effectiveMinutes);
+  }, [settings, rawWoodhouse, allSchedule, effectiveMinutes, now, wakeDay]);
 
   const bedtime = useMemo(
     () => computeSuggestedBedtime(settings, tomorrowLeaveBy, now),
@@ -231,6 +235,7 @@ export default function App() {
           eveningWrap={eveningWrap}
           eveningMode={eveningMode}
           displayName={displayName}
+          modeLabel={DAY_MODE_LABEL[mode]}
           afterGreeting={
             <>
               {showWeeklyReview && <WeeklyReview review={weeklyReview} />}

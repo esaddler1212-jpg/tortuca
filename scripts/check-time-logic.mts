@@ -13,6 +13,7 @@ import { computeSuggestedBedtime, nextWakeDay } from "../shared/bedtime.ts";
 import { computeServerLeaveBy } from "../shared/leaveByLite.ts";
 import { addDays, localHour, weekdayOfDay, zonedDateTime } from "../shared/timezone.ts";
 import { DEFAULT_SETTINGS } from "../src/types.ts";
+import { applyDayMode, dayMode } from "../shared/dayMode.ts";
 
 const TZ = "America/Los_Angeles";
 const settings = { ...DEFAULT_SETTINGS }; // wake 04:15 weekdays, 08:00 days off, 7.5h sleep
@@ -88,6 +89,26 @@ check("one wind-down reminder per night (15 nights incl. DST night)", windDowns.
 // Sun–Thu nights at 8:10 PM, except Tue Nov 10 (Veterans Day eve → 11:50 PM): 9 nights.
 check("weeknight reminders at 8:10 PM (holiday eve moves later)", windDowns.filter((w) => w.endsWith("8:10 PM")).length, 9);
 check("Veterans Day eve reminder at 11:50 PM", windDowns.includes("Tue, Nov 10, 11:50 PM"), true);
+
+// ── workday vs off duty (Family Purpose hidden off hours, events kept)
+check("Fri 6:59 PM is workday", dayMode(TZ, new Date("2026-11-07T02:59:00Z")), "workday");
+check("Fri 7:00 PM is off duty", dayMode(TZ, new Date("2026-11-07T03:00:00Z")), "evening");
+check("Saturday is weekend", dayMode(TZ, new Date("2026-11-07T18:00:00Z")), "weekend");
+check("Veterans Day is a holiday", dayMode(TZ, new Date("2026-11-11T18:00:00Z")), "holiday");
+check("Mon 12:30 AM is off duty (after 7 PM rule)", dayMode(TZ, new Date("2026-11-02T08:30:00Z")), "evening");
+const feed = {
+  nodes: [
+    { nodeType: "education", snapshot: { summary: "2 follow-ups", priorityActions: ["Follow up with a student"],
+      calendar: [{ kind: "follow_up_due", title: "Follow-up" }, { kind: "group_meeting", title: "BOYS group" }] } },
+    { nodeType: "ops", snapshot: { summary: "Roadmap", priorityActions: ["Lock $BAY legal"], calendar: [] } },
+  ],
+  priorityActions: ["Follow up with a student", "Lock $BAY legal"],
+  calendar: [{ kind: "follow_up_due", title: "Follow-up" }, { kind: "group_meeting", title: "BOYS group" }],
+};
+const off = applyDayMode(feed, "weekend")!;
+check("off duty: Family Purpose tasks hidden, other apps kept", off.priorityActions, ["Lock $BAY legal"]);
+check("off duty: Family Purpose calendar events still shown", off.calendar.map((c) => c.title), ["BOYS group"]);
+check("workday: feed unchanged", applyDayMode(feed, "workday") === feed, true);
 
 // ── same answers regardless of the machine's time zone
 const self = fileURLToPath(import.meta.url);

@@ -48,6 +48,8 @@ interface Props {
   displayName?: string;
   /** Rendered directly under the greeting (alerts, command bar, console). */
   afterGreeting?: ReactNode;
+  /** "Workday", "Weekend", "Off duty after 7 PM"… */
+  modeLabel?: string;
   unreadEmails: number;
   actions: TodayAction[];
   todayTimeline: CalendarEvent[];
@@ -79,6 +81,7 @@ export function TodayCommandCenter({
   eveningMode,
   displayName,
   afterGreeting,
+  modeLabel,
   unreadEmails,
   actions,
   todayTimeline,
@@ -204,6 +207,7 @@ export function TodayCommandCenter({
           )}
         </div>
         <div className="flex flex-wrap gap-2 mt-4">
+          {modeLabel && <Chip label={modeLabel} />}
           <Chip label={`${pendingTodos.length} tasks`} alert={pendingTodos.length > 5} />
           <Chip label={`${unreadEmails} unread`} alert={unreadEmails > 0} />
           <Chip
