@@ -1,6 +1,9 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { dayKey, localHour } from "../../shared/timezone";
 import { useDailyChecks } from "../hooks/useDailyChecks";
+import { PromptButton } from "./PromptButton";
+import { promptForEvent, promptForTask, promptForTodo } from "../lib/promptGenerator";
+import type { PlanTask, YearGoal } from "../../shared/planData";
 import { format, parseISO } from "date-fns";
 import type { CalendarEvent } from "../types";
 import type { EmailMessage } from "../types";
@@ -78,6 +81,12 @@ interface Props {
   doneTodos?: TodoItem[];
   /** Shared clock (refreshes the daily list at midnight). */
   now?: Date;
+  /** Plan tasks (for prompts) and how to complete them. */
+  planTasks?: Map<string, PlanTask>;
+  planGoals?: Map<string, YearGoal>;
+  onTogglePlanTask?: (id: string) => void;
+  /** Plan tasks completed today (shown crossed off with undo). */
+  planDoneToday?: PlanTask[];
 }
 
 export function TodayCommandCenter({
@@ -115,6 +124,10 @@ export function TodayCommandCenter({
   pendingTodos,
   doneTodos = [],
   now = new Date(),
+  planTasks,
+  planGoals,
+  onTogglePlanTask,
+  planDoneToday = [],
 }: Props) {
   const greeting = (() => {
     const h = localHour(settings.timezone);
@@ -132,14 +145,21 @@ export function TodayCommandCenter({
   // Do today: every item can be crossed off; done items move to "Done today" with undo.
   const daily = useDailyChecks(settings.timezone, now);
   const today = dayKey(settings.timezone, now);
-  const openActions = actions.filter((a) => a.todoId || !daily.checked.has(a.id));
-  const doneApp = actions.filter((a) => !a.todoId && daily.checked.has(a.id));
+  const openActions = actions.filter((a) => a.todoId || a.planTaskId || !daily.checked.has(a.id));
+  const doneApp = actions.filter((a) => !a.todoId && !a.planTaskId && daily.checked.has(a.id));
   const doneTodosToday = doneTodos.filter(
     (t) => t.completedAt && dayKey(settings.timezone, new Date(t.completedAt)) === today,
   );
-  const doneCount = doneApp.length + doneTodosToday.length;
-  const completeAction = (a: (typeof actions)[number]) =>
-    a.todoId ? onToggleTodo(a.todoId) : daily.toggle(a.id);
+  const doneCount = doneApp.length + doneTodosToday.length + planDoneToday.length;
+  const completeAction = (a: (typeof actions)[number]) => {
+    if (a.todoId) onToggleTodo(a.todoId);
+    else if (a.planTaskId) onTogglePlanTask?.(a.planTaskId);
+    else daily.toggle(a.id);
+  };
+  const promptFor = (a: (typeof actions)[number]) => () => {
+    const task = a.planTaskId ? planTasks?.get(a.planTaskId) : undefined;
+    return task ? promptForTask(task, planGoals?.get(task.goalId)) : promptForTodo(a.title, a.sourceLabel);
+  };
 
   return (
     <div className="space-y-4">
@@ -310,11 +330,15 @@ export function TodayCommandCenter({
                   {doneCount ? "All done for today. Nice work." : "All clear. Nothing queued."}
                 </li>
               )}
-              {openActions.map((a) => (
+              {openActions.map((a, i) => (
                 <li
                   key={a.id}
                   className={`flex items-start gap-3 rounded-lg border px-3 py-2 text-sm ${
-                    a.urgent ? "border-alfred-gold/40 bg-alfred-gold/5" : "border-alfred-border/60"
+                    i === 0
+                      ? "border-alfred-gold/60 bg-alfred-gold/10 shadow-hud"
+                      : a.urgent
+                        ? "border-alfred-gold/40 bg-alfred-gold/5"
+                        : "border-alfred-border/60"
                   }`}
                 >
                   <button
@@ -324,8 +348,12 @@ export function TodayCommandCenter({
                     aria-label={`Cross off: ${a.title}`}
                   />
                   <div className="flex-1 min-w-0">
+                    {i === 0 && <p className="hud-label !text-[10px] mb-0.5">Up next</p>}
                     <p>{a.title}</p>
-                    <p className="text-xs text-alfred-mist capitalize">{a.sourceLabel}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                      <span className="text-xs text-alfred-mist capitalize">{a.sourceLabel}</span>
+                      <PromptButton build={promptFor(a)} />
+                    </div>
                   </div>
                 </li>
               ))}
@@ -337,6 +365,7 @@ export function TodayCommandCenter({
                   {[
                     ...doneTodosToday.map((t) => ({ id: `todo-${t.id}`, title: t.title, source: "To-do", undo: () => onToggleTodo(t.id) })),
                     ...doneApp.map((a) => ({ id: a.id, title: a.title, source: a.sourceLabel, undo: () => daily.toggle(a.id) })),
+                    ...planDoneToday.map((t) => ({ id: `plan-${t.id}`, title: t.title, source: `Plan · ${t.area}`, undo: () => onTogglePlanTask?.(t.id) })),
                   ].map((d) => (
                     <li key={d.id} className="flex items-start gap-3 rounded-lg border border-alfred-border/30 px-3 py-1.5 text-sm opacity-70">
                       <button
@@ -385,7 +414,10 @@ export function TodayCommandCenter({
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">{ev.title}</p>
-                    <p className="text-xs text-alfred-mist capitalize">{ev.source.replace("-", " ")}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                      <span className="text-xs text-alfred-mist capitalize">{ev.source.replace("-", " ")}</span>
+                      <PromptButton label="Prep" build={() => promptForEvent(ev, settings.timezone)} />
+                    </div>
                   </div>
                 </li>
               ))}

@@ -14,6 +14,7 @@ import { computeServerLeaveBy } from "../shared/leaveByLite.ts";
 import { addDays, localHour, weekdayOfDay, zonedDateTime } from "../shared/timezone.ts";
 import { DEFAULT_SETTINGS } from "../src/types.ts";
 import { applyDayMode, dayMode } from "../shared/dayMode.ts";
+import * as Plan from "../shared/plan.ts";
 
 const TZ = "America/Los_Angeles";
 const settings = { ...DEFAULT_SETTINGS }; // wake 04:15 weekdays, 08:00 days off, 7.5h sleep
@@ -117,6 +118,18 @@ check("school: only Family Purpose tasks", actions("school"), ["Follow up with a
 check("network: ECS tasks, no Family Purpose", actions("network"), ["Approve 2 orders", "Lock $BAY legal"]);
 check("weekend: big picture only (roadmap)", actions("weekend"), ["Lock $BAY legal"]);
 check("events kept in every mode", events("network"), ["BOYS group", "$BAY legal"]);
+
+// ── plan: focus, overdue, countdown, MWFS
+const plan0 = { ...Plan.EMPTY_PLAN };
+check("plan: school hours keep ECS tasks off Do today", Plan.weekFocus(plan0, "2026-11-02", "school").length, 0);
+check("plan: ECS afternoon starts with the $BAY budget", Plan.weekFocus(plan0, "2026-11-02", "network", 1)[0]?.id, "bay-budget");
+check("plan: December shows November's open tasks first (overdue)", Plan.weekFocus(plan0, "2026-12-02", "network", 1)[0]?.month, "2026-11");
+check("plan: 59 days left on Nov 2", Plan.daysLeftInYear("2026-11-02"), 59);
+const done1 = { ...plan0, done: { "bay-budget": "2026-11-02T20:00:00Z" } };
+check("plan: crossing off counts toward the goal", Plan.goalProgress(done1, "g26-bay-lock"), { done: 3, total: 12 });
+const mw = { ...plan0, mwfsLog: { "2026-10-30": { music: true, meditate: true, master: true }, "2026-10-31": { music: true, meditate: true, master: true }, "2026-11-02": { music: true } } };
+check("MWFS: week score counts Mon/Wed/Fri/Sat habits", Plan.mwfsWeek(mw, "2026-11-02").done, 1);
+check("MWFS: streak counts full days (today still in progress)", Plan.mwfsStreak(mw, "2026-11-02"), 2);
 
 // ── same answers regardless of the machine's time zone
 const self = fileURLToPath(import.meta.url);

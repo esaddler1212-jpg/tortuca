@@ -1,9 +1,9 @@
 import { CheckCircle2, CircleOff, Link2, Unlink } from "lucide-react";
-import type { CalendarEvent, EmailMessage, TodoItem, WeatherSnapshot } from "../../types";
+import type { CalendarEvent, EmailMessage, WeatherSnapshot } from "../../types";
 import type { WoodhouseOrchestrationSnapshot } from "../../types/woodhouse";
 import type { FitnessStatus } from "../../lib/fitness";
 import { weatherLabel } from "../../lib/weather";
-import { HudBar, HudFrame } from "./HudFrame";
+import { HudFrame } from "./HudFrame";
 
 const fmtTime = (iso: string, timeZone: string) => {
   try {
@@ -15,11 +15,6 @@ const fmtTime = (iso: string, timeZone: string) => {
   }
 };
 
-const isToday = (iso: string | undefined, timeZone: string) => {
-  if (!iso) return false;
-  const f = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone }).format(d);
-  return f(new Date(iso)) === f(new Date());
-};
 
 /* ─── Left column ───────────────────────────────────────────────── */
 
@@ -58,29 +53,6 @@ export function VitalsPanel({
   );
 }
 
-export function LoadPanel({
-  pending,
-  done,
-  unread,
-  todayEvents,
-  timeZone,
-}: {
-  pending: TodoItem[];
-  done: TodoItem[];
-  unread: number;
-  todayEvents: number;
-  timeZone: string;
-}) {
-  const doneToday = done.filter((t) => isToday(t.completedAt, timeZone)).length;
-  const total = doneToday + pending.length;
-  return (
-    <HudFrame title="Load" tag="Today">
-      <HudBar label="Tasks cleared" value={`${doneToday}/${total}`} pct={total ? (doneToday / total) * 100 : 0} />
-      <HudBar label="Inbox unread" value={String(unread)} pct={Math.min(100, unread * 5)} />
-      <HudBar label="On the calendar" value={`${todayEvents} today`} pct={Math.min(100, todayEvents * 12.5)} />
-    </HudFrame>
-  );
-}
 
 export function NetworkPanel({
   woodhouse,
@@ -197,19 +169,3 @@ export function LogPanel({
   );
 }
 
-export function TerminalPanel({ lines }: { lines: string[] }) {
-  return (
-    <HudFrame title="Terminal" tag="root@alfred">
-      <div className="rounded border border-cyan-400/15 bg-black/60 p-3 font-mono text-xs">
-        <p className="text-cyan-300">
-          <span className="text-cyan-400/60">&gt;_</span> alfred --brief
-        </p>
-        {lines.map((l, i) => (
-          <p key={i} className="text-cyan-100/60 italic mt-1">
-            {l}
-          </p>
-        ))}
-      </div>
-    </HudFrame>
-  );
-}

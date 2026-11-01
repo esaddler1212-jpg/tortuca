@@ -6,7 +6,9 @@ import { applyDayMode, dayMode, DAY_MODE_LABEL, isVantageMode, resolveMode } fro
 import { useFocusChoice } from "./hooks/useFocusChoice";
 import { useVoiceOutput } from "./hooks/useVoiceOutput";
 import { buildDailyBrief, buildVantageBrief } from "./lib/spokenBrief";
-import { buildGoalsSummary } from "./lib/goals2026";
+import { usePlan } from "./hooks/usePlan";
+import { PlanPanel } from "./components/PlanPanel";
+import { allGoals, allTasks, goalProgress, planTasksDoneOn, weekFocus } from "../shared/plan";
 import { VantageBriefingPanel } from "./components/hud/VantageBriefingPanel";
 import { OvernightDeltaBanner } from "./components/OvernightDeltaBanner";
 import { OvercommitmentBanner } from "./components/OvercommitmentBanner";
@@ -38,17 +40,13 @@ import { buildTodayQueue } from "./lib/todayQueue";
 import { buildWeeklyReview, isWeeklyReviewTime } from "./lib/weeklyReview";
 import { buildFitnessStatus } from "./lib/fitness";
 import { assessOvercommitment } from "./lib/overcommitment";
-import { useGoals2026 } from "./hooks/useGoals2026";
-import { Goals2026Panel } from "./components/Goals2026Panel";
 import { HudHeader, type SystemStatus } from "./components/hud/HudHeader";
 import { CoreRing } from "./components/hud/CoreRing";
 import { WeekWeatherPanel } from "./components/hud/WeekWeatherPanel";
 import {
-  LoadPanel,
   LogPanel,
   NetworkPanel,
   RoadmapPanel,
-  TerminalPanel,
   VitalsPanel,
 } from "./components/hud/HudPanels";
 import { InstallAppBanner } from "./components/InstallAppBanner";
@@ -80,7 +78,7 @@ export default function App() {
   const { effectiveMinutes, loading: commuteLoading, error: commuteError } = useCommute(settings);
   const { logs: fitnessLogs, logWorkout, loadRemote: loadFitness } = useFitness(settings);
   const { items: shoppingItems, add: addShopping, togglePantry, remove: removeShopping, loadRemote: loadShopping } = useShoppingList();
-  const { progress: goalsProgress, toggleTrip, toggleMwfs, toggleAiAgents } = useGoals2026();
+  const { plan, toggleTask: togglePlanTask, addTask: addPlanTask, removeTask: removePlanTask, setGoals: setPlanGoals, toggleMwfs } = usePlan();
 
   useUserDataSync(settings, persist, todos, setTodos, loadFitness, loadShopping);
   const push = usePushNotifications(settings.pushNotificationsEnabled);
@@ -122,10 +120,39 @@ export default function App() {
     [settings, tomorrowLeaveBy, now],
   );
 
-  const todayActions = useMemo(
-    () => buildTodayQueue(pending, woodhouse),
-    [pending, woodhouse],
+  const today = dayKey(settings.timezone, now);
+  const planTaskMap = useMemo(() => new Map(allTasks(plan).map((t) => [t.id, t])), [plan]);
+  const planGoalMap = useMemo(() => new Map(allGoals(plan).map((g) => [g.id, g])), [plan]);
+  // Do today = urgent app items, then up to 2 plan tasks for the current focus, then the rest.
+  const todayPlanTasks = useMemo(
+    () => (mode === "school" ? [] : weekFocus(plan, today, mode, 2)),
+    [plan, today, mode],
   );
+  const todayActions = useMemo(() => {
+    const queue = buildTodayQueue(pending, woodhouse);
+    const planItems = todayPlanTasks.map((t) => ({
+      id: `plan-${t.id}`,
+      title: t.title,
+      source: "plan" as const,
+      sourceLabel: `Plan · ${t.area}`,
+      urgent: false,
+      sort: 0.5,
+      planTaskId: t.id,
+    }));
+    return [...queue.filter((a) => a.urgent), ...planItems, ...queue.filter((a) => !a.urgent)];
+  }, [pending, woodhouse, todayPlanTasks]);
+  // "$BAY Season 1: 4/34" lines for the current year's goals (Vantage briefing, weekly review).
+  const goalLines = useMemo(() => {
+    const year = Number(today.slice(0, 4));
+    return allGoals(plan)
+      .filter((g) => g.year === year)
+      .map((g) => {
+        const p = goalProgress(plan, g.id);
+        return p.total ? `${g.title}: ${p.done} of ${p.total} done` : g.title;
+      });
+  }, [plan, today]);
+
+  const planDoneToday = useMemo(() => planTasksDoneOn(plan, today, settings.timezone), [plan, today, settings.timezone]);
 
   const urgentCount = todayActions.filter((a) => a.urgent).length;
 
@@ -169,8 +196,8 @@ export default function App() {
   const eveningMode = isEveningMode(settings, now);
   const showWindDown = bedtime && isWindDownTime(bedtime, now) && !eveningMode;
   const weeklyReview = useMemo(
-    () => buildWeeklyReview(settings, pending, done, allSchedule, woodhouse, shoppingItems, goalsProgress),
-    [settings, pending, done, allSchedule, woodhouse, shoppingItems, goalsProgress],
+    () => buildWeeklyReview(settings, pending, done, allSchedule, woodhouse, shoppingItems, goalLines),
+    [settings, pending, done, allSchedule, woodhouse, shoppingItems, goalLines],
   );
   const showWeeklyReview = isWeeklyReviewTime(settings, now);
 
@@ -183,25 +210,7 @@ export default function App() {
     return nodes.every((n) => n.ok) ? "ok" : "degraded";
   }, [woodhouse, woodhouseError, woodhouseLoading]);
 
-  const terminalLines = useMemo(() => {
-    const next = todayTimeline.find((e) => new Date(e.start).getTime() > Date.now());
-    const lines = [
-      urgentCount
-        ? `${urgentCount} urgent · ${pending.length} open tasks · ${unread} unread`
-        : `No urgent items · ${pending.length} open tasks · ${unread} unread`,
-    ];
-    if (next) {
-      lines.push(
-        `Next: ${next.title} at ${new Date(next.start).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`,
-      );
-    }
-    if (leaveBy) {
-      lines.push(
-        `Leave by ${leaveBy.leaveBy.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} → ${leaveBy.destination}`,
-      );
-    }
-    return lines;
-  }, [todayTimeline, urgentCount, pending.length, unread, leaveBy]);
+
 
   const voiceOut = useVoiceOutput();
   const vantage = useMemo(
@@ -211,11 +220,11 @@ export default function App() {
         tz: settings.timezone,
         now,
         woodhouse,
-        goals: buildGoalsSummary(goalsProgress, settings.timezone),
+        goals: goalLines,
         weather,
         events: allSchedule,
       }),
-    [displayName, settings.timezone, now, woodhouse, goalsProgress, weather, allSchedule],
+    [displayName, settings.timezone, now, woodhouse, goalLines, weather, allSchedule],
   );
   // "Brief me": Alfred reads today's rundown (or the Vantage briefing in that mode).
   const briefMe = () => {
@@ -244,13 +253,6 @@ export default function App() {
   const statusPanels = (
     <>
       <VitalsPanel weather={weather} city={settings.city} fitness={fitnessStatus} />
-      <LoadPanel
-        pending={pending}
-        done={done}
-        unread={unread}
-        todayEvents={todayTimeline.length}
-        timeZone={settings.timezone}
-      />
       <NetworkPanel woodhouse={woodhouse} googleConnected={connected} />
     </>
   );
@@ -259,7 +261,6 @@ export default function App() {
     <>
       <RoadmapPanel woodhouse={woodhouse} />
       <LogPanel timeline={todayTimeline} woodhouse={woodhouse} messages={messages} timeZone={settings.timezone} />
-      <TerminalPanel lines={terminalLines} />
     </>
   );
 
@@ -347,7 +348,28 @@ export default function App() {
           pendingTodos={pending}
           doneTodos={done}
           now={now}
+          planTasks={planTaskMap}
+          planGoals={planGoalMap}
+          onTogglePlanTask={togglePlanTask}
+          planDoneToday={planDoneToday}
         />
+        <PlanPanel
+          key={isVantageMode(mode) ? "plan-year" : "plan-week"}
+          initialTab={isVantageMode(mode) ? "year" : "week"}
+          plan={plan}
+          today={today}
+          mode={mode}
+          timeZone={settings.timezone}
+          now={now}
+          events={allSchedule}
+          onTodayIds={new Set(todayPlanTasks.map((t) => t.id))}
+          onToggleTask={togglePlanTask}
+          onAddTask={addPlanTask}
+          onRemoveTask={removePlanTask}
+          onSetGoals={setPlanGoals}
+          onToggleMwfs={toggleMwfs}
+        />
+
         {/* Phones/tablets: the console's status panels, after today's plan */}
         <div className="xl:hidden grid gap-4 md:grid-cols-2">
           <div className="space-y-4">{statusPanels}</div>
@@ -359,13 +381,6 @@ export default function App() {
         )}
 
         <div className="grid gap-4 lg:grid-cols-2">
-          <Goals2026Panel
-            settings={settings}
-            progress={goalsProgress}
-            onToggleTrip={toggleTrip}
-            onToggleMwfs={toggleMwfs}
-            onToggleAiAgents={toggleAiAgents}
-          />
           <MealPrepPanel
             settings={settings}
             items={shoppingItems}

@@ -57,6 +57,16 @@ export interface SyncedShoppingItem {
   createdAt: string;
 }
 
+/** Plan progress (see shared/plan.ts PlanState); synced across devices. */
+export interface SyncedPlanState {
+  done: Record<string, string>;
+  hidden: string[];
+  customTasks: unknown[];
+  goals: unknown[] | null;
+  mwfsLog: Record<string, Record<string, boolean>>;
+  updatedAt: string;
+}
+
 export interface AlfredUserData {
   settings?: SyncedUserSettings;
   todos?: SyncedTodo[];
@@ -67,5 +77,6 @@ export interface AlfredUserData {
   lastWindDownReminderKey?: string;
   fitnessLogs?: SyncedFitnessLog[];
   shoppingList?: SyncedShoppingItem[];
+  plan?: SyncedPlanState;
   updatedAt: string;
 }
