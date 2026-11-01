@@ -49,20 +49,20 @@ git clone https://github.com/esaddler1212-jpg/tortuca.git && cd tortuca/alfred-j
 
 ### 2. Install OpenJarvis
 
-```bash
-curl -fsSL https://open-jarvis.github.io/OpenJarvis/install.sh | bash -s -- --no-bg-orchestrator
-```
-
-If the installer stops at the **Ollama** step (expected on Catalina), install it manually:
+**On this iMac (Catalina), use the Catalina installer:**
 
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-git clone https://github.com/open-jarvis/OpenJarvis.git ~/.openjarvis/src
-cd ~/.openjarvis/src && uv sync
-mkdir -p ~/.local/bin && ln -sf ~/.openjarvis/src/.venv/bin/jarvis ~/.local/bin/jarvis
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
-cd -   # back to tortuca/alfred-jarvis
+./scripts/install-catalina.sh
 ```
+
+The official installer can't finish on Catalina. Ollama needs a newer macOS, and current
+`pyarrow` only ships builds for macOS 12+. This script installs OpenJarvis pinned to a tested
+version, on Python 3.12, using `requirements-catalina.txt`. Every package there has a prebuilt
+Catalina/Intel build, so nothing compiles. It runs in cloud mode (Claude does the thinking).
+It takes about 5 minutes. When it finishes, open a new Terminal window.
+
+On a newer Mac, the official one-liner works instead:
+`curl -fsSL https://open-jarvis.github.io/OpenJarvis/install.sh | bash -s -- --no-bg-orchestrator`
 
 ### 3. Add your Claude API key
 

@@ -142,26 +142,8 @@ fi
 say "Index knowledge"
 jarvis memory index "$OJ/knowledge" || echo "    (index failed; run 'jarvis memory index ~/.openjarvis/knowledge' later)"
 
-say "Scheduled agents"
-if jarvis scheduler list 2>/dev/null | grep -q "ECS weekly ops"; then
-    echo "    already created"
-else
-    jarvis scheduler create \
-        "ECS weekly ops review. Read woodhouse-today.md, the ECS docs, and your MEMORY notes. List this week's ECS Network deadlines, what is at risk, and the three moves that most advance the \$BAY timeline and the \$100K/month goal. Store the review as a dated memory note." \
-        --type cron --value "0 8 * * 1" \
-        --agent operative \
-        --tools "knowledge_search,knowledge_sql,memory_store,memory_search,think" || true
-    jarvis scheduler create \
-        "Career scan. Find up to 5 open Program Manager roles (education, youth development, nonprofit, or media) within a 35-minute commute of Vallejo, CA that meet the salary floor in USER.md. For each, give the title, org, pay, link, and two lines on how E's experience fits. Store as a dated memory note." \
-        --type cron --value "0 9 * * 3" \
-        --agent operative \
-        --tools "web_search,knowledge_search,memory_store,think" || true
-    jarvis scheduler create \
-        "Funding scan. Find open grants and local sponsors for \$BAY (Bay Area city arts councils, community foundations, credit unions) and for North Star Network (ASES/ASSETS, youth media). List deadline, amount, fit, and link. Store as a dated memory note." \
-        --type cron --value "0 9 1,15 * *" \
-        --agent operative \
-        --tools "web_search,knowledge_search,memory_store,think" || true
-fi
+say "Scheduled agents (Pacific time)"
+"$PY" "$HERE/scripts/create_agents.py" || echo "    (couldn't create agents; run: $PY $HERE/scripts/create_agents.py)"
 
 say "Done"
 cat <<EOF
