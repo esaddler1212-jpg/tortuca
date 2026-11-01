@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { CalendarEvent } from "../types";
 import { LOCAL_EVENTS_KEY, loadJson, saveJson } from "../lib/storage";
 import {
@@ -32,6 +32,8 @@ export function useGoogleIntegration() {
   const [accountEmail, setAccountEmail] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const wasConnected = useRef<boolean | null>(null);
+  const pollTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const refreshStatus = useCallback(async () => {
     setLoading(true);
@@ -39,7 +41,15 @@ export function useGoogleIntegration() {
       const status = await fetchGoogleStatus();
       setConnected(status.connected);
       setAccountEmail(status.email);
-      if (status.connected) setConnectionError(null);
+      if (status.connected) {
+        setConnectionError(null);
+        if (pollTimer.current) clearInterval(pollTimer.current);
+        pollTimer.current = null;
+        // Just connected on this device: reload once so plan, sparks and Hub
+        // pull the data shared with your other devices.
+        if (wasConnected.current === false) window.location.reload();
+      }
+      wasConnected.current = status.connected;
     } catch {
       setConnected(false);
     } finally {
@@ -68,9 +78,12 @@ export function useGoogleIntegration() {
     };
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("focus", onVisible);
+    window.addEventListener("pageshow", onVisible);
     return () => {
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onVisible);
+      window.removeEventListener("pageshow", onVisible);
+      if (pollTimer.current) clearInterval(pollTimer.current);
     };
   }, [refreshStatus]);
 
@@ -79,13 +92,26 @@ export function useGoogleIntegration() {
     // Must run before any await: iPhone only allows the Safari window inside the tap.
     if (isStandaloneApp()) {
       startGoogleConnectFromApp();
+      // Closing the sign-in sheet on iPhone doesn't always wake the app, so
+      // keep checking for a few minutes until the connection shows up.
+      if (pollTimer.current) clearInterval(pollTimer.current);
+      let tries = 0;
+      pollTimer.current = setInterval(() => {
+        tries++;
+        if (tries > 60 && pollTimer.current) {
+          clearInterval(pollTimer.current);
+          pollTimer.current = null;
+          return;
+        }
+        void refreshStatus();
+      }, 3000);
       return;
     }
     const result = await startGoogleConnect();
     if (!result.ok && result.error) {
       setConnectionError(result.error);
     }
-  }, []);
+  }, [refreshStatus]);
 
   const disconnect = useCallback(async () => {
     await disconnectGoogle();

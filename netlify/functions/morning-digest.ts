@@ -1,7 +1,7 @@
 import { localHour } from "../../shared/timezone";
 import type { Config, Handler } from "@netlify/functions";
 import { buildMorningDigest } from "./_briefing";
-import { listAllUserData, saveUserData } from "./_userData";
+import { accountKey, listAllUserData, saveUserData } from "./_userData";
 import { getValidSession, initBlobs, listConnectedSessions, sendGmail } from "./_shared";
 
 export const config: Config = {
@@ -22,8 +22,13 @@ export const handler: Handler = async (event) => {
   let sent = 0;
   const errors: string[] = [];
 
-  for (const { sessionId } of sessions) {
-    const userData = dataBySession.get(sessionId);
+  const seen = new Set<string>();
+  for (const { sessionId, session } of sessions) {
+    // Data is shared per Google account; send one digest per account.
+    const key = session.email ? accountKey(session.email) : sessionId;
+    if (seen.has(key)) continue;
+    const userData = dataBySession.get(key) ?? dataBySession.get(sessionId);
+    if (userData) seen.add(key);
     if (!userData?.settings?.morningDigestEnabled) continue;
 
     const tz = userData.settings.timezone;
@@ -42,7 +47,7 @@ export const handler: Handler = async (event) => {
     try {
       const ok = await sendGmail(validSession, validSession.email, digest.subject, digest.html, digest.text);
       if (ok) {
-        await saveUserData(sessionId, { ...userData, lastDigestDate: today });
+        await saveUserData(dataBySession.has(key) ? key : sessionId, { ...userData, lastDigestDate: today });
         sent++;
       } else {
         errors.push(`${sessionId}: gmail send failed`);

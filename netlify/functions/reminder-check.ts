@@ -1,7 +1,6 @@
 import type { Config, Handler } from "@netlify/functions";
 import { buildLeaveReminder, buildUrgentReminder, buildWindDownReminder } from "./_briefing";
-import { listAllUserData, saveUserData } from "./_userData";
-import { sendPush } from "./_push";
+import { listAllUserData, pushAll, pushTargets, saveUserData } from "./_userData";
 import { initBlobs } from "./_shared";
 import type { SyncedTodo } from "../../shared/userDataTypes";
 import { computeSuggestedBedtime, nextWakeDay } from "../../shared/bedtime";
@@ -26,7 +25,7 @@ export const handler: Handler = async (event) => {
 
   for (const { sessionId, data } of users) {
     const settings = data.settings;
-    if (!settings?.pushNotificationsEnabled || !data.pushSubscription) continue;
+    if (!settings?.pushNotificationsEnabled || !pushTargets(data).length) continue;
 
     const tz = settings.timezone;
     const day = dayKey(tz, now);
@@ -38,7 +37,7 @@ export const handler: Handler = async (event) => {
 
       if (msUntilLeave > 0 && msUntilLeave <= 10 * 60_000 && data.lastLeaveReminderKey !== leaveKey) {
         const msg = buildLeaveReminder(settings, leavePlan.leaveBy, leavePlan.destination);
-        const ok = await sendPush(data.pushSubscription, { ...msg, url: "/" });
+        const ok = await pushAll(data, { ...msg, url: "/" });
         if (ok) {
           await saveUserData(sessionId, { ...data, lastLeaveReminderKey: leaveKey });
           sent++;
@@ -54,7 +53,7 @@ export const handler: Handler = async (event) => {
         data.lastUrgentReminderKey !== urgentKey
       ) {
         const msg = buildUrgentReminder(urgent);
-        const ok = await sendPush(data.pushSubscription, { ...msg, url: "/" });
+        const ok = await pushAll(data, { ...msg, url: "/" });
         if (ok) {
           await saveUserData(sessionId, { ...data, lastUrgentReminderKey: urgentKey });
           sent++;
@@ -79,7 +78,7 @@ export const handler: Handler = async (event) => {
       data.lastWindDownReminderKey !== windDownKey
     ) {
       const msg = buildWindDownReminder(settings, bedtime.windDownStart, bedtime.lightsOut);
-      const ok = await sendPush(data.pushSubscription, { ...msg, url: "/" });
+      const ok = await pushAll(data, { ...msg, url: "/" });
       if (ok) {
         await saveUserData(sessionId, { ...data, lastWindDownReminderKey: windDownKey });
         sent++;

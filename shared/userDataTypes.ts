@@ -73,6 +73,8 @@ export interface AlfredUserData {
   settings?: SyncedUserSettings;
   todos?: SyncedTodo[];
   pushSubscription?: PushSubscriptionPayload | null;
+  /** Every device with notifications on (data is shared per Google account). */
+  pushSubscriptions?: PushSubscriptionPayload[];
   lastDigestDate?: string;
   lastLeaveReminderKey?: string;
   lastUrgentReminderKey?: string;
