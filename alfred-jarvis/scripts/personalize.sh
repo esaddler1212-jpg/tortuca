@@ -72,21 +72,20 @@ else
     echo "    using $PY"
 fi
 
-say "Fish Audio voice"
+say "Voice plugins (free macOS voice + optional Fish Audio)"
 if [ "$PY" != "/usr/bin/python3" ]; then
     SITE="$("$PY" -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"
-    cp "$HERE/plugins/alfred_fish_tts.py" "$SITE/alfred_fish_tts.py"
-    echo "import alfred_fish_tts" > "$SITE/zzz_alfred_fish_tts.pth"
-    if "$PY" -c 'from openjarvis.core.registry import TTSRegistry as R; import sys; sys.exit(0 if R.contains("fish") else 1)'; then
-        echo "    installed (TTS backend \"fish\")"
-    else
-        echo "    install failed; the briefing will fall back to text"
-    fi
+    cp "$HERE/plugins/alfred_macsay_tts.py" "$HERE/plugins/alfred_fish_tts.py" "$SITE/"
+    # One startup hook loads both; named zzz_ so it runs after OpenJarvis's own .pth.
+    rm -f "$SITE/zzz_alfred_fish_tts.pth"
+    printf 'import alfred_macsay_tts\nimport alfred_fish_tts\n' > "$SITE/zzz_alfred_tts.pth"
+    "$PY" - <<'PYEOF'
+from openjarvis.core.registry import TTSRegistry as R
+for key, label in (("macsay", "free macOS voice"), ("fish", "Fish Audio")):
+    print(f"    {label}: {'ready' if R.contains(key) else 'NOT installed'}")
+PYEOF
 else
     echo "    skipped (no OpenJarvis Python found)"
-fi
-if [ -z "${FISH_API_KEY:-}" ]; then
-    echo "    add to ~/.zshrc:  export FISH_API_KEY=\"sk-fish-...\""
 fi
 
 say "Knowledge folders"
@@ -149,8 +148,9 @@ say "Done"
 cat <<EOF
 Next:
   1. In ~/.zshrc: export ANTHROPIC_API_KEY=...  (cloud fallback)
-                 export FISH_API_KEY=...       (Alfred's voice)
-                 export FISH_VOICE_ID=...      (optional: a voice id from fish.audio)
+                 Voice is free by default (macOS "say", voice Daniel). Optional:
+                 export MACSAY_VOICE=...       (any name from: say -v '?')
+                 export FISH_API_KEY=...       (premium voice; then set tts_backend = "fish")
   2. jarvis connect gdrive          (one Google sign-in covers Gmail, Calendar, and Tasks)
   3. jarvis doctor                  (check engines and connectors)
   4. jarvis digest --fresh          (hear your first briefing)

@@ -59,13 +59,14 @@ schedule = "15 6 * * *"              # 6:15 AM daily (iMac must be awake)
 timezone = "America/Los_Angeles"
 persona = "alfred"                   # ~/.openjarvis/prompts/personas/alfred.md
 honorific = "E"
-tts_backend = "fish"                 # Fish Audio via plugins/alfred_fish_tts.py (FISH_API_KEY)
-voice_id = ""                        # empty = FISH_VOICE_ID from ~/.zshrc
+tts_backend = "macsay"               # free, offline macOS voice (plugins/alfred_macsay_tts.py)
+                                     # premium: "fish" + FISH_API_KEY (plugins/alfred_fish_tts.py)
+voice_id = ""                        # empty = MACSAY_VOICE, default "Daniel"
 voice_speed = 1.1
 sections = ["calendar", "messages", "world"]
 
 [speech]
-tts_backend = "fish"                 # same voice for `jarvis chat --voice`
+tts_backend = "macsay"               # same voice for `jarvis chat --voice`
 voice_id = ""
 
 [digest.messages]

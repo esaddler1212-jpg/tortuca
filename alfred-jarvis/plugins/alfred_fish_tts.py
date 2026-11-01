@@ -1,7 +1,7 @@
 """Fish Audio text-to-speech backend for OpenJarvis (Alfred's voice).
 
 Registers the TTS backend key "fish". personalize.sh installs this file into the
-OpenJarvis virtualenv together with a one-line ``zzz_alfred_fish_tts.pth``
+OpenJarvis virtualenv together with a one-line ``zzz_alfred_tts.pth``
 (named so it runs after OpenJarvis's own .pth path entries). Python runs that ``.pth`` at startup, so the backend is registered in every ``jarvis``
 process without editing OpenJarvis's own files, and survives ``git pull``
 updates of OpenJarvis.

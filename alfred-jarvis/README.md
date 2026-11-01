@@ -123,21 +123,25 @@ jarvis                       # chat with Alfred
 
 A free weather key is available at <https://openweathermap.org/api>.
 
-### Alfred's voice (Fish Audio)
+### Alfred's voice
 
-OpenJarvis has no built-in Fish Audio support, so this folder adds it in
-`plugins/alfred_fish_tts.py`. `personalize.sh` installs it into OpenJarvis's Python with a
-one-line startup hook (`zzz_alfred_fish_tts.pth`), so OpenJarvis's own files aren't touched and
-updates won't remove it. Add to `~/.zshrc`:
+**Free by default:** Alfred speaks with macOS's built-in `say` voice (**Daniel**, British).
+No key, no account, works offline on Catalina. It's added by `plugins/alfred_macsay_tts.py`,
+which OpenJarvis doesn't ship.
 
-```bash
-export FISH_API_KEY="sk-fish-..."        # from fish.audio, never commit this
-export FISH_VOICE_ID="..."               # optional: a voice model id from fish.audio
-# export FISH_MODEL="s2.1-pro-free"      # the default
-```
+- Hear the voices: `say -v '?'` lists them; `say -v Daniel "Good morning, E."` previews one.
+- Better voices (free): **System Preferences → Accessibility → Speech → System Voice →
+  Customize…** and download an enhanced voice (e.g. *Daniel (Enhanced)*, *Alex*).
+- Use a different one: add `export MACSAY_VOICE="Alex"` to `~/.zshrc`.
+  Speed: `export MACSAY_RATE=170` (words per minute).
 
-Test it with `jarvis digest --fresh`. If the voice fails (bad key, out of credits), the
-briefing still arrives as text.
+**Premium option (Fish Audio):** `plugins/alfred_fish_tts.py`. Add
+`export FISH_API_KEY="sk-fish-..."` (and optionally `FISH_VOICE_ID`) to `~/.zshrc`, then set
+`tts_backend = "fish"` in both `[digest]` and `[speech]` in `~/.openjarvis/config.toml`.
+
+Both plugins load through one startup hook (`zzz_alfred_tts.pth`) in OpenJarvis's Python, so
+OpenJarvis's own files aren't touched and updates won't remove them. If the voice ever fails,
+the briefing still arrives as text.
 
 ## Things to ask Alfred
 
