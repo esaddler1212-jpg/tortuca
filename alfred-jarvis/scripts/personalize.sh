@@ -56,6 +56,39 @@ else
 fi
 cp "$HERE/prompts/personas/alfred.md" "$OJ/prompts/personas/alfred.md"
 
+say "Python environment"
+# Find the virtualenv that runs jarvis: the official installer uses
+# ~/.openjarvis/.venv, the manual install uses ~/.openjarvis/src/.venv.
+PY=""
+for cand in "$OJ/.venv/bin/python" "$OJ/src/.venv/bin/python"; do
+    if [ -x "$cand" ] && "$cand" -c "import openjarvis" >/dev/null 2>&1; then
+        PY="$cand"; break
+    fi
+done
+if [ -z "$PY" ]; then
+    echo "    couldn't find OpenJarvis's Python; Fish voice and Woodhouse sync will use /usr/bin/python3"
+    PY="/usr/bin/python3"
+else
+    echo "    using $PY"
+fi
+
+say "Fish Audio voice"
+if [ "$PY" != "/usr/bin/python3" ]; then
+    SITE="$("$PY" -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"
+    cp "$HERE/plugins/alfred_fish_tts.py" "$SITE/alfred_fish_tts.py"
+    echo "import alfred_fish_tts" > "$SITE/zzz_alfred_fish_tts.pth"
+    if "$PY" -c 'from openjarvis.core.registry import TTSRegistry as R; import sys; sys.exit(0 if R.contains("fish") else 1)'; then
+        echo "    installed (TTS backend \"fish\")"
+    else
+        echo "    install failed; the briefing will fall back to text"
+    fi
+else
+    echo "    skipped (no OpenJarvis Python found)"
+fi
+if [ -z "${FISH_API_KEY:-}" ]; then
+    echo "    add to ~/.zshrc:  export FISH_API_KEY=\"sk-fish-...\""
+fi
+
 say "Knowledge folders"
 mkdir -p "$OJ/knowledge/ecs" "$OJ/knowledge/career"
 cp "$HERE/scripts/woodhouse_sync.py" "$OJ/woodhouse_sync.py"
@@ -70,8 +103,6 @@ fi
 if [ -n "$ALFRED_URL_VALUE" ]; then
     PLIST="$HOME/Library/LaunchAgents/com.ecs.alfred.woodhouse-sync.plist"
     mkdir -p "$HOME/Library/LaunchAgents"
-    PY="$OJ/.venv/bin/python"
-    [ -x "$PY" ] || PY="/usr/bin/python3"
     {
         cat <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -138,7 +169,9 @@ fi
 say "Done"
 cat <<EOF
 Next:
-  1. export ANTHROPIC_API_KEY=...   (add to ~/.zshrc; this enables the cloud fallback)
+  1. In ~/.zshrc: export ANTHROPIC_API_KEY=...  (cloud fallback)
+                 export FISH_API_KEY=...       (Alfred's voice)
+                 export FISH_VOICE_ID=...      (optional: a voice id from fish.audio)
   2. jarvis connect gdrive          (one Google sign-in covers Gmail, Calendar, and Tasks)
   3. jarvis doctor                  (check engines and connectors)
   4. jarvis digest --fresh          (hear your first briefing)

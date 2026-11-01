@@ -59,9 +59,14 @@ schedule = "15 6 * * *"              # 6:15 AM daily (iMac must be awake)
 timezone = "America/Los_Angeles"
 persona = "alfred"                   # ~/.openjarvis/prompts/personas/alfred.md
 honorific = "E"
-tts_backend = "openai"               # or "cartesia"; needs that provider's key
+tts_backend = "fish"                 # Fish Audio via plugins/alfred_fish_tts.py (FISH_API_KEY)
+voice_id = ""                        # empty = FISH_VOICE_ID from ~/.zshrc
 voice_speed = 1.1
 sections = ["calendar", "messages", "world"]
+
+[speech]
+tts_backend = "fish"                 # same voice for `jarvis chat --voice`
+voice_id = ""
 
 [digest.messages]
 sources = ["gmail", "google_tasks"]

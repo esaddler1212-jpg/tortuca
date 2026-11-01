@@ -103,8 +103,23 @@ jarvis scheduler start       # start the weekly agents
 jarvis                       # chat with Alfred
 ```
 
-A free weather key is available at <https://openweathermap.org/api>. For spoken audio, add an
-OpenAI or Cartesia key (`tts_backend` in `config.toml`).
+A free weather key is available at <https://openweathermap.org/api>.
+
+### Alfred's voice (Fish Audio)
+
+OpenJarvis has no built-in Fish Audio support, so this folder adds it in
+`plugins/alfred_fish_tts.py`. `personalize.sh` installs it into OpenJarvis's Python with a
+one-line startup hook (`zzz_alfred_fish_tts.pth`), so OpenJarvis's own files aren't touched and
+updates won't remove it. Add to `~/.zshrc`:
+
+```bash
+export FISH_API_KEY="sk-fish-..."        # from fish.audio, never commit this
+export FISH_VOICE_ID="..."               # optional: a voice model id from fish.audio
+# export FISH_MODEL="s2.1-pro-free"      # the default
+```
+
+Test it with `jarvis digest --fresh`. If the voice fails (bad key, out of credits), the
+briefing still arrives as text.
 
 ## Things to ask Alfred
 
@@ -124,6 +139,7 @@ OpenAI or Cartesia key (`tts_backend` in `config.toml`).
 | `personas/alfred/MEMORY.md` | same | Standing facts and 2027 dates. Alfred appends to it, and re-running the script won't overwrite it |
 | `prompts/personas/alfred.md` | `~/.openjarvis/prompts/personas/` | Morning briefing voice |
 | `scripts/woodhouse_sync.py` | `~/.openjarvis/` | Pulls the Woodhouse feed into Alfred's memory |
+| `plugins/alfred_fish_tts.py` | OpenJarvis's Python packages folder | Fish Audio voice (TTS backend `fish`) |
 | `scripts/personalize.sh` | not installed | Runs the setup |
 
 **Privacy:** this repo is public, so contact info, salary, and the full business plans stay off
