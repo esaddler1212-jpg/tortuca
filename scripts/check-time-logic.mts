@@ -90,25 +90,33 @@ check("one wind-down reminder per night (15 nights incl. DST night)", windDowns.
 check("weeknight reminders at 8:10 PM (holiday eve moves later)", windDowns.filter((w) => w.endsWith("8:10 PM")).length, 9);
 check("Veterans Day eve reminder at 11:50 PM", windDowns.includes("Tue, Nov 10, 11:50 PM"), true);
 
-// ── workday vs off duty (Family Purpose hidden off hours, events kept)
-check("Fri 6:59 PM is workday", dayMode(TZ, new Date("2026-11-07T02:59:00Z")), "workday");
-check("Fri 7:00 PM is off duty", dayMode(TZ, new Date("2026-11-07T03:00:00Z")), "evening");
-check("Saturday is weekend", dayMode(TZ, new Date("2026-11-07T18:00:00Z")), "weekend");
-check("Veterans Day is a holiday", dayMode(TZ, new Date("2026-11-11T18:00:00Z")), "holiday");
-check("Mon 12:30 AM is off duty (after 7 PM rule)", dayMode(TZ, new Date("2026-11-02T08:30:00Z")), "evening");
+// ── focus modes: school (Family Purpose) → ECS Network → weekend Vantage briefing
+const mode = (iso: string) => dayMode(TZ, new Date(iso));
+check("Mon 5:30 AM: before school focus → network", mode("2026-11-02T13:30:00Z"), "network");
+check("Mon 8:00 AM: school (Family Purpose)", mode("2026-11-02T16:00:00Z"), "school");
+check("Mon 2:17 PM: still school", mode("2026-11-02T22:17:00Z"), "school");
+check("Mon 2:18 PM dismissal: ECS Network", mode("2026-11-02T22:18:00Z"), "network");
+check("Wed 12:45 PM (early release): ECS Network", mode("2026-11-04T20:45:00Z"), "network");
+check("Tue Dec 1 12:30 PM (minimum day): ECS Network", mode("2026-12-01T20:30:00Z"), "network");
+check("Fri 9 PM: ECS Network", mode("2026-11-07T05:00:00Z"), "network");
+check("Saturday: weekend (Vantage)", mode("2026-11-07T18:00:00Z"), "weekend");
+check("Veterans Day: holiday (Vantage)", mode("2026-11-11T18:00:00Z"), "holiday");
 const feed = {
   nodes: [
-    { nodeType: "education", snapshot: { summary: "2 follow-ups", priorityActions: ["Follow up with a student"],
+    { nodeType: "education", snapshot: { summary: "FP", priorityActions: ["Follow up with a student"],
       calendar: [{ kind: "follow_up_due", title: "Follow-up" }, { kind: "group_meeting", title: "BOYS group" }] } },
-    { nodeType: "ops", snapshot: { summary: "Roadmap", priorityActions: ["Lock $BAY legal"], calendar: [] } },
+    { nodeType: "commerce", snapshot: { summary: "Store", priorityActions: ["Approve 2 orders"], calendar: [] } },
+    { nodeType: "ops", snapshot: { summary: "Roadmap", priorityActions: ["Lock $BAY legal"],
+      calendar: [{ kind: "milestone", title: "$BAY legal" }] } },
   ],
-  priorityActions: ["Follow up with a student", "Lock $BAY legal"],
-  calendar: [{ kind: "follow_up_due", title: "Follow-up" }, { kind: "group_meeting", title: "BOYS group" }],
+  priorityActions: [], calendar: [],
 };
-const off = applyDayMode(feed, "weekend")!;
-check("off duty: Family Purpose tasks hidden, other apps kept", off.priorityActions, ["Lock $BAY legal"]);
-check("off duty: Family Purpose calendar events still shown", off.calendar.map((c) => c.title), ["BOYS group"]);
-check("workday: feed unchanged", applyDayMode(feed, "workday") === feed, true);
+const actions = (m: Parameters<typeof applyDayMode>[1]) => applyDayMode(feed as never, m)!.priorityActions;
+const events = (m: Parameters<typeof applyDayMode>[1]) => (applyDayMode(feed as never, m)! as typeof feed).calendar.map((c) => c.title);
+check("school: only Family Purpose tasks", actions("school"), ["Follow up with a student"]);
+check("network: ECS tasks, no Family Purpose", actions("network"), ["Approve 2 orders", "Lock $BAY legal"]);
+check("weekend: big picture only (roadmap)", actions("weekend"), ["Lock $BAY legal"]);
+check("events kept in every mode", events("network"), ["BOYS group", "$BAY legal"]);
 
 // ── same answers regardless of the machine's time zone
 const self = fileURLToPath(import.meta.url);

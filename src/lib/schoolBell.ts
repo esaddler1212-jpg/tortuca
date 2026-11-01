@@ -2,21 +2,10 @@
 
 export type ScheduleId = "grade6" | "grade78" | "wednesday" | "minimum";
 
-export const MINIMUM_DAYS = [
-  "2026-09-01",
-  "2026-10-02",
-  "2026-12-01",
-  "2026-12-18",
-  "2027-02-12",
-  "2027-03-09",
-  "2027-04-02",
-  "2027-05-07",
-  "2027-06-02",
-];
 
-import { NO_SCHOOL_DAYS, isNoSchoolLabel } from "../../shared/schoolCalendar";
+import { MINIMUM_DAYS, NO_SCHOOL_DAYS, isNoSchoolLabel } from "../../shared/schoolCalendar";
 
-export { NO_SCHOOL_DAYS, isNoSchoolLabel };
+export { MINIMUM_DAYS, NO_SCHOOL_DAYS, isNoSchoolLabel };
 
 const SCHEDULES: Record<ScheduleId, { label: string; firstBell: string; firstPeriod: string }> = {
   grade6: {

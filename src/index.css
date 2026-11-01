@@ -3,6 +3,34 @@
 @tailwind utilities;
 
 @layer base {
+  /* Accent palettes. Blue = school hours (default), green = ECS Network
+     afternoons, purple = weekends & school holidays. Set by data-focus on <html>. */
+  :root {
+    --accent-50: 236 254 255; --accent-100: 207 250 254; --accent-200: 165 243 252;
+    --accent-300: 103 232 249; --accent-400: 34 211 238; --accent-500: 6 182 212;
+    --accent-600: 8 145 178; --accent-700: 14 116 144; --accent-800: 21 94 117;
+    --accent-900: 22 78 99; --accent-950: 8 51 68;
+    --panel: 6 18 26; --panel-a: 6 22 32; --panel-b: 2 8 14;
+  }
+  :root[data-focus="network"] {
+    --accent-50: 240 253 244; --accent-100: 220 252 231; --accent-200: 187 247 208;
+    --accent-300: 134 239 172; --accent-400: 74 222 128; --accent-500: 34 197 94;
+    --accent-600: 22 163 74; --accent-700: 21 128 61; --accent-800: 22 101 52;
+    --accent-900: 20 83 45; --accent-950: 5 46 22;
+    --panel: 6 20 10; --panel-a: 6 26 14; --panel-b: 2 10 4;
+  }
+  :root[data-focus="weekend"],
+  :root[data-focus="holiday"] {
+    --accent-50: 250 245 255; --accent-100: 243 232 255; --accent-200: 233 213 255;
+    --accent-300: 216 180 254; --accent-400: 192 132 252; --accent-500: 168 85 247;
+    --accent-600: 147 51 234; --accent-700: 126 34 206; --accent-800: 107 33 168;
+    --accent-900: 88 28 135; --accent-950: 59 7 100;
+    --panel: 16 8 26; --panel-a: 22 10 34; --panel-b: 8 4 14;
+  }
+}
+
+
+@layer base {
   html {
     @apply antialiased;
   }
@@ -11,11 +39,11 @@
     @apply bg-alfred-ink text-alfred-cream font-sans min-h-screen;
     background-color: #000000;
     background-image:
-      linear-gradient(rgba(34, 211, 238, 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(34, 211, 238, 0.04) 1px, transparent 1px),
-      radial-gradient(ellipse 90% 60% at 50% -30%, rgba(6, 182, 212, 0.12), transparent 55%),
-      radial-gradient(ellipse 50% 40% at 100% 80%, rgba(21, 94, 117, 0.15), transparent),
-      radial-gradient(ellipse 40% 30% at 0% 60%, rgba(6, 182, 212, 0.06), transparent);
+      linear-gradient(rgb(var(--accent-400) / 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(var(--accent-400) / 0.04) 1px, transparent 1px),
+      radial-gradient(ellipse 90% 60% at 50% -30%, rgb(var(--accent-500) / 0.12), transparent 55%),
+      radial-gradient(ellipse 50% 40% at 100% 80%, rgb(var(--accent-800) / 0.15), transparent),
+      radial-gradient(ellipse 40% 30% at 0% 60%, rgb(var(--accent-500) / 0.06), transparent);
     background-size: 48px 48px, 48px 48px, auto, auto, auto;
   }
 
@@ -34,8 +62,8 @@
       0deg,
       transparent,
       transparent 2px,
-      rgba(34, 211, 238, 0.02) 2px,
-      rgba(34, 211, 238, 0.02) 4px
+      rgb(var(--accent-400) / 0.02) 2px,
+      rgb(var(--accent-400) / 0.02) 4px
     );
   }
 
@@ -51,8 +79,8 @@
     @apply bg-alfred-panel/90 border border-alfred-border/60 rounded-lg shadow-panel backdrop-blur-md;
     background: linear-gradient(
       135deg,
-      rgba(6, 16, 24, 0.95) 0%,
-      rgba(2, 6, 10, 0.92) 100%
+      rgb(var(--panel) / 0.95) 0%,
+      rgb(var(--panel-b) / 0.92) 100%
     );
   }
 
@@ -65,17 +93,17 @@
   }
 
   .hud-glow-text {
-    text-shadow: 0 0 12px rgba(34, 211, 238, 0.55), 0 0 24px rgba(34, 211, 238, 0.2);
+    text-shadow: 0 0 12px rgb(var(--accent-400) / 0.55), 0 0 24px rgb(var(--accent-400) / 0.2);
   }
 
   .btn-gold {
     @apply inline-flex items-center justify-center gap-2 rounded-md border border-alfred-gold/50 bg-cyan-400/10 px-4 py-2 text-sm font-semibold font-mono uppercase tracking-wider text-alfred-gold transition;
-    box-shadow: 0 0 12px rgba(34, 211, 238, 0.15), inset 0 1px 0 rgba(34, 211, 238, 0.2);
+    box-shadow: 0 0 12px rgb(var(--accent-400) / 0.15), inset 0 1px 0 rgb(var(--accent-400) / 0.2);
   }
 
   .btn-gold:hover {
     @apply bg-cyan-400/20 border-alfred-gold;
-    box-shadow: 0 0 20px rgba(34, 211, 238, 0.35), inset 0 1px 0 rgba(34, 211, 238, 0.3);
+    box-shadow: 0 0 20px rgb(var(--accent-400) / 0.35), inset 0 1px 0 rgb(var(--accent-400) / 0.3);
   }
 
   .btn-ghost {
@@ -92,18 +120,18 @@
 @layer components {
   .hud-frame {
     position: relative;
-    border: 1px solid rgba(34, 211, 238, 0.16);
+    border: 1px solid rgb(var(--accent-400) / 0.16);
     background:
-      linear-gradient(#22d3ee, #22d3ee) top left / 14px 2px no-repeat,
-      linear-gradient(#22d3ee, #22d3ee) top left / 2px 14px no-repeat,
-      linear-gradient(#22d3ee, #22d3ee) top right / 14px 2px no-repeat,
-      linear-gradient(#22d3ee, #22d3ee) top right / 2px 14px no-repeat,
-      linear-gradient(#22d3ee, #22d3ee) bottom left / 14px 2px no-repeat,
-      linear-gradient(#22d3ee, #22d3ee) bottom left / 2px 14px no-repeat,
-      linear-gradient(#22d3ee, #22d3ee) bottom right / 14px 2px no-repeat,
-      linear-gradient(#22d3ee, #22d3ee) bottom right / 2px 14px no-repeat,
-      linear-gradient(160deg, rgba(6, 22, 32, 0.92), rgba(2, 8, 14, 0.92));
-    box-shadow: inset 0 0 24px rgba(34, 211, 238, 0.04);
+      linear-gradient(rgb(var(--accent-400)), rgb(var(--accent-400))) top left / 14px 2px no-repeat,
+      linear-gradient(rgb(var(--accent-400)), rgb(var(--accent-400))) top left / 2px 14px no-repeat,
+      linear-gradient(rgb(var(--accent-400)), rgb(var(--accent-400))) top right / 14px 2px no-repeat,
+      linear-gradient(rgb(var(--accent-400)), rgb(var(--accent-400))) top right / 2px 14px no-repeat,
+      linear-gradient(rgb(var(--accent-400)), rgb(var(--accent-400))) bottom left / 14px 2px no-repeat,
+      linear-gradient(rgb(var(--accent-400)), rgb(var(--accent-400))) bottom left / 2px 14px no-repeat,
+      linear-gradient(rgb(var(--accent-400)), rgb(var(--accent-400))) bottom right / 14px 2px no-repeat,
+      linear-gradient(rgb(var(--accent-400)), rgb(var(--accent-400))) bottom right / 2px 14px no-repeat,
+      linear-gradient(160deg, rgb(var(--panel-a) / 0.92), rgb(var(--panel-b) / 0.92));
+    box-shadow: inset 0 0 24px rgb(var(--accent-400) / 0.04);
   }
 
   .hud-bar {
@@ -112,7 +140,7 @@
 
   .hud-bar > span {
     @apply block h-full rounded-full bg-cyan-400;
-    box-shadow: 0 0 8px rgba(34, 211, 238, 0.6);
+    box-shadow: 0 0 8px rgb(var(--accent-400) / 0.6);
   }
 
   .hud-tile {

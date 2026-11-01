@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useNow } from "./hooks/useNow";
 import { nextWakeDay } from "../shared/bedtime";
 import { zonedDateTime } from "../shared/timezone";
@@ -60,6 +60,13 @@ export default function App() {
   // Workday vs off duty: Family Purpose tasks hide on weekends, holidays and after 7 PM.
   const mode = dayMode(settings.timezone, now);
   const woodhouse = useMemo(() => applyDayMode(rawWoodhouse, mode), [rawWoodhouse, mode]);
+
+  // Theme follows the focus: blue school hours, green ECS Network, purple weekends.
+  useEffect(() => {
+    document.documentElement.dataset.focus = mode;
+    const themeColor = { school: "#22d3ee", network: "#4ade80", weekend: "#c084fc", holiday: "#c084fc" }[mode];
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", themeColor);
+  }, [mode]);
   const { snapshot: stocks, loading: stocksLoading } = useStocks();
   const { effectiveMinutes, loading: commuteLoading, error: commuteError } = useCommute(settings);
   const { logs: fitnessLogs, logWorkout, loadRemote: loadFitness } = useFitness(settings);

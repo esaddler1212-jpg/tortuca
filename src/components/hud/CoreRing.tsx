@@ -5,17 +5,23 @@ interface Props {
 }
 
 const COLOR: Record<Props["status"], string> = {
-  ok: "#22d3ee",
+  ok: "rgb(var(--accent-400))", // follows the focus-mode theme
   degraded: "#fbbf24",
   offline: "#f87171",
 };
 
 /** Large animated core ring at the centre of the operator console. */
 export function CoreRing({ lines, status }: Props) {
-  const c = COLOR[status];
+  const color = COLOR[status];
+  const c = "currentColor";
   const spokes = [0, 60, 120, 180, 240, 300];
   return (
-    <div className="relative mx-auto aspect-square w-full max-w-[420px] [container-type:inline-size]" aria-label={`${lines[0]} ${lines[1]}`} role="img">
+    <div
+      className="relative mx-auto aspect-square w-full max-w-[420px] [container-type:inline-size]"
+      style={{ color }}
+      aria-label={`${lines[0]} ${lines[1]}`}
+      role="img"
+    >
       <svg viewBox="0 0 400 400" className="h-full w-full" fill="none" aria-hidden>
         <defs>
           <radialGradient id="core-glow" cx="50%" cy="50%" r="50%">
@@ -49,7 +55,7 @@ export function CoreRing({ lines, status }: Props) {
         ))}
         <circle cx="200" cy="200" r="118" stroke={c} strokeOpacity="0.4" strokeWidth="1.5" />
         <circle cx="200" cy="200" r="56" stroke={c} strokeOpacity="0.85" strokeWidth="2.5" className="animate-hud-pulse" />
-        <circle cx="200" cy="200" r="48" fill="#02080e" fillOpacity="0.85" />
+        <circle cx="200" cy="200" r="48" fill="#000000" fillOpacity="0.8" />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
         <span className="font-display text-[4cqw] leading-tight tracking-[0.15em]" style={{ color: c, textShadow: `0 0 12px ${c}` }}>

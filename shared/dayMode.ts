@@ -1,43 +1,47 @@
 /**
- * Workday vs off-duty modes.
+ * Focus modes: what Alfred puts in front of E at a given time.
  *
- * Work apps (Family Purpose / education) only matter during the workday:
- * Mon–Fri, not a school holiday, 6 AM–7 PM. Outside that, their tasks and
- * follow-ups are hidden; their calendar events (meetings, group sessions)
- * still show, because a scheduled event is still something to be at.
+ * - school   Weekdays 6 AM until school dismissal: Family Purpose focus.
+ * - network  Weekday afternoons/evenings (and overnight): ECS Network focus
+ *            (Easy Supply, the roadmap, revenue). Shown with the green theme.
+ * - weekend  Saturdays and Sundays: the Vantage briefing, big picture only.
+ * - holiday  School holidays on weekdays: same as weekend.
+ *
+ * Out-of-focus apps keep their scheduled events (meetings, group sessions,
+ * milestones) but hide their tasks, follow-ups and check-ins.
  */
-import { NO_SCHOOL_DAYS } from "./schoolCalendar";
-import { dayKey, isWeekendDay, localHour } from "./timezone";
+import { NO_SCHOOL_DAYS, dismissalTime } from "./schoolCalendar";
+import { dayKey, isWeekendDay, localHour, weekdayOfDay, zonedDateTime } from "./timezone";
 
-export type DayMode = "workday" | "evening" | "weekend" | "holiday";
+export type DayMode = "school" | "network" | "weekend" | "holiday";
 
-/** Workday hours (local, 24h): work items show from 6 AM until 7 PM. */
-export const WORK_DAY_START_HOUR = 6;
-export const WORK_DAY_END_HOUR = 19;
+/** School-hours focus starts at 6 AM. */
+export const SCHOOL_FOCUS_START_HOUR = 6;
 
 export function dayMode(timeZone: string, now = new Date()): DayMode {
   const day = dayKey(timeZone, now);
   if (isWeekendDay(day)) return "weekend";
   if (NO_SCHOOL_DAYS.has(day)) return "holiday";
-  const hour = localHour(timeZone, now);
-  return hour >= WORK_DAY_START_HOUR && hour < WORK_DAY_END_HOUR ? "workday" : "evening";
-}
-
-export function isOffDuty(mode: DayMode): boolean {
-  return mode !== "workday";
+  const dismissal = zonedDateTime(day, dismissalTime(day, weekdayOfDay(day)), timeZone);
+  return localHour(timeZone, now) >= SCHOOL_FOCUS_START_HOUR && now < dismissal ? "school" : "network";
 }
 
 export const DAY_MODE_LABEL: Record<DayMode, string> = {
-  workday: "Workday",
-  evening: "Off duty (after hours)",
-  weekend: "Weekend",
-  holiday: "School holiday",
+  school: "School hours · Family Purpose",
+  network: "ECS Network",
+  weekend: "Weekend · Vantage briefing",
+  holiday: "School holiday · Vantage briefing",
 };
 
-/** Node types whose tasks are work-only. */
-export const WORK_NODE_TYPES = new Set(["education"]);
+/** Which Woodhouse node types are in focus for each mode. */
+export const FOCUS_NODE_TYPES: Record<DayMode, ReadonlySet<string>> = {
+  school: new Set(["education"]),
+  network: new Set(["commerce", "ops", "media", "custom"]),
+  weekend: new Set(["ops"]),
+  holiday: new Set(["ops"]),
+};
 
-/** Calendar kinds that are real scheduled events (kept off duty). Others are tasks. */
+/** Calendar kinds that are real scheduled events (kept in every mode). Others are tasks. */
 const EVENT_KINDS = new Set(["meeting", "group_meeting", "event", "milestone", "deadline"]);
 
 interface CalendarItemLike {
@@ -58,22 +62,22 @@ interface OrchestrationLike<C extends CalendarItemLike, N extends NodeLike<C>> {
 }
 
 /**
- * Hide work-app tasks when off duty. Keeps the node (so it still shows as
- * online) and its scheduled events; drops its priority actions, follow-ups
- * and check-ins. Returns the snapshot unchanged during the workday.
+ * Keep the in-focus apps' tasks; for the rest keep only scheduled events.
+ * Every node stays listed (so the Network panel still shows it online).
  */
 export function applyDayMode<C extends CalendarItemLike, N extends NodeLike<C>, O extends OrchestrationLike<C, N>>(
   snapshot: O | null,
   mode: DayMode,
 ): O | null {
-  if (!snapshot || !isOffDuty(mode)) return snapshot;
+  if (!snapshot) return snapshot;
+  const focus = FOCUS_NODE_TYPES[mode];
   const nodes = snapshot.nodes.map((node) => {
-    if (!WORK_NODE_TYPES.has(node.nodeType) || !node.snapshot) return node;
+    if (focus.has(node.nodeType) || !node.snapshot) return node;
     return {
       ...node,
       snapshot: {
         ...node.snapshot,
-        summary: `Off duty (${DAY_MODE_LABEL[mode].toLowerCase()})`,
+        summary: `Not in focus (${DAY_MODE_LABEL[mode]})`,
         priorityActions: [],
         calendar: (node.snapshot.calendar ?? []).filter((c) => EVENT_KINDS.has(c.kind)),
       },
