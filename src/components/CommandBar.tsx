@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Mic, MicOff, MessageSquare, Send, Terminal } from "lucide-react";
+import { Mic, MicOff, MessageSquare, Send, Terminal, Volume2, VolumeX } from "lucide-react";
+import { useVoiceOutput } from "../hooks/useVoiceOutput";
 import { useSpeechInput } from "../hooks/useSpeechInput";
 import type { UserSettings } from "../types";
 import type { LeaveByPlan } from "../lib/leaveBy";
@@ -31,6 +32,7 @@ export function CommandBar({
 }: Props) {
   const [text, setText] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
+  const voiceOut = useVoiceOutput();
 
   const run = (input: string = text) => {
     if (!input.trim()) return;
@@ -56,6 +58,7 @@ export function CommandBar({
         break;
     }
     setFeedback(cmd.message);
+    voiceOut.speak(cmd.message); // Alfred answers out loud (unless muted)
     setText("");
     setTimeout(() => setFeedback(null), 6000);
   };
@@ -67,11 +70,29 @@ export function CommandBar({
   });
   const shownText = voice.listening ? voice.interim : text;
 
+  const speakerButton = (className: string) =>
+    voiceOut.supported ? (
+      <button
+        type="button"
+        className={className}
+        onClick={() => voiceOut.setMuted(!voiceOut.muted)}
+        aria-label={voiceOut.muted ? "Turn Alfred's voice on" : "Mute Alfred's voice"}
+        aria-pressed={!voiceOut.muted}
+        title={voiceOut.muted ? "Alfred's voice is off" : "Alfred answers out loud"}
+      >
+        {voiceOut.muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+      </button>
+    ) : null;
+
   const micButton = (className: string) => (
     <button
       type="button"
       className={className}
-      onClick={() => (voice.listening ? voice.stop() : voice.start())}
+      onClick={() => {
+        voiceOut.prime(); // unlock speech on iPhone inside this tap
+        if (voice.listening) voice.stop();
+        else voice.start();
+      }}
       aria-label={voice.listening ? "Stop listening" : "Speak a command"}
       aria-pressed={voice.listening}
       title={voice.supported ? "Speak a command" : "Voice input not supported here"}
@@ -87,6 +108,7 @@ export function CommandBar({
           className="flex items-center gap-2 rounded-full border border-cyan-400/40 bg-cyan-950/30 pl-4 pr-1.5 py-1.5 shadow-hud focus-within:border-cyan-300"
           onSubmit={(e) => {
             e.preventDefault();
+            voiceOut.prime();
             run();
           }}
         >
@@ -101,6 +123,7 @@ export function CommandBar({
             value={shownText}
             onChange={(e) => setText(e.target.value)}
           />
+          {speakerButton("rounded-full p-2 text-cyan-300/70 hover:bg-cyan-400/15")}
           {micButton(
             `rounded-full p-2 hover:bg-cyan-400/15 ${voice.listening ? "text-black bg-cyan-300 animate-hud-pulse" : "text-cyan-300"}`,
           )}
@@ -128,6 +151,7 @@ export function CommandBar({
         className="flex gap-2"
         onSubmit={(e) => {
           e.preventDefault();
+          voiceOut.prime();
           run();
         }}
       >
@@ -138,6 +162,7 @@ export function CommandBar({
           value={shownText}
           onChange={(e) => setText(e.target.value)}
         />
+        {speakerButton("btn-ghost px-2")}
         {micButton(`btn-gold px-3 ${voice.listening ? "animate-hud-pulse" : ""}`)}
         <button type="submit" className="btn-gold px-4" aria-label="Run command">
           <Send className="h-4 w-4" />

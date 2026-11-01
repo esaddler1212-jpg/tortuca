@@ -6,6 +6,8 @@
  *            (Easy Supply, the roadmap, revenue). Shown with the green theme.
  * - weekend  Saturdays and Sundays: the Vantage briefing, big picture only.
  * - holiday  School holidays on weekdays: same as weekend.
+ * - vantage  Picked from the header's Focus menu: the Vantage Point briefing
+ *            on demand (same big-picture view, any day).
  *
  * Out-of-focus apps keep their scheduled events (meetings, group sessions,
  * milestones) but hide their tasks, follow-ups and check-ins.
@@ -13,7 +15,27 @@
 import { NO_SCHOOL_DAYS, dismissalTime } from "./schoolCalendar";
 import { dayKey, isWeekendDay, localHour, weekdayOfDay, zonedDateTime } from "./timezone";
 
-export type DayMode = "school" | "network" | "weekend" | "holiday";
+export type DayMode = "school" | "network" | "weekend" | "holiday" | "vantage";
+
+/** What the header's Focus menu offers. "auto" follows the clock. */
+export type FocusChoice = "auto" | "school" | "network" | "vantage";
+
+export const FOCUS_CHOICE_LABEL: Record<FocusChoice, string> = {
+  auto: "Auto (follows the clock)",
+  school: "Family Purpose",
+  network: "ECS Network",
+  vantage: "Vantage Point briefing",
+};
+
+/** The mode in effect: a manual choice wins; "auto" uses the clock's mode. */
+export function resolveMode(auto: DayMode, choice: FocusChoice): DayMode {
+  return choice === "auto" ? auto : choice;
+}
+
+/** Modes that show the big-picture Vantage view (purple). */
+export function isVantageMode(mode: DayMode): boolean {
+  return mode === "weekend" || mode === "holiday" || mode === "vantage";
+}
 
 /** School-hours focus starts at 6 AM. */
 export const SCHOOL_FOCUS_START_HOUR = 6;
@@ -31,6 +53,7 @@ export const DAY_MODE_LABEL: Record<DayMode, string> = {
   network: "ECS Network",
   weekend: "Weekend · Vantage briefing",
   holiday: "School holiday · Vantage briefing",
+  vantage: "Vantage Point briefing",
 };
 
 /** Which Woodhouse node types are in focus for each mode. */
@@ -39,6 +62,7 @@ export const FOCUS_NODE_TYPES: Record<DayMode, ReadonlySet<string>> = {
   network: new Set(["commerce", "ops", "media", "custom"]),
   weekend: new Set(["ops"]),
   holiday: new Set(["ops"]),
+  vantage: new Set(["ops"]),
 };
 
 /** Calendar kinds that are real scheduled events (kept in every mode). Others are tasks. */

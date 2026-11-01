@@ -2,7 +2,12 @@ import { useEffect, useMemo } from "react";
 import { useNow } from "./hooks/useNow";
 import { nextWakeDay } from "../shared/bedtime";
 import { dayKey, weekdayOfDay, zonedDateTime } from "../shared/timezone";
-import { applyDayMode, dayMode, DAY_MODE_LABEL } from "../shared/dayMode";
+import { applyDayMode, dayMode, DAY_MODE_LABEL, isVantageMode, resolveMode } from "../shared/dayMode";
+import { useFocusChoice } from "./hooks/useFocusChoice";
+import { useVoiceOutput } from "./hooks/useVoiceOutput";
+import { buildDailyBrief, buildVantageBrief } from "./lib/spokenBrief";
+import { buildGoalsSummary } from "./lib/goals2026";
+import { VantageBriefingPanel } from "./components/hud/VantageBriefingPanel";
 import { OvernightDeltaBanner } from "./components/OvernightDeltaBanner";
 import { OvercommitmentBanner } from "./components/OvercommitmentBanner";
 import { MorningRitualModal } from "./components/MorningRitualModal";
@@ -59,13 +64,16 @@ export default function App() {
   const { messages, unread } = useEmails(connected);
   const { snapshot: rawWoodhouse, loading: woodhouseLoading, error: woodhouseError } = useWoodhouse();
   // Workday vs off duty: Family Purpose tasks hide on weekends, holidays and after 7 PM.
-  const mode = dayMode(settings.timezone, now);
+  // Clock picks the mode; the header's Focus menu can override it until the next switch.
+  const autoMode = dayMode(settings.timezone, now);
+  const focus = useFocusChoice(autoMode);
+  const mode = resolveMode(autoMode, focus.choice);
   const woodhouse = useMemo(() => applyDayMode(rawWoodhouse, mode), [rawWoodhouse, mode]);
 
   // Theme follows the focus: blue school hours, green ECS Network, purple weekends.
   useEffect(() => {
     document.documentElement.dataset.focus = mode;
-    const themeColor = { school: "#22d3ee", network: "#4ade80", weekend: "#c084fc", holiday: "#c084fc" }[mode];
+    const themeColor = { school: "#22d3ee", network: "#4ade80", weekend: "#c084fc", holiday: "#c084fc", vantage: "#c084fc" }[mode];
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", themeColor);
   }, [mode]);
   const { snapshot: stocks, loading: stocksLoading } = useStocks();
@@ -195,6 +203,38 @@ export default function App() {
     return lines;
   }, [todayTimeline, urgentCount, pending.length, unread, leaveBy]);
 
+  const voiceOut = useVoiceOutput();
+  const vantage = useMemo(
+    () =>
+      buildVantageBrief({
+        name: displayName,
+        tz: settings.timezone,
+        now,
+        woodhouse,
+        goals: buildGoalsSummary(goalsProgress, settings.timezone),
+        weather,
+        events: allSchedule,
+      }),
+    [displayName, settings.timezone, now, woodhouse, goalsProgress, weather, allSchedule],
+  );
+  // "Brief me": Alfred reads today's rundown (or the Vantage briefing in that mode).
+  const briefMe = () => {
+    const text = isVantageMode(mode)
+      ? vantage.spoken
+      : buildDailyBrief({
+          name: displayName,
+          tz: settings.timezone,
+          now,
+          mode,
+          city: settings.city,
+          weather,
+          leaveBy,
+          actions: todayActions,
+          events: allSchedule,
+        });
+    voiceOut.speak(text, { force: true });
+  };
+
   // Sunday: plan the week (week-ahead weather under the greeting).
   const isSunday = weekdayOfDay(dayKey(settings.timezone, now)) === "Sun";
 
@@ -232,6 +272,8 @@ export default function App() {
         status={systemStatus}
         alerts={urgentCount}
         operator={displayName ? displayName.slice(0, 1).toUpperCase() + "." : "E."}
+        focusChoice={focus.choice}
+        onFocusChoice={focus.choose}
       />
 
       <main className="mx-auto max-w-[1400px] px-4 py-6 space-y-4">
@@ -247,8 +289,12 @@ export default function App() {
           eveningMode={eveningMode}
           displayName={displayName}
           modeLabel={DAY_MODE_LABEL[mode]}
+          onBriefMe={voiceOut.supported ? briefMe : undefined}
+          briefSpeaking={voiceOut.speaking}
+          onStopBrief={voiceOut.stop}
           afterGreeting={
             <>
+              {isVantageMode(mode) && <VantageBriefingPanel lines={vantage.lines} spoken={vantage.spoken} />}
               {isSunday && weather?.week && <WeekWeatherPanel week={weather.week} city={settings.city} />}
               {showWeeklyReview && <WeeklyReview review={weeklyReview} />}
               <InstallAppBanner />

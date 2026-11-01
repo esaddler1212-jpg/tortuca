@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Bell, Settings } from "lucide-react";
+import { Bell, ChevronDown, Settings } from "lucide-react";
+import { FOCUS_CHOICE_LABEL, type FocusChoice } from "../../../shared/dayMode";
 import { HudRing } from "../HudRing";
 import { openSettings } from "../../lib/settingsEvents";
 
@@ -35,9 +36,11 @@ interface Props {
   status: SystemStatus;
   alerts: number;
   operator: string;
+  focusChoice: FocusChoice;
+  onFocusChoice: (c: FocusChoice) => void;
 }
 
-export function HudHeader({ timeZone, status, alerts, operator }: Props) {
+export function HudHeader({ timeZone, status, alerts, operator, focusChoice, onFocusChoice }: Props) {
   const time = useClock(timeZone);
   const s = STATUS_TEXT[status];
   return (
@@ -69,6 +72,23 @@ export function HudHeader({ timeZone, status, alerts, operator }: Props) {
 
         <div className="ml-auto flex items-center gap-2">
           <span className="md:hidden font-mono text-xs text-cyan-100 tabular-nums">{time.slice(0, 5)}</span>
+          {/* Focus menu: Auto, Family Purpose, ECS Network, or the Vantage Point briefing on demand */}
+          <label className="relative flex items-center">
+            <span className="sr-only">Focus</span>
+            <select
+              className="appearance-none max-w-[7.5rem] sm:max-w-none truncate rounded-full border border-cyan-400/30 bg-cyan-950/40 py-1.5 pl-3 pr-7 font-mono text-[11px] uppercase tracking-wider text-cyan-200 focus:outline-none focus:border-cyan-300"
+              value={focusChoice}
+              onChange={(e) => onFocusChoice(e.target.value as FocusChoice)}
+              aria-label="Focus"
+            >
+              {(Object.keys(FOCUS_CHOICE_LABEL) as FocusChoice[]).map((c) => (
+                <option key={c} value={c}>
+                  {c === "auto" ? "Focus: Auto" : FOCUS_CHOICE_LABEL[c]}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2 h-3.5 w-3.5 text-cyan-300/70" aria-hidden />
+          </label>
           <span className="relative p-2 text-cyan-300/80" aria-label={`${alerts} alerts`} title={`${alerts} urgent`}>
             <Bell className="h-5 w-5" />
             {alerts > 0 && (
