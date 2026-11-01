@@ -50,8 +50,8 @@ export const YEAR_GOALS: YearGoal[] = [
     detail: "Everything the 2027–28 pilot needs signed before spring." },
   { id: "g26-alfred", year: 2026, area: "Personal", title: "AI Agents: Alfred live on iMac and iPhone",
     detail: "Alfred runs the day across both devices.", complete: true },
-  { id: "g26-mwfs", year: 2026, area: "Personal", title: "MWFS: Music · Meditate · Master, 4 days a week",
-    detail: "Mon · Wed · Fri · Sat." },
+  { id: "g26-spark", year: 2026, area: "Personal", title: "Daily creative spark: one mindset, one small make",
+    detail: "A rotating focus and prompt each day: music, story, design, community, reflection." },
 
   // ── 2027 ──────────────────────────────────────────────────────────────
   { id: "g27-bay", year: 2027, area: "Tortuga", title: "Release $BAY Season 1 (Jun 12 – Jul 31)",
@@ -64,8 +64,8 @@ export const YEAR_GOALS: YearGoal[] = [
     detail: "Merch revenue toward the monthly goal ladder." },
   { id: "g27-2easy", year: 2027, area: "2EASY", title: "Trilogy Deluxe + Sample Sales",
     detail: "Deluxe release and documentary (Q1), Sample Sales in Q2 and Q3." },
-  { id: "g27-mwfs", year: 2027, area: "Personal", title: "MWFS: Music · Meditate · Master, 4 days a week",
-    detail: "Mon · Wed · Fri · Sat, plus gym Tue/Thu/Sun." },
+  { id: "g27-spark", year: 2027, area: "Personal", title: "Daily creative spark: 5 days a week, every week",
+    detail: "Keep the habit going all year, plus gym Tue/Thu/Sun." },
 ];
 
 const T = (

@@ -3,20 +3,15 @@ import { Check, Flag, Pencil, Plus, Target, Trash2, X } from "lucide-react";
 import type { CalendarEvent } from "../types";
 import type { Area, PlanTask, YearGoal } from "../../shared/planData";
 import {
-  MWFS_HABITS,
   allGoals,
   daysLeftInYear,
   goalProgress,
   isDone,
   monthKey,
   monthTasks,
-  mwfsHistory,
-  mwfsStreak,
-  mwfsWeek,
   nudges,
-  todayIsMwfsDay,
+  sparkHistory,
   weekFocus,
-  type MwfsHabit,
   type PlanState,
 } from "../../shared/plan";
 import { AI_TAG_LABEL, promptForEvent, promptForTask } from "../lib/promptGenerator";
@@ -25,7 +20,6 @@ import { PromptButton } from "./PromptButton";
 
 type Tab = "week" | "month" | "year";
 
-const MWFS_LABEL: Record<MwfsHabit, string> = { music: "Music", meditate: "Meditate", master: "Master" };
 const AREAS: Area[] = ["Tortuga", "North Star", "Easy Supply", "2EASY", "ECS", "Personal"];
 
 interface Props {
@@ -41,7 +35,6 @@ interface Props {
   onAddTask: (t: PlanTask) => void;
   onRemoveTask: (id: string) => void;
   onSetGoals: (g: YearGoal[]) => void;
-  onToggleMwfs: (day: string, h: MwfsHabit) => void;
   /** Start on this tab (e.g. "year" in the Vantage view). */
   initialTab?: Tab;
 }
@@ -157,10 +150,7 @@ export function PlanPanel(props: Props) {
 function WeekTab(props: Props & { renderTask: (t: PlanTask) => ReactElement }) {
   const { plan, today, mode, timeZone, now, renderTask } = props;
   const focus = weekFocus(plan, today, mode === "school" ? "network" : mode, 7).filter((t) => !props.onTodayIds.has(t.id)).slice(0, 5);
-  const mw = mwfsWeek(plan, today);
-  const streak = mwfsStreak(plan, today);
   const events = upcomingEvents(props.events, now, 7).slice(0, 4);
-  const isMwfsToday = todayIsMwfsDay(today);
   return (
     <div className="space-y-5">
       <div>
@@ -169,42 +159,6 @@ function WeekTab(props: Props & { renderTask: (t: PlanTask) => ReactElement }) {
           {focus.map(renderTask)}
           {!focus.length && <li className="text-sm text-alfred-mist">Nothing else due. You're ahead.</li>}
         </ul>
-      </div>
-
-      <div>
-        <div className="flex items-baseline justify-between mb-2">
-          <p className="hud-label">MWFS · Music · Meditate · Master</p>
-          <span className="font-mono text-xs text-alfred-mist">
-            {mw.done}/{mw.possible} this week{streak ? ` · ${streak}-day streak` : ""}
-          </span>
-        </div>
-        <div className="grid grid-cols-4 gap-2">
-          {mw.days.map((d) => (
-            <div key={d.day} className={`hud-tile text-center ${d.day === today ? "border-alfred-gold/50" : ""}`}>
-              <p className="font-mono text-[10px] uppercase text-alfred-mist">{d.label}</p>
-              <p className="font-mono text-sm">{d.future ? "–" : `${d.done}/3`}</p>
-            </div>
-          ))}
-        </div>
-        {isMwfsToday && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {MWFS_HABITS.map((h) => {
-              const done = Boolean(plan.mwfsLog[today]?.[h]);
-              return (
-                <button
-                  key={h}
-                  type="button"
-                  className={`rounded-md border px-3 py-1.5 text-xs font-mono uppercase tracking-wider ${done ? "border-alfred-gold bg-alfred-gold/15 text-alfred-gold" : "border-alfred-border/60 text-alfred-mist"}`}
-                  onClick={() => props.onToggleMwfs(today, h)}
-                  aria-pressed={done}
-                >
-                  {done ? "✓ " : ""}
-                  {MWFS_LABEL[h]}
-                </button>
-              );
-            })}
-          </div>
-        )}
       </div>
 
       {events.length > 0 && (
@@ -319,7 +273,7 @@ function YearTab({
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<YearGoal[]>(goals);
-  const history = mwfsHistory(plan, today, 8);
+  const history = sparkHistory(plan, today, 8);
   const shown = (editing ? draft : goals).filter((g) => g.year === year || g.year === year + 1);
 
   const GoalList = ({ y }: { y: number }) => (
@@ -328,7 +282,7 @@ function YearTab({
         .filter((g) => g.year === y)
         .map((g) => {
           const p = goalProgress(plan, g.id);
-          const isMwfs = /mwfs/i.test(g.title);
+          const isSpark = /spark/i.test(g.id);
           return (
             <li key={g.id}>
               {editing ? (
@@ -358,7 +312,7 @@ function YearTab({
                     <span className="font-mono text-xs text-alfred-mist shrink-0">
                       {g.complete
                         ? "✓ Done"
-                        : isMwfs && y === year
+                        : isSpark && y === year
                           ? `${history.reduce((n, w) => n + w.done, 0)}/${history.reduce((n, w) => n + w.possible, 0)} (8 wks)`
                           : p.total
                             ? `${p.done}/${p.total}`
@@ -366,14 +320,14 @@ function YearTab({
                     </span>
                   </div>
                   {g.detail && <p className="text-xs text-alfred-mist mb-1">{g.detail}</p>}
-                  {isMwfs && y === year ? (
-                    <div className="flex items-end gap-1 h-8 mt-1" aria-label="MWFS last 8 weeks">
+                  {isSpark && y === year ? (
+                    <div className="flex items-end gap-1 h-8 mt-1" aria-label="Creative sparks, last 8 weeks">
                       {history.map((w) => (
                         <span
                           key={w.weekOf}
                           className="flex-1 rounded-sm bg-alfred-gold/70"
                           style={{ height: `${Math.max(8, (w.done / w.possible) * 100)}%`, opacity: w.done ? 1 : 0.25 }}
-                          title={`Week of ${w.weekOf}: ${w.done}/${w.possible}`}
+                          title={`Week of ${w.weekOf}: ${w.done}/${w.possible} sparks`}
                         />
                       ))}
                     </div>

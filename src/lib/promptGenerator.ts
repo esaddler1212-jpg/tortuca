@@ -127,3 +127,16 @@ export const AI_TAG_LABEL: Record<AiTag, { short: string; long: string }> = {
   assist: { short: "🤝 Claude helps", long: "Claude preps you; you do the real-world part" },
   you: { short: "🙋 You", long: "Hands-on; Claude can make you a checklist" },
 };
+
+/** Prompt to riff on today's creative spark with Claude. */
+export function promptForSpark(spark: { theme: string; mindset: string; prompt: string }, themeLabel: string): string {
+  return [
+    ABOUT_E,
+    "",
+    `Today's creative spark (${themeLabel}).`,
+    `Mindset: ${spark.mindset}`,
+    `Prompt: ${spark.prompt}`,
+    "",
+    "Be my creative partner for 10 minutes. Give me three quick takes on this prompt in different directions (one safe, one weird, one personal), then ask me one question that pushes my favorite further. Keep it short and playful; I'll do the making.",
+  ].join("\n");
+}

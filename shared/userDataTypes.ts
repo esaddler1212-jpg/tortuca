@@ -63,7 +63,7 @@ export interface SyncedPlanState {
   hidden: string[];
   customTasks: unknown[];
   goals: unknown[] | null;
-  mwfsLog: Record<string, Record<string, boolean>>;
+  sparkLog: Record<string, { done?: string; shuffle?: number; note?: string }>;
   updatedAt: string;
 }
 

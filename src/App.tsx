@@ -7,8 +7,9 @@ import { useFocusChoice } from "./hooks/useFocusChoice";
 import { useVoiceOutput } from "./hooks/useVoiceOutput";
 import { buildDailyBrief, buildVantageBrief } from "./lib/spokenBrief";
 import { usePlan } from "./hooks/usePlan";
+import { SparkCard } from "./components/SparkCard";
 import { PlanPanel } from "./components/PlanPanel";
-import { allGoals, allTasks, goalProgress, planTasksDoneOn, weekFocus } from "../shared/plan";
+import { allGoals, allTasks, goalProgress, planTasksDoneOn, todaySpark, weekFocus } from "../shared/plan";
 import { VantageBriefingPanel } from "./components/hud/VantageBriefingPanel";
 import { OvernightDeltaBanner } from "./components/OvernightDeltaBanner";
 import { OvercommitmentBanner } from "./components/OvercommitmentBanner";
@@ -78,7 +79,7 @@ export default function App() {
   const { effectiveMinutes, loading: commuteLoading, error: commuteError } = useCommute(settings);
   const { logs: fitnessLogs, logWorkout, loadRemote: loadFitness } = useFitness(settings);
   const { items: shoppingItems, add: addShopping, togglePantry, remove: removeShopping, loadRemote: loadShopping } = useShoppingList();
-  const { plan, toggleTask: togglePlanTask, addTask: addPlanTask, removeTask: removePlanTask, setGoals: setPlanGoals, toggleMwfs } = usePlan();
+  const { plan, toggleTask: togglePlanTask, addTask: addPlanTask, removeTask: removePlanTask, setGoals: setPlanGoals, toggleSpark, shuffleSpark, noteSpark } = usePlan();
 
   useUserDataSync(settings, persist, todos, setTodos, loadFitness, loadShopping);
   const push = usePushNotifications(settings.pushNotificationsEnabled);
@@ -223,8 +224,9 @@ export default function App() {
         goals: goalLines,
         weather,
         events: allSchedule,
+        spark: todaySpark(plan, today),
       }),
-    [displayName, settings.timezone, now, woodhouse, goalLines, weather, allSchedule],
+    [displayName, settings.timezone, now, woodhouse, goalLines, weather, allSchedule, plan, today],
   );
   // "Brief me": Alfred reads today's rundown (or the Vantage briefing in that mode).
   const briefMe = () => {
@@ -240,6 +242,7 @@ export default function App() {
           leaveBy,
           actions: todayActions,
           events: allSchedule,
+          spark: todaySpark(plan, today),
         });
     voiceOut.speak(text, { force: true });
   };
@@ -295,6 +298,7 @@ export default function App() {
           onStopBrief={voiceOut.stop}
           afterGreeting={
             <>
+              <SparkCard plan={plan} today={today} onToggle={toggleSpark} onShuffle={shuffleSpark} onNote={noteSpark} />
               {isVantageMode(mode) && <VantageBriefingPanel lines={vantage.lines} spoken={vantage.spoken} />}
               {isSunday && weather?.week && <WeekWeatherPanel week={weather.week} city={settings.city} />}
               {showWeeklyReview && <WeeklyReview review={weeklyReview} />}
@@ -367,7 +371,6 @@ export default function App() {
           onAddTask={addPlanTask}
           onRemoveTask={removePlanTask}
           onSetGoals={setPlanGoals}
-          onToggleMwfs={toggleMwfs}
         />
 
         {/* Phones/tablets: the console's status panels, after today's plan */}
