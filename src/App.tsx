@@ -299,6 +299,8 @@ export default function App() {
           onAddTodo={add}
           onLogWorkout={logWorkout}
           pendingTodos={pending}
+          doneTodos={done}
+          now={now}
         />
         {/* Phones/tablets: the console's status panels, after today's plan */}
         <div className="xl:hidden grid gap-4 md:grid-cols-2">

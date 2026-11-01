@@ -1,5 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { localHour } from "../../shared/timezone";
+import { dayKey, localHour } from "../../shared/timezone";
+import { useDailyChecks } from "../hooks/useDailyChecks";
 import { format, parseISO } from "date-fns";
 import type { CalendarEvent } from "../types";
 import type { EmailMessage } from "../types";
@@ -67,6 +68,10 @@ interface Props {
   onAddTodo: (title: string) => void;
   onLogWorkout: (type: WorkoutType) => void;
   pendingTodos: TodoItem[];
+  /** Completed to-dos (today's show crossed off with undo). */
+  doneTodos?: TodoItem[];
+  /** Shared clock (refreshes the daily list at midnight). */
+  now?: Date;
 }
 
 export function TodayCommandCenter({
@@ -99,6 +104,8 @@ export function TodayCommandCenter({
   onAddTodo,
   onLogWorkout,
   pendingTodos,
+  doneTodos = [],
+  now = new Date(),
 }: Props) {
   const greeting = (() => {
     const h = localHour(settings.timezone);
@@ -112,6 +119,18 @@ export function TodayCommandCenter({
     .slice(0, 3);
 
   const dailyQuote = useMemo(() => getDailyQuote(settings.timezone), [settings.timezone]);
+
+  // Do today: every item can be crossed off; done items move to "Done today" with undo.
+  const daily = useDailyChecks(settings.timezone, now);
+  const today = dayKey(settings.timezone, now);
+  const openActions = actions.filter((a) => a.todoId || !daily.checked.has(a.id));
+  const doneApp = actions.filter((a) => !a.todoId && daily.checked.has(a.id));
+  const doneTodosToday = doneTodos.filter(
+    (t) => t.completedAt && dayKey(settings.timezone, new Date(t.completedAt)) === today,
+  );
+  const doneCount = doneApp.length + doneTodosToday.length;
+  const completeAction = (a: (typeof actions)[number]) =>
+    a.todoId ? onToggleTodo(a.todoId) : daily.toggle(a.id);
 
   return (
     <div className="space-y-4">
@@ -255,28 +274,33 @@ export function TodayCommandCenter({
         {/* Actions + timeline — main column */}
         <div className="lg:col-span-7 space-y-4">
           <section className="panel p-5">
-            <h3 className="font-display text-lg text-alfred-gold mb-3">Do today</h3>
-            <ul className="space-y-2 max-h-64 overflow-y-auto">
-              {actions.length === 0 && (
-                <li className="text-sm text-alfred-mist">All clear — nothing queued.</li>
+            <h3 className="font-display text-lg text-alfred-gold mb-3 flex items-baseline justify-between gap-2">
+              Do today
+              {doneCount > 0 && (
+                <span className="font-mono text-xs text-alfred-mist">
+                  {doneCount}/{doneCount + openActions.length} done
+                </span>
               )}
-              {actions.map((a) => (
+            </h3>
+            <ul className="space-y-2 max-h-80 overflow-y-auto">
+              {openActions.length === 0 && (
+                <li className="text-sm text-alfred-mist">
+                  {doneCount ? "All done for today. Nice work." : "All clear. Nothing queued."}
+                </li>
+              )}
+              {openActions.map((a) => (
                 <li
                   key={a.id}
                   className={`flex items-start gap-3 rounded-lg border px-3 py-2 text-sm ${
                     a.urgent ? "border-alfred-gold/40 bg-alfred-gold/5" : "border-alfred-border/60"
                   }`}
                 >
-                  {a.todoId ? (
-                    <button
-                      type="button"
-                      className="mt-0.5 h-5 w-5 shrink-0 rounded border border-alfred-border hover:border-alfred-gold"
-                      onClick={() => onToggleTodo(a.todoId!)}
-                      aria-label="Complete task"
-                    />
-                  ) : (
-                    <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-alfred-gold" />
-                  )}
+                  <button
+                    type="button"
+                    className="mt-0.5 h-6 w-6 shrink-0 rounded border border-alfred-border hover:border-alfred-gold hover:bg-alfred-gold/10"
+                    onClick={() => completeAction(a)}
+                    aria-label={`Cross off: ${a.title}`}
+                  />
                   <div className="flex-1 min-w-0">
                     <p>{a.title}</p>
                     <p className="text-xs text-alfred-mist capitalize">{a.sourceLabel}</p>
@@ -284,6 +308,33 @@ export function TodayCommandCenter({
                 </li>
               ))}
             </ul>
+            {doneCount > 0 && (
+              <div className="mt-3">
+                <p className="hud-label mb-2">Done today</p>
+                <ul className="space-y-1.5">
+                  {[
+                    ...doneTodosToday.map((t) => ({ id: `todo-${t.id}`, title: t.title, source: "To-do", undo: () => onToggleTodo(t.id) })),
+                    ...doneApp.map((a) => ({ id: a.id, title: a.title, source: a.sourceLabel, undo: () => daily.toggle(a.id) })),
+                  ].map((d) => (
+                    <li key={d.id} className="flex items-start gap-3 rounded-lg border border-alfred-border/30 px-3 py-1.5 text-sm opacity-70">
+                      <button
+                        type="button"
+                        className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded border border-alfred-gold/60 bg-alfred-gold/20 text-alfred-gold"
+                        onClick={d.undo}
+                        aria-label={`Undo: ${d.title}`}
+                        title="Tap to undo"
+                      >
+                        <Check className="h-4 w-4" />
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <p className="line-through decoration-alfred-gold/70">{d.title}</p>
+                        <p className="text-xs text-alfred-mist capitalize">{d.source}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <QuickAdd onAdd={onAddTodo} />
           </section>
 
