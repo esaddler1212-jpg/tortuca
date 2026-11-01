@@ -121,6 +121,19 @@ Each milestone has a `start` date, an optional `end` date (both `YYYY-MM-DD`, in
 Active and upcoming milestones become `priorityActions`. A milestone that starts or ends today
 becomes a `calendar` item, with `kind` set to `milestone` or `deadline`.
 
+### Revenue goal
+
+The roadmap node also tracks **month-to-date revenue against a monthly goal**. It adds up every
+numeric `revenue` metric reported by nodes with real data (demo data is ignored), so any app that
+reports `{ "key": "revenue", "value": <number> }` counts toward the total. Today that's Easy Supply Co.
+
+- `WOODHOUSE_REVENUE_GOAL` sets this month's goal (default `1000`). Start small.
+- When the goal is hit, Alfred suggests the next step on the ladder:
+  $1K → $2.5K → $5K → $10K → $25K → $50K → **$100K/month**.
+- When revenue falls behind pace (under 80% of where it should be for the day of the month),
+  a priority action flags it.
+- With no live revenue data, the node shows the goal and "no revenue data yet" instead of guessing.
+
 ## Consumers
 
 Anything that reads `GET /api/woodhouse` is a consumer. There are two today:

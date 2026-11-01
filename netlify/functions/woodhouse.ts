@@ -1,6 +1,7 @@
 import type { Handler } from "@netlify/functions";
 import { initBlobs } from "./_shared";
 import { syncRegistryEntry } from "./_woodhouse-sync";
+import { applyRevenueGoal, revenueGoalFromEnv, totalLiveRevenue } from "./_ecs-roadmap";
 import {
   demoRegistry,
   parseRegistryFromEnv,
@@ -52,6 +53,19 @@ export const handler: Handler = async (event) => {
       };
     }),
   );
+
+  // Revenue vs. goal is cross-node, so it's added after every node has synced.
+  const roadmap = results.find((r) => r.registryId === "ecs-roadmap" && r.snapshot);
+  if (roadmap?.snapshot) {
+    const tz = process.env.WOODHOUSE_TIMEZONE?.trim() || "America/Los_Angeles";
+    roadmap.snapshot = applyRevenueGoal(
+      roadmap.snapshot,
+      totalLiveRevenue(results),
+      revenueGoalFromEnv(),
+      new Date(),
+      tz,
+    );
+  }
 
   const priorityActions = [
     ...new Set(

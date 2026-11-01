@@ -82,7 +82,23 @@ Download these from Google Drive as **PDF** (OpenJarvis can't read `.docx`):
 | Tortuga Productions 2027 Business Plan | (optional) job descriptions you like |
 | North Star Network Business Plan | |
 
-### 5. Personalize
+### 5. Find your Alfred URL
+
+Alfred (the web app at the root of this repo) runs on Netlify. To find its address:
+
+1. Sign in at <https://app.netlify.com> and open **Sites** (or **Projects**).
+2. Find the site connected to `esaddler1212-jpg/tortuca` whose base directory is the repo root.
+   Family Purpose (`family-purpose-checkins`) and BOYS (`boys-with-purpose`) are separate sites.
+3. The URL appears under the site name, e.g. `https://something.netlify.app`. Open
+   `<that URL>/api/woodhouse` in a browser. If you see JSON starting with `"protocol":"woodhouse/v3"`,
+   that's the right one.
+
+**Not there?** Alfred isn't deployed yet. Choose **Add new site → Import an existing project →
+GitHub → tortuca**, leave the base directory empty (build settings come from `netlify.toml`),
+and deploy. Then add the environment variables from `.env.example` (Google sign-in, and
+`WOODHOUSE_REVENUE_GOAL`) under **Site configuration → Environment variables**.
+
+### 6. Personalize
 
 ```bash
 ALFRED_URL=https://YOUR-ALFRED-SITE.netlify.app ./scripts/personalize.sh
@@ -92,7 +108,7 @@ This installs the config, the Alfred persona, the Woodhouse sync, the knowledge 
 scheduled agents. Fill in `~/.openjarvis/personas/alfred/USER.local.md` (your salary floor and
 anything else private), then run the script again.
 
-### 6. Connect accounts and test
+### 7. Connect accounts and test
 
 ```bash
 jarvis connect gdrive        # one Google sign-in covers Gmail, Calendar, and Tasks

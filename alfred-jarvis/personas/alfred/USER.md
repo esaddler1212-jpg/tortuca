@@ -13,7 +13,7 @@
 **ECS Network**: the parent company. Its tagline is "Building Culture. Creating Stories. Developing Futures."
 Its near-term target is **$100,000/month** across the divisions.
 
-Under **Vantage**:
+Under **Vantage**, ECS Network's operating company:
 
 | Division | Role |
 |---|---|

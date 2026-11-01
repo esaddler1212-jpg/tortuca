@@ -197,3 +197,96 @@ export function buildEcsRoadmapNode(
     priorityActions,
   };
 }
+
+// ─── Revenue goal ladder ─────────────────────────────────────────────
+// Start small and climb toward the long-term $100K/month target.
+// The current monthly goal comes from WOODHOUSE_REVENUE_GOAL (default $1,000).
+export const REVENUE_LADDER = [1_000, 2_500, 5_000, 10_000, 25_000, 50_000, 100_000];
+export const LONG_TERM_MONTHLY_GOAL = 100_000;
+
+const usd = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
+
+/** Sum numeric `revenue` metrics from nodes with real (non-demo) data. */
+export function totalLiveRevenue(
+  nodes: Array<{ source: string; snapshot: NodeSnapshot | null }>,
+): number | null {
+  let total = 0;
+  let found = false;
+  for (const n of nodes) {
+    if (n.source === "demo" || !n.snapshot) continue;
+    for (const m of n.snapshot.metrics) {
+      if (m.key === "revenue" && typeof m.value === "number" && Number.isFinite(m.value)) {
+        total += m.value;
+        found = true;
+      }
+    }
+  }
+  return found ? total : null;
+}
+
+/** Next ladder step above `goal` (or the long-term goal). */
+export function nextLadderStep(goal: number): number {
+  return REVENUE_LADDER.find((g) => g > goal) ?? LONG_TERM_MONTHLY_GOAL;
+}
+
+/**
+ * Add month-to-date revenue vs. goal to the roadmap node. `revenue` null means
+ * no app reports live revenue yet; the node says so instead of guessing.
+ */
+export function applyRevenueGoal(
+  node: NodeSnapshot,
+  revenue: number | null,
+  goal: number,
+  now: Date = new Date(),
+  tz = "America/Los_Angeles",
+): NodeSnapshot {
+  const [y, mo, d] = todayIn(tz, now).split("-").map(Number);
+  const daysInMonth = new Date(Date.UTC(y, mo, 0)).getUTCDate();
+  const daysLeft = daysInMonth - d;
+
+  if (revenue === null) {
+    return {
+      ...node,
+      metrics: [
+        ...node.metrics,
+        { key: "revenue-goal", label: "Monthly goal", value: `${usd(goal)} (no revenue data yet)` },
+      ],
+    };
+  }
+
+  const pct = Math.round((revenue / goal) * 100);
+  const expected = (goal * d) / daysInMonth;
+  const behind = revenue < expected * 0.8;
+  const hit = revenue >= goal;
+  const actions = [...node.priorityActions];
+  if (hit) {
+    actions.unshift(
+      `Monthly goal hit (${usd(revenue)} of ${usd(goal)}). Raise the goal to ${usd(nextLadderStep(goal))} next month`,
+    );
+  } else if (behind) {
+    actions.push(
+      `Revenue behind pace: ${usd(revenue)} of ${usd(goal)} with ${daysLeft} day${daysLeft === 1 ? "" : "s"} left`,
+    );
+  }
+
+  return {
+    ...node,
+    summary: `${node.summary} · Revenue ${usd(revenue)} of ${usd(goal)} (${pct}%)`,
+    metrics: [
+      ...node.metrics,
+      { key: "revenue-mtd", label: "Revenue this month", value: usd(revenue) },
+      { key: "revenue-goal", label: `Goal ${usd(goal)}`, value: `${pct}%`, alert: behind && !hit },
+      {
+        key: "revenue-long-term",
+        label: `${usd(LONG_TERM_MONTHLY_GOAL)}/mo target`,
+        value: `${((revenue / LONG_TERM_MONTHLY_GOAL) * 100).toFixed(1)}%`,
+      },
+    ],
+    priorityActions: actions,
+  };
+}
+
+export function revenueGoalFromEnv(): number {
+  const raw = Number(process.env.WOODHOUSE_REVENUE_GOAL?.replace(/[$,\s]/g, ""));
+  return Number.isFinite(raw) && raw > 0 ? raw : REVENUE_LADDER[0];
+}
