@@ -31,7 +31,16 @@ import { buildFitnessStatus } from "./lib/fitness";
 import { assessOvercommitment } from "./lib/overcommitment";
 import { useGoals2026 } from "./hooks/useGoals2026";
 import { Goals2026Panel } from "./components/Goals2026Panel";
-import { HudRing } from "./components/HudRing";
+import { HudHeader, type SystemStatus } from "./components/hud/HudHeader";
+import { CoreRing } from "./components/hud/CoreRing";
+import {
+  LoadPanel,
+  LogPanel,
+  NetworkPanel,
+  RoadmapPanel,
+  TerminalPanel,
+  VitalsPanel,
+} from "./components/hud/HudPanels";
 import { InstallAppBanner } from "./components/InstallAppBanner";
 
 export default function App() {
@@ -136,51 +145,91 @@ export default function App() {
 
   const displayName = accountEmail?.split("@")[0];
 
+  const systemStatus: SystemStatus = useMemo(() => {
+    if (woodhouseError && !woodhouse) return "offline";
+    const nodes = woodhouse?.nodes ?? [];
+    if (!nodes.length) return woodhouseLoading ? "ok" : "offline";
+    return nodes.every((n) => n.ok) ? "ok" : "degraded";
+  }, [woodhouse, woodhouseError, woodhouseLoading]);
+
+  const terminalLines = useMemo(() => {
+    const next = todayTimeline.find((e) => new Date(e.start).getTime() > Date.now());
+    const lines = [
+      urgentCount
+        ? `${urgentCount} urgent · ${pending.length} open tasks · ${unread} unread`
+        : `No urgent items · ${pending.length} open tasks · ${unread} unread`,
+    ];
+    if (next) {
+      lines.push(
+        `Next: ${next.title} at ${new Date(next.start).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`,
+      );
+    }
+    if (leaveBy) {
+      lines.push(
+        `Leave by ${leaveBy.leaveBy.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} → ${leaveBy.destination}`,
+      );
+    }
+    return lines;
+  }, [todayTimeline, urgentCount, pending.length, unread, leaveBy]);
+
   return (
     <div className="min-h-screen pb-20 relative">
       <div className="hud-vignette" aria-hidden />
       <div className="hud-scanline" aria-hidden />
-      <header className="border-b border-green-500/20 bg-alfred-panel/40 backdrop-blur-xl sticky top-0 z-10">
-        <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
-          <div>
-            <p className="hud-label mb-1">Operator interface</p>
-            <h1 className="font-display text-3xl font-bold tracking-[0.15em] text-alfred-cream hud-glow-text">
-              ALFRED
-            </h1>
-          </div>
-          <HudRing className="h-11 w-11" />
-        </div>
-      </header>
+      <HudHeader
+        timeZone={settings.timezone}
+        status={systemStatus}
+        alerts={urgentCount}
+        operator={displayName ? displayName.slice(0, 1).toUpperCase() + "." : "E."}
+      />
 
-      <main className="mx-auto max-w-6xl px-4 py-6 space-y-4">
+      <main className="mx-auto max-w-[1400px] px-4 py-6 space-y-4">
+        {/* Operator console: status | core | ECS */}
+        <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)_340px]">
+          <div className="space-y-4 order-2 xl:order-1">
+            <VitalsPanel weather={weather} city={settings.city} fitness={fitnessStatus} />
+            <LoadPanel
+              pending={pending}
+              done={done}
+              unread={unread}
+              todayEvents={todayTimeline.length}
+              timeZone={settings.timezone}
+            />
+            <NetworkPanel woodhouse={woodhouse} googleConnected={connected} />
+          </div>
+
+          <div className="order-1 xl:order-2 flex flex-col items-center justify-center gap-6 py-4 xl:py-10">
+            <div className="w-full max-w-[260px] sm:max-w-[360px] xl:max-w-[420px]">
+              <CoreRing
+                lines={systemStatus === "ok" ? ["ALFRED", "ONLINE"] : systemStatus === "degraded" ? ["ALFRED", "DEGRADED"] : ["ALFRED", "OFFLINE"]}
+                status={systemStatus}
+              />
+            </div>
+            <CommandBar
+              variant="hud"
+              settings={settings}
+              leaveBy={leaveBy}
+              bedtime={bedtime}
+              onAddTodo={add}
+              onLogWorkout={logWorkout}
+              onAddEvent={addLocalEvent}
+              onAddShopping={addShopping}
+            />
+          </div>
+
+          <div className="space-y-4 order-3">
+            <RoadmapPanel woodhouse={woodhouse} />
+            <LogPanel timeline={todayTimeline} woodhouse={woodhouse} messages={messages} timeZone={settings.timezone} />
+            <TerminalPanel lines={terminalLines} />
+          </div>
+        </div>
+
         {showWeeklyReview && <WeeklyReview review={weeklyReview} />}
         <InstallAppBanner />
-        <Goals2026Panel
-          settings={settings}
-          progress={goalsProgress}
-          onToggleTrip={toggleTrip}
-          onToggleMwfs={toggleMwfs}
-          onToggleAiAgents={toggleAiAgents}
-        />
         <OvernightDeltaBanner delta={overnightDelta} />
         {overcommitment && <OvercommitmentBanner warning={overcommitment} />}
         {showWindDown && <WindDownBanner bedtime={bedtime} />}
-        <CommandBar
-          settings={settings}
-          leaveBy={leaveBy}
-          bedtime={bedtime}
-          onAddTodo={add}
-          onLogWorkout={logWorkout}
-          onAddEvent={addLocalEvent}
-          onAddShopping={addShopping}
-        />
-        <MealPrepPanel
-          settings={settings}
-          items={shoppingItems}
-          onAdd={addShopping}
-          onToggle={togglePantry}
-          onRemove={removeShopping}
-        />
+
         {commuteError && settings.useLiveCommute && (
           <p className="text-sm text-amber-300/90 panel px-4 py-2">{commuteError}</p>
         )}
@@ -216,6 +265,22 @@ export default function App() {
           onLogWorkout={logWorkout}
           pendingTodos={pending}
         />
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Goals2026Panel
+            settings={settings}
+            progress={goalsProgress}
+            onToggleTrip={toggleTrip}
+            onToggleMwfs={toggleMwfs}
+            onToggleAiAgents={toggleAiAgents}
+          />
+          <MealPrepPanel
+            settings={settings}
+            items={shoppingItems}
+            onAdd={addShopping}
+            onToggle={togglePantry}
+            onRemove={removeShopping}
+          />
+        </div>
       </main>
 
       <MorningRitualModal

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Settings, X } from "lucide-react";
+import { X } from "lucide-react";
+import { OPEN_SETTINGS_EVENT } from "../lib/settingsEvents";
 import type { UserSettings } from "../types";
 import type { WoodhouseRegistryEntry } from "../types/woodhouse";
 import { WoodhouseNodesEditor } from "./WoodhouseNodesEditor";
@@ -117,6 +118,13 @@ export function SettingsDrawer({
     setWeekendWake(settings.weekendWakeTime);
   }, [settings]);
 
+  // The header's gear button opens the drawer (see lib/settingsEvents).
+  useEffect(() => {
+    const onOpen = () => setOpen(true);
+    window.addEventListener(OPEN_SETTINGS_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_SETTINGS_EVENT, onOpen);
+  }, []);
+
   const save = async () => {
     const ok = await onSaveCity(city);
     if (ok) setOpen(false);
@@ -124,14 +132,6 @@ export function SettingsDrawer({
 
   return (
     <>
-      <button
-        type="button"
-        className="btn-ghost fixed bottom-6 right-6 z-20 panel !rounded-full p-3 shadow-panel"
-        onClick={() => setOpen(true)}
-        aria-label="Settings"
-      >
-        <Settings className="h-5 w-5 text-alfred-gold" />
-      </button>
       {open && (
         <div className="fixed inset-0 z-30 flex justify-end bg-black/50" role="dialog" aria-modal>
           <div className="panel h-full w-full max-w-md p-6 overflow-y-auto border-l border-alfred-border">

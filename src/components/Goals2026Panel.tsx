@@ -61,7 +61,7 @@ export function Goals2026Panel({
         </div>
       </div>
 
-      <blockquote className="border-l-2 border-green-400/50 pl-4 mb-4">
+      <blockquote className="border-l-2 border-cyan-400/50 pl-4 mb-4">
         <p className="text-sm text-alfred-cream/90 italic flex gap-2">
           <Quote className="h-4 w-4 text-alfred-gold/70 shrink-0 mt-0.5" aria-hidden />
           <span>&ldquo;{YEAR_QUOTE.text}&rdquo;</span>
