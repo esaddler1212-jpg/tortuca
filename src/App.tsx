@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useNow } from "./hooks/useNow";
 import { nextWakeDay } from "../shared/bedtime";
-import { zonedDateTime } from "../shared/timezone";
+import { dayKey, weekdayOfDay, zonedDateTime } from "../shared/timezone";
 import { applyDayMode, dayMode, DAY_MODE_LABEL } from "../shared/dayMode";
 import { OvernightDeltaBanner } from "./components/OvernightDeltaBanner";
 import { OvercommitmentBanner } from "./components/OvercommitmentBanner";
@@ -37,6 +37,7 @@ import { useGoals2026 } from "./hooks/useGoals2026";
 import { Goals2026Panel } from "./components/Goals2026Panel";
 import { HudHeader, type SystemStatus } from "./components/hud/HudHeader";
 import { CoreRing } from "./components/hud/CoreRing";
+import { WeekWeatherPanel } from "./components/hud/WeekWeatherPanel";
 import {
   LoadPanel,
   LogPanel,
@@ -194,6 +195,9 @@ export default function App() {
     return lines;
   }, [todayTimeline, urgentCount, pending.length, unread, leaveBy]);
 
+  // Sunday: plan the week (week-ahead weather under the greeting).
+  const isSunday = weekdayOfDay(dayKey(settings.timezone, now)) === "Sun";
+
   const coreLines: [string, string] =
     systemStatus === "ok" ? ["ALFRED", "ONLINE"] : systemStatus === "degraded" ? ["ALFRED", "DEGRADED"] : ["ALFRED", "OFFLINE"];
 
@@ -245,6 +249,7 @@ export default function App() {
           modeLabel={DAY_MODE_LABEL[mode]}
           afterGreeting={
             <>
+              {isSunday && weather?.week && <WeekWeatherPanel week={weather.week} city={settings.city} />}
               {showWeeklyReview && <WeeklyReview review={weeklyReview} />}
               <InstallAppBanner />
               <OvernightDeltaBanner delta={overnightDelta} />

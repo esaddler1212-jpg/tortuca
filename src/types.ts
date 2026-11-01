@@ -98,7 +98,19 @@ export interface ShoppingItem {
   createdAt: string;
 }
 
+export interface WeatherDay {
+  /** YYYY-MM-DD (local) */
+  date: string;
+  high: number;
+  low: number;
+  weatherCode: number;
+  /** 0–100, max chance of rain that day */
+  rainChance: number;
+}
+
 export interface WeatherSnapshot {
+  /** Today plus the next 6 days (for the Sunday week-ahead view). */
+  week?: WeatherDay[];
   temperature: number;
   weatherCode: number;
   high: number;

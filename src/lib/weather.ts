@@ -66,8 +66,8 @@ export async function fetchWeather(
     longitude: String(longitude),
     timezone,
     current: "temperature_2m,weather_code",
-    daily: "temperature_2m_max,temperature_2m_min,sunrise,sunset,weather_code",
-    forecast_days: "1",
+    daily: "temperature_2m_max,temperature_2m_min,sunrise,sunset,weather_code,precipitation_probability_max",
+    forecast_days: "7",
     temperature_unit: "fahrenheit",
   });
   const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
@@ -75,13 +75,24 @@ export async function fetchWeather(
   const data = (await res.json()) as {
     current: { temperature_2m: number; weather_code: number };
     daily: {
+      time: string[];
       temperature_2m_max: number[];
       temperature_2m_min: number[];
       sunrise: string[];
       sunset: string[];
+      weather_code: number[];
+      precipitation_probability_max?: (number | null)[];
     };
   };
+  const week = (data.daily.time ?? []).map((date, i) => ({
+    date,
+    high: data.daily.temperature_2m_max[i],
+    low: data.daily.temperature_2m_min[i],
+    weatherCode: data.daily.weather_code?.[i] ?? 0,
+    rainChance: data.daily.precipitation_probability_max?.[i] ?? 0,
+  }));
   return {
+    week,
     temperature: data.current.temperature_2m,
     weatherCode: data.current.weather_code,
     high: data.daily.temperature_2m_max[0],
