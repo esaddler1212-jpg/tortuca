@@ -72,17 +72,19 @@ else
     echo "    using $PY"
 fi
 
-say "Voice plugins (free macOS voice + optional Fish Audio)"
+say "Alfred plugins (voices + Claude compatibility fix)"
 if [ "$PY" != "/usr/bin/python3" ]; then
     SITE="$("$PY" -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"
-    cp "$HERE/plugins/alfred_macsay_tts.py" "$HERE/plugins/alfred_fish_tts.py" "$SITE/"
+    cp "$HERE/plugins/alfred_macsay_tts.py" "$HERE/plugins/alfred_fish_tts.py" "$HERE/plugins/alfred_compat.py" "$SITE/"
     # One startup hook loads both; named zzz_ so it runs after OpenJarvis's own .pth.
     rm -f "$SITE/zzz_alfred_fish_tts.pth"
-    printf 'import alfred_macsay_tts\nimport alfred_fish_tts\n' > "$SITE/zzz_alfred_tts.pth"
+    printf 'import alfred_compat\nimport alfred_macsay_tts\nimport alfred_fish_tts\n' > "$SITE/zzz_alfred_tts.pth"
     "$PY" - <<'PYEOF'
 from openjarvis.core.registry import TTSRegistry as R
 for key, label in (("macsay", "free macOS voice"), ("fish", "Fish Audio")):
     print(f"    {label}: {'ready' if R.contains(key) else 'NOT installed'}")
+import openjarvis.engine.cloud as cloud
+print(f"    Claude compatibility fix: {'active' if 'claude' in cloud._ANTHROPIC_FIXED_SAMPLING_PREFIXES else 'NOT active'}")
 PYEOF
 else
     echo "    skipped (no OpenJarvis Python found)"
