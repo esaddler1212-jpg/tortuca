@@ -51,6 +51,8 @@ export function buildDailyBrief(opts: {
   actions: TodayAction[];
   events: CalendarEvent[];
   spark?: { mindset: string; prompt: string };
+  /** Today's gym session title, if it's a gym day. */
+  gym?: string;
 }): string {
   const { tz, now, weather, leaveBy } = opts;
   const h = localHour(tz, now);
@@ -69,6 +71,7 @@ export function buildDailyBrief(opts: {
   const today = dayKey(tz, now);
   const next = upcomingEvents(opts.events, now, 1).find((e) => dayKey(tz, new Date(e.start)) === today);
   if (next) parts.push(`Next on the calendar: ${next.title} at ${time(next.start, tz)}.`);
+  if (opts.gym) parts.push(`Gym day: ${opts.gym}.`);
   if (opts.spark) parts.push(`Today's spark: ${forSpeech(opts.spark.mindset)} And a prompt: ${forSpeech(opts.spark.prompt)}`);
   return parts.join(" ");
 }

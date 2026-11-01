@@ -16,6 +16,7 @@ import { DEFAULT_SETTINGS } from "../src/types.ts";
 import { applyDayMode, dayMode } from "../shared/dayMode.ts";
 import * as Plan from "../shared/plan.ts";
 import * as Sparks from "../shared/sparks.ts";
+import * as Hub from "../shared/hub.ts";
 
 const TZ = "America/Los_Angeles";
 const settings = { ...DEFAULT_SETTINGS }; // wake 04:15 weekdays, 08:00 days off, 7.5h sleep
@@ -144,6 +145,29 @@ check("desk: review and working queues", [q.review.map((t) => t.id), q.working.l
 check("desk: approved tasks leave the desk", Plan.handoffQueue({ ...desk, done: { "bay-budget": "x" } }).review.length, 0);
 check("desk: 'you' tasks can't be handed off", Plan.allTasks(plan0).filter((t) => t.ai === "you").every((t) => !Plan.canHandOff(t)), true);
 check("budget: total of line items", Plan.budgetTotal({ monthly: 50, items: [{ id: "a", name: "Claude", amount: 20 }, { id: "b", name: "Fish", amount: 11 }] }), 31);
+
+// ── hub: feed, watchers, gym, money, memos
+const rss = `<rss><channel><item><title><![CDATA[Bay &amp; film]]></title><link>https://a.com/1</link><pubDate>Mon, 02 Nov 2026 10:00:00 GMT</pubDate></item></channel></rss>`;
+const atom = `<feed><entry><title>New video</title><link rel="alternate" href="https://youtube.com/watch?v=x"/><published>2026-11-01T00:00:00Z</published></entry></feed>`;
+check("feed: parses RSS (CDATA, entities)", Hub.parseFeed(rss, "A")[0], { title: "Bay & film", link: "https://a.com/1", published: "Mon, 02 Nov 2026 10:00:00 GMT", source: "A" });
+check("feed: parses Atom/YouTube links", Hub.parseFeed(atom, "YT")[0]?.link, "https://youtube.com/watch?v=x");
+check("feed: blocks private/IP URLs", ["http://localhost/x", "http://169.254.169.254/", "file:///etc", "https://ok.example.com/feed"].map(Hub.isSafePublicUrl), [false, false, false, true]);
+const w = { id: "w", name: "Grants", url: "https://x.org" };
+check("watch: first check sets a baseline, no alert", Hub.evaluateCheck(w, undefined, "a", "h1", "t").alert, null);
+check("watch: changed hash alerts", Hub.evaluateCheck(w, { hash: "h1", checkedAt: "t" }, "b", "h2", "t2").alert, "Grants changed");
+const wl = { ...w, lookFor: "Now Open" };
+check("watch: lookFor alerts only when text appears", [Hub.evaluateCheck(wl, undefined, "applications now open", "h", "t").alert, Hub.evaluateCheck(wl, { found: false, checkedAt: "t" }, "applications now open", "h", "t").alert], [null, '"Now Open" is now on Grants']);
+check("gym: Tue is arms & chest", Hub.gymDayFor(Hub.DEFAULT_ROUTINE, "2026-11-03")?.plan.title, "Arms & chest");
+check("gym: Monday points to Tuesday", [Hub.gymDayFor(Hub.DEFAULT_ROUTINE, "2026-11-02")?.day, Hub.gymDayFor(Hub.DEFAULT_ROUTINE, "2026-11-02")?.isToday], ["2026-11-03", false]);
+check("gym: last weight from earlier sessions", Hub.lastWeight({ "2026-10-27": { bench: { weight: 135 } }, "2026-11-03": { bench: { weight: 145 } } }, "bench", "2026-11-03"), 135);
+const m = Hub.moneyMonth([
+  { id: "1", date: "2026-11-02", kind: "in", amount: 400, category: "Easy Supply" },
+  { id: "2", date: "2026-11-02", kind: "in", amount: 1000, category: "Personal" },
+  { id: "3", date: "2026-11-03", kind: "out", amount: 60, category: "Food" },
+  { id: "4", date: "2026-10-30", kind: "out", amount: 999, category: "Bills" },
+], "2026-11");
+check("money: month totals and ECS revenue", [m.income, m.spent, m.net, m.ecsRevenue], [1400, 60, 1340, 400]);
+check("memos: pulls to-dos out of speech", Hub.extractTodos("Okay so I need to call Mike about the shoot. The beat is fire. Remember to send the deck to KQED and then email the principal"), ["Call Mike about the shoot", "Send the deck to KQED", "Email the principal"]);
 
 // ── same answers regardless of the machine's time zone
 const self = fileURLToPath(import.meta.url);

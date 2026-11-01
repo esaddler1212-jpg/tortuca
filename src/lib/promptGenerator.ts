@@ -140,3 +140,17 @@ export function promptForSpark(spark: { theme: string; mindset: string; prompt: 
     "Be my creative partner for 10 minutes. Give me three quick takes on this prompt in different directions (one safe, one weird, one personal), then ask me one question that pushes my favorite further. Keep it short and playful; I'll do the making.",
   ].join("\n");
 }
+
+/** Prompt to turn a raw voice memo into something usable. */
+export function promptForMemo(text: string): string {
+  return [
+    ABOUT_E,
+    "",
+    "Here's a voice memo I recorded (speech-to-text, so expect typos):",
+    `"""${text}"""`,
+    "",
+    "Organize it: 1) the core idea in one line, 2) any to-dos as a checklist, 3) if it's creative (lyrics, a film idea, a design), tighten it up and give me one way to push it further. Keep my voice.",
+    "",
+    ...GUARDRAILS.map((g) => `- ${g}`),
+  ].join("\n");
+}

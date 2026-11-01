@@ -8,6 +8,9 @@ import { useVoiceOutput } from "./hooks/useVoiceOutput";
 import { buildDailyBrief, buildVantageBrief } from "./lib/spokenBrief";
 import { usePlan } from "./hooks/usePlan";
 import { SparkCard } from "./components/SparkCard";
+import { HubPanel } from "./components/HubPanel";
+import { useHub } from "./hooks/useHub";
+import { DEFAULT_ROUTINE, gymDayFor } from "../shared/hub";
 import { PlanPanel } from "./components/PlanPanel";
 import { allGoals, allTasks, goalProgress, handoffQueue, planTasksDoneOn, todaySpark, weekFocus } from "../shared/plan";
 import { VantageBriefingPanel } from "./components/hud/VantageBriefingPanel";
@@ -78,6 +81,7 @@ export default function App() {
   const { snapshot: stocks, loading: stocksLoading } = useStocks();
   const { effectiveMinutes, loading: commuteLoading, error: commuteError } = useCommute(settings);
   const { logs: fitnessLogs, logWorkout, loadRemote: loadFitness } = useFitness(settings);
+  const { hub, update: updateHub } = useHub();
   const { items: shoppingItems, add: addShopping, togglePantry, remove: removeShopping, loadRemote: loadShopping } = useShoppingList();
   const { plan, toggleTask: togglePlanTask, addTask: addPlanTask, removeTask: removePlanTask, setGoals: setPlanGoals, setHandoff, setBudget, toggleSpark, shuffleSpark, noteSpark } = usePlan();
 
@@ -249,6 +253,10 @@ export default function App() {
           actions: todayActions,
           events: allSchedule,
           spark: todaySpark(plan, today),
+          gym: (() => {
+            const g = gymDayFor(hub.routine ?? DEFAULT_ROUTINE, today);
+            return g?.isToday ? g.plan.title : undefined;
+          })(),
         });
     voiceOut.speak(text, { force: true });
   };
@@ -379,6 +387,19 @@ export default function App() {
           onSetGoals={setPlanGoals}
           onSetHandoff={setHandoff}
           onSetBudget={setBudget}
+        />
+
+        <HubPanel
+          key={`hub-${mode}`}
+          hub={hub}
+          update={updateHub}
+          today={today}
+          mode={mode}
+          timeZone={settings.timezone}
+          googleConnected={connected}
+          onAddTodo={(title) => add(title)}
+          onLogWorkout={logWorkout}
+          workoutLoggedToday={fitnessLogs.some((l) => l.date === today)}
         />
 
         {/* Phones/tablets: the console's status panels, after today's plan */}
