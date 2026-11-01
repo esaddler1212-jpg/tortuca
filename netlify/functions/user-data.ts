@@ -1,6 +1,6 @@
 import type { Handler } from "@netlify/functions";
 import { getValidSession, initBlobs, sessionHeader } from "./_shared";
-import { loadUserData, saveUserData } from "./_userData";
+import { loadUserData, mergeSubs, pushTargets, resolveDataKey, saveUserData } from "./_userData";
 import type { AlfredUserData } from "../../shared/userDataTypes";
 
 export const handler: Handler = async (event) => {
@@ -11,8 +11,11 @@ export const handler: Handler = async (event) => {
     return { statusCode: 401, body: JSON.stringify({ error: "Unauthorized" }) };
   }
 
+  // Shared across devices once Google is connected.
+  const key = await resolveDataKey(sessionId);
+
   if (event.httpMethod === "GET") {
-    const data = await loadUserData(sessionId);
+    const data = await loadUserData(key);
     // Watcher page copies are large and server-only; results come from /api/watch-now.
     if (data) delete data.watchState;
     return {
@@ -29,7 +32,7 @@ export const handler: Handler = async (event) => {
     }
 
     const incoming = JSON.parse(event.body ?? "{}") as Partial<AlfredUserData>;
-    const existing = (await loadUserData(sessionId)) ?? { updatedAt: new Date().toISOString() };
+    const existing = (await loadUserData(key)) ?? { updatedAt: new Date().toISOString() };
     const merged: AlfredUserData = {
       ...existing,
       ...incoming,
@@ -37,9 +40,13 @@ export const handler: Handler = async (event) => {
       todos: incoming.todos ?? existing.todos,
       pushSubscription:
         incoming.pushSubscription !== undefined ? incoming.pushSubscription : existing.pushSubscription,
+      // Add this device to the list instead of replacing the other devices.
+      pushSubscriptions: incoming.pushSubscription
+        ? mergeSubs(pushTargets(existing), [incoming.pushSubscription])
+        : pushTargets(existing),
       updatedAt: new Date().toISOString(),
     };
-    await saveUserData(sessionId, merged);
+    await saveUserData(key, merged);
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },

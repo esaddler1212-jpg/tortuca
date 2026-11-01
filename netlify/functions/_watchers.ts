@@ -2,12 +2,11 @@ import { createHash } from "node:crypto";
 import { evaluateCheck, pageText, newSnippet, type WatchResult, type Watcher } from "../../shared/hub";
 import type { AlfredUserData } from "../../shared/userDataTypes";
 import { fetchPublicText } from "./_fetchText";
-import { loadUserData, saveUserData } from "./_userData";
-import { sendPush } from "./_push";
+import { loadUserData, pushAll, pushTargets, saveUserData } from "./_userData";
 
 /** Check one user's watchers; save results; push an alert for each change. */
 export async function runWatchers(
-  sessionId: string,
+  key: string,
   data: AlfredUserData,
   opts: { notify: boolean },
 ): Promise<{ state: Record<string, WatchResult>; alerts: string[] }> {
@@ -35,10 +34,10 @@ export async function runWatchers(
   );
 
   // Re-read so edits made while pages were loading aren't overwritten.
-  const latest = (await loadUserData(sessionId)) ?? data;
-  await saveUserData(sessionId, { ...latest, watchState: state });
-  if (opts.notify && alerts.length && data.pushSubscription && data.settings?.pushNotificationsEnabled) {
-    await sendPush(data.pushSubscription, {
+  const latest = (await loadUserData(key)) ?? data;
+  await saveUserData(key, { ...latest, watchState: state });
+  if (opts.notify && alerts.length && pushTargets(data).length && data.settings?.pushNotificationsEnabled) {
+    await pushAll(data, {
       title: alerts.length === 1 ? "Alfred · Watcher" : `Alfred · ${alerts.length} watchers`,
       body: alerts.join(" · ").slice(0, 180),
       url: "/",

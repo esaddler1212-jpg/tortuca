@@ -73,6 +73,14 @@ export const handler: Handler = async (event) => {
     email,
   });
 
+  // Move this device's saved data onto the Google account (shared by all devices).
+  try {
+    const { resolveDataKey } = await import("./_userData");
+    await resolveDataKey(sessionId);
+  } catch {
+    /* data moves on the next sync instead */
+  }
+
   return {
     statusCode: 302,
     headers: { Location: doneUrl(true) },
