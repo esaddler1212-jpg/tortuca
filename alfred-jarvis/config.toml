@@ -1,0 +1,97 @@
+# Alfred — OpenJarvis config for E (ECS Network / Vantage)
+#
+# Target machine: iMac 21.5" (Late 2012), Intel quad-core, 8 GB DDR3, macOS Catalina.
+# install-imac.sh copies this file to ~/.openjarvis/config.toml.
+#
+# Strategy: "local first, cloud fallback". This iMac has no Apple Silicon and
+# no usable GPU, so local models are CPU-only and slow (a 2B model writes about
+# 3–8 words/sec). Short, private tasks stay local. Long writing, research, and
+# the daily briefing go to Claude, which costs a few cents a day.
+# If the local engine isn't running, OpenJarvis probes the other engines and
+# falls back to the cloud automatically.
+
+# ─── Model ──────────────────────────────────────────────────
+[intelligence]
+default_model  = "qwen3.5:2b"        # local, fits in 8 GB next to macOS
+model_short    = "qwen3.5:2b"        # quick questions stay local and private
+model_chat     = "claude-haiku-4-5"  # everyday chat: fast + cheap in the cloud
+model_long     = "claude-sonnet-4-6" # grant writing, pitches, research
+model_code     = "claude-sonnet-4-6"
+fallback_model = "claude-haiku-4-5"  # used whenever local is down or too weak
+temperature    = 0.4
+max_tokens     = 2048
+
+[engine]
+default = "ollama"                   # see README: Ollama vs llama.cpp on Catalina
+
+[engine.ollama]
+host = "http://localhost:11434"
+
+[engine.llamacpp]
+host = "http://localhost:8080"       # alternative local engine if Ollama won't install
+
+# Cloud engine reads ANTHROPIC_API_KEY from the environment (set in ~/.zshrc,
+# never in this file).
+
+# ─── Agent ──────────────────────────────────────────────────
+[agent]
+default_agent = "orchestrator"       # picks tools automatically
+max_turns = 12
+context_from_memory = true
+tools = "knowledge_search,knowledge_sql,memory_store,memory_search,web_search,think,file_read,calculator"
+objective = "Run E's day and ECS Network operations: briefings, deadlines, sponsor/grant research, writing, and career moves."
+
+[memory_files]
+persona_name = "alfred"              # ~/.openjarvis/personas/alfred/{SOUL,USER,MEMORY}.md
+
+[tools.storage]
+default_backend = "sqlite"
+db_path = "~/.openjarvis/memory.db"
+
+[tools.weather]
+default_location = "Vallejo,CA,US"
+units = "imperial"
+
+# ─── Morning briefing ───────────────────────────────────────
+[digest]
+enabled = true
+schedule = "15 6 * * *"              # 6:15 AM daily (iMac must be awake)
+timezone = "America/Los_Angeles"
+persona = "alfred"                   # ~/.openjarvis/prompts/personas/alfred.md
+honorific = "E"
+tts_backend = "fish"                 # Fish Audio via plugins/alfred_fish_tts.py (FISH_API_KEY)
+voice_id = ""                        # empty = FISH_VOICE_ID from ~/.zshrc
+voice_speed = 1.1
+sections = ["calendar", "messages", "world"]
+
+[speech]
+tts_backend = "fish"                 # same voice for `jarvis chat --voice`
+voice_id = ""
+
+[digest.messages]
+sources = ["gmail", "google_tasks"]
+max_items = 8
+
+[digest.calendar]
+sources = ["gcalendar"]
+
+[digest.world]
+sources = ["weather", "news_rss"]
+
+# ─── Learning / telemetry ───────────────────────────────────
+[learning]
+enabled = false                      # trace-based fine-tuning is too heavy for this iMac
+
+[learning.routing]
+policy = "heuristic"
+
+[telemetry]
+enabled = true
+gpu_metrics = false
+
+[traces]
+enabled = true
+
+[server]
+host = "127.0.0.1"                   # loopback only
+port = 8000

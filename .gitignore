@@ -7,3 +7,8 @@ tsconfig.tsbuildinfo
 .env
 .env.local
 *.local
+
+# Alfred private profile (never commit)
+USER.local.md
+__pycache__/
+*.pyc

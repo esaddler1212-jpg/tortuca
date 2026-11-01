@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, Package, RefreshCw, Users, Box } from "lucide-react";
+import { AlertCircle, CheckCircle2, Package, RefreshCw, Users, Box, Flag } from "lucide-react";
 import type { WoodhouseOrchestrationSnapshot } from "../types/woodhouse";
 
 interface Props {
@@ -14,6 +14,7 @@ interface Props {
 const TYPE_ICON: Record<string, typeof Package> = {
   commerce: Package,
   education: Users,
+  ops: Flag,
 };
 
 function syncLabel(source: Props["source"]): string {

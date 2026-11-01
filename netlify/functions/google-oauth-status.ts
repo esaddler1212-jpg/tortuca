@@ -1,11 +1,20 @@
 import type { Handler } from "@netlify/functions";
-import { googleConfigured, initBlobs, siteUrl } from "./_shared";
+import {
+  envNeedsCleaning,
+  googleClientId,
+  googleClientSecret,
+  googleConfigured,
+  initBlobs,
+  siteUrl,
+} from "./_shared";
 
 export const handler: Handler = async (event) => {
   initBlobs(event);
 
-  const hasClientId = Boolean(process.env.GOOGLE_CLIENT_ID?.trim());
-  const hasClientSecret = Boolean(process.env.GOOGLE_CLIENT_SECRET?.trim());
+  const clientId = googleClientId();
+  const secret = googleClientSecret();
+  const hasClientId = Boolean(clientId);
+  const hasClientSecret = Boolean(secret);
   const configured = googleConfigured();
   const redirectUri = `${siteUrl(event)}/api/auth-callback`;
 
@@ -32,6 +41,15 @@ export const handler: Handler = async (event) => {
       hasClientSecret,
       redirectUri,
       hint,
+      // Safe diagnostics: the client ID is public; the secret is described, never shown.
+      clientId,
+      clientIdLooksValid: /^\d+-[a-z0-9]+\.apps\.googleusercontent\.com$/.test(clientId),
+      secretLength: secret.length,
+      secretLooksValid: /^GOCSPX-[A-Za-z0-9_-]{20,}$/.test(secret),
+      cleanedWhitespaceOrQuotes: {
+        GOOGLE_CLIENT_ID: envNeedsCleaning("GOOGLE_CLIENT_ID"),
+        GOOGLE_CLIENT_SECRET: envNeedsCleaning("GOOGLE_CLIENT_SECRET"),
+      },
     }),
   };
 };

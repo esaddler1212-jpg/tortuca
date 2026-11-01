@@ -105,6 +105,52 @@ Or legacy env vars: `WOODHOUSE_EASY_SUPPLY_URL`, `WOODHOUSE_FAMILY_PURPOSE_URL`,
 
 **Browser (Alfred Settings):** same registry stored in `localStorage`, sent as `X-Woodhouse-Registry` on each sync.
 
+## Built-in nodes
+
+Some nodes need no app of their own. Alfred serves them directly through a `provider`:
+
+| `provider` | Node | What it reports |
+|---|---|---|
+| `family-purpose-backup` | Family Purpose | Check-ins and follow-ups from the latest backup blob |
+| `ecs-roadmap` | ECS Network roadmap (`nodeType: "ops"`) | Active ECS/Vantage milestones, items starting within 14 days, and countdowns to the $BAY shoot and premiere |
+
+The **ECS roadmap** node is added to every sync automatically. Turn it off with
+`WOODHOUSE_ECS_ROADMAP=off`, or register your own node with `id: "ecs-roadmap"` to replace it.
+To change milestones, edit `MILESTONES` in `netlify/functions/_ecs-roadmap.ts`.
+Each milestone has a `start` date, an optional `end` date (both `YYYY-MM-DD`, inclusive), and an `action`.
+Active and upcoming milestones become `priorityActions`. A milestone that starts or ends today
+becomes a `calendar` item, with `kind` set to `milestone` or `deadline`.
+
+### Revenue goal
+
+The roadmap node also tracks **month-to-date revenue against a monthly goal**. It adds up every
+numeric `revenue` metric reported by nodes with real data (demo data is ignored), so any app that
+reports `{ "key": "revenue", "value": <number> }` counts toward the total. Today that's Easy Supply Co.
+
+- `WOODHOUSE_REVENUE_GOAL` sets this month's goal (default `1000`). Start small.
+- When the goal is hit, Alfred suggests the next step on the ladder:
+  $1K → $2.5K → $5K → $10K → $25K → $50K → **$100K/month**.
+- When revenue falls behind pace (under 80% of where it should be for the day of the month),
+  a priority action flags it.
+- With no live revenue data, the node shows the goal and "no revenue data yet" instead of guessing.
+
+## Consumers
+
+Anything that reads `GET /api/woodhouse` is a consumer. There are two today:
+
+- **Alfred web app.** The dashboard and daily briefing.
+- **Alfred on OpenJarvis** (`alfred-jarvis/`). This is the local AI assistant on the iMac.
+  `woodhouse_sync.py` pulls the v3 snapshot on a schedule (6 AM, then hourly 8 AM–8 PM). It writes
+  `~/.openjarvis/knowledge/woodhouse-today.md` and re-indexes that file, so the morning briefing and
+  the weekly ECS ops agent see the same priorities as the dashboard. It sends
+  `X-Woodhouse-Registry` when `WOODHOUSE_REGISTRY_FILE` is set.
+
+Consumers must treat the feed as **read-only** and tolerate unknown `nodeType` values and
+`ok: false` nodes.
+
+> Security note: `/api/woodhouse` is currently unauthenticated, so anyone with the site URL can read
+> priority actions. Don't put student names or private data into node `summary` or `priorityActions`.
+
 ## Adding a new app
 
 1. Add `GET /api/woodhouse/snapshot` to the app (return `woodhouse/node/v1`).

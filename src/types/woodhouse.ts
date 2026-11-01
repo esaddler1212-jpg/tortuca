@@ -64,7 +64,7 @@ export interface WoodhouseRegistryEntry {
   nodeType: string;
   /** App base URL (no trailing slash). Empty = use built-in provider if any. */
   baseUrl: string;
-  provider?: "family-purpose-backup";
+  provider?: "family-purpose-backup" | "ecs-roadmap";
 }
 
 export interface WoodhouseNodeSyncResult {

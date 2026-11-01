@@ -1,5 +1,5 @@
 import type { Handler } from "@netlify/functions";
-import { initBlobs, saveSession, siteUrl } from "./_shared";
+import { googleClientId, googleClientSecret, initBlobs, saveSession, siteUrl } from "./_shared";
 
 export const handler: Handler = async (event) => {
   initBlobs(event);
@@ -20,8 +20,8 @@ export const handler: Handler = async (event) => {
   const redirectUri = `${siteUrl(event)}/api/auth-callback`;
   const body = new URLSearchParams({
     code,
-    client_id: process.env.GOOGLE_CLIENT_ID!,
-    client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+    client_id: googleClientId(),
+    client_secret: googleClientSecret(),
     redirect_uri: redirectUri,
     grant_type: "authorization_code",
   });

@@ -7,7 +7,7 @@ export interface RegistryEntry {
   displayName: string;
   nodeType: string;
   baseUrl: string;
-  provider?: "family-purpose-backup";
+  provider?: "family-purpose-backup" | "ecs-roadmap";
 }
 
 export interface NodeSnapshot {
@@ -181,6 +181,22 @@ export function normalizeRemoteSnapshot(
   }
 
   return null;
+}
+
+/** Built-in ECS Network roadmap node (disable with WOODHOUSE_ECS_ROADMAP=off). */
+export const ECS_ROADMAP_ENTRY: RegistryEntry = {
+  id: "ecs-roadmap",
+  displayName: "ECS Network roadmap",
+  nodeType: "ops",
+  baseUrl: "",
+  provider: "ecs-roadmap",
+};
+
+/** Append the roadmap node unless disabled or already registered. */
+export function withBuiltinNodes(registry: RegistryEntry[]): RegistryEntry[] {
+  if (process.env.WOODHOUSE_ECS_ROADMAP?.trim().toLowerCase() === "off") return registry;
+  if (registry.some((e) => e.id === ECS_ROADMAP_ENTRY.id)) return registry;
+  return [...registry, ECS_ROADMAP_ENTRY];
 }
 
 export function demoRegistry(): RegistryEntry[] {

@@ -1,5 +1,5 @@
 import type { Handler } from "@netlify/functions";
-import { googleConfigured, SCOPES, siteUrl } from "./_shared";
+import { googleClientId, googleConfigured, SCOPES, siteUrl } from "./_shared";
 
 export const handler: Handler = async (event) => {
   if (!googleConfigured()) {
@@ -19,7 +19,7 @@ export const handler: Handler = async (event) => {
 
   const redirectUri = `${siteUrl(event)}/api/auth-callback`;
   const params = new URLSearchParams({
-    client_id: process.env.GOOGLE_CLIENT_ID!,
+    client_id: googleClientId(),
     redirect_uri: redirectUri,
     response_type: "code",
     scope: SCOPES,

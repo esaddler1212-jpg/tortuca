@@ -6,6 +6,7 @@ import {
 import type { NodeSnapshot, RegistryEntry } from "./_woodhouse-registry";
 import { normalizeRemoteSnapshot } from "./_woodhouse-registry";
 import { getStore } from "@netlify/blobs";
+import { buildEcsRoadmapNode } from "./_ecs-roadmap";
 
 export function demoCommerceSnapshot(): NodeSnapshot {
   return {
@@ -70,6 +71,11 @@ export async function syncRegistryEntry(
   error?: string;
   snapshot: NodeSnapshot | null;
 }> {
+  if (entry.provider === "ecs-roadmap") {
+    const tz = process.env.WOODHOUSE_TIMEZONE?.trim() || "America/Los_Angeles";
+    return { ok: true, source: "builtin", snapshot: buildEcsRoadmapNode(new Date(), tz) };
+  }
+
   if (entry.provider === "family-purpose-backup") {
     const snap = await familyFromBackup();
     if (snap) return { ok: true, source: "backup", snapshot: snap };
