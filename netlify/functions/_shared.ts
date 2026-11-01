@@ -58,16 +58,38 @@ export function siteUrl(event: { headers: Record<string, string | undefined> }):
   return `${proto}://${host}`;
 }
 
+/**
+ * Read an OAuth env var defensively: pasted values often carry invisible
+ * whitespace/newlines or wrapping quotes, which Google rejects as invalid_client.
+ */
+function cleanEnv(name: string): string {
+  return (process.env[name] ?? "").trim().replace(/^(["'])(.*)\1$/, "$2").trim();
+}
+
+export function googleClientId(): string {
+  return cleanEnv("GOOGLE_CLIENT_ID");
+}
+
+export function googleClientSecret(): string {
+  return cleanEnv("GOOGLE_CLIENT_SECRET");
+}
+
+/** Whether the raw env value needed cleaning (for diagnostics, never the value). */
+export function envNeedsCleaning(name: string): boolean {
+  const raw = process.env[name] ?? "";
+  return raw.length > 0 && raw !== cleanEnv(name);
+}
+
 export function googleConfigured(): boolean {
-  return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+  return Boolean(googleClientId() && googleClientSecret());
 }
 
 export async function refreshAccessToken(session: StoredSession): Promise<StoredSession> {
   if (Date.now() < session.expiresAt - 60_000) return session;
 
   const body = new URLSearchParams({
-    client_id: process.env.GOOGLE_CLIENT_ID!,
-    client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+    client_id: googleClientId(),
+    client_secret: googleClientSecret(),
     refresh_token: session.refreshToken,
     grant_type: "refresh_token",
   });
