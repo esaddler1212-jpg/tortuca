@@ -4,9 +4,9 @@ import { listAllUserData, saveUserData } from "./_userData";
 import { sendPush } from "./_push";
 import { initBlobs } from "./_shared";
 import type { SyncedTodo } from "../../shared/userDataTypes";
-import { computeSuggestedBedtime } from "../../shared/bedtime";
+import { computeSuggestedBedtime, nextWakeDay } from "../../shared/bedtime";
 import { computeServerLeaveBy } from "../../shared/leaveByLite";
-import { dayKey } from "../../shared/timezone";
+import { dayKey, zonedDateTime } from "../../shared/timezone";
 
 export const config: Config = {
   schedule: "*/10 * * * *",
@@ -62,17 +62,16 @@ export const handler: Handler = async (event) => {
       }
     }
 
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowLeave = computeServerLeaveBy(settings, tomorrow);
+    // Leave-by on the morning of the next wake-up drives tonight's bedtime.
+    const wakeDay = nextWakeDay(settings, now);
+    const wakeLeave = computeServerLeaveBy(settings, zonedDateTime(wakeDay, "12:00", tz));
     const bedtime = computeSuggestedBedtime(
       settings,
-      tomorrowLeave
-        ? { leaveBy: tomorrowLeave.leaveBy, destination: tomorrowLeave.destination }
-        : null,
+      wakeLeave ? { leaveBy: wakeLeave.leaveBy, destination: wakeLeave.destination } : null,
       now,
     );
-    const windDownKey = `${day}-winddown`;
+    // One reminder per night (keyed by the morning it's for), even across midnight.
+    const windDownKey = `${bedtime.wakeDay}-winddown`;
     const msUntilWindDown = bedtime.windDownStart.getTime() - now.getTime();
     if (
       msUntilWindDown >= 0 &&

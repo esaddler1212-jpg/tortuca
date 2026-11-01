@@ -1,3 +1,4 @@
+import { localHour } from "../../shared/timezone";
 import type { Config, Handler } from "@netlify/functions";
 import { buildMorningDigest } from "./_briefing";
 import { listAllUserData, saveUserData } from "./_userData";
@@ -6,12 +7,6 @@ import { getValidSession, initBlobs, listConnectedSessions, sendGmail } from "./
 export const config: Config = {
   schedule: "0 * * * *",
 };
-
-function localHour(timeZone: string, now = new Date()): number {
-  return Number(
-    new Intl.DateTimeFormat("en-US", { timeZone, hour: "numeric", hour12: false }).format(now),
-  );
-}
 
 function localDayKey(timeZone: string, now = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone }).format(now);

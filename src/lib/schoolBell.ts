@@ -2,17 +2,10 @@
 
 export type ScheduleId = "grade6" | "grade78" | "wednesday" | "minimum";
 
-export const MINIMUM_DAYS = [
-  "2026-09-01",
-  "2026-10-02",
-  "2026-12-01",
-  "2026-12-18",
-  "2027-02-12",
-  "2027-03-09",
-  "2027-04-02",
-  "2027-05-07",
-  "2027-06-02",
-];
+
+import { MINIMUM_DAYS, NO_SCHOOL_DAYS, isNoSchoolLabel } from "../../shared/schoolCalendar";
+
+export { MINIMUM_DAYS, NO_SCHOOL_DAYS, isNoSchoolLabel };
 
 const SCHEDULES: Record<ScheduleId, { label: string; firstBell: string; firstPeriod: string }> = {
   grade6: {
@@ -54,20 +47,20 @@ export function resolveSchoolSchedule(
   const day = dayKeyInTz(date, timeZone);
   const label = (schoolDayLabel ?? "").toLowerCase();
 
-  if (label.includes("no school") || label.includes("weekend") || label.includes("recess")) {
+  if (NO_SCHOOL_DAYS.has(day) || isNoSchoolLabel(label) || label.includes("weekend")) {
     return null;
   }
+
+  const wd = weekdayShort(date, timeZone);
+  if (wd === "Sat" || wd === "Sun") return null;
 
   if (MINIMUM_DAYS.includes(day) || label.includes("minimum")) {
     return { id: "minimum", ...SCHEDULES.minimum };
   }
 
-  if (weekdayShort(date, timeZone) === "Wed" || label.includes("wednesday") || label.includes("early release")) {
+  if (wd === "Wed" || label.includes("wednesday") || label.includes("early release")) {
     return { id: "wednesday", ...SCHEDULES.wednesday };
   }
-
-  const wd = weekdayShort(date, timeZone);
-  if (wd === "Sat" || wd === "Sun") return null;
 
   if (grade === "6") {
     return { id: "grade6", ...SCHEDULES.grade6 };

@@ -1,7 +1,7 @@
 import type { CalendarEvent } from "../types";
 import type { UserSettings } from "../types";
 import type { WoodhouseOrchestrationSnapshot } from "../types/woodhouse";
-import { resolveSchoolSchedule, schoolDismissalHint } from "./schoolBell";
+import { isNoSchoolLabel, resolveSchoolSchedule, schoolDismissalHint } from "./schoolBell";
 import { dayKey, zonedDateTime } from "../../shared/timezone";
 
 export { dayKey, zonedDateTime };
@@ -48,7 +48,12 @@ export function computeLeaveBy(
   const schoolName = settings.schoolName || "Oak Grove Middle School";
 
   const todayEvents = eventsToday(scheduleEvents, tz, forDate);
-  const upcomingToday = todayEvents.filter((e) => new Date(e.start) > now);
+  // Only timed events are places to be; all-day items ("No school", birthdays) are not.
+  // All-day Google events arrive as "YYYY-MM-DD" or "YYYY-MM-DDT00:00:00" (no offset).
+  const isAllDay = (e: CalendarEvent) => /^\d{4}-\d{2}-\d{2}(T00:00:00)?$/.test(e.start);
+  const upcomingToday = todayEvents.filter(
+    (e) => !isAllDay(e) && !isNoSchoolLabel(e.title) && new Date(e.start) > now,
+  );
 
   let arriveBy: Date | null = null;
   let reason = "";
@@ -56,12 +61,13 @@ export function computeLeaveBy(
   let scheduleLabel: string | undefined;
   let dismissal: string | undefined;
 
-  const bell = resolveSchoolSchedule(
-    forDate,
-    tz,
-    schoolDayLabel(woodhouse),
-    settings.schoolGrade,
-  );
+  const isToday = day === dayKey(tz, now);
+  // Woodhouse's school-day label describes today only; don't apply it to other days.
+  // A calendar event that day saying "no school", "recess" or "holiday" cancels school.
+  const calendarSaysNoSchool = todayEvents.some((e) => isNoSchoolLabel(e.title));
+  const bell = calendarSaysNoSchool
+    ? null
+    : resolveSchoolSchedule(forDate, tz, isToday ? schoolDayLabel(woodhouse) : undefined, settings.schoolGrade);
 
   if (bell) {
     arriveBy = zonedDateTime(day, bell.firstBell, tz);
@@ -79,9 +85,9 @@ export function computeLeaveBy(
   if (!arriveBy) return null;
 
   const leaveBy = new Date(arriveBy.getTime() - (commute + buffer) * 60_000);
-  const late = forDate.toDateString() === now.toDateString() && leaveBy < now && arriveBy > now;
+  const late = isToday && leaveBy < now && arriveBy > now;
 
-  if (forDate.toDateString() === now.toDateString() && arriveBy <= now && !late) return null;
+  if (isToday && arriveBy <= now && !late) return null;
 
   return {
     leaveBy,
@@ -110,7 +116,5 @@ function eventsOnDay(events: CalendarEvent[], timeZone: string, date: Date): Cal
 }
 
 export function filterTomorrowTimeline(events: CalendarEvent[], timeZone: string): CalendarEvent[] {
-  const t = new Date();
-  t.setDate(t.getDate() + 1);
-  return eventsOnDay(events, timeZone, t);
+  return eventsOnDay(events, timeZone, new Date(Date.now() + 24 * 3_600_000));
 }

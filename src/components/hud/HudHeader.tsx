@@ -41,7 +41,7 @@ export function HudHeader({ timeZone, status, alerts, operator }: Props) {
   const time = useClock(timeZone);
   const s = STATUS_TEXT[status];
   return (
-    <header className="sticky top-0 z-10 border-b border-cyan-400/15 bg-[#02080e]/85 backdrop-blur-xl">
+    <header className="sticky top-0 z-10 border-b border-cyan-400/15 bg-black/80 backdrop-blur-xl">
       <div className="mx-auto max-w-[1400px] px-4 py-3 flex items-center gap-4">
         <div className="flex items-center gap-3 min-w-0">
           <HudRing className="h-9 w-9 shrink-0" />

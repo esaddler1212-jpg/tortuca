@@ -25,7 +25,8 @@ export const handler: Handler = async (event) => {
     scope: SCOPES,
     access_type: "offline",
     prompt: "consent",
-    state: session,
+    // "~app" marks a sign-in started from the installed app (finishes on oauth-done.html).
+    state: event.queryStringParameters?.return === "app" ? `${session}~app` : session,
   });
 
   return {

@@ -1,4 +1,8 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { useNow } from "./hooks/useNow";
+import { nextWakeDay } from "../shared/bedtime";
+import { dayKey, weekdayOfDay, zonedDateTime } from "../shared/timezone";
+import { applyDayMode, dayMode, DAY_MODE_LABEL } from "../shared/dayMode";
 import { OvernightDeltaBanner } from "./components/OvernightDeltaBanner";
 import { OvercommitmentBanner } from "./components/OvercommitmentBanner";
 import { MorningRitualModal } from "./components/MorningRitualModal";
@@ -33,6 +37,7 @@ import { useGoals2026 } from "./hooks/useGoals2026";
 import { Goals2026Panel } from "./components/Goals2026Panel";
 import { HudHeader, type SystemStatus } from "./components/hud/HudHeader";
 import { CoreRing } from "./components/hud/CoreRing";
+import { WeekWeatherPanel } from "./components/hud/WeekWeatherPanel";
 import {
   LoadPanel,
   LogPanel,
@@ -45,12 +50,24 @@ import { InstallAppBanner } from "./components/InstallAppBanner";
 
 export default function App() {
   const { settings, persist, updateCity, saving, error, setError } = useSettings();
+  // Re-evaluates all time-of-day logic every minute and when the app is reopened.
+  const now = useNow();
   const { weather, loading: weatherLoading, error: weatherError } = useWeather(settings);
   const { todos, pending, done, add, toggle, setTodos } = useTodos();
   const { connected, accountEmail, connect, disconnect, connectionError } = useGoogleIntegration();
   const { allEvents, addLocalEvent } = useSchedule(connected);
   const { messages, unread } = useEmails(connected);
-  const { snapshot: woodhouse, loading: woodhouseLoading, error: woodhouseError } = useWoodhouse();
+  const { snapshot: rawWoodhouse, loading: woodhouseLoading, error: woodhouseError } = useWoodhouse();
+  // Workday vs off duty: Family Purpose tasks hide on weekends, holidays and after 7 PM.
+  const mode = dayMode(settings.timezone, now);
+  const woodhouse = useMemo(() => applyDayMode(rawWoodhouse, mode), [rawWoodhouse, mode]);
+
+  // Theme follows the focus: blue school hours, green ECS Network, purple weekends.
+  useEffect(() => {
+    document.documentElement.dataset.focus = mode;
+    const themeColor = { school: "#22d3ee", network: "#4ade80", weekend: "#c084fc", holiday: "#c084fc" }[mode];
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", themeColor);
+  }, [mode]);
   const { snapshot: stocks, loading: stocksLoading } = useStocks();
   const { effectiveMinutes, loading: commuteLoading, error: commuteError } = useCommute(settings);
   const { logs: fitnessLogs, logWorkout, loadRemote: loadFitness } = useFitness(settings);
@@ -71,25 +88,30 @@ export default function App() {
     );
   }, [allEvents, familyScheduleEvents]);
 
+  // Calendar day of the next wake-up (today if it's after midnight but before the alarm).
+  const wakeDay = nextWakeDay(settings, now);
+
   const todayTimeline = useMemo(
     () => filterTodayTimeline(allSchedule, settings.timezone),
-    [allSchedule, settings.timezone],
+    // `now` keeps "today" correct after midnight.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [allSchedule, settings.timezone, wakeDay],
   );
 
   const leaveBy = useMemo(
-    () => computeLeaveBy(settings, woodhouse, allSchedule, new Date(), new Date(), effectiveMinutes),
-    [settings, woodhouse, allSchedule, effectiveMinutes],
+    () => computeLeaveBy(settings, rawWoodhouse, allSchedule, now, now, effectiveMinutes),
+    [settings, rawWoodhouse, allSchedule, effectiveMinutes, now],
   );
 
+  // Leave-by for the next wake-up morning (drives bedtime and the "tomorrow" preview).
   const tomorrowLeaveBy = useMemo(() => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return computeLeaveBy(settings, woodhouse, allSchedule, new Date(), tomorrow, effectiveMinutes);
-  }, [settings, woodhouse, allSchedule, effectiveMinutes]);
+    const wakeMorning = zonedDateTime(wakeDay, "12:00", settings.timezone);
+    return computeLeaveBy(settings, rawWoodhouse, allSchedule, now, wakeMorning, effectiveMinutes);
+  }, [settings, rawWoodhouse, allSchedule, effectiveMinutes, now, wakeDay]);
 
   const bedtime = useMemo(
-    () => computeSuggestedBedtime(settings, tomorrowLeaveBy),
-    [settings, tomorrowLeaveBy],
+    () => computeSuggestedBedtime(settings, tomorrowLeaveBy, now),
+    [settings, tomorrowLeaveBy, now],
   );
 
   const todayActions = useMemo(
@@ -100,8 +122,8 @@ export default function App() {
   const urgentCount = todayActions.filter((a) => a.urgent).length;
 
   const fitnessStatus = useMemo(
-    () => buildFitnessStatus(settings, fitnessLogs, allSchedule),
-    [settings, fitnessLogs, allSchedule],
+    () => buildFitnessStatus(settings, fitnessLogs, allSchedule, now),
+    [settings, fitnessLogs, allSchedule, now],
   );
 
   const overcommitment = useMemo(
@@ -131,17 +153,18 @@ export default function App() {
         allSchedule,
         woodhouse,
         tomorrowLeaveBy,
+        now,
       ),
-    [settings, weather, pending, done, todayActions, allSchedule, woodhouse, tomorrowLeaveBy],
+    [settings, weather, pending, done, todayActions, allSchedule, woodhouse, tomorrowLeaveBy, now],
   );
 
-  const eveningMode = isEveningMode(settings);
-  const showWindDown = bedtime && isWindDownTime(bedtime) && !eveningMode;
+  const eveningMode = isEveningMode(settings, now);
+  const showWindDown = bedtime && isWindDownTime(bedtime, now) && !eveningMode;
   const weeklyReview = useMemo(
     () => buildWeeklyReview(settings, pending, done, allSchedule, woodhouse, shoppingItems, goalsProgress),
     [settings, pending, done, allSchedule, woodhouse, shoppingItems, goalsProgress],
   );
-  const showWeeklyReview = isWeeklyReviewTime(settings);
+  const showWeeklyReview = isWeeklyReviewTime(settings, now);
 
   const displayName = settings.preferredName?.trim() || accountEmail?.split("@")[0];
 
@@ -171,6 +194,9 @@ export default function App() {
     }
     return lines;
   }, [todayTimeline, urgentCount, pending.length, unread, leaveBy]);
+
+  // Sunday: plan the week (week-ahead weather under the greeting).
+  const isSunday = weekdayOfDay(dayKey(settings.timezone, now)) === "Sun";
 
   const coreLines: [string, string] =
     systemStatus === "ok" ? ["ALFRED", "ONLINE"] : systemStatus === "degraded" ? ["ALFRED", "DEGRADED"] : ["ALFRED", "OFFLINE"];
@@ -220,8 +246,10 @@ export default function App() {
           eveningWrap={eveningWrap}
           eveningMode={eveningMode}
           displayName={displayName}
+          modeLabel={DAY_MODE_LABEL[mode]}
           afterGreeting={
             <>
+              {isSunday && weather?.week && <WeekWeatherPanel week={weather.week} city={settings.city} />}
               {showWeeklyReview && <WeeklyReview review={weeklyReview} />}
               <InstallAppBanner />
               <OvernightDeltaBanner delta={overnightDelta} />
@@ -271,6 +299,8 @@ export default function App() {
           onAddTodo={add}
           onLogWorkout={logWorkout}
           pendingTodos={pending}
+          doneTodos={done}
+          now={now}
         />
         {/* Phones/tablets: the console's status panels, after today's plan */}
         <div className="xl:hidden grid gap-4 md:grid-cols-2">
