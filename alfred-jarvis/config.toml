@@ -1,34 +1,34 @@
 # Alfred — OpenJarvis config for E (ECS Network / Vantage)
 #
 # Target machine: iMac 21.5" (Late 2012), Intel quad-core, 8 GB DDR3, macOS Catalina.
-# install-imac.sh copies this file to ~/.openjarvis/config.toml.
+# scripts/personalize.sh copies this file to ~/.openjarvis/config.toml.
 #
-# Strategy: "local first, cloud fallback". This iMac has no Apple Silicon and
-# no usable GPU, so local models are CPU-only and slow (a 2B model writes about
-# 3–8 words/sec). Short, private tasks stay local. Long writing, research, and
-# the daily briefing go to Claude, which costs a few cents a day.
-# If the local engine isn't running, OpenJarvis probes the other engines and
-# falls back to the cloud automatically.
+# Strategy: cloud mode. This iMac has no Apple Silicon or usable GPU, and
+# Catalina can't run current Ollama, so Claude does the thinking (a few cents a
+# day). Everything else (memory, voice, schedules, your documents) stays local.
 
 # ─── Model ──────────────────────────────────────────────────
 [intelligence]
-default_model  = "qwen3.5:2b"        # local, fits in 8 GB next to macOS
-model_short    = "qwen3.5:2b"        # quick questions stay local and private
-model_chat     = "claude-haiku-4-5"  # everyday chat: fast + cheap in the cloud
+# This iMac runs cloud-only (Catalina can't run current Ollama). Claude does the thinking.
+default_model  = "claude-haiku-4-5"  # fast, cheap: chat, briefing, quick questions
+model_short    = "claude-haiku-4-5"
+model_chat     = "claude-haiku-4-5"
 model_long     = "claude-sonnet-4-6" # grant writing, pitches, research
 model_code     = "claude-sonnet-4-6"
-fallback_model = "claude-haiku-4-5"  # used whenever local is down or too weak
+fallback_model = "claude-haiku-4-5"
+# Local option for a newer Mac with Ollama: default_model = "qwen3.5:2b" and
+# [engine] default = "ollama" keep quick, private questions on the machine.
 temperature    = 0.4
 max_tokens     = 2048
 
 [engine]
-default = "ollama"                   # see README: Ollama vs llama.cpp on Catalina
+default = "cloud"
 
 [engine.ollama]
 host = "http://localhost:11434"
 
 [engine.llamacpp]
-host = "http://localhost:8080"       # alternative local engine if Ollama won't install
+host = "http://localhost:8080"
 
 # Cloud engine reads ANTHROPIC_API_KEY from the environment (set in ~/.zshrc,
 # never in this file).
@@ -92,6 +92,9 @@ gpu_metrics = false
 
 [traces]
 enabled = true
+
+[security]
+profile = "personal"                 # single-user Mac: loopback only, redact secrets
 
 [server]
 host = "127.0.0.1"                   # loopback only
