@@ -1,0 +1,12 @@
+# Gitleaks config for Alfred. Uses the default rules plus a few known
+# false positives (placeholders in docs, a localStorage key name).
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Known placeholders and non-secrets"
+regexes = [
+  '''your-long-secret-here''',
+  '''tortuca\.pond\.v1''',
+  '''sk-(fish|ant)-\.\.\.''',
+]

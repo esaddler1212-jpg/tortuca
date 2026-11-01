@@ -8,7 +8,8 @@
     "build": "tsc -p tsconfig.app.json && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test:time": "tsx scripts/check-time-logic.mts"
+    "test:time": "tsx scripts/check-time-logic.mts",
+    "scan:secrets": "gitleaks git . --config .gitleaks.toml --redact --no-banner && gitleaks dir . --config .gitleaks.toml --redact --no-banner"
   },
   "dependencies": {
     "@netlify/blobs": "^10.0.10",
