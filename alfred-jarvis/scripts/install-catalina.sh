@@ -4,7 +4,8 @@
 # The official installer can't finish on Catalina: Ollama needs a newer macOS,
 # and some current Python packages only ship macOS 12+ builds. This installs a
 # pinned OpenJarvis with dependencies that all have Catalina builds, in cloud
-# mode (Claude does the thinking; no local model needed).
+# mode (Claude does the thinking; no local model needed). It ends by compiling
+# OpenJarvis's Rust extension (one time, ~20-40 min); SKIP_RUST=1 defers that.
 #
 #   cd ~/tortuca/alfred-jarvis && ./scripts/install-catalina.sh
 #
@@ -49,6 +50,13 @@ if ! grep -q 'OpenJarvis' "$HOME/.zshrc" 2>/dev/null; then
 fi
 export PATH="$HOME/.local/bin:$PATH"
 jarvis --version
+
+say "Native Rust extension (memory, tools, security checks)"
+if [ "${SKIP_RUST:-0}" = "1" ]; then
+    echo "    skipped (SKIP_RUST=1). Run scripts/build-rust-extension.sh later."
+else
+    "$HERE/scripts/build-rust-extension.sh" || echo "    Rust build failed; re-run scripts/build-rust-extension.sh and send the error."
+fi
 
 say "Done"
 echo "Open a new Terminal window (or run: source ~/.zshrc), then continue with README step 3."

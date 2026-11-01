@@ -59,7 +59,10 @@ The official installer can't finish on Catalina. Ollama needs a newer macOS, and
 `pyarrow` only ships builds for macOS 12+. This script installs OpenJarvis pinned to a tested
 version, on Python 3.12, using `requirements-catalina.txt`. Every package there has a prebuilt
 Catalina/Intel build, so nothing compiles. It runs in cloud mode (Claude does the thinking).
-It takes about 5 minutes. When it finishes, open a new Terminal window.
+It takes about 5 minutes, plus a **one-time 20–40 minute compile** of OpenJarvis's Rust
+extension at the end. Alfred needs it for document memory, its tools, and its security checks,
+so leave it running. If it was skipped or failed, run `./scripts/build-rust-extension.sh`.
+When it finishes, open a new Terminal window.
 
 On a newer Mac, the official one-liner works instead:
 `curl -fsSL https://open-jarvis.github.io/OpenJarvis/install.sh | bash -s -- --no-bg-orchestrator`
