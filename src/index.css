@@ -20,7 +20,8 @@
     --panel: 6 20 10; --panel-a: 6 26 14; --panel-b: 2 10 4;
   }
   :root[data-focus="weekend"],
-  :root[data-focus="holiday"] {
+  :root[data-focus="holiday"],
+  :root[data-focus="vantage"] {
     --accent-50: 250 245 255; --accent-100: 243 232 255; --accent-200: 233 213 255;
     --accent-300: 216 180 254; --accent-400: 192 132 252; --accent-500: 168 85 247;
     --accent-600: 147 51 234; --accent-700: 126 34 206; --accent-800: 107 33 168;

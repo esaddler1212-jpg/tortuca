@@ -5,7 +5,9 @@ import {
   disconnectGoogle,
   fetchCalendarEvents,
   fetchGoogleStatus,
+  isStandaloneApp,
   startGoogleConnect,
+  startGoogleConnectFromApp,
 } from "../lib/google";
 
 const OAUTH_ERROR_MESSAGES: Record<string, string> = {
@@ -74,6 +76,11 @@ export function useGoogleIntegration() {
 
   const connect = useCallback(async () => {
     setConnectionError(null);
+    // Must run before any await: iPhone only allows the Safari window inside the tap.
+    if (isStandaloneApp()) {
+      startGoogleConnectFromApp();
+      return;
+    }
     const result = await startGoogleConnect();
     if (!result.ok && result.error) {
       setConnectionError(result.error);

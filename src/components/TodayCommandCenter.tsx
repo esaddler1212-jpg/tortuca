@@ -32,6 +32,8 @@ import {
   Package,
   Plane,
   Quote,
+  Square,
+  Volume2,
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
@@ -51,6 +53,10 @@ interface Props {
   afterGreeting?: ReactNode;
   /** "Workday", "Weekend", "Off duty after 7 PM"… */
   modeLabel?: string;
+  /** Speak today's rundown (omitted when the device can't speak). */
+  onBriefMe?: () => void;
+  briefSpeaking?: boolean;
+  onStopBrief?: () => void;
   unreadEmails: number;
   actions: TodayAction[];
   todayTimeline: CalendarEvent[];
@@ -87,6 +93,9 @@ export function TodayCommandCenter({
   displayName,
   afterGreeting,
   modeLabel,
+  onBriefMe,
+  briefSpeaking = false,
+  onStopBrief,
   unreadEmails,
   actions,
   todayTimeline,
@@ -138,7 +147,20 @@ export function TodayCommandCenter({
       <section className="panel-hud p-5 md:p-6">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
           <div>
-            <p className="hud-label mb-1">Status · Today</p>
+            <div className="flex items-center justify-between gap-3 mb-1">
+              <p className="hud-label">Status · Today</p>
+              {onBriefMe && (
+                <button
+                  type="button"
+                  className="btn-ghost !py-1 !px-2.5 text-xs border border-alfred-gold/30 rounded-full"
+                  onClick={() => (briefSpeaking ? onStopBrief?.() : onBriefMe())}
+                  aria-label={briefSpeaking ? "Stop" : "Brief me out loud"}
+                >
+                  {briefSpeaking ? <Square className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+                  {briefSpeaking ? "Stop" : "Brief me"}
+                </button>
+              )}
+            </div>
             <h2 className="font-display text-3xl md:text-4xl font-semibold tracking-wide">
               {greeting}{displayName ? `, ${displayName}` : ""}
             </h2>
