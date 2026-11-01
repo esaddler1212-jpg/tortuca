@@ -95,8 +95,8 @@ Alfred (the web app at the root of this repo) runs on Netlify. To find its addre
 
 **Not there?** Alfred isn't deployed yet. Choose **Add new site → Import an existing project →
 GitHub → tortuca**, leave the base directory empty (build settings come from `netlify.toml`),
-and deploy. Then add the environment variables from `.env.example` (Google sign-in, and
-`WOODHOUSE_REVENUE_GOAL`) under **Site configuration → Environment variables**.
+and deploy. Then set up Google sign-in with **[GOOGLE_SIGNIN.md](GOOGLE_SIGNIN.md)**.
+One Google setup covers both the web app and the iMac.
 
 ### 6. Personalize
 
@@ -111,7 +111,7 @@ anything else private), then run the script again.
 ### 7. Connect accounts and test
 
 ```bash
-jarvis connect gdrive        # one Google sign-in covers Gmail, Calendar, and Tasks
+jarvis connect gdrive        # paste the Client ID/secret from GOOGLE_SIGNIN.md step 5
 echo '{"api_key": "OWM_KEY", "location": "Vallejo,CA,US"}' > ~/.openjarvis/connectors/weather.json
 jarvis doctor                # everything green?
 jarvis digest --fresh        # your first briefing
