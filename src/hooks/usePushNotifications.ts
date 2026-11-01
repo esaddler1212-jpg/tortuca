@@ -35,9 +35,28 @@ export function usePushNotifications(enabled: boolean) {
     setLoading(true);
     setError(null);
     try {
+      // iPhone/iPad only allow web push for apps opened from the Home Screen (iOS 16.4+).
+      const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const standalone =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        (navigator as Navigator & { standalone?: boolean }).standalone === true;
+      if (isIos && !standalone) {
+        setError(
+          "On iPhone, add Alfred to your Home Screen first (Safari → Share → Add to Home Screen), open it from there, then turn on notifications.",
+        );
+        return false;
+      }
+      if (!("PushManager" in window)) {
+        setError("This browser doesn't support push notifications. On iPhone, update to iOS 16.4 or later.");
+        return false;
+      }
       const sub = await subscribeToPush();
       if (!sub) {
-        setError("Push notifications unavailable. Add VAPID keys on Netlify.");
+        setError(
+          typeof Notification !== "undefined" && Notification.permission === "denied"
+            ? "Notifications are blocked. On iPhone: Settings → Notifications → Alfred → Allow."
+            : "Push notifications unavailable. Add VAPID keys on Netlify.",
+        );
         return false;
       }
       await savePushSubscription(sub);
