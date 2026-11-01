@@ -52,7 +52,7 @@ Audience**):
 
   ```
   https://alfred2.netlify.app/api/auth-callback
-  http://localhost:8789/callback
+  http://127.0.0.1:8789/callback
   ```
 
   The first is the web app; the second is OpenJarvis on the iMac.
@@ -91,7 +91,7 @@ verified this app". That's expected for your own Testing app: **Continue** → a
 ## 8. On the iMac
 
 Run `jarvis connect gdrive`. It asks for the same **Client ID** and **Client secret**, opens the
-browser, and returns to `localhost:8789`. That's why step 5 included that address.
+browser, and returns to `http://127.0.0.1:8789/callback` (the IP address, not `localhost`; Google treats them as different addresses). That is why step 5 lists it.
 
 **Keep the Client secret private.** It goes in Netlify and in OpenJarvis's prompt, never in this
 repo or in chat.

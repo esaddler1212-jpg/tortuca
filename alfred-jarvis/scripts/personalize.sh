@@ -72,21 +72,22 @@ else
     echo "    using $PY"
 fi
 
-say "Fish Audio voice"
+say "Alfred plugins (voices + Claude compatibility fix)"
 if [ "$PY" != "/usr/bin/python3" ]; then
     SITE="$("$PY" -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"
-    cp "$HERE/plugins/alfred_fish_tts.py" "$SITE/alfred_fish_tts.py"
-    echo "import alfred_fish_tts" > "$SITE/zzz_alfred_fish_tts.pth"
-    if "$PY" -c 'from openjarvis.core.registry import TTSRegistry as R; import sys; sys.exit(0 if R.contains("fish") else 1)'; then
-        echo "    installed (TTS backend \"fish\")"
-    else
-        echo "    install failed; the briefing will fall back to text"
-    fi
+    cp "$HERE/plugins/alfred_macsay_tts.py" "$HERE/plugins/alfred_fish_tts.py" "$HERE/plugins/alfred_compat.py" "$SITE/"
+    # One startup hook loads both; named zzz_ so it runs after OpenJarvis's own .pth.
+    rm -f "$SITE/zzz_alfred_fish_tts.pth"
+    printf 'import alfred_compat\nimport alfred_macsay_tts\nimport alfred_fish_tts\n' > "$SITE/zzz_alfred_tts.pth"
+    "$PY" - <<'PYEOF'
+from openjarvis.core.registry import TTSRegistry as R
+for key, label in (("macsay", "free macOS voice"), ("fish", "Fish Audio")):
+    print(f"    {label}: {'ready' if R.contains(key) else 'NOT installed'}")
+import openjarvis.engine.cloud as cloud
+print(f"    Claude compatibility fix: {'active' if 'claude' in cloud._ANTHROPIC_FIXED_SAMPLING_PREFIXES else 'NOT active'}")
+PYEOF
 else
     echo "    skipped (no OpenJarvis Python found)"
-fi
-if [ -z "${FISH_API_KEY:-}" ]; then
-    echo "    add to ~/.zshrc:  export FISH_API_KEY=\"sk-fish-...\""
 fi
 
 say "Knowledge folders"
@@ -139,38 +140,25 @@ else
     echo "    skipped (re-run with ALFRED_URL=https://... to enable)"
 fi
 
+say "Morning briefing (6:15 AM) + weekly agents (always on)"
+"$PY" "$HERE/scripts/install_jobs.py" || echo "    (couldn't install jobs; run: $PY $HERE/scripts/install_jobs.py)"
+
 say "Index knowledge"
 jarvis memory index "$OJ/knowledge" || echo "    (index failed; run 'jarvis memory index ~/.openjarvis/knowledge' later)"
 
-say "Scheduled agents"
-if jarvis scheduler list 2>/dev/null | grep -q "ECS weekly ops"; then
-    echo "    already created"
-else
-    jarvis scheduler create \
-        "ECS weekly ops review. Read woodhouse-today.md, the ECS docs, and your MEMORY notes. List this week's ECS Network deadlines, what is at risk, and the three moves that most advance the \$BAY timeline and the \$100K/month goal. Store the review as a dated memory note." \
-        --type cron --value "0 8 * * 1" \
-        --agent operative \
-        --tools "knowledge_search,knowledge_sql,memory_store,memory_search,think" || true
-    jarvis scheduler create \
-        "Career scan. Find up to 5 open Program Manager roles (education, youth development, nonprofit, or media) within a 35-minute commute of Vallejo, CA that meet the salary floor in USER.md. For each, give the title, org, pay, link, and two lines on how E's experience fits. Store as a dated memory note." \
-        --type cron --value "0 9 * * 3" \
-        --agent operative \
-        --tools "web_search,knowledge_search,memory_store,think" || true
-    jarvis scheduler create \
-        "Funding scan. Find open grants and local sponsors for \$BAY (Bay Area city arts councils, community foundations, credit unions) and for North Star Network (ASES/ASSETS, youth media). List deadline, amount, fit, and link. Store as a dated memory note." \
-        --type cron --value "0 9 1,15 * *" \
-        --agent operative \
-        --tools "web_search,knowledge_search,memory_store,think" || true
-fi
+say "Scheduled agents (Pacific time)"
+"$PY" "$HERE/scripts/create_agents.py" || echo "    (couldn't create agents; run: $PY $HERE/scripts/create_agents.py)"
 
 say "Done"
 cat <<EOF
 Next:
   1. In ~/.zshrc: export ANTHROPIC_API_KEY=...  (cloud fallback)
-                 export FISH_API_KEY=...       (Alfred's voice)
-                 export FISH_VOICE_ID=...      (optional: a voice id from fish.audio)
+                 Voice is free by default (macOS "say", voice Daniel). Optional:
+                 export MACSAY_VOICE=...       (any name from: say -v '?')
+                 export FISH_API_KEY=...       (premium voice; then set tts_backend = "fish")
   2. jarvis connect gdrive          (one Google sign-in covers Gmail, Calendar, and Tasks)
   3. jarvis doctor                  (check engines and connectors)
-  4. jarvis digest --fresh          (hear your first briefing)
-  5. jarvis scheduler start         (run the weekly agents)
+  4. jarvis digest --fresh          (hear a briefing now)
+  The 6:15 AM briefing and weekly agents now run on their own (launchd).
+  Keep the iMac awake for them:  sudo pmset repeat wakeorpoweron MTWRFSU 06:10:00
 EOF
