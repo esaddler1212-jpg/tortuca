@@ -6,9 +6,19 @@ import { claudeLink } from "../lib/promptGenerator";
  * "Prompt" chip: opens a ready-to-paste Claude prompt for this item, with
  * Copy and Open-in-Claude. The prompt is built only when opened.
  */
-export function PromptButton({ build, label = "Prompt" }: { build: () => string; label?: string }) {
+/**
+ * `onUsed` runs when the dialog closes after the prompt was copied or opened
+ * in Claude (e.g. to move a task to "With Claude" without closing the dialog early).
+ */
+export function PromptButton({ build, label = "Prompt", onUsed }: { build: () => string; label?: string; onUsed?: () => void }) {
   const [prompt, setPrompt] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [used, setUsed] = useState(false);
+  const close = () => {
+    setPrompt(null);
+    if (used) onUsed?.();
+    setUsed(false);
+  };
 
   const copy = async (text: string) => {
     try {
@@ -23,6 +33,7 @@ export function PromptButton({ build, label = "Prompt" }: { build: () => string;
       ta.remove();
     }
     setCopied(true);
+    setUsed(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -37,13 +48,13 @@ export function PromptButton({ build, label = "Prompt" }: { build: () => string;
         <Sparkles className="h-3 w-3" aria-hidden /> {label}
       </button>
       {prompt !== null && (
-        <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-black/60 p-3" role="dialog" aria-modal aria-label="Claude prompt">
+        <div onClick={(e) => e.target === e.currentTarget && close()} className="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-black/60 p-3" role="dialog" aria-modal aria-label="Claude prompt">
           <div className="panel-hud w-full max-w-lg p-4">
             <div className="flex items-center justify-between mb-2">
               <p className="hud-label flex items-center gap-1.5">
                 <Sparkles className="h-3.5 w-3.5" /> Prompt for Claude
               </p>
-              <button type="button" className="btn-ghost p-1.5" onClick={() => setPrompt(null)} aria-label="Close">
+              <button type="button" className="btn-ghost p-1.5" onClick={close} aria-label="Close">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -58,7 +69,7 @@ export function PromptButton({ build, label = "Prompt" }: { build: () => string;
                 {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 {copied ? "Copied" : "Copy"}
               </button>
-              <a className="btn-ghost flex-1 border border-alfred-gold/30" href={claudeLink(prompt)} target="_blank" rel="noreferrer">
+              <a className="btn-ghost flex-1 border border-alfred-gold/30" href={claudeLink(prompt)} target="_blank" rel="noreferrer" onClick={() => setUsed(true)}>
                 <ExternalLink className="h-4 w-4" /> Open in Claude
               </a>
             </div>

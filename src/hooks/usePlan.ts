@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { EMPTY_PLAN, type PlanState, type SparkEntry } from "../../shared/plan";
+import { EMPTY_PLAN, type AiBudget, type HandoffStatus, type PlanState, type SparkEntry } from "../../shared/plan";
 import { YEAR_GOALS, type PlanTask, type YearGoal } from "../../shared/planData";
 import { fetchUserData, saveUserDataRemote } from "../lib/userData";
 import { loadJson, saveJson } from "../lib/storage";
@@ -14,7 +14,7 @@ function normalize(p: Partial<PlanState> & { mwfsLog?: unknown }): PlanState {
       ? YEAR_GOALS.find((y) => y.id === g.id.replace("mwfs", "spark")) ?? g
       : g,
   ) ?? null;
-  return { ...EMPTY_PLAN, ...rest, goals, sparkLog: rest.sparkLog ?? {} };
+  return { ...EMPTY_PLAN, ...rest, goals, sparkLog: rest.sparkLog ?? {}, handoffs: rest.handoffs ?? {}, budget: rest.budget ?? EMPTY_PLAN.budget };
 }
 
 function initialPlan(): PlanState {
@@ -70,7 +70,9 @@ export function usePlan() {
         const done = { ...p.done };
         if (done[id]) delete done[id];
         else done[id] = new Date().toISOString();
-        return { ...p, done };
+        const handoffs = { ...p.handoffs };
+        delete handoffs[id]; // finished (or reopened): off the agent desk
+        return { ...p, done, handoffs };
       }),
     [update],
   );
@@ -111,5 +113,18 @@ export function usePlan() {
     [patchSpark],
   );
 
-  return { plan, toggleTask, addTask, removeTask, setGoals, toggleSpark, shuffleSpark, noteSpark };
+  /** Hand a task to Claude, mark it back for review, or (null) take it back. */
+  const setHandoff = useCallback(
+    (id: string, status: HandoffStatus | null) =>
+      update((p) => {
+        const handoffs = { ...p.handoffs };
+        if (status) handoffs[id] = { status, at: new Date().toISOString() };
+        else delete handoffs[id];
+        return { ...p, handoffs };
+      }),
+    [update],
+  );
+  const setBudget = useCallback((budget: AiBudget) => update((p) => ({ ...p, budget })), [update]);
+
+  return { plan, setHandoff, setBudget, toggleTask, addTask, removeTask, setGoals, toggleSpark, shuffleSpark, noteSpark };
 }

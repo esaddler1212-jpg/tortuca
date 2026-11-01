@@ -64,6 +64,8 @@ export interface SyncedPlanState {
   customTasks: unknown[];
   goals: unknown[] | null;
   sparkLog: Record<string, { done?: string; shuffle?: number; note?: string }>;
+  handoffs: Record<string, { status: string; at: string }>;
+  budget: { monthly: number; items: { id: string; name: string; amount: number }[] };
   updatedAt: string;
 }
 

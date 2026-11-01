@@ -137,6 +137,14 @@ check("spark: Monday is a music day", Sparks.sparkFor("2026-11-02").theme, "musi
 check("spark: Another one changes the prompt", Plan.todaySpark(sp, "2026-11-02").prompt !== Sparks.sparkFor("2026-11-02").prompt, true);
 check("spark: Sunday is reflection", Sparks.sparkFor("2026-11-01").theme, "reflect");
 
+// ── agent desk + AI budget
+const desk = { ...plan0, handoffs: { "bay-budget": { status: "review", at: "x" }, "bay-trademark": { status: "working", at: "x" } } } as typeof plan0;
+const q = Plan.handoffQueue(desk);
+check("desk: review and working queues", [q.review.map((t) => t.id), q.working.length], [["bay-budget"], Plan.allTasks(plan0).some((t) => t.id === "bay-trademark") ? 1 : 0]);
+check("desk: approved tasks leave the desk", Plan.handoffQueue({ ...desk, done: { "bay-budget": "x" } }).review.length, 0);
+check("desk: 'you' tasks can't be handed off", Plan.allTasks(plan0).filter((t) => t.ai === "you").every((t) => !Plan.canHandOff(t)), true);
+check("budget: total of line items", Plan.budgetTotal({ monthly: 50, items: [{ id: "a", name: "Claude", amount: 20 }, { id: "b", name: "Fish", amount: 11 }] }), 31);
+
 // ── same answers regardless of the machine's time zone
 const self = fileURLToPath(import.meta.url);
 if (!process.env.TIME_CHECK_CHILD) {

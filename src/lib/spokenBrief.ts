@@ -83,6 +83,7 @@ export function buildVantageBrief(opts: {
   weather: WeatherSnapshot | null;
   events: CalendarEvent[];
   spark?: { mindset: string; prompt: string };
+  desk?: { review: number; working: number };
 }): { lines: { label: string; text: string }[]; spoken: string } {
   const lines: { label: string; text: string }[] = [];
   const roadmap = opts.woodhouse?.nodes.find((n) => n.registryId === "ecs-roadmap")?.snapshot;
@@ -107,6 +108,12 @@ export function buildVantageBrief(opts: {
     lines.push({
       label: "Weather",
       text: rainy.length ? `Rain likely ${rainy.join(", ")}.` : "Dry week ahead.",
+    });
+  }
+  if (opts.desk && opts.desk.review + opts.desk.working > 0) {
+    lines.push({
+      label: "Agent desk",
+      text: `${opts.desk.review} need${opts.desk.review === 1 ? "s" : ""} your OK, ${opts.desk.working} with Claude`,
     });
   }
   if (opts.spark) lines.push({ label: "Creative spark", text: `${opts.spark.mindset} ${opts.spark.prompt}` });
