@@ -1,9 +1,12 @@
 import { useMemo, useState, type ReactElement } from "react";
-import { Check, Flag, Pencil, Plus, Target, Trash2, X } from "lucide-react";
+import { Bot, Check, Flag, Pencil, Plus, Target, Trash2, Undo2, Wallet, X } from "lucide-react";
 import type { CalendarEvent } from "../types";
 import type { Area, PlanTask, YearGoal } from "../../shared/planData";
 import {
   allGoals,
+  budgetTotal,
+  canHandOff,
+  handoffQueue,
   daysLeftInYear,
   goalProgress,
   isDone,
@@ -12,6 +15,8 @@ import {
   nudges,
   sparkHistory,
   weekFocus,
+  type AiBudget,
+  type HandoffStatus,
   type PlanState,
 } from "../../shared/plan";
 import { AI_TAG_LABEL, promptForEvent, promptForTask } from "../lib/promptGenerator";
@@ -35,6 +40,8 @@ interface Props {
   onAddTask: (t: PlanTask) => void;
   onRemoveTask: (id: string) => void;
   onSetGoals: (g: YearGoal[]) => void;
+  onSetHandoff: (id: string, status: HandoffStatus | null) => void;
+  onSetBudget: (b: AiBudget) => void;
   /** Start on this tab (e.g. "year" in the Vantage view). */
   initialTab?: Tab;
 }
@@ -54,11 +61,15 @@ interface TaskRowProps {
   month: string;
   goal?: YearGoal;
   onToggle: (id: string) => void;
+  onHandoff: (id: string, status: HandoffStatus | null) => void;
 }
 
+const chip = "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-mono uppercase tracking-wider";
+
 /** One plan task: check off, AI tag, and its prompt. Top-level so open prompts survive re-renders. */
-function TaskRow({ t, plan, month, goal, onToggle }: TaskRowProps) {
+function TaskRow({ t, plan, month, goal, onToggle, onHandoff }: TaskRowProps) {
   const done = isDone(plan, t);
+  const handoff = done ? undefined : plan.handoffs[t.id];
   return (
     <li className={`flex items-start gap-3 rounded-lg border px-3 py-2 text-sm ${done ? "border-alfred-border/30 opacity-60" : "border-alfred-border/60"}`}>
       <button
@@ -76,7 +87,32 @@ function TaskRow({ t, plan, month, goal, onToggle }: TaskRowProps) {
           <span>{t.area}</span>
           {t.month < month && !done && <span className="text-amber-300">overdue · {monthName(t.month)}</span>}
           <span title={AI_TAG_LABEL[t.ai].long}>{AI_TAG_LABEL[t.ai].short}</span>
-          {!done && <PromptButton build={() => promptForTask(t, goal)} />}
+          {!done && !handoff && canHandOff(t) && (
+            <PromptButton label="Hand off" build={() => promptForTask(t, goal)} onUsed={() => onHandoff(t.id, "working")} />
+          )}
+          {!done && !handoff && !canHandOff(t) && <PromptButton build={() => promptForTask(t, goal)} />}
+          {handoff?.status === "working" && (
+            <>
+              <span className={`${chip} border-alfred-gold/40 text-alfred-gold`}>
+                <Bot className="h-3 w-3" aria-hidden /> With Claude
+              </span>
+              <button type="button" className={`${chip} border-alfred-border/60 hover:text-alfred-gold`} onClick={() => onHandoff(t.id, "review")}>
+                Ready to review
+              </button>
+              <PromptButton label="Prompt" build={() => promptForTask(t, goal)} />
+            </>
+          )}
+          {handoff?.status === "review" && (
+            <>
+              <span className={`${chip} border-amber-400/50 text-amber-200`}>Needs your OK</span>
+              <button type="button" className={`${chip} border-alfred-gold bg-alfred-gold/15 text-alfred-gold`} onClick={() => onToggle(t.id)}>
+                <Check className="h-3 w-3" aria-hidden /> Approve
+              </button>
+              <button type="button" className={`${chip} border-alfred-border/60 hover:text-alfred-gold`} onClick={() => onHandoff(t.id, "working")}>
+                <Undo2 className="h-3 w-3" aria-hidden /> Send back
+              </button>
+            </>
+          )}
         </div>
       </div>
     </li>
@@ -97,7 +133,7 @@ export function PlanPanel(props: Props) {
   const days = daysLeftInYear(today);
   const yearNudges = nudges(plan, today);
   const renderTask = (t: PlanTask) => (
-    <TaskRow key={t.id} t={t} plan={plan} month={month} goal={goalById.get(t.goalId)} onToggle={props.onToggleTask} />
+    <TaskRow key={t.id} t={t} plan={plan} month={month} goal={goalById.get(t.goalId)} onToggle={props.onToggleTask} onHandoff={props.onSetHandoff} />
   );
 
   return (
@@ -128,7 +164,10 @@ export function PlanPanel(props: Props) {
 
       {tab === "week" && <WeekTab {...props} renderTask={renderTask} />}
       {tab === "month" && (
-        <MonthTab plan={plan} month={month} renderTask={renderTask} goalById={goalById} onAddTask={props.onAddTask} goals={goals.filter((g) => g.year >= year)} />
+        <>
+          <MonthTab plan={plan} month={month} renderTask={renderTask} goalById={goalById} onAddTask={props.onAddTask} goals={goals.filter((g) => g.year >= year)} />
+          <BudgetSection budget={plan.budget} onSet={props.onSetBudget} />
+        </>
       )}
       {tab === "year" && (
         <YearTab
@@ -149,10 +188,27 @@ export function PlanPanel(props: Props) {
 
 function WeekTab(props: Props & { renderTask: (t: PlanTask) => ReactElement }) {
   const { plan, today, mode, timeZone, now, renderTask } = props;
-  const focus = weekFocus(plan, today, mode === "school" ? "network" : mode, 7).filter((t) => !props.onTodayIds.has(t.id)).slice(0, 5);
+  const focus = weekFocus(plan, today, mode === "school" ? "network" : mode, 12)
+    .filter((t) => !props.onTodayIds.has(t.id) && !plan.handoffs[t.id])
+    .slice(0, 5);
   const events = upcomingEvents(props.events, now, 7).slice(0, 4);
+  const desk = handoffQueue(plan);
+  const deskIds = new Set([...desk.review, ...desk.working].map((t) => t.id));
   return (
     <div className="space-y-5">
+      {deskIds.size > 0 && (
+        <div>
+          <div className="flex items-baseline justify-between mb-2">
+            <p className="hud-label flex items-center gap-1.5">
+              <Bot className="h-3.5 w-3.5" aria-hidden /> Agent desk
+            </p>
+            <span className="font-mono text-xs text-alfred-mist">
+              {desk.review.length} need your OK · {desk.working.length} with Claude
+            </span>
+          </div>
+          <ul className="space-y-2">{[...desk.review, ...desk.working].map(renderTask)}</ul>
+        </div>
+      )}
       <div>
         <p className="hud-label mb-2">Also this week</p>
         <ul className="space-y-2">
@@ -390,3 +446,69 @@ function YearTab({
   );
 }
 
+
+/** Monthly AI spend vs. a budget, Paperclip-style: know what the agents cost. */
+function BudgetSection({ budget, onSet }: { budget: AiBudget; onSet: (b: AiBudget) => void }) {
+  const total = budgetTotal(budget);
+  const over = total > budget.monthly;
+  const [name, setName] = useState("");
+  const [amount, setAmount] = useState("");
+  const money = (n: number) => `$${n.toFixed(n % 1 ? 2 : 0)}`;
+  return (
+    <div className="mt-5 border-t border-alfred-border/40 pt-4 space-y-3">
+      <p className="hud-label flex items-center gap-1.5">
+        <Wallet className="h-3.5 w-3.5" aria-hidden /> AI spend
+      </p>
+      <label className="flex items-center gap-2 font-mono text-xs text-alfred-mist">
+        <span className={over ? "text-amber-200" : "text-alfred-gold"}>{money(total)}/mo</span>
+        <span>of a</span>
+        <span className="flex items-center">
+          $
+          <input
+            className="ml-0.5 w-16 rounded border border-alfred-border/60 bg-transparent px-1.5 py-0.5 text-xs"
+            type="number"
+            min={0}
+            inputMode="decimal"
+            value={budget.monthly}
+            onChange={(e) => onSet({ ...budget, monthly: Math.max(0, Number(e.target.value) || 0) })}
+            aria-label="Monthly AI budget"
+          />
+        </span>
+        <span>budget</span>
+      </label>
+      <div className={over ? "[&_span]:!bg-amber-400" : ""}>
+        <Bar done={Math.min(total, budget.monthly)} total={budget.monthly || 1} />
+      </div>
+      {over && <p className="text-xs text-amber-200">Over budget by {money(total - budget.monthly)}. Cut a tool or raise the budget.</p>}
+      <ul className="space-y-1.5">
+        {budget.items.map((i) => (
+          <li key={i.id} className="flex items-center justify-between gap-2 text-sm">
+            <span className="truncate">{i.name}</span>
+            <span className="flex items-center gap-2 font-mono text-xs text-alfred-mist">
+              {money(i.amount)}
+              <button type="button" className="btn-ghost p-1" onClick={() => onSet({ ...budget, items: budget.items.filter((x) => x.id !== i.id) })} aria-label={`Remove ${i.name}`}>
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </span>
+          </li>
+        ))}
+        {!budget.items.length && <li className="text-xs text-alfred-mist">Add what you pay for: Claude, Fish Audio, Netlify…</li>}
+      </ul>
+      <form
+        className="flex gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const amt = Number(amount);
+          if (!name.trim() || !Number.isFinite(amt) || amt < 0) return;
+          onSet({ ...budget, items: [...budget.items, { id: `b-${Date.now().toString(36)}`, name: name.trim(), amount: amt }] });
+          setName("");
+          setAmount("");
+        }}
+      >
+        <input className="input-field flex-1" placeholder="Tool (e.g. Claude Pro)" value={name} onChange={(e) => setName(e.target.value)} aria-label="Tool name" />
+        <input className="input-field w-24" placeholder="$/mo" type="number" min={0} step="0.01" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} aria-label="Monthly cost" />
+        <button type="submit" className="btn-gold" aria-label="Add cost"><Plus className="h-4 w-4" /></button>
+      </form>
+    </div>
+  );
+}

@@ -9,7 +9,7 @@ import { buildDailyBrief, buildVantageBrief } from "./lib/spokenBrief";
 import { usePlan } from "./hooks/usePlan";
 import { SparkCard } from "./components/SparkCard";
 import { PlanPanel } from "./components/PlanPanel";
-import { allGoals, allTasks, goalProgress, planTasksDoneOn, todaySpark, weekFocus } from "../shared/plan";
+import { allGoals, allTasks, goalProgress, handoffQueue, planTasksDoneOn, todaySpark, weekFocus } from "../shared/plan";
 import { VantageBriefingPanel } from "./components/hud/VantageBriefingPanel";
 import { OvernightDeltaBanner } from "./components/OvernightDeltaBanner";
 import { OvercommitmentBanner } from "./components/OvercommitmentBanner";
@@ -79,7 +79,7 @@ export default function App() {
   const { effectiveMinutes, loading: commuteLoading, error: commuteError } = useCommute(settings);
   const { logs: fitnessLogs, logWorkout, loadRemote: loadFitness } = useFitness(settings);
   const { items: shoppingItems, add: addShopping, togglePantry, remove: removeShopping, loadRemote: loadShopping } = useShoppingList();
-  const { plan, toggleTask: togglePlanTask, addTask: addPlanTask, removeTask: removePlanTask, setGoals: setPlanGoals, toggleSpark, shuffleSpark, noteSpark } = usePlan();
+  const { plan, toggleTask: togglePlanTask, addTask: addPlanTask, removeTask: removePlanTask, setGoals: setPlanGoals, setHandoff, setBudget, toggleSpark, shuffleSpark, noteSpark } = usePlan();
 
   useUserDataSync(settings, persist, todos, setTodos, loadFitness, loadShopping);
   const push = usePushNotifications(settings.pushNotificationsEnabled);
@@ -125,23 +125,28 @@ export default function App() {
   const planTaskMap = useMemo(() => new Map(allTasks(plan).map((t) => [t.id, t])), [plan]);
   const planGoalMap = useMemo(() => new Map(allGoals(plan).map((g) => [g.id, g])), [plan]);
   // Do today = urgent app items, then up to 2 plan tasks for the current focus, then the rest.
+  // Hand-offs waiting on your OK come first; tasks already with Claude stay off the list.
+  const desk = useMemo(() => handoffQueue(plan), [plan]);
   const todayPlanTasks = useMemo(
-    () => (mode === "school" ? [] : weekFocus(plan, today, mode, 2)),
-    [plan, today, mode],
+    () =>
+      mode === "school"
+        ? []
+        : [...desk.review, ...weekFocus(plan, today, mode, 12).filter((t) => !plan.handoffs[t.id]).slice(0, 2)],
+    [plan, today, mode, desk],
   );
   const todayActions = useMemo(() => {
     const queue = buildTodayQueue(pending, woodhouse);
     const planItems = todayPlanTasks.map((t) => ({
       id: `plan-${t.id}`,
-      title: t.title,
+      title: plan.handoffs[t.id]?.status === "review" ? `Review Claude's work: ${t.title}` : t.title,
       source: "plan" as const,
-      sourceLabel: `Plan · ${t.area}`,
+      sourceLabel: plan.handoffs[t.id] ? `Agent desk · ${t.area}` : `Plan · ${t.area}`,
       urgent: false,
       sort: 0.5,
       planTaskId: t.id,
     }));
     return [...queue.filter((a) => a.urgent), ...planItems, ...queue.filter((a) => !a.urgent)];
-  }, [pending, woodhouse, todayPlanTasks]);
+  }, [pending, woodhouse, todayPlanTasks, plan.handoffs]);
   // "$BAY Season 1: 4/34" lines for the current year's goals (Vantage briefing, weekly review).
   const goalLines = useMemo(() => {
     const year = Number(today.slice(0, 4));
@@ -225,8 +230,9 @@ export default function App() {
         weather,
         events: allSchedule,
         spark: todaySpark(plan, today),
+        desk: { review: desk.review.length, working: desk.working.length },
       }),
-    [displayName, settings.timezone, now, woodhouse, goalLines, weather, allSchedule, plan, today],
+    [displayName, settings.timezone, now, woodhouse, goalLines, weather, allSchedule, plan, today, desk],
   );
   // "Brief me": Alfred reads today's rundown (or the Vantage briefing in that mode).
   const briefMe = () => {
@@ -371,6 +377,8 @@ export default function App() {
           onAddTask={addPlanTask}
           onRemoveTask={removePlanTask}
           onSetGoals={setPlanGoals}
+          onSetHandoff={setHandoff}
+          onSetBudget={setBudget}
         />
 
         {/* Phones/tablets: the console's status panels, after today's plan */}

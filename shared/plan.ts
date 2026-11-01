@@ -13,6 +13,19 @@ export interface SparkEntry {
   note?: string;
 }
 
+/** A Claude-ready task handed off: Claude is working on it, or it's back for your OK. */
+export type HandoffStatus = "working" | "review";
+export interface Handoff {
+  status: HandoffStatus;
+  at: string;
+}
+
+/** Monthly AI spend: a budget and what's on it (Claude, voice, hosting…). */
+export interface AiBudget {
+  monthly: number;
+  items: { id: string; name: string; amount: number }[];
+}
+
 /** Everything the user changes, synced across devices. */
 export interface PlanState {
   /** taskId → ISO time it was completed. */
@@ -25,6 +38,9 @@ export interface PlanState {
   goals: YearGoal[] | null;
   /** YYYY-MM-DD → that day's creative spark. */
   sparkLog: Record<string, SparkEntry>;
+  /** taskId → hand-off state (cleared when approved or sent back). */
+  handoffs: Record<string, Handoff>;
+  budget: AiBudget;
   updatedAt: string;
 }
 
@@ -34,6 +50,8 @@ export const EMPTY_PLAN: PlanState = {
   customTasks: [],
   goals: null,
   sparkLog: {},
+  handoffs: {},
+  budget: { monthly: 50, items: [] },
   updatedAt: new Date(0).toISOString(),
 };
 
@@ -192,4 +210,24 @@ export function planTasksDoneOn(plan: PlanState, day: string, timeZone: string):
     const at = plan.done[t.id];
     return at && new Intl.DateTimeFormat("en-CA", { timeZone }).format(new Date(at)) === day;
   });
+}
+
+// ── Agent desk (hand-offs) and AI budget ─────────────────────────────────
+
+/** Tasks Claude can take on (fully or with you). */
+export function canHandOff(task: PlanTask): boolean {
+  return task.ai !== "you";
+}
+
+/** Handed-off tasks still open: waiting on your OK first, then with Claude. */
+export function handoffQueue(state: PlanState): { review: PlanTask[]; working: PlanTask[] } {
+  const open = allTasks(state).filter((t) => !isDone(state, t) && state.handoffs[t.id]);
+  return {
+    review: open.filter((t) => state.handoffs[t.id].status === "review"),
+    working: open.filter((t) => state.handoffs[t.id].status === "working"),
+  };
+}
+
+export function budgetTotal(budget: AiBudget): number {
+  return budget.items.reduce((n, i) => n + (Number.isFinite(i.amount) ? i.amount : 0), 0);
 }
