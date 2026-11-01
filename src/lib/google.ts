@@ -63,15 +63,31 @@ export async function startGoogleConnect(): Promise<{ ok: boolean; error?: strin
   }
 
   const sessionId = await ensureSession();
-  const base = `${apiBase()}/auth-start?session=${encodeURIComponent(sessionId)}`;
-  if (isStandaloneApp()) {
-    // Home Screen app: Google's pages open in Safari, outside the app. Finish on a
-    // "go back to Alfred" page there; the app re-checks when you switch back.
-    const win = window.open(`${base}&return=app`, "_blank");
-    if (win) return { ok: true };
-  }
-  window.location.href = base;
+  window.location.href = `${apiBase()}/auth-start?session=${encodeURIComponent(sessionId)}`;
   return { ok: true };
+}
+
+/**
+ * Home Screen app (iPhone): open Google sign-in in Safari *synchronously*,
+ * inside the tap. iOS blocks window.open once any await has happened, which
+ * is why the old flow silently fell back to an in-app redirect that never
+ * came back. Uses the session id already on the device (no network first).
+ * Returns false if the window was blocked anyway.
+ */
+export function startGoogleConnectFromApp(): boolean {
+  let sessionId = getSessionId();
+  if (!sessionId) {
+    sessionId = crypto.randomUUID();
+    setSessionId(sessionId);
+  }
+  const url = `${apiBase()}/auth-start?session=${encodeURIComponent(sessionId)}&return=app`;
+  const win = window.open(url, "_blank");
+  if (win) return true;
+  // Blocked anyway: sign in within the app's browser layer. The login is still
+  // saved under this app's session, and the page says "switch back to Alfred";
+  // closing it returns here, where the app re-checks.
+  window.location.href = url;
+  return false;
 }
 
 /** True when running as an installed Home Screen / desktop app. */
