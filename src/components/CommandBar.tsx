@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { MessageSquare, Send, Terminal } from "lucide-react";
+import { Mic, MicOff, MessageSquare, Send, Terminal } from "lucide-react";
+import { useSpeechInput } from "../hooks/useSpeechInput";
 import type { UserSettings } from "../types";
 import type { LeaveByPlan } from "../lib/leaveBy";
 import type { BedtimePlan } from "../lib/bedtime";
@@ -31,8 +32,9 @@ export function CommandBar({
   const [text, setText] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
 
-  const run = () => {
-    const cmd = parseCommand(text, settings, leaveBy, bedtime);
+  const run = (input: string = text) => {
+    if (!input.trim()) return;
+    const cmd = parseCommand(input, settings, leaveBy, bedtime);
     switch (cmd.kind) {
       case "todo":
         onAddTodo(cmd.title, cmd.dueDate);
@@ -55,8 +57,28 @@ export function CommandBar({
     }
     setFeedback(cmd.message);
     setText("");
-    setTimeout(() => setFeedback(null), 5000);
+    setTimeout(() => setFeedback(null), 6000);
   };
+
+  // Speak a command: the transcript runs as soon as you stop talking.
+  const voice = useSpeechInput((spoken) => {
+    setText(spoken);
+    run(spoken);
+  });
+  const shownText = voice.listening ? voice.interim : text;
+
+  const micButton = (className: string) => (
+    <button
+      type="button"
+      className={className}
+      onClick={() => (voice.listening ? voice.stop() : voice.start())}
+      aria-label={voice.listening ? "Stop listening" : "Speak a command"}
+      aria-pressed={voice.listening}
+      title={voice.supported ? "Speak a command" : "Voice input not supported here"}
+    >
+      {voice.listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+    </button>
+  );
 
   if (variant === "hud") {
     return (
@@ -75,17 +97,21 @@ export function CommandBar({
           <input
             id="alfred-command"
             className="flex-1 min-w-0 bg-transparent font-mono text-sm uppercase tracking-[0.2em] text-cyan-100 placeholder:text-cyan-300/70 focus:outline-none"
-            placeholder="Awaiting command..."
-            value={text}
+            placeholder={voice.listening ? "Listening..." : "Awaiting command..."}
+            value={shownText}
             onChange={(e) => setText(e.target.value)}
           />
+          {micButton(
+            `rounded-full p-2 hover:bg-cyan-400/15 ${voice.listening ? "text-black bg-cyan-300 animate-hud-pulse" : "text-cyan-300"}`,
+          )}
           <button type="submit" className="rounded-full p-2 text-cyan-300 hover:bg-cyan-400/15" aria-label="Run command">
             <Send className="h-4 w-4" />
           </button>
         </form>
         <p className="mt-2 text-center font-mono text-[10px] uppercase tracking-widest text-cyan-400/40">
-          “buy chicken” · “log legs” · “leave by” · “bedtime”
+          🎤 or type · “buy chicken” · “leave by” · “bedtime”
         </p>
+        {voice.error && <p className="mt-2 text-center text-xs text-amber-300/90">{voice.error}</p>}
         {feedback && (
           <p className="mt-2 text-center font-mono text-sm text-cyan-200">ALFRED: {feedback}</p>
         )}
@@ -108,14 +134,16 @@ export function CommandBar({
         <input
           id="alfred-command"
           className="input-field flex-1"
-          placeholder='“buy chicken”, “log legs”, “leave by”, “bedtime”, “what can I make”'
-          value={text}
+          placeholder={voice.listening ? "Listening…" : '“buy chicken”, “log legs”, “leave by”, “bedtime”, “what can I make”'}
+          value={shownText}
           onChange={(e) => setText(e.target.value)}
         />
+        {micButton(`btn-gold px-3 ${voice.listening ? "animate-hud-pulse" : ""}`)}
         <button type="submit" className="btn-gold px-4" aria-label="Run command">
           <Send className="h-4 w-4" />
         </button>
       </form>
+      {voice.error && <p className="text-xs text-amber-300/90 mt-2">{voice.error}</p>}
       {feedback && (
         <p className="text-sm text-alfred-mist mt-2 font-mono border-l-2 border-cyan-400/40 pl-3">
           ALFRED: {feedback}
