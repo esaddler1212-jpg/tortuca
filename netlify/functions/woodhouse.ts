@@ -6,6 +6,7 @@ import {
   parseRegistryFromEnv,
   parseRegistryHeader,
   type RegistryEntry,
+  withBuiltinNodes,
 } from "./_woodhouse-registry";
 
 const WOODHOUSE_ORCHESTRATION = "woodhouse/v3" as const;
@@ -29,7 +30,7 @@ export const handler: Handler = async (event) => {
     return { statusCode: 405, body: "Method not allowed" };
   }
 
-  const registry = mergeRegistry(event);
+  const registry = withBuiltinNodes(mergeRegistry(event));
   const useDemo =
     !parseRegistryFromEnv().length &&
     !parseRegistryHeader(

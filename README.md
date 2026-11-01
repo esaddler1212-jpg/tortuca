@@ -10,6 +10,7 @@ its own README, build, and (typically) its own Netlify site.
 | **Alfred** | repo root | Personal command center — email, calendar, weather, Woodhouse app dashboard |
 | **Family Purpose** | [`family-purpose/`](family-purpose/) | Student check-ins, mentoring group sign-in, debriefs, BOYS curriculum API |
 | **BOYS Student** | [`boys-student/`](boys-student/) | Student-facing monthly curriculum app (class code login) |
+| **Alfred × OpenJarvis** | [`alfred-jarvis/`](alfred-jarvis/) | Local AI assistant (OpenJarvis) personalized as Alfred: briefings, ECS ops, research, career |
 
 ### Alfred (repo root)
 
