@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { format, parseISO } from "date-fns";
 import type { CalendarEvent } from "../types";
 import type { EmailMessage } from "../types";
@@ -45,6 +45,8 @@ interface Props {
   eveningWrap: EveningWrap;
   eveningMode: boolean;
   displayName?: string;
+  /** Rendered directly under the greeting (alerts, command bar, console). */
+  afterGreeting?: ReactNode;
   unreadEmails: number;
   actions: TodayAction[];
   todayTimeline: CalendarEvent[];
@@ -75,6 +77,7 @@ export function TodayCommandCenter({
   eveningWrap,
   eveningMode,
   displayName,
+  afterGreeting,
   unreadEmails,
   actions,
   todayTimeline,
@@ -210,6 +213,8 @@ export function TodayCommandCenter({
           <Chip label={`${woodhouse?.nodes.filter((n) => n.ok).length ?? 0}/${woodhouse?.nodes.length ?? 0} apps online`} />
         </div>
       </section>
+
+      {afterGreeting}
 
       {eveningMode && (
         <section className="panel p-5 border-cyan-500/25 bg-gradient-to-br from-cyan-950/40 to-alfred-panel/30">

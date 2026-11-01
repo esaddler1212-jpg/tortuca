@@ -73,7 +73,7 @@ export function InstallAppBanner() {
         ) : (
           <p className="text-xs text-alfred-mist mt-1">
             In Safari: tap <strong className="text-alfred-cream">Share</strong> →{" "}
-            <strong className="text-alfred-cream">Add to Home Screen</strong>. Opens full-screen with your green HUD.
+            <strong className="text-alfred-cream">Add to Home Screen</strong>. Opens full-screen, like an app.
           </p>
         )}
       </div>
