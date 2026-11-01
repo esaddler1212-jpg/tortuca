@@ -13,6 +13,8 @@ export const handler: Handler = async (event) => {
 
   if (event.httpMethod === "GET") {
     const data = await loadUserData(sessionId);
+    // Watcher page copies are large and server-only; results come from /api/watch-now.
+    if (data) delete data.watchState;
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },

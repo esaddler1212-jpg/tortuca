@@ -80,5 +80,9 @@ export interface AlfredUserData {
   fitnessLogs?: SyncedFitnessLog[];
   shoppingList?: SyncedShoppingItem[];
   plan?: SyncedPlanState;
+  /** Feed, watchers, gym, money, memos, links (see shared/hub.ts HubState). */
+  hub?: unknown;
+  /** Server-owned watcher results (see shared/hub.ts WatchResult). */
+  watchState?: Record<string, unknown>;
   updatedAt: string;
 }
