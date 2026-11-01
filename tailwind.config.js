@@ -11,18 +11,18 @@ export default {
       colors: {
         alfred: {
           ink: "#000000",
-          panel: "#0a120a",
-          border: "#166534",
-          gold: "#4ade80",
-          "gold-dim": "#22c55e",
-          cream: "#ecfdf5",
-          mist: "#86efac",
+          panel: "#06121a",
+          border: "#155e75",
+          gold: "#22d3ee",
+          "gold-dim": "#06b6d4",
+          cream: "#ecfeff",
+          mist: "#67e8f9",
         },
       },
       boxShadow: {
-        panel: "0 0 1px rgba(74, 222, 128, 0.35), 0 4px 32px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(74, 222, 128, 0.08)",
-        hud: "0 0 16px rgba(74, 222, 128, 0.35)",
-        "hud-lg": "0 0 28px rgba(74, 222, 128, 0.28), inset 0 0 20px rgba(74, 222, 128, 0.06)",
+        panel: "0 0 1px rgba(34, 211, 238, 0.35), 0 4px 32px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(34, 211, 238, 0.08)",
+        hud: "0 0 16px rgba(34, 211, 238, 0.35)",
+        "hud-lg": "0 0 28px rgba(34, 211, 238, 0.28), inset 0 0 20px rgba(34, 211, 238, 0.06)",
       },
       animation: {
         "hud-pulse": "hud-pulse 3s ease-in-out infinite",

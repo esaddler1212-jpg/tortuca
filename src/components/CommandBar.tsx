@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageSquare, Send } from "lucide-react";
+import { MessageSquare, Send, Terminal } from "lucide-react";
 import type { UserSettings } from "../types";
 import type { LeaveByPlan } from "../lib/leaveBy";
 import type { BedtimePlan } from "../lib/bedtime";
@@ -14,6 +14,8 @@ interface Props {
   onLogWorkout: (type: WorkoutType) => void;
   onAddEvent: (title: string, start: string, end?: string) => void;
   onAddShopping: (name: string, inPantry?: boolean) => void;
+  /** "hud" renders the pill-shaped console prompt under the core ring. */
+  variant?: "panel" | "hud";
 }
 
 export function CommandBar({
@@ -24,6 +26,7 @@ export function CommandBar({
   onLogWorkout,
   onAddEvent,
   onAddShopping,
+  variant = "panel",
 }: Props) {
   const [text, setText] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -55,6 +58,41 @@ export function CommandBar({
     setTimeout(() => setFeedback(null), 5000);
   };
 
+  if (variant === "hud") {
+    return (
+      <section className="mx-auto w-full max-w-md">
+        <form
+          className="flex items-center gap-2 rounded-full border border-cyan-400/40 bg-cyan-950/30 pl-4 pr-1.5 py-1.5 shadow-hud focus-within:border-cyan-300"
+          onSubmit={(e) => {
+            e.preventDefault();
+            run();
+          }}
+        >
+          <Terminal className="h-4 w-4 text-cyan-300 shrink-0" aria-hidden />
+          <label htmlFor="alfred-command" className="sr-only">
+            Command
+          </label>
+          <input
+            id="alfred-command"
+            className="flex-1 min-w-0 bg-transparent font-mono text-sm uppercase tracking-[0.2em] text-cyan-100 placeholder:text-cyan-300/70 focus:outline-none"
+            placeholder="Awaiting command..."
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+          />
+          <button type="submit" className="rounded-full p-2 text-cyan-300 hover:bg-cyan-400/15" aria-label="Run command">
+            <Send className="h-4 w-4" />
+          </button>
+        </form>
+        <p className="mt-2 text-center font-mono text-[10px] uppercase tracking-widest text-cyan-400/40">
+          “buy chicken” · “log legs” · “leave by” · “bedtime”
+        </p>
+        {feedback && (
+          <p className="mt-2 text-center font-mono text-sm text-cyan-200">ALFRED: {feedback}</p>
+        )}
+      </section>
+    );
+  }
+
   return (
     <section className="panel-hud p-4">
       <label className="hud-label flex items-center gap-1.5 mb-2" htmlFor="alfred-command">
@@ -79,7 +117,7 @@ export function CommandBar({
         </button>
       </form>
       {feedback && (
-        <p className="text-sm text-alfred-mist mt-2 font-mono border-l-2 border-green-400/40 pl-3">
+        <p className="text-sm text-alfred-mist mt-2 font-mono border-l-2 border-cyan-400/40 pl-3">
           ALFRED: {feedback}
         </p>
       )}
