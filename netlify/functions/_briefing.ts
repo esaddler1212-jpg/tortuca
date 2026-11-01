@@ -29,6 +29,7 @@ export async function fetchWeather(
     url.searchParams.set("daily", "temperature_2m_max,sunset");
     url.searchParams.set("timezone", "auto");
     url.searchParams.set("forecast_days", "1");
+    url.searchParams.set("temperature_unit", "fahrenheit");
     const res = await fetch(url);
     if (!res.ok) return null;
     const data = (await res.json()) as {

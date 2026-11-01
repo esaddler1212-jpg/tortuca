@@ -28,6 +28,8 @@ export interface EmailMessage {
 import type { WoodhouseRegistryEntry } from "./types/woodhouse";
 
 export interface UserSettings {
+  /** Name Alfred greets you by ("Good morning, E"). */
+  preferredName: string;
   city: string;
   latitude: number;
   longitude: number;
@@ -107,6 +109,7 @@ export interface WeatherSnapshot {
 }
 
 export const DEFAULT_SETTINGS: UserSettings = {
+  preferredName: "E",
   city: "Vallejo",
   latitude: 38.1041,
   longitude: -122.2566,

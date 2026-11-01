@@ -68,6 +68,7 @@ export async function fetchWeather(
     current: "temperature_2m,weather_code",
     daily: "temperature_2m_max,temperature_2m_min,sunrise,sunset,weather_code",
     forecast_days: "1",
+    temperature_unit: "fahrenheit",
   });
   const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
   if (!res.ok) throw new Error("Weather unavailable");

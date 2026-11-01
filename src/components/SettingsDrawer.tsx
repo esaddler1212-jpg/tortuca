@@ -24,6 +24,7 @@ interface Props {
     patch: Partial<
       Pick<
         UserSettings,
+        | "preferredName"
         | "commuteMinutes"
         | "arriveBufferMinutes"
         | "schoolStartTime"
@@ -70,6 +71,7 @@ export function SettingsDrawer({
   error,
 }: Props) {
   const [open, setOpen] = useState(false);
+  const [preferredName, setPreferredName] = useState(settings.preferredName);
   const [city, setCity] = useState(settings.city);
   const [nodes, setNodes] = useState(settings.woodhouseNodes);
   const [commute, setCommute] = useState(String(settings.commuteMinutes));
@@ -94,6 +96,7 @@ export function SettingsDrawer({
   const [weekendWake, setWeekendWake] = useState(settings.weekendWakeTime);
 
   useEffect(() => {
+    setPreferredName(settings.preferredName);
     setCity(settings.city);
     setNodes(settings.woodhouseNodes);
     setCommute(String(settings.commuteMinutes));
@@ -143,6 +146,26 @@ export function SettingsDrawer({
             </div>
             <div className="space-y-6">
               <div>
+                <label className="block text-sm text-alfred-mist mb-2" htmlFor="preferred-name">
+                  Your name (Alfred greets you by it)
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    id="preferred-name"
+                    className="input-field flex-1"
+                    value={preferredName}
+                    onChange={(e) => setPreferredName(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="btn-gold"
+                    onClick={() => onSaveCommute({ preferredName: preferredName.trim() || "E" })}
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+              <div className="border-t border-alfred-border pt-6">
                 <label className="block text-sm text-alfred-mist mb-2" htmlFor="city">
                   Location (weather &amp; sunset)
                 </label>

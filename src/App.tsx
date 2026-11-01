@@ -143,7 +143,7 @@ export default function App() {
   );
   const showWeeklyReview = isWeeklyReviewTime(settings);
 
-  const displayName = accountEmail?.split("@")[0];
+  const displayName = settings.preferredName?.trim() || accountEmail?.split("@")[0];
 
   const systemStatus: SystemStatus = useMemo(() => {
     if (woodhouseError && !woodhouse) return "offline";
@@ -172,6 +172,31 @@ export default function App() {
     return lines;
   }, [todayTimeline, urgentCount, pending.length, unread, leaveBy]);
 
+  const coreLines: [string, string] =
+    systemStatus === "ok" ? ["ALFRED", "ONLINE"] : systemStatus === "degraded" ? ["ALFRED", "DEGRADED"] : ["ALFRED", "OFFLINE"];
+
+  const statusPanels = (
+    <>
+      <VitalsPanel weather={weather} city={settings.city} fitness={fitnessStatus} />
+      <LoadPanel
+        pending={pending}
+        done={done}
+        unread={unread}
+        todayEvents={todayTimeline.length}
+        timeZone={settings.timezone}
+      />
+      <NetworkPanel woodhouse={woodhouse} googleConnected={connected} />
+    </>
+  );
+
+  const ecsPanels = (
+    <>
+      <RoadmapPanel woodhouse={woodhouse} />
+      <LogPanel timeline={todayTimeline} woodhouse={woodhouse} messages={messages} timeZone={settings.timezone} />
+      <TerminalPanel lines={terminalLines} />
+    </>
+  );
+
   return (
     <div className="min-h-screen pb-20 relative">
       <div className="hud-vignette" aria-hidden />
@@ -184,58 +209,6 @@ export default function App() {
       />
 
       <main className="mx-auto max-w-[1400px] px-4 py-6 space-y-4">
-        {/* Operator console: status | core | ECS */}
-        <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)_340px]">
-          <div className="space-y-4 order-2 xl:order-1">
-            <VitalsPanel weather={weather} city={settings.city} fitness={fitnessStatus} />
-            <LoadPanel
-              pending={pending}
-              done={done}
-              unread={unread}
-              todayEvents={todayTimeline.length}
-              timeZone={settings.timezone}
-            />
-            <NetworkPanel woodhouse={woodhouse} googleConnected={connected} />
-          </div>
-
-          <div className="order-1 xl:order-2 flex flex-col items-center justify-center gap-6 py-4 xl:py-10">
-            <div className="w-full max-w-[260px] sm:max-w-[360px] xl:max-w-[420px]">
-              <CoreRing
-                lines={systemStatus === "ok" ? ["ALFRED", "ONLINE"] : systemStatus === "degraded" ? ["ALFRED", "DEGRADED"] : ["ALFRED", "OFFLINE"]}
-                status={systemStatus}
-              />
-            </div>
-            <CommandBar
-              variant="hud"
-              settings={settings}
-              leaveBy={leaveBy}
-              bedtime={bedtime}
-              onAddTodo={add}
-              onLogWorkout={logWorkout}
-              onAddEvent={addLocalEvent}
-              onAddShopping={addShopping}
-            />
-          </div>
-
-          <div className="space-y-4 order-3">
-            <RoadmapPanel woodhouse={woodhouse} />
-            <LogPanel timeline={todayTimeline} woodhouse={woodhouse} messages={messages} timeZone={settings.timezone} />
-            <TerminalPanel lines={terminalLines} />
-          </div>
-        </div>
-
-        {showWeeklyReview && <WeeklyReview review={weeklyReview} />}
-        <InstallAppBanner />
-        <OvernightDeltaBanner delta={overnightDelta} />
-        {overcommitment && <OvercommitmentBanner warning={overcommitment} />}
-        {showWindDown && <WindDownBanner bedtime={bedtime} />}
-
-        {commuteError && settings.useLiveCommute && (
-          <p className="text-sm text-amber-300/90 panel px-4 py-2">{commuteError}</p>
-        )}
-        {commuteLoading && settings.useLiveCommute && (
-          <p className="text-xs text-alfred-mist">Updating live commute…</p>
-        )}
         <TodayCommandCenter
           settings={settings}
           weather={weather}
@@ -247,6 +220,40 @@ export default function App() {
           eveningWrap={eveningWrap}
           eveningMode={eveningMode}
           displayName={displayName}
+          afterGreeting={
+            <>
+              {showWeeklyReview && <WeeklyReview review={weeklyReview} />}
+              <InstallAppBanner />
+              <OvernightDeltaBanner delta={overnightDelta} />
+              {overcommitment && <OvercommitmentBanner warning={overcommitment} />}
+              {showWindDown && <WindDownBanner bedtime={bedtime} />}
+              {commuteError && settings.useLiveCommute && (
+                <p className="text-sm text-amber-300/90 panel px-4 py-2">{commuteError}</p>
+              )}
+
+              {/* Operator console. Phones: ring + command only (status panels come later).
+                  Desktop: status | core + command | ECS. */}
+              <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)_340px]">
+                <div className="hidden xl:block space-y-4">{statusPanels}</div>
+                <div className="flex flex-col items-center justify-center gap-4 py-2 xl:py-10">
+                  <div className="w-full max-w-[200px] sm:max-w-[320px] xl:max-w-[420px]">
+                    <CoreRing lines={coreLines} status={systemStatus} />
+                  </div>
+                  <CommandBar
+                    variant="hud"
+                    settings={settings}
+                    leaveBy={leaveBy}
+                    bedtime={bedtime}
+                    onAddTodo={add}
+                    onLogWorkout={logWorkout}
+                    onAddEvent={addLocalEvent}
+                    onAddShopping={addShopping}
+                  />
+                </div>
+                <div className="hidden xl:block space-y-4">{ecsPanels}</div>
+              </div>
+            </>
+          }
           unreadEmails={unread}
           actions={todayActions}
           todayTimeline={todayTimeline}
@@ -265,6 +272,16 @@ export default function App() {
           onLogWorkout={logWorkout}
           pendingTodos={pending}
         />
+        {/* Phones/tablets: the console's status panels, after today's plan */}
+        <div className="xl:hidden grid gap-4 md:grid-cols-2">
+          <div className="space-y-4">{statusPanels}</div>
+          <div className="space-y-4">{ecsPanels}</div>
+        </div>
+
+        {commuteLoading && settings.useLiveCommute && (
+          <p className="text-xs text-alfred-mist">Updating live commute…</p>
+        )}
+
         <div className="grid gap-4 lg:grid-cols-2">
           <Goals2026Panel
             settings={settings}
