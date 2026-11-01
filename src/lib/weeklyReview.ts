@@ -5,7 +5,6 @@ import type { WoodhouseOrchestrationSnapshot } from "../types/woodhouse";
 import { MINIMUM_DAYS } from "./schoolBell";
 import { getDailyQuote } from "./dailyQuote";
 import { buildMealPrepPlan, isMealPrepDay } from "./mealPrep";
-import { buildGoalsSummary, type Goals2026Progress } from "./goals2026";
 
 export interface WeeklyReview {
   headline: string;
@@ -47,7 +46,7 @@ export function buildWeeklyReview(
   allSchedule: CalendarEvent[],
   woodhouse: WoodhouseOrchestrationSnapshot | null,
   shoppingItems: ShoppingItem[] = [],
-  goalsProgress?: Goals2026Progress,
+  goalLines: string[] = [],
   now = new Date(),
 ): WeeklyReview {
   const tz = settings.timezone;
@@ -108,9 +107,7 @@ export function buildWeeklyReview(
     }
   }
 
-  if (goalsProgress) {
-    lines.push(...buildGoalsSummary(goalsProgress, tz));
-  }
+  lines.push(...goalLines);
 
   return {
     headline: "Weekly review",

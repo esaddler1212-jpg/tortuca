@@ -1,7 +1,7 @@
 import type { TodoItem } from "../types";
 import type { WoodhouseOrchestrationSnapshot } from "../types/woodhouse";
 
-export type TodayActionSource = "todo" | "woodhouse" | "follow-up" | "overdue";
+export type TodayActionSource = "todo" | "woodhouse" | "follow-up" | "overdue" | "plan";
 
 export interface TodayAction {
   id: string;
@@ -12,6 +12,8 @@ export interface TodayAction {
   /** Lower = sooner */
   sort: number;
   todoId?: string;
+  /** Set for ECS plan tasks pulled into today (crossing off marks the plan task done). */
+  planTaskId?: string;
 }
 
 export function buildTodayQueue(
