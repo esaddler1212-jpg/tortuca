@@ -140,6 +140,9 @@ else
     echo "    skipped (re-run with ALFRED_URL=https://... to enable)"
 fi
 
+say "Morning briefing (6:15 AM) + weekly agents (always on)"
+"$PY" "$HERE/scripts/install_jobs.py" || echo "    (couldn't install jobs; run: $PY $HERE/scripts/install_jobs.py)"
+
 say "Index knowledge"
 jarvis memory index "$OJ/knowledge" || echo "    (index failed; run 'jarvis memory index ~/.openjarvis/knowledge' later)"
 
@@ -155,6 +158,7 @@ Next:
                  export FISH_API_KEY=...       (premium voice; then set tts_backend = "fish")
   2. jarvis connect gdrive          (one Google sign-in covers Gmail, Calendar, and Tasks)
   3. jarvis doctor                  (check engines and connectors)
-  4. jarvis digest --fresh          (hear your first briefing)
-  5. jarvis scheduler start         (run the weekly agents)
+  4. jarvis digest --fresh          (hear a briefing now)
+  The 6:15 AM briefing and weekly agents now run on their own (launchd).
+  Keep the iMac awake for them:  sudo pmset repeat wakeorpoweron MTWRFSU 06:10:00
 EOF

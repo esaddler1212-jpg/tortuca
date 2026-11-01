@@ -55,7 +55,7 @@ units = "imperial"
 # ─── Morning briefing ───────────────────────────────────────
 [digest]
 enabled = true
-schedule = "15 6 * * *"              # 6:15 AM daily (iMac must be awake)
+schedule = "15 6 * * *"              # 6:15 AM, run by launchd job com.ecs.alfred.briefing
 timezone = "America/Los_Angeles"
 persona = "alfred"                   # ~/.openjarvis/prompts/personas/alfred.md
 honorific = "E"
