@@ -95,11 +95,8 @@ cp "$HERE/scripts/woodhouse_sync.py" "$OJ/woodhouse_sync.py"
 echo "    Put your ECS docs in $OJ/knowledge/ecs and your resume in $OJ/knowledge/career."
 
 say "Woodhouse sync (launchd, daily 6:00 AM + hourly 8 AM-8 PM)"
-ALFRED_URL_VALUE="${ALFRED_URL:-}"
-if [ -z "$ALFRED_URL_VALUE" ]; then
-    printf '    Alfred site URL (e.g. https://your-alfred.netlify.app), blank to skip: '
-    read -r ALFRED_URL_VALUE || true
-fi
+ALFRED_URL_VALUE="${ALFRED_URL:-https://alfred2.netlify.app}"
+echo "    Alfred site: $ALFRED_URL_VALUE (override with ALFRED_URL=...)"
 if [ -n "$ALFRED_URL_VALUE" ]; then
     PLIST="$HOME/Library/LaunchAgents/com.ecs.alfred.woodhouse-sync.plist"
     mkdir -p "$HOME/Library/LaunchAgents"

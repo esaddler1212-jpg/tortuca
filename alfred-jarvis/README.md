@@ -84,6 +84,8 @@ Download these from Google Drive as **PDF** (OpenJarvis can't read `.docx`):
 
 ### 5. Find your Alfred URL
 
+E's is **https://alfred2.netlify.app**. The steps below are for finding it again or redeploying.
+
 Alfred (the web app at the root of this repo) runs on Netlify. To find its address:
 
 1. Sign in at <https://app.netlify.com> and open **Sites** (or **Projects**).
@@ -101,7 +103,7 @@ One Google setup covers both the web app and the iMac.
 ### 6. Personalize
 
 ```bash
-ALFRED_URL=https://YOUR-ALFRED-SITE.netlify.app ./scripts/personalize.sh
+./scripts/personalize.sh      # uses https://alfred2.netlify.app; override with ALFRED_URL=...
 ```
 
 This installs the config, the Alfred persona, the Woodhouse sync, the knowledge index, and the three

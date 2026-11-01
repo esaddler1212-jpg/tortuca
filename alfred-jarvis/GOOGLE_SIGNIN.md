@@ -10,7 +10,7 @@ Takes about 15 minutes. Do it from a computer, not a phone.
 ## 1. Deploy Alfred first (you need its URL)
 
 Netlify → **Add new site → Import an existing project → GitHub → tortuca** → leave base
-directory blank → **Deploy**. Copy the URL, e.g. `https://ecs-alfred.netlify.app`.
+directory blank → **Deploy**. Copy the URL. E's is `https://alfred2.netlify.app`.
 Tip: rename it in **Site configuration → Change site name** *before* the Google steps, because
 the URL becomes part of the Google settings.
 
@@ -51,7 +51,7 @@ Audience**):
 - **Authorized redirect URIs**: add **both** of these, exactly (https, no trailing slash):
 
   ```
-  https://YOUR-SITE.netlify.app/api/auth-callback
+  https://alfred2.netlify.app/api/auth-callback
   http://localhost:8789/callback
   ```
 
