@@ -15,6 +15,7 @@ import { addDays, localHour, weekdayOfDay, zonedDateTime } from "../shared/timez
 import { DEFAULT_SETTINGS } from "../src/types.ts";
 import { applyDayMode, dayMode } from "../shared/dayMode.ts";
 import * as Plan from "../shared/plan.ts";
+import * as Sparks from "../shared/sparks.ts";
 
 const TZ = "America/Los_Angeles";
 const settings = { ...DEFAULT_SETTINGS }; // wake 04:15 weekdays, 08:00 days off, 7.5h sleep
@@ -119,7 +120,7 @@ check("network: ECS tasks, no Family Purpose", actions("network"), ["Approve 2 o
 check("weekend: big picture only (roadmap)", actions("weekend"), ["Lock $BAY legal"]);
 check("events kept in every mode", events("network"), ["BOYS group", "$BAY legal"]);
 
-// ── plan: focus, overdue, countdown, MWFS
+// ── plan: focus, overdue, countdown, daily spark
 const plan0 = { ...Plan.EMPTY_PLAN };
 check("plan: school hours keep ECS tasks off Do today", Plan.weekFocus(plan0, "2026-11-02", "school").length, 0);
 check("plan: ECS afternoon starts with the $BAY budget", Plan.weekFocus(plan0, "2026-11-02", "network", 1)[0]?.id, "bay-budget");
@@ -127,9 +128,14 @@ check("plan: December shows November's open tasks first (overdue)", Plan.weekFoc
 check("plan: 59 days left on Nov 2", Plan.daysLeftInYear("2026-11-02"), 59);
 const done1 = { ...plan0, done: { "bay-budget": "2026-11-02T20:00:00Z" } };
 check("plan: crossing off counts toward the goal", Plan.goalProgress(done1, "g26-bay-lock"), { done: 3, total: 12 });
-const mw = { ...plan0, mwfsLog: { "2026-10-30": { music: true, meditate: true, master: true }, "2026-10-31": { music: true, meditate: true, master: true }, "2026-11-02": { music: true } } };
-check("MWFS: week score counts Mon/Wed/Fri/Sat habits", Plan.mwfsWeek(mw, "2026-11-02").done, 1);
-check("MWFS: streak counts full days (today still in progress)", Plan.mwfsStreak(mw, "2026-11-02"), 2);
+const sp = { ...plan0, sparkLog: { "2026-10-31": { done: "x" }, "2026-11-01": { done: "x" }, "2026-11-02": { shuffle: 1 } } };
+check("spark: week (Mon–Sun) counts Sunday's spark", Plan.sparkWeek(sp, "2026-11-01").done, 2);
+check("spark: new week starts at 0 on Monday", Plan.sparkWeek(sp, "2026-11-02").done, 0);
+check("spark: streak keeps going while today is open", Plan.sparkStreak(sp, "2026-11-02"), 2);
+check("spark: same day, same spark", Sparks.sparkFor("2026-11-02").prompt, Sparks.sparkFor("2026-11-02").prompt);
+check("spark: Monday is a music day", Sparks.sparkFor("2026-11-02").theme, "music");
+check("spark: Another one changes the prompt", Plan.todaySpark(sp, "2026-11-02").prompt !== Sparks.sparkFor("2026-11-02").prompt, true);
+check("spark: Sunday is reflection", Sparks.sparkFor("2026-11-01").theme, "reflect");
 
 // ── same answers regardless of the machine's time zone
 const self = fileURLToPath(import.meta.url);

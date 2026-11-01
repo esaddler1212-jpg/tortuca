@@ -50,6 +50,7 @@ export function buildDailyBrief(opts: {
   leaveBy: LeaveByPlan | null;
   actions: TodayAction[];
   events: CalendarEvent[];
+  spark?: { mindset: string; prompt: string };
 }): string {
   const { tz, now, weather, leaveBy } = opts;
   const h = localHour(tz, now);
@@ -68,6 +69,7 @@ export function buildDailyBrief(opts: {
   const today = dayKey(tz, now);
   const next = upcomingEvents(opts.events, now, 1).find((e) => dayKey(tz, new Date(e.start)) === today);
   if (next) parts.push(`Next on the calendar: ${next.title} at ${time(next.start, tz)}.`);
+  if (opts.spark) parts.push(`Today's spark: ${forSpeech(opts.spark.mindset)} And a prompt: ${forSpeech(opts.spark.prompt)}`);
   return parts.join(" ");
 }
 
@@ -80,6 +82,7 @@ export function buildVantageBrief(opts: {
   goals: string[];
   weather: WeatherSnapshot | null;
   events: CalendarEvent[];
+  spark?: { mindset: string; prompt: string };
 }): { lines: { label: string; text: string }[]; spoken: string } {
   const lines: { label: string; text: string }[] = [];
   const roadmap = opts.woodhouse?.nodes.find((n) => n.registryId === "ecs-roadmap")?.snapshot;
@@ -106,6 +109,7 @@ export function buildVantageBrief(opts: {
       text: rainy.length ? `Rain likely ${rainy.join(", ")}.` : "Dry week ahead.",
     });
   }
+  if (opts.spark) lines.push({ label: "Creative spark", text: `${opts.spark.mindset} ${opts.spark.prompt}` });
   if (opts.goals.length) lines.push({ label: "2026 goals", text: opts.goals.join(" · ") });
 
   const spoken = [

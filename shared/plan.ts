@@ -1,13 +1,17 @@
 /**
  * Plan logic (pure, testable): progress by goal, what's on deck this week and
- * month, the year countdown, catch-up nudges, and MWFS scores/streaks.
+ * month, the year countdown, catch-up nudges, and the daily creative spark log.
  */
 import { PLAN_TASKS, YEAR_GOALS, type Area, type PlanTask, type YearGoal } from "./planData";
+import { sparkFor, type Spark } from "./sparks";
 import { addDays, dayKey, weekdayOfDay } from "./timezone";
 
-export type MwfsHabit = "music" | "meditate" | "master";
-export const MWFS_HABITS: MwfsHabit[] = ["music", "meditate", "master"];
-export const MWFS_DAYS = new Set(["Mon", "Wed", "Fri", "Sat"]);
+/** One day's creative spark: when it was done, how many shuffles, an optional note. */
+export interface SparkEntry {
+  done?: string;
+  shuffle?: number;
+  note?: string;
+}
 
 /** Everything the user changes, synced across devices. */
 export interface PlanState {
@@ -19,8 +23,8 @@ export interface PlanState {
   customTasks: PlanTask[];
   /** User-edited goals; null = use the built-in goals. */
   goals: YearGoal[] | null;
-  /** YYYY-MM-DD → habits done that day. */
-  mwfsLog: Record<string, Partial<Record<MwfsHabit, boolean>>>;
+  /** YYYY-MM-DD → that day's creative spark. */
+  sparkLog: Record<string, SparkEntry>;
   updatedAt: string;
 }
 
@@ -29,7 +33,7 @@ export const EMPTY_PLAN: PlanState = {
   hidden: [],
   customTasks: [],
   goals: null,
-  mwfsLog: {},
+  sparkLog: {},
   updatedAt: new Date(0).toISOString(),
 };
 
@@ -128,11 +132,15 @@ export function nudges(state: PlanState, today: string): Nudge[] {
   return out;
 }
 
-// ── MWFS ────────────────────────────────────────────────────────────────
+// ── Daily creative spark ─────────────────────────────────────────────────
 
-export function mwfsDoneOn(state: PlanState, day: string): number {
-  const log = state.mwfsLog[day] ?? {};
-  return MWFS_HABITS.filter((h) => log[h]).length;
+/** Today's spark (respects "Another one" shuffles). */
+export function todaySpark(state: PlanState, today: string): Spark {
+  return sparkFor(today, state.sparkLog[today]?.shuffle ?? 0);
+}
+
+export function sparkDone(state: PlanState, day: string): boolean {
+  return Boolean(state.sparkLog[day]?.done);
 }
 
 /** Monday of the week containing `day`. */
@@ -141,45 +149,37 @@ export function weekStart(day: string): string {
   return addDays(day, -offset[weekdayOfDay(day)]);
 }
 
-/** This week's MWFS score: habits done / possible on Mon, Wed, Fri, Sat. */
-export function mwfsWeek(state: PlanState, today: string): { done: number; possible: number; days: { day: string; label: string; done: number; future: boolean }[] } {
+/** This week (Mon–Sun): which days the spark got done. */
+export function sparkWeek(state: PlanState, today: string): { done: number; days: { day: string; label: string; done: boolean; future: boolean }[] } {
   const start = weekStart(today);
-  const days = [0, 2, 4, 5].map((n) => {
+  const days = [0, 1, 2, 3, 4, 5, 6].map((n) => {
     const day = addDays(start, n);
-    return { day, label: weekdayOfDay(day), done: mwfsDoneOn(state, day), future: day > today };
+    return { day, label: weekdayOfDay(day), done: sparkDone(state, day), future: day > today };
   });
-  return { done: days.reduce((n, d) => n + d.done, 0), possible: days.length * MWFS_HABITS.length, days };
+  return { done: days.filter((d) => d.done).length, days };
 }
 
-/** Consecutive past MWFS days with all three habits done (today counts once complete). */
-export function mwfsStreak(state: PlanState, today: string): number {
+/** Consecutive days with a spark done (today counts once done, never breaks it). */
+export function sparkStreak(state: PlanState, today: string): number {
   let streak = 0;
   let day = today;
   for (let i = 0; i < 400; i++) {
-    if (MWFS_DAYS.has(weekdayOfDay(day))) {
-      const full = mwfsDoneOn(state, day) === MWFS_HABITS.length;
-      if (full) streak++;
-      else if (day !== today) break; // today can still be in progress
-    }
+    if (sparkDone(state, day)) streak++;
+    else if (day !== today) break;
     day = addDays(day, -1);
   }
   return streak;
 }
 
-/** MWFS completion over the last `weeks` weeks (for the month/year views). */
-export function mwfsHistory(state: PlanState, today: string, weeks: number): { weekOf: string; done: number; possible: number }[] {
+/** Sparks done per week over the last `weeks` weeks (for the Year view). */
+export function sparkHistory(state: PlanState, today: string, weeks: number): { weekOf: string; done: number; possible: number }[] {
   const out: { weekOf: string; done: number; possible: number }[] = [];
   let start = weekStart(today);
   for (let i = 0; i < weeks; i++) {
-    const w = mwfsWeek(state, addDays(start, 6));
-    out.unshift({ weekOf: start, done: w.done, possible: w.possible });
+    out.unshift({ weekOf: start, done: sparkWeek(state, addDays(start, 6)).done, possible: 7 });
     start = addDays(start, -7);
   }
   return out;
-}
-
-export function todayIsMwfsDay(today: string): boolean {
-  return MWFS_DAYS.has(weekdayOfDay(today));
 }
 
 export function dayKeyIn(timeZone: string, now: Date): string {
