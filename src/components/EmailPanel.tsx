@@ -34,7 +34,7 @@ export function EmailPanel({
       </header>
       {!connected && (
         <div className="text-sm text-alfred-mist space-y-3">
-          <p>Connect Gmail so Alfred can summarize your latest messages.</p>
+          <p>Connect Gmail so Iris can summarize your latest messages.</p>
           <button type="button" className="btn-gold" onClick={onConnect}>
             Connect Google
           </button>

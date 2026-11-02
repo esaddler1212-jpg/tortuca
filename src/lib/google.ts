@@ -58,7 +58,7 @@ export async function startGoogleConnect(): Promise<{ ok: boolean; error?: strin
     return {
       ok: false,
       error:
-        "Cannot reach Alfred's server functions. Are you on your Netlify URL (not localhost)? Try opening the deployed site.",
+        "Cannot reach IRIS's server functions. Are you on your Netlify URL (not localhost)? Try opening the deployed site.",
     };
   }
 
@@ -84,7 +84,7 @@ export function startGoogleConnectFromApp(): boolean {
   const win = window.open(url, "_blank");
   if (win) return true;
   // Blocked anyway: sign in within the app's browser layer. The login is still
-  // saved under this app's session, and the page says "switch back to Alfred";
+  // saved under this app's session, and the page says "switch back to IRIS";
   // closing it returns here, where the app re-checks.
   window.location.href = url;
   return false;

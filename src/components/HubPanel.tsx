@@ -310,7 +310,7 @@ function WatchTab({ hub, update, googleConnected }: Props) {
           </button>
         )}
       </div>
-      <p className="text-xs text-alfred-mist">Alfred checks these pages every 3 hours and pings your phone when they change.</p>
+      <p className="text-xs text-alfred-mist">Iris checks these pages every 3 hours and pings your phone when they change.</p>
       {!googleConnected && <p className="text-sm text-alfred-mist">Connect Google in Settings to use watchers.</p>}
       {msg && <p className="text-xs text-alfred-gold">{msg}</p>}
       <ul className="space-y-2">
@@ -574,7 +574,7 @@ function MemosTab({ hub, update, onAddTodo }: Props) {
             </div>
           </li>
         ))}
-        {!hub.memos.length && <li className="text-xs text-alfred-mist">Tap the mic and talk. Alfred saves it and can pull out the to-dos.</li>}
+        {!hub.memos.length && <li className="text-xs text-alfred-mist">Tap the mic and talk. Iris saves it and can pull out the to-dos.</li>}
       </ul>
     </div>
   );

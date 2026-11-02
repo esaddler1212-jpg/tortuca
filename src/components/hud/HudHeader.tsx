@@ -49,7 +49,7 @@ export function HudHeader({ timeZone, status, alerts, operator, focusChoice, onF
         <div className="flex items-center gap-3 min-w-0">
           <HudRing className="h-9 w-9 shrink-0" />
           <div className="min-w-0">
-            <h1 className="font-display text-lg sm:text-xl font-bold tracking-[0.3em] text-cyan-300 hud-glow-text">ALFRED</h1>
+            <h1 className="font-display text-lg sm:text-xl font-bold tracking-[0.3em] text-cyan-300 hud-glow-text">IRIS</h1>
             <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-cyan-400/50 truncate">
               Chief of staff · ECS Network
             </p>

@@ -1,6 +1,6 @@
-/* Alfred service worker — push notifications */
+/* IRIS service worker — push notifications */
 self.addEventListener("push", (event) => {
-  let data = { title: "Alfred", body: "You have a reminder.", url: "/" };
+  let data = { title: "IRIS", body: "You have a reminder.", url: "/" };
   try {
     data = { ...data, ...JSON.parse(event.data?.text() ?? "{}") };
   } catch {

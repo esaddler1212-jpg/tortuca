@@ -58,7 +58,7 @@ export function CommandBar({
         break;
     }
     setFeedback(cmd.message);
-    voiceOut.speak(cmd.message); // Alfred answers out loud (unless muted)
+    voiceOut.speak(cmd.message); // Iris answers out loud (unless muted)
     setText("");
     setTimeout(() => setFeedback(null), 6000);
   };
@@ -76,9 +76,9 @@ export function CommandBar({
         type="button"
         className={className}
         onClick={() => voiceOut.setMuted(!voiceOut.muted)}
-        aria-label={voiceOut.muted ? "Turn Alfred's voice on" : "Mute Alfred's voice"}
+        aria-label={voiceOut.muted ? "Turn Iris's voice on" : "Mute Iris's voice"}
         aria-pressed={!voiceOut.muted}
-        title={voiceOut.muted ? "Alfred's voice is off" : "Alfred answers out loud"}
+        title={voiceOut.muted ? "Iris's voice is off" : "Iris answers out loud"}
       >
         {voiceOut.muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
       </button>
@@ -136,7 +136,7 @@ export function CommandBar({
         </p>
         {voice.error && <p className="mt-2 text-center text-xs text-amber-300/90">{voice.error}</p>}
         {feedback && (
-          <p className="mt-2 text-center font-mono text-sm text-cyan-200">ALFRED: {feedback}</p>
+          <p className="mt-2 text-center font-mono text-sm text-cyan-200">IRIS: {feedback}</p>
         )}
       </section>
     );
@@ -171,7 +171,7 @@ export function CommandBar({
       {voice.error && <p className="text-xs text-amber-300/90 mt-2">{voice.error}</p>}
       {feedback && (
         <p className="text-sm text-alfred-mist mt-2 font-mono border-l-2 border-cyan-400/40 pl-3">
-          ALFRED: {feedback}
+          IRIS: {feedback}
         </p>
       )}
     </section>

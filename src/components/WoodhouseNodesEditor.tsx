@@ -33,7 +33,7 @@ export function WoodhouseNodesEditor({ nodes, onChange }: Props) {
   return (
     <div className="space-y-4">
       <p className="text-sm text-alfred-mist">
-        Register each app&apos;s base URL. Alfred polls{" "}
+        Register each app&apos;s base URL. IRIS polls{" "}
         <code className="text-alfred-cream/90">/api/woodhouse/snapshot</code> on every node. See{" "}
         <code className="text-alfred-cream/90">WOODHOUSE.md</code> in the repo for the contract.
       </p>

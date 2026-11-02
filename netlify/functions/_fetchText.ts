@@ -10,7 +10,7 @@ export async function fetchPublicText(url: string, timeoutMs = 8000, maxBytes = 
       signal: ctrl.signal,
       redirect: "follow",
       headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; AlfredBot/1.0; personal dashboard)",
+        "User-Agent": "Mozilla/5.0 (compatible; IRISBot/1.0; personal dashboard)",
         Accept: "application/rss+xml, application/atom+xml, application/xml, text/xml, text/html;q=0.9, */*;q=0.5",
       },
     });

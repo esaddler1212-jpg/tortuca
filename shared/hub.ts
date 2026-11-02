@@ -2,7 +2,7 @@
  * The Hub: feed sources, page watchers, gym routine, money, voice memos and
  * quick links. Pure logic + defaults, shared by the app and Netlify functions.
  * (Ideas borrowed from Glance/Miniflux, changedetection.io, wger, Actual Budget
- * and whisper.cpp, rebuilt small for Alfred.)
+ * and whisper.cpp, rebuilt small for IRIS.)
  */
 import type { Area } from "./planData";
 import { addDays, weekdayOfDay } from "./timezone";

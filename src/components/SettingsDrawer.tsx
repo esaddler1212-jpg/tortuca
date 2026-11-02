@@ -147,7 +147,7 @@ export function SettingsDrawer({
             <div className="space-y-6">
               <div>
                 <label className="block text-sm text-alfred-mist mb-2" htmlFor="preferred-name">
-                  Your name (Alfred greets you by it)
+                  Your name (Iris greets you by it)
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -188,7 +188,7 @@ export function SettingsDrawer({
               <div className="border-t border-alfred-border pt-6">
                 <h3 className="text-sm font-medium mb-2 text-alfred-gold">Leave-by time</h3>
                 <p className="text-sm text-alfred-mist mb-3">
-                  Alfred calculates when to leave for school or your first calendar event.
+                  Iris calculates when to leave for school or your first calendar event.
                 </p>
                 <div className="space-y-2">
                   <label className="text-xs text-alfred-mist" htmlFor="school-name">School name</label>
@@ -243,7 +243,7 @@ export function SettingsDrawer({
               <div className="border-t border-alfred-border pt-6">
                 <h3 className="text-sm font-medium mb-2 text-alfred-gold">Wake &amp; training</h3>
                 <p className="text-sm text-alfred-mist mb-3">
-                  Weekday alarm 4:15 AM — Alfred prompts for arms, body, legs, or cardio, then suggests a slot if you skip the morning.
+                  Weekday alarm 4:15 AM — Iris prompts for arms, body, legs, or cardio, then suggests a slot if you skip the morning.
                 </p>
                 <label className="text-xs text-alfred-mist" htmlFor="wake-time">Wake time (HH:MM)</label>
                 <input id="wake-time" className="input-field mb-2" value={wakeTime} onChange={(e) => setWakeTime(e.target.value)} placeholder="04:15" />
@@ -268,7 +268,7 @@ export function SettingsDrawer({
               <div className="border-t border-alfred-border pt-6">
                 <h3 className="text-sm font-medium mb-2 text-alfred-gold">Sleep &amp; bedtime</h3>
                 <p className="text-sm text-alfred-mist mb-3">
-                  Alfred suggests lights-out from tomorrow&apos;s schedule, your wake alarm, and target sleep hours.
+                  Iris suggests lights-out from tomorrow&apos;s schedule, your wake alarm, and target sleep hours.
                 </p>
                 <label className="text-xs text-alfred-mist" htmlFor="target-sleep">Target sleep (hours)</label>
                 <input
@@ -327,7 +327,7 @@ export function SettingsDrawer({
               <div className="border-t border-alfred-border pt-6">
                 <h3 className="text-sm font-medium mb-2 text-alfred-gold">Evening wrap</h3>
                 <p className="text-sm text-alfred-mist mb-3">
-                  After this hour, Alfred shows your day summary and tomorrow preview.
+                  After this hour, Iris shows your day summary and tomorrow preview.
                 </p>
                 <label className="text-xs text-alfred-mist" htmlFor="evening-hour">Start hour (0–23)</label>
                 <input

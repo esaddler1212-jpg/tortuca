@@ -38,7 +38,7 @@ export async function runWatchers(
   await saveUserData(key, { ...latest, watchState: state });
   if (opts.notify && alerts.length && pushTargets(data).length && data.settings?.pushNotificationsEnabled) {
     await pushAll(data, {
-      title: alerts.length === 1 ? "Alfred · Watcher" : `Alfred · ${alerts.length} watchers`,
+      title: alerts.length === 1 ? "IRIS · Watcher" : `IRIS · ${alerts.length} watchers`,
       body: alerts.join(" · ").slice(0, 180),
       url: "/",
     });

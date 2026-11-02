@@ -5,7 +5,7 @@ import { getValidSession, initBlobs, sessionHeader } from "./_shared";
 import { dayKey } from "../../shared/timezone";
 
 /**
- * POST /api/ask: Alfred's conversation brain (Claude). Signed-in only, capped
+ * POST /api/ask: Iris's conversation brain (Claude). Signed-in only, capped
  * per day, short spoken-style replies. The one tool, add_todo, is run by the
  * app (it adds to Do today), so this returns the reply text plus any to-dos.
  */
@@ -16,11 +16,11 @@ const MAX_TURNS = 12;
 const MAX_CHARS = 2000;
 
 // Stable persona: kept byte-identical so it can be served from the prompt cache.
-const PERSONA = `You are Alfred, the personal chief-of-staff for E (Eric Saddler II) in Vallejo, CA. E runs ECS Network: Tortuga (film, the $BAY series), North Star (a youth program for middle schoolers), Easy Supply (merch) and 2EASY (music). By day he works with middle schoolers at Family Purpose.
+const PERSONA = `You are Iris, E's personal chief of staff and the voice of IRIS, his command center. E is Eric Saddler II in Vallejo, CA. E runs ECS Network: Tortuga (film, the $BAY series), North Star (a youth program for middle schoolers), Easy Supply (merch) and 2EASY (music). By day he works with middle schoolers at Family Purpose.
 
 You are speaking out loud through a phone or computer speaker, in a back-and-forth voice conversation.
 - Answer in one to three short sentences unless E asks for more. Plain spoken English: no lists, markdown, emoji or URLs.
-- Warm, direct, a little dry, like a trusted butler who knows the business. Call him E sometimes, not every time.
+- Warm, sharp and direct, with a little wit, like a trusted chief of staff who knows the business inside out. Call him E sometimes, not every time.
 - Use the "Right now" notes for anything about his day, schedule, weather, plans or goals. If something isn't in the notes, say you don't have it rather than guessing.
 - When E asks you to remember, add or remind him of something to do, call add_todo (one call per item) and confirm it briefly.
 - Never ask for or repeat students' names or personal details from Family Purpose; refer to "a student".
@@ -30,7 +30,7 @@ Latency-sensitive; begin your visible answer immediately.`;
 const ADD_TODO = {
   name: "add_todo",
   description:
-    "Add an item to E's to-do list in Alfred (shows on Do today). Use when E asks to remember, add, or be reminded of something to do.",
+    "Add an item to E's to-do list in IRIS (shows on Do today). Use when E asks to remember, add, or be reminded of something to do.",
   strict: true,
   input_schema: {
     type: "object" as const,
@@ -53,11 +53,11 @@ export const handler: Handler = async (event) => {
   initBlobs(event);
   if (event.httpMethod !== "POST") return json(405, { error: "POST only" });
   if (!process.env.ANTHROPIC_API_KEY) {
-    return json(503, { error: "Alfred's brain isn't set up yet: add ANTHROPIC_API_KEY in Netlify and redeploy." });
+    return json(503, { error: "Iris's brain isn't set up yet: add ANTHROPIC_API_KEY in Netlify and redeploy." });
   }
   const sessionId = sessionHeader(event);
   const session = sessionId ? await getValidSession(sessionId) : null;
-  if (!sessionId || !session) return json(401, { error: "Connect Google first so only you can talk to Alfred." });
+  if (!sessionId || !session) return json(401, { error: "Connect Google first so only you can talk to Iris." });
 
   let body: { messages?: Turn[]; context?: string; timeZone?: string };
   try {
@@ -117,7 +117,7 @@ export const handler: Handler = async (event) => {
     return json(200, { reply, todos });
   } catch (error) {
     if (error instanceof Anthropic.RateLimitError) return json(429, { error: "I'm being rate-limited. Give me a minute." });
-    if (error instanceof Anthropic.AuthenticationError) return json(503, { error: "Alfred's API key was rejected. Check ANTHROPIC_API_KEY in Netlify." });
+    if (error instanceof Anthropic.AuthenticationError) return json(503, { error: "Iris's API key was rejected. Check ANTHROPIC_API_KEY in Netlify." });
     if (error instanceof Anthropic.APIError) return json(502, { error: `Claude error (${error.status ?? "?"}). Try again.` });
     return json(502, { error: "Couldn't reach Claude. Try again." });
   }

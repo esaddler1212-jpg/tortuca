@@ -92,13 +92,13 @@ export async function buildMorningDigest(
     lines.push(`${urgent.length} task${urgent.length === 1 ? "" : "s"} due today.`);
   }
   lines.push(`Leave-by uses ${settings.useLiveCommute ? "live" : "manual"} commute (${settings.commuteMinutes} min + ${settings.arriveBufferMinutes} min buffer).`);
-  lines.push(`Open Alfred for your full command center.`);
+  lines.push(`Open IRIS for your full command center.`);
 
-  const subject = `Alfred morning briefing — ${new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "short", month: "short", day: "numeric" }).format(new Date())}`;
+  const subject = `IRIS morning briefing — ${new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "short", month: "short", day: "numeric" }).format(new Date())}`;
 
   const html = `
     <div style="font-family: Georgia, serif; max-width: 560px; color: #1a1a1a;">
-      <p style="color: #4ade80; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase;">Alfred</p>
+      <p style="color: #4ade80; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase;">IRIS</p>
       <h1 style="font-size: 24px;">Good morning</h1>
       <blockquote style="border-left: 3px solid #4ade80; padding-left: 16px; color: #444; font-style: italic;">
         "${quote.text}"<br/><span style="font-size: 13px;">— ${quote.author}</span>
@@ -109,7 +109,7 @@ export async function buildMorningDigest(
       <ul>${topTasks.length ? topTasks.map((t) => `<li>${t}</li>`).join("") : "<li>All clear</li>"}</ul>
       ${urgent.length ? `<p><strong>${urgent.length}</strong> due today.</p>` : ""}
       <p style="color: #666; font-size: 13px;">Commute: ${settings.commuteMinutes} min drive + ${settings.arriveBufferMinutes} min buffer${settings.useLiveCommute ? " (live traffic when available)" : ""}.</p>
-      <p style="margin-top: 24px; font-size: 13px; color: #888;">— Alfred, at your service.</p>
+      <p style="margin-top: 24px; font-size: 13px; color: #888;">— Iris, at your service.</p>
     </div>
   `;
 

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 const MUTE_KEY = "alfred-voice-muted";
 const listeners = new Set<(muted: boolean) => void>();
 
-/** Alfred's voice activity, shared app-wide so the core ring can "talk". */
+/** Iris's voice activity, shared app-wide so the core ring can "talk". */
 export interface VoiceSignal {
   speaking: boolean;
   /** Bumps on every spoken word (when the browser reports word boundaries). */
@@ -16,7 +16,7 @@ function emitSignal(next: Partial<VoiceSignal>) {
   signalListeners.forEach((l) => l(voiceSignal));
 }
 
-/** Subscribe to Alfred speaking (any part of the app). */
+/** Subscribe to Iris speaking (any part of the app). */
 export function useVoiceSignal(): VoiceSignal {
   const [s, setS] = useState(voiceSignal);
   useEffect(() => {
@@ -40,19 +40,28 @@ export function speechOutputSupported(): boolean {
   return typeof window !== "undefined" && "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
 }
 
-/** Alfred's voice: British "Daniel" (iPhone/Mac), else any en-GB, else English. */
+/** Known male system voices to skip when looking for Iris's voice. */
+const MALE = /\b(alex|fred|daniel|tom|aaron|arthur|evan|nathan|oliver|george|gordon|reed|rocko|grandpa|eddy|ralph|junior|albert|david|mark|guy|ryan|christopher|eric|andrew|brian|roger|steffan)\b/i;
+
+/**
+ * Iris's voice: a US English female voice. "Samantha" on iPhone/Mac, then
+ * other known US female voices (Chrome/Android/Windows), then any US English
+ * voice that isn't a known male one, then any English voice.
+ */
 function pickVoice(): SpeechSynthesisVoice | undefined {
   const voices = window.speechSynthesis.getVoices();
+  const us = voices.filter((v) => v.lang.replace("_", "-").toLowerCase().startsWith("en-us"));
   return (
-    voices.find((v) => /daniel/i.test(v.name) && v.lang.startsWith("en")) ??
-    voices.find((v) => v.lang === "en-GB" && /male|arthur|oliver|george/i.test(v.name)) ??
-    voices.find((v) => v.lang === "en-GB") ??
+    us.find((v) => /samantha/i.test(v.name)) ??
+    us.find((v) => /\b(ava|allison|susan|zoe|nicky|joelle|google us english|zira|aria|jenny|michelle|emma)\b/i.test(v.name)) ??
+    us.find((v) => !MALE.test(v.name)) ??
+    voices.find((v) => v.lang.startsWith("en") && !MALE.test(v.name)) ??
     voices.find((v) => v.lang.startsWith("en"))
   );
 }
 
 /**
- * Text-to-speech for Alfred's replies (browser speech synthesis: Apple voices
+ * Text-to-speech for Iris's replies (browser speech synthesis: Apple voices
  * on iPhone/Mac, system voices elsewhere). Mute state is shared app-wide and
  * remembered on the device. iPhone only allows speech after a tap, so call
  * `prime()` inside a tap before speaking from async code.
@@ -102,7 +111,7 @@ export function useVoiceOutput() {
       u.voice = voice;
       u.lang = voice.lang;
     }
-    u.rate = 1.02;
+    u.rate = 1.0;
     let ended = false;
     const finish = () => {
       if (ended) return;

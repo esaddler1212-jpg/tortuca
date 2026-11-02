@@ -54,7 +54,7 @@ export function InstallAppBanner() {
     <section className="panel-hud px-4 py-3 flex items-start gap-3">
       <Download className="h-5 w-5 text-alfred-gold shrink-0 mt-0.5" />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-alfred-cream">Install Alfred on your phone</p>
+        <p className="text-sm font-semibold text-alfred-cream">Install Iris on your phone</p>
         {showAndroid ? (
           <>
             <p className="text-xs text-alfred-mist mt-1">

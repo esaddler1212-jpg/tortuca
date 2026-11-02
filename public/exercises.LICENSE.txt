@@ -1,6 +1,6 @@
 exercises.json: exercise names, target muscles, equipment and English
 instruction text from the exercises-dataset project
-(https://github.com/hasaneyldrm/exercises-dataset), trimmed for Alfred.
+(https://github.com/hasaneyldrm/exercises-dataset), trimmed for IRIS.
 
 MIT License
 
@@ -25,4 +25,4 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 The dataset's exercise images and animations (© Gym visual, gymvisual.com)
-are NOT included in Alfred; they are not covered by this license.
+are NOT included in IRIS; they are not covered by this license.

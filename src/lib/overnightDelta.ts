@@ -74,7 +74,7 @@ export function buildOvernightDelta(
   if (!prev) {
     return {
       headline: "Briefing ready",
-      lines: ["First check-in today — Alfred is tracking changes from here."],
+      lines: ["First check-in today — Iris is tracking changes from here."],
       isFirstVisit: true,
     };
   }
