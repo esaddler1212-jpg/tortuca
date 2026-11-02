@@ -41,6 +41,7 @@ export const handler: Handler = async (event) => {
   }
 
   if (!draft.to.trim()) return json(400, { error: "Add a recipient before sending." });
+  const from = channel.fromEmail.trim();
   const text = draft.body.trim();
   const html = text
     .split(/\n\n+/)
