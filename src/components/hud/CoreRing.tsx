@@ -1,14 +1,14 @@
 import { useVoiceSignal } from "../../hooks/useVoiceOutput";
 
 interface Props {
-  /** Two short lines in the centre, e.g. ["ALFRED", "ONLINE"] */
+  /** Two short lines in the centre, e.g. ["IRIS", "ONLINE"] */
   lines: [string, string];
   status: "ok" | "degraded" | "offline";
   /** Conversation phase: the ring listens, thinks and speaks. */
   phase?: "idle" | "listening" | "thinking" | "speaking";
-  /** Bumps when Alfred's reply arrives (one burst ripple). */
+  /** Bumps when Iris's reply arrives (one burst ripple). */
   replyTick?: number;
-  /** Tap the ring to talk to Alfred. */
+  /** Tap the ring to talk to Iris. */
   onActivate?: () => void;
   /** A conversation is open (idle means "your turn"). */
   active?: boolean;
@@ -24,7 +24,7 @@ const COLOR: Record<Props["status"], string> = {
 export function CoreRing({ lines, status, phase = "idle", replyTick = 0, onActivate, active = false }: Props) {
   const color = COLOR[status];
   const c = "currentColor";
-  // Alfred's "face": the core glows and ripples with each word while he speaks.
+  // Iris's "face": the core glows and ripples with each word while she speaks.
   const voice = useVoiceSignal();
   const talking = voice.speaking || phase === "speaking";
   const listening = phase === "listening";
@@ -35,7 +35,7 @@ export function CoreRing({ lines, status, phase = "idle", replyTick = 0, onActiv
     <div
       className={`relative mx-auto aspect-square w-full max-w-[420px] [container-type:inline-size] ${onActivate ? "cursor-pointer select-none rounded-full outline-none focus-visible:ring-2 focus-visible:ring-alfred-gold" : ""}`}
       style={{ color, WebkitTapHighlightColor: "transparent" }}
-      aria-label={onActivate ? (active ? `Alfred is ${label.toLowerCase()}. Tap to ${listening ? "stop listening" : "talk"}` : "Talk to Alfred") : `${lines[0]} ${lines[1]}`}
+      aria-label={onActivate ? (active ? `Iris is ${label.toLowerCase()}. Tap to ${listening ? "stop listening" : "talk"}` : "Talk to Iris") : `${lines[0]} ${lines[1]}`}
       role={onActivate ? "button" : "img"}
       tabIndex={onActivate ? 0 : undefined}
       onClick={onActivate}
@@ -78,7 +78,7 @@ export function CoreRing({ lines, status, phase = "idle", replyTick = 0, onActiv
           />
         ))}
         <circle cx="200" cy="200" r="118" stroke={c} strokeOpacity="0.4" strokeWidth="1.5" />
-        {/* reply burst: one big ripple when Alfred's answer lands */}
+        {/* reply burst: one big ripple when Iris's answer lands */}
         {replyTick > 0 && (
           <circle key={`burst-${replyTick}`} cx="200" cy="200" r="118" stroke={c} strokeWidth="4" className="animate-hud-burst" style={{ transformOrigin: "200px 200px" }} />
         )}

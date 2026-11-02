@@ -32,7 +32,7 @@ export function MealPrepPanel({ settings, items, onAdd, onToggle, onRemove }: Pr
       </h3>
       {sunday && (
         <p className="text-xs text-alfred-mist mb-3">
-          Check off groceries as you shop — Alfred updates meal prep recipes from what&apos;s in your pantry.
+          Check off groceries as you shop — Iris updates meal prep recipes from what&apos;s in your pantry.
         </p>
       )}
 

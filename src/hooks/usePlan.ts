@@ -24,7 +24,7 @@ function initialPlan(): PlanState {
 
 /**
  * Plan progress (tasks done, edited goals, daily sparks), saved on the device and
- * synced to Alfred's server so phone and computer stay in step. The newest
+ * synced to Iris's server so phone and computer stay in step. The newest
  * copy wins.
  */
 export function usePlan() {

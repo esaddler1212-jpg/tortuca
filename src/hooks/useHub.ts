@@ -11,7 +11,7 @@ function normalize(h: Partial<HubState> | null | undefined): HubState {
 
 /**
  * Feed sources, watchers, gym log, money, memos and links: saved on the device
- * and synced through Alfred's server (newest copy wins), like the plan.
+ * and synced through Iris's server (newest copy wins), like the plan.
  */
 export function useHub() {
   const [hub, setHub] = useState<HubState>(() => normalize(loadJson<HubState | null>(HUB_KEY, null)));

@@ -64,12 +64,12 @@ const QUOTES: DailyQuote[] = [
   { text: "Master Wayne, you haven't been picking up your dry cleaning.", author: "Alfred Pennyworth" },
   { text: "Perhaps both is good.", author: "Alfred Pennyworth" },
   { text: "Very well.", author: "Alfred Pennyworth" },
-  { text: "Rise and shine — the day won't organize itself.", author: "Alfred" },
-  { text: "A gentleman prepares the night before so the morning belongs to him.", author: "Alfred" },
-  { text: "Show up on time. The rest tends to follow.", author: "Alfred" },
-  { text: "One task finished beats ten tasks started.", author: "Alfred" },
-  { text: "The inbox can wait; your priorities cannot.", author: "Alfred" },
-  { text: "Leave early enough to arrive calm.", author: "Alfred" },
+  { text: "Rise and shine — the day won't organize itself.", author: "Iris" },
+  { text: "A gentleman prepares the night before so the morning belongs to him.", author: "Iris" },
+  { text: "Show up on time. The rest tends to follow.", author: "Iris" },
+  { text: "One task finished beats ten tasks started.", author: "Iris" },
+  { text: "The inbox can wait; your priorities cannot.", author: "Iris" },
+  { text: "Leave early enough to arrive calm.", author: "Iris" },
   { text: "Even the darkest night will end and the sun will rise.", author: "Victor Hugo" },
   { text: "You have power over your mind—not outside events. Realize this, and you will find strength.", author: "Marcus Aurelius" },
   { text: "Waste no more time arguing about what a good man should be. Be one.", author: "Marcus Aurelius" },
@@ -116,7 +116,7 @@ const QUOTES: DailyQuote[] = [
   { text: "No one saves us but ourselves.", author: "Buddha" },
   { text: "Today is a good day to have a good day.", author: "Unknown" },
   { text: "Make today so awesome that yesterday gets jealous.", author: "Unknown" },
-  { text: "You've got this.", author: "Alfred" },
+  { text: "You've got this.", author: "Iris" },
 ];
 
 function dayKey(timeZone: string, date = new Date()): string {

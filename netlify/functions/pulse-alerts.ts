@@ -20,7 +20,7 @@ export const handler: Handler = async (event) => {
     const fresh = pulseAlerts(snapshot, new Date(), dayKey(s.timezone)).filter((a) => !seen.has(a.id));
     if (!fresh.length) continue;
     const ok = await pushAll(data, {
-      title: fresh.length === 1 ? "Alfred · Bay Area Pulse" : `Alfred · ${fresh.length} Pulse alerts`,
+      title: fresh.length === 1 ? "IRIS · Bay Area Pulse" : `IRIS · ${fresh.length} Pulse alerts`,
       body: fresh.map((a) => a.text).join(" · ").slice(0, 180),
       url: "/",
     });

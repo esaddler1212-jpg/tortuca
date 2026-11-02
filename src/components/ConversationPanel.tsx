@@ -2,7 +2,7 @@ import { Check, X } from "lucide-react";
 import type { Conversation } from "../hooks/useConversation";
 
 /**
- * Under the Alfred ring: no captions, just a short hint, setup errors, the
+ * Under the Iris ring: no captions, just a short hint, setup errors, the
  * "save this conversation?" choice, and End. The ring itself is the button.
  */
 export function ConversationCaptions({ convo, googleConnected }: { convo: Conversation; googleConnected: boolean }) {
@@ -10,13 +10,13 @@ export function ConversationCaptions({ convo, googleConnected }: { convo: Conver
   if (!convo.active) {
     return (
       <p className="text-center text-[11px] font-mono uppercase tracking-[0.2em] text-alfred-mist" aria-hidden>
-        Tap Alfred to talk
+        Tap Iris to talk
       </p>
     );
   }
   return (
     <div className="w-full max-w-md space-y-2 text-center" aria-live="polite">
-      {!googleConnected && <p className="text-xs text-amber-200">Connect Google in Settings first. It keeps Alfred's brain private to you.</p>}
+      {!googleConnected && <p className="text-xs text-amber-200">Connect Google in Settings first. It keeps Iris's brain private to you.</p>}
       {convo.error && <p className="text-xs text-amber-300/90">{convo.error}</p>}
       {convo.offerSave ? (
         <div className="flex items-center justify-center gap-2">

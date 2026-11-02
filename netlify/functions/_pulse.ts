@@ -8,7 +8,7 @@ import {
   type PulseSnapshot,
 } from "../../shared/pulse";
 
-const UA = "Alfred personal dashboard (alfred2.netlify.app)";
+const UA = "IRIS personal dashboard (alfred2.netlify.app)";
 
 async function getJson(url: string, timeoutMs = 8000, headers: Record<string, string> = {}): Promise<unknown> {
   const ctrl = new AbortController();

@@ -247,7 +247,7 @@ export default function App() {
       }),
     [displayName, settings.timezone, now, woodhouse, goalLines, weather, allSchedule, plan, today, desk, pulse],
   );
-  // "Brief me": Alfred reads today's rundown (or the Vantage briefing in that mode).
+  // "Brief me": Iris reads today's rundown (or the Vantage briefing in that mode).
   const briefMe = () => {
     const text = isVantageMode(mode)
       ? vantage.spoken
@@ -278,9 +278,9 @@ export default function App() {
   const isSunday = weekdayOfDay(dayKey(settings.timezone, now)) === "Sun";
 
   const coreLines: [string, string] =
-    systemStatus === "ok" ? ["ALFRED", "ONLINE"] : systemStatus === "degraded" ? ["ALFRED", "DEGRADED"] : ["ALFRED", "OFFLINE"];
+    systemStatus === "ok" ? ["IRIS", "ONLINE"] : systemStatus === "degraded" ? ["IRIS", "DEGRADED"] : ["IRIS", "OFFLINE"];
 
-  // Talk to Alfred: tap the core ring. Context is rebuilt fresh at each turn.
+  // Talk to Iris: tap the core ring. Context is rebuilt fresh at each turn.
   const convo = useConversation({
     timeZone: settings.timezone,
     today,
@@ -289,7 +289,7 @@ export default function App() {
     onSaveTranscript: (text) =>
       updateHub((h) => ({
         ...h,
-        memos: [{ id: `memo-${Date.now().toString(36)}`, at: new Date().toISOString(), text: `Conversation with Alfred\n${text}` }, ...h.memos].slice(0, 200),
+        memos: [{ id: `memo-${Date.now().toString(36)}`, at: new Date().toISOString(), text: `Conversation with Iris\n${text}` }, ...h.memos].slice(0, 200),
       })),
     buildContext: () =>
                       buildAskContext({

@@ -2,7 +2,7 @@ import type { CalendarEvent } from "../types";
 import type { TodayAction } from "./todayQueue";
 
 /**
- * What Alfred knows during a conversation: a short plain-text summary of the
+ * What Iris knows during a conversation: a short plain-text summary of the
  * day, built on the device. Family Purpose items are counted, never named, so
  * no student names or details leave the phone.
  */

@@ -1,6 +1,6 @@
 {
-  "name": "Alfred — Operator Interface",
-  "short_name": "Alfred",
+  "name": "IRIS",
+  "short_name": "IRIS",
   "description": "Personal command center: schedule, todos, commute, Woodhouse apps, and markets.",
   "start_url": "/",
   "display": "standalone",

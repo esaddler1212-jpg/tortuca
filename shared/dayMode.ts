@@ -1,5 +1,5 @@
 /**
- * Focus modes: what Alfred puts in front of E at a given time.
+ * Focus modes: what Iris puts in front of E at a given time.
  *
  * - school   Weekdays 6 AM until school dismissal: Family Purpose focus.
  * - network  Weekday afternoons/evenings (and overnight): ECS Network focus

@@ -42,7 +42,7 @@ export function usePushNotifications(enabled: boolean) {
         (navigator as Navigator & { standalone?: boolean }).standalone === true;
       if (isIos && !standalone) {
         setError(
-          "On iPhone, add Alfred to your Home Screen first (Safari → Share → Add to Home Screen), open it from there, then turn on notifications.",
+          "On iPhone, add IRIS to your Home Screen first (Safari → Share → Add to Home Screen), open it from there, then turn on notifications.",
         );
         return false;
       }
@@ -54,7 +54,7 @@ export function usePushNotifications(enabled: boolean) {
       if (!sub) {
         setError(
           typeof Notification !== "undefined" && Notification.permission === "denied"
-            ? "Notifications are blocked. On iPhone: Settings → Notifications → Alfred → Allow."
+            ? "Notifications are blocked. On iPhone: Settings → Notifications → IRIS → Allow."
             : "Push notifications unavailable. Add VAPID keys on Netlify.",
         );
         return false;

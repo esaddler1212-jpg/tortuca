@@ -5,7 +5,7 @@ import { useVoiceOutput, useVoiceSignal } from "./useVoiceOutput";
 import { addDays } from "../../shared/timezone";
 
 export type Turn = { role: "user" | "assistant"; content: string };
-/** What the Alfred ring shows. */
+/** What the Iris ring shows. */
 export type ConversationPhase = "idle" | "listening" | "thinking" | "speaking";
 
 const YES = /^(yes|yeah|yep|yup|sure|please|save( it)?|do it|ok(ay)?|go ahead)\b/i;
@@ -19,12 +19,12 @@ async function askAlfred(messages: Turn[], context: string, timeZone: string): P
     body: JSON.stringify({ messages, context, timeZone }),
   });
   const data = (await res.json().catch(() => ({}))) as { reply?: string; todos?: { title: string; due: string }[]; error?: string };
-  if (!res.ok || !data.reply) throw new Error(data.error ?? "Alfred couldn't answer. Try again.");
+  if (!res.ok || !data.reply) throw new Error(data.error ?? "Iris couldn't answer. Try again.");
   return { reply: data.reply, todos: data.todos ?? [] };
 }
 
 /**
- * A back-and-forth voice conversation with Alfred (Claude). Shared by the core
+ * A back-and-forth voice conversation with Iris (Claude). Shared by the core
  * ring (tap to talk, reacts to each phase) and the captions under it.
  */
 export function useConversation(opts: {
@@ -40,7 +40,7 @@ export function useConversation(opts: {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [handsFree, setHandsFree] = useState(true);
-  /** Alfred asked "save this conversation?" and is waiting for yes/no. */
+  /** Iris asked "save this conversation?" and is waiting for yes/no. */
   const [offerSave, setOfferSave] = useState(false);
   const offerSaveRef = useRef(offerSave);
   offerSaveRef.current = offerSave;
@@ -60,7 +60,7 @@ export function useConversation(opts: {
   const listenRef = useRef<() => void>(() => undefined);
 
   const transcript = () =>
-    turnsRef.current.map((t) => `${t.role === "user" ? "You" : "Alfred"}: ${t.content}`).join("\n");
+    turnsRef.current.map((t) => `${t.role === "user" ? "You" : "Iris"}: ${t.content}`).join("\n");
 
   /** Close out: save (or not), say goodbye, end. */
   const finish = useCallback(
@@ -74,7 +74,7 @@ export function useConversation(opts: {
     [voice],
   );
 
-  /** Ending: if we actually talked, Alfred offers to save the transcript. */
+  /** Ending: if we actually talked, Iris offers to save the transcript. */
   const wrapUp = useCallback(() => {
     if (!turnsRef.current.some((t) => t.role === "assistant") || !optsRef.current.onSaveTranscript) {
       finish(false);
@@ -113,13 +113,13 @@ export function useConversation(opts: {
         setReplyTick((n) => n + 1);
         voice.speak(reply, {
           force: true,
-          // Hands-free: listen again once Alfred finishes talking.
+          // Hands-free: listen again once Iris finishes talking.
           onEnd: () => {
             if (activeRef.current && handsFreeRef.current) listenRef.current();
           },
         });
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Alfred couldn't answer.");
+        setError(e instanceof Error ? e.message : "Iris couldn't answer.");
       } finally {
         setBusy(false);
       }
@@ -132,7 +132,7 @@ export function useConversation(opts: {
     if (speech.supported) speech.start();
   };
 
-  /** Tap on the ring: start, or interrupt Alfred and listen, or stop listening. */
+  /** Tap on the ring: start, or interrupt Iris and listen, or stop listening. */
   const tap = useCallback(() => {
     voice.prime(); // iPhone: unlock speech inside the tap
     setError(null);

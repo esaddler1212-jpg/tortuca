@@ -48,8 +48,8 @@ export const YEAR_GOALS: YearGoal[] = [
     detail: "Budget, trademark, releases, insurance quotes, sponsor deck." },
   { id: "g26-ns-foundation", year: 2026, area: "North Star", title: "North Star foundation: fiscal sponsor, board, pilot site",
     detail: "Everything the 2027–28 pilot needs signed before spring." },
-  { id: "g26-alfred", year: 2026, area: "Personal", title: "AI Agents: Alfred live on iMac and iPhone",
-    detail: "Alfred runs the day across both devices.", complete: true },
+  { id: "g26-alfred", year: 2026, area: "Personal", title: "AI Agents: IRIS live on phone and computer",
+    detail: "Iris runs the day across phone and computer.", complete: true },
   { id: "g26-spark", year: 2026, area: "Personal", title: "Daily creative spark: one mindset, one small make",
     detail: "A rotating focus and prompt each day: music, story, design, community, reflection." },
 

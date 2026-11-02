@@ -10,7 +10,7 @@ export const handler: Handler = async (event) => {
   const sessionId = fromApp ? rawState.slice(0, -"~app".length) : rawState;
   const error = event.queryStringParameters?.error;
 
-  // Sign-ins started from the installed app finish on a "go back to Alfred" page.
+  // Sign-ins started from the installed app finish on a "go back to IRIS" page.
   const doneUrl = (ok: boolean, reason?: string) =>
     fromApp
       ? `${siteUrl(event)}/oauth-done.html?ok=${ok ? 1 : 0}${reason ? `&oauth_error=${reason}` : ""}`

@@ -1,8 +1,8 @@
 /**
- * Woodhouse protocol — connection contract between your apps and Alfred.
+ * Woodhouse protocol — connection contract between your apps and Iris.
  *
  * Each app implements GET /api/woodhouse/snapshot returning WoodhouseNodeSnapshot.
- * Alfred aggregates registered nodes into WoodhouseOrchestrationSnapshot.
+ * Iris aggregates registered nodes into WoodhouseOrchestrationSnapshot.
  */
 
 export const WOODHOUSE_NODE = "woodhouse/node/v1" as const;
@@ -38,7 +38,7 @@ export interface WoodhouseMetric {
   key: string;
   label: string;
   value: string | number;
-  /** Highlight in Alfred when attention needed */
+  /** Highlight in Iris when attention needed */
   alert?: boolean;
 }
 
@@ -50,7 +50,7 @@ export interface WoodhouseNodeSnapshot {
   displayName: string;
   generatedAt: string;
   status: WoodhouseNodeStatus;
-  /** One sentence for Alfred's daily briefing */
+  /** One sentence for Iris's daily briefing */
   summary: string;
   metrics: WoodhouseMetric[];
   calendar?: WoodhouseCalendarItem[];
@@ -78,7 +78,7 @@ export interface WoodhouseNodeSyncResult {
   snapshot: WoodhouseNodeSnapshot | null;
 }
 
-/** Alfred's aggregated view — pull this to see everything at once */
+/** Iris's aggregated view — pull this to see everything at once */
 export interface WoodhouseOrchestrationSnapshot {
   protocol: typeof WOODHOUSE_ORCHESTRATION;
   generatedAt: string;

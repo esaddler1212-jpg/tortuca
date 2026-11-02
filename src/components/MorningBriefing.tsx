@@ -62,7 +62,7 @@ export function MorningBriefing({
         {lines.join(" ")}
       </p>
       <p className="mt-4 text-sm italic text-alfred-mist/80 font-display">
-        — Alfred, at your service.
+        — Iris, at your service.
       </p>
     </section>
   );

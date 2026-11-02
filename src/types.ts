@@ -28,14 +28,14 @@ export interface EmailMessage {
 import type { WoodhouseRegistryEntry } from "./types/woodhouse";
 
 export interface UserSettings {
-  /** Name Alfred greets you by ("Good morning, E"). */
+  /** Name Iris greets you by ("Good morning, E"). */
   preferredName: string;
   city: string;
   latitude: number;
   longitude: number;
   timezone: string;
   briefingHour: number;
-  /** Registered Woodhouse app nodes (Alfred syncs all of these). */
+  /** Registered Woodhouse app nodes (Iris syncs all of these). */
   woodhouseNodes: WoodhouseRegistryEntry[];
   /** @deprecated Use woodhouseNodes — migrated on load */
   woodhouseNodeUrl: string;
