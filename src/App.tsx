@@ -427,6 +427,158 @@ export default function App() {
     </>
   );
 
+  const renderPlanetModule = (id: SolarPlanetId) => {
+    switch (id) {
+      case "vitals":
+        return <VitalsPanel weather={weather} city={settings.city} fitness={fitnessStatus} />;
+      case "apps":
+        return <NetworkPanel woodhouse={woodhouse} googleConnected={connected} />;
+      case "today":
+        return (
+          <>
+            <FamilyPurposeDebriefBanner
+              mode={mode}
+              timeZone={settings.timezone}
+              woodhouse={woodhouse}
+              familyPurposeAppUrl={familyPurposeAppUrl}
+            />
+            <TodayCommandCenter
+              moduleOnly
+              settings={settings}
+              weather={weather}
+              weatherLoading={weatherLoading}
+              weatherError={weatherError}
+              leaveBy={leaveBy}
+              tomorrowLeaveBy={tomorrowLeaveBy}
+              bedtime={bedtime}
+              eveningWrap={eveningWrap}
+              eveningMode={eveningMode}
+              displayName={displayName}
+              modeLabel={DAY_MODE_LABEL[mode]}
+              onBriefMe={voiceOut.supported ? briefMe : undefined}
+              briefSpeaking={voiceOut.speaking}
+              onStopBrief={voiceOut.stop}
+              afterGreeting={
+                <>
+                  <SparkCard plan={plan} today={today} onToggle={toggleSpark} onShuffle={shuffleSpark} onNote={noteSpark} />
+                  {isVantageMode(mode) && <VantageBriefingPanel lines={vantage.lines} spoken={vantage.spoken} />}
+                  <PulsePanel key={`pulse-${isVantageMode(mode)}`} pulse={pulse} error={pulseError} city={settings.city} defaultOpen={isVantageMode(mode)} />
+                  {isSunday && weather?.week && <WeekWeatherPanel week={weather.week} city={settings.city} />}
+                  {showWeeklyReview && <WeeklyReview review={weeklyReview} />}
+                  <InstallAppBanner />
+                  <OvernightDeltaBanner delta={overnightDelta} />
+                  {overcommitment && <OvercommitmentBanner warning={overcommitment} />}
+                  {showWindDown && <WindDownBanner bedtime={bedtime} />}
+                  {commuteError && settings.useLiveCommute && (
+                    <p className="text-sm text-amber-300/90 panel px-4 py-2">{commuteError}</p>
+                  )}
+                </>
+              }
+              unreadEmails={unread}
+              actions={todayActions}
+              todayTimeline={todayTimeline}
+              allSchedule={allSchedule}
+              woodhouse={woodhouse}
+              woodhouseLoading={woodhouseLoading}
+              woodhouseError={woodhouseError}
+              stocks={stocks}
+              stocksLoading={stocksLoading}
+              messages={messages}
+              googleConnected={connected}
+              fitnessLogs={fitnessLogs}
+              onConnectGoogle={() => void connect()}
+              onToggleTodo={toggle}
+              onAddTodo={add}
+              onLogWorkout={logWorkout}
+              pendingTodos={pending}
+              doneTodos={done}
+              now={now}
+              planTasks={planTaskMap}
+              planGoals={planGoalMap}
+              onTogglePlanTask={togglePlanTask}
+              planDoneToday={planDoneToday}
+            />
+          </>
+        );
+      case "plan":
+        return (
+          <PlanPanel
+            key={isVantageMode(mode) ? "plan-year" : "plan-week"}
+            initialTab={isVantageMode(mode) ? "year" : "week"}
+            plan={plan}
+            today={today}
+            mode={mode}
+            timeZone={settings.timezone}
+            now={now}
+            events={allSchedule}
+            onTodayIds={new Set(todayPlanTasks.map((t) => t.id))}
+            onToggleTask={togglePlanTask}
+            onAddTask={addPlanTask}
+            onRemoveTask={removePlanTask}
+            onSetGoals={setPlanGoals}
+            onSetHandoff={setHandoff}
+            onSetBudget={setBudget}
+            onResearchTask={onResearchTask}
+            onDraftEmail={onDraftEmail}
+          />
+        );
+      case "research":
+        return (
+          <BusinessResearcherPanel
+            googleConnected={connected}
+            loading={bizResearch.loading}
+            error={bizResearch.error}
+            last={bizResearch.last}
+            onConnectGoogle={() => void connect()}
+            onResearch={(q, a) => runBusinessResearch(q, a)}
+          />
+        );
+      case "hub":
+        return (
+          <HubPanel
+            key={`hub-${mode}`}
+            hub={hub}
+            update={updateHub}
+            today={today}
+            mode={mode}
+            timeZone={settings.timezone}
+            googleConnected={connected}
+            onAddTodo={(title) => add(title)}
+            onLogWorkout={logWorkout}
+            workoutLoggedToday={fitnessLogs.some((l) => l.date === today)}
+          />
+        );
+      case "meal":
+        return (
+          <MealPrepPanel
+            settings={settings}
+            items={shoppingItems}
+            onAdd={addShopping}
+            onToggle={togglePantry}
+            onRemove={removeShopping}
+          />
+        );
+      case "ecs":
+        return ecsPanels;
+      case "channels":
+        return (
+          <ChannelsPanel
+            state={channelAgent.channels}
+            pending={channelAgent.pending}
+            googleConnected={connected}
+            accountEmail={accountEmail}
+            onSaveChannel={channelAgent.saveChannel}
+            onAddDraft={channelAgent.addDraft}
+            onDiscardDraft={channelAgent.discardDraft}
+            onSendDraft={channelAgent.sendDraft}
+            onConnectGoogle={() => void connect()}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="min-h-screen pb-20 relative">
       <div className="hud-vignette" aria-hidden />
@@ -440,10 +592,11 @@ export default function App() {
         onFocusChoice={focus.choose}
       />
 
-      <main className="mx-auto max-w-[1400px] px-4 py-6 space-y-4">
+      <main className={`mx-auto max-w-[1400px] px-4 py-6 space-y-4 ${activePlanet ? "planet-visit" : ""}`}>
         <SolarSystemStage
           planets={solarPlanetViews}
           activeId={activePlanet}
+          focusedId={activePlanet}
           bringFrontId={bringFrontId}
           spinNonce={spinNonce}
           onSelect={focusPlanet}
@@ -476,156 +629,26 @@ export default function App() {
         />
 
         {!activePlanet && (
-          <p className="text-center font-mono text-xs text-cyan-400/50 px-4">
-            Tap a planet to open that module — or tell Iris &quot;open my plan&quot; / &quot;show email channels&quot; and she&apos;ll
-            spin it forward.
-          </p>
+          <>
+            <p className="text-center font-mono text-xs text-cyan-400/50 px-4">
+              Tap a planet to visit that world — only one module open at a time. Ask Iris to bring one forward.
+            </p>
+            <FamilyPurposeDebriefBanner
+              mode={mode}
+              timeZone={settings.timezone}
+              woodhouse={woodhouse}
+              familyPurposeAppUrl={familyPurposeAppUrl}
+            />
+          </>
         )}
-
-        <FamilyPurposeDebriefBanner
-          mode={mode}
-          timeZone={settings.timezone}
-          woodhouse={woodhouse}
-          familyPurposeAppUrl={familyPurposeAppUrl}
-        />
 
         {activePlanet && (
           <PlanetModuleDock planetId={activePlanet} onClose={() => setActivePlanet(null)}>
-            {activePlanet === "vitals" && (
-              <VitalsPanel weather={weather} city={settings.city} fitness={fitnessStatus} />
-            )}
-            {activePlanet === "apps" && (
-              <NetworkPanel woodhouse={woodhouse} googleConnected={connected} />
-            )}
-            {activePlanet === "today" && (
-              <TodayCommandCenter
-                settings={settings}
-                weather={weather}
-                weatherLoading={weatherLoading}
-                weatherError={weatherError}
-                leaveBy={leaveBy}
-                tomorrowLeaveBy={tomorrowLeaveBy}
-                bedtime={bedtime}
-                eveningWrap={eveningWrap}
-                eveningMode={eveningMode}
-                displayName={displayName}
-                modeLabel={DAY_MODE_LABEL[mode]}
-                onBriefMe={voiceOut.supported ? briefMe : undefined}
-                briefSpeaking={voiceOut.speaking}
-                onStopBrief={voiceOut.stop}
-                afterGreeting={
-                  <>
-                    <SparkCard plan={plan} today={today} onToggle={toggleSpark} onShuffle={shuffleSpark} onNote={noteSpark} />
-                    {isVantageMode(mode) && <VantageBriefingPanel lines={vantage.lines} spoken={vantage.spoken} />}
-                    <PulsePanel key={`pulse-${isVantageMode(mode)}`} pulse={pulse} error={pulseError} city={settings.city} defaultOpen={isVantageMode(mode)} />
-                    {isSunday && weather?.week && <WeekWeatherPanel week={weather.week} city={settings.city} />}
-                    {showWeeklyReview && <WeeklyReview review={weeklyReview} />}
-                    <InstallAppBanner />
-                    <OvernightDeltaBanner delta={overnightDelta} />
-                    {overcommitment && <OvercommitmentBanner warning={overcommitment} />}
-                    {showWindDown && <WindDownBanner bedtime={bedtime} />}
-                    {commuteError && settings.useLiveCommute && (
-                      <p className="text-sm text-amber-300/90 panel px-4 py-2">{commuteError}</p>
-                    )}
-                  </>
-                }
-                unreadEmails={unread}
-                actions={todayActions}
-                todayTimeline={todayTimeline}
-                allSchedule={allSchedule}
-                woodhouse={woodhouse}
-                woodhouseLoading={woodhouseLoading}
-                woodhouseError={woodhouseError}
-                stocks={stocks}
-                stocksLoading={stocksLoading}
-                messages={messages}
-                googleConnected={connected}
-                fitnessLogs={fitnessLogs}
-                onConnectGoogle={() => void connect()}
-                onToggleTodo={toggle}
-                onAddTodo={add}
-                onLogWorkout={logWorkout}
-                pendingTodos={pending}
-                doneTodos={done}
-                now={now}
-                planTasks={planTaskMap}
-                planGoals={planGoalMap}
-                onTogglePlanTask={togglePlanTask}
-                planDoneToday={planDoneToday}
-              />
-            )}
-            {activePlanet === "plan" && (
-              <PlanPanel
-                key={isVantageMode(mode) ? "plan-year" : "plan-week"}
-                initialTab={isVantageMode(mode) ? "year" : "week"}
-                plan={plan}
-                today={today}
-                mode={mode}
-                timeZone={settings.timezone}
-                now={now}
-                events={allSchedule}
-                onTodayIds={new Set(todayPlanTasks.map((t) => t.id))}
-                onToggleTask={togglePlanTask}
-                onAddTask={addPlanTask}
-                onRemoveTask={removePlanTask}
-                onSetGoals={setPlanGoals}
-                onSetHandoff={setHandoff}
-                onSetBudget={setBudget}
-                onResearchTask={onResearchTask}
-                onDraftEmail={onDraftEmail}
-              />
-            )}
-            {activePlanet === "research" && (
-              <BusinessResearcherPanel
-                googleConnected={connected}
-                loading={bizResearch.loading}
-                error={bizResearch.error}
-                last={bizResearch.last}
-                onConnectGoogle={() => void connect()}
-                onResearch={(q, a) => runBusinessResearch(q, a)}
-              />
-            )}
-            {activePlanet === "hub" && (
-              <HubPanel
-                key={`hub-${mode}`}
-                hub={hub}
-                update={updateHub}
-                today={today}
-                mode={mode}
-                timeZone={settings.timezone}
-                googleConnected={connected}
-                onAddTodo={(title) => add(title)}
-                onLogWorkout={logWorkout}
-                workoutLoggedToday={fitnessLogs.some((l) => l.date === today)}
-              />
-            )}
-            {activePlanet === "meal" && (
-              <MealPrepPanel
-                settings={settings}
-                items={shoppingItems}
-                onAdd={addShopping}
-                onToggle={togglePantry}
-                onRemove={removeShopping}
-              />
-            )}
-            {activePlanet === "ecs" && ecsPanels}
-            {activePlanet === "channels" && (
-              <ChannelsPanel
-                state={channelAgent.channels}
-                pending={channelAgent.pending}
-                googleConnected={connected}
-                accountEmail={accountEmail}
-                onSaveChannel={channelAgent.saveChannel}
-                onAddDraft={channelAgent.addDraft}
-                onDiscardDraft={channelAgent.discardDraft}
-                onSendDraft={channelAgent.sendDraft}
-                onConnectGoogle={() => void connect()}
-              />
-            )}
+            {renderPlanetModule(activePlanet)}
           </PlanetModuleDock>
         )}
 
-        {commuteLoading && settings.useLiveCommute && (
+        {!activePlanet && commuteLoading && settings.useLiveCommute && (
           <p className="text-xs text-alfred-mist">Updating live commute…</p>
         )}
       </main>

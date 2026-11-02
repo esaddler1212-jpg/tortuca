@@ -13,6 +13,8 @@ export interface SolarPlanetView {
 interface Props {
   planets: SolarPlanetView[];
   activeId?: SolarPlanetId | null;
+  /** When set, only this planet orb is shown (focused visit). */
+  focusedId?: SolarPlanetId | null;
   /** Rotate this planet slot to the front (6 o'clock). */
   bringFrontId?: SolarPlanetId | null;
   /** Bumps when the same planet should spin forward again. */
@@ -83,17 +85,21 @@ function PlanetOrb({
 }
 
 /** Solar system: Iris is the sun; modules orbit slowly. Drag or scroll to spin. */
-export function SolarSystemStage({ planets, activeId, bringFrontId, spinNonce = 0, onSelect, sun, underSun }: Props) {
+export function SolarSystemStage({ planets, activeId, focusedId, bringFrontId, spinNonce = 0, onSelect, sun, underSun }: Props) {
   const { totalDeg, setFrontForSlot, orbitHandlers } = useSolarOrbit(0);
   const count = planets.length;
 
   const merged = useMemo(() => {
     const map = new Map(planets.map((p) => [p.id, p]));
-    return SOLAR_PLANETS.filter((d) => map.has(d.id)).map((d) => ({
+    let list = SOLAR_PLANETS.filter((d) => map.has(d.id)).map((d) => ({
       def: d,
       ...map.get(d.id)!,
     }));
-  }, [planets]);
+    if (focusedId) {
+      list = list.filter((m) => m.def.id === focusedId);
+    }
+    return list;
+  }, [planets, focusedId]);
 
   useEffect(() => {
     if (!bringFrontId) return;
@@ -157,7 +163,9 @@ export function SolarSystemStage({ planets, activeId, bringFrontId, spinNonce = 
         </div>
       </div>
       <p className="mt-3 text-center font-mono text-[10px] uppercase tracking-[0.28em] text-cyan-400/45 px-2">
-        Drag or scroll the orbit · tap a planet · ask Iris to bring one forward
+        {focusedId
+          ? "One world at a time · back to solar system to choose another"
+          : "Drag or scroll the orbit · tap a planet · ask Iris to bring one forward"}
       </p>
     </section>
   );
