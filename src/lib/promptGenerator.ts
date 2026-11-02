@@ -141,6 +141,24 @@ export function promptForSpark(spark: { theme: string; mindset: string; prompt: 
   ].join("\n");
 }
 
+/** Prompt for a deep business research brief (offline fallback). */
+export function promptForBusinessResearch(query: string, area: Area, extraContext?: string): string {
+  return [
+    ABOUT_E,
+    "",
+    `Context — ${area}: ${AREA_CONTEXT[area]}`,
+    "",
+    `Research question: ${query}`,
+    extraContext ?? "",
+    "",
+    "Produce a sourced business research brief in Markdown: executive summary, findings with [Source](url), next steps, sources list.",
+    "",
+    ...GUARDRAILS.map((g) => `- ${g}`),
+  ]
+    .filter((l, i, a) => !(l === "" && a[i - 1] === ""))
+    .join("\n");
+}
+
 /** Prompt to turn a raw voice memo into something usable. */
 export function promptForMemo(text: string): string {
   return [
