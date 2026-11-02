@@ -39,6 +39,8 @@ export default {
         // where the browser doesn't report word boundaries).
         "hud-word": "hud-word 0.7s ease-out forwards",
         "hud-talk-glow": "hud-talk-glow 0.45s ease-in-out infinite alternate",
+        "hud-listen": "hud-listen 1.1s ease-in-out infinite alternate",
+        "hud-burst": "hud-burst 0.9s ease-out forwards",
       },
       keyframes: {
         "hud-pulse": {
@@ -52,6 +54,14 @@ export default {
         "hud-word": {
           from: { transform: "scale(1)", opacity: "0.9" },
           to: { transform: "scale(1.9)", opacity: "0" },
+        },
+        "hud-listen": {
+          from: { transform: "scale(0.96)", opacity: "0.7" },
+          to: { transform: "scale(1.1)", opacity: "1" },
+        },
+        "hud-burst": {
+          from: { transform: "scale(0.9)", opacity: "0.95" },
+          to: { transform: "scale(1.6)", opacity: "0" },
         },
         "hud-talk-glow": {
           from: { transform: "scale(0.94)", opacity: "0.75" },

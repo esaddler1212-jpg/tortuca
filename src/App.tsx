@@ -11,7 +11,8 @@ import { SparkCard } from "./components/SparkCard";
 import { HubPanel } from "./components/HubPanel";
 import { PulsePanel } from "./components/PulsePanel";
 import { usePulse } from "./hooks/usePulse";
-import { ConversationPanel } from "./components/ConversationPanel";
+import { ConversationCaptions } from "./components/ConversationPanel";
+import { useConversation } from "./hooks/useConversation";
 import { buildAskContext } from "./lib/askContext";
 import { weatherLabel } from "./lib/weather";
 import { pulseSummary } from "../shared/pulse";
@@ -279,6 +280,39 @@ export default function App() {
   const coreLines: [string, string] =
     systemStatus === "ok" ? ["ALFRED", "ONLINE"] : systemStatus === "degraded" ? ["ALFRED", "DEGRADED"] : ["ALFRED", "OFFLINE"];
 
+  // Talk to Alfred: tap the core ring. Context is rebuilt fresh at each turn.
+  const convo = useConversation({
+    timeZone: settings.timezone,
+    today,
+    onAddTodo: (title, dueDate) => add(title, dueDate),
+    // "Save this conversation?" → yes: the transcript becomes a memo.
+    onSaveTranscript: (text) =>
+      updateHub((h) => ({
+        ...h,
+        memos: [{ id: `memo-${Date.now().toString(36)}`, at: new Date().toISOString(), text: `Conversation with Alfred\n${text}` }, ...h.memos].slice(0, 200),
+      })),
+    buildContext: () =>
+                      buildAskContext({
+                        name: displayName,
+                        now: new Date(),
+                        timeZone: settings.timezone,
+                        modeLabel: DAY_MODE_LABEL[mode],
+                        city: settings.city,
+                        weather: weather
+                          ? `${Math.round(weather.temperature)}°F, ${weatherLabel(weather.weatherCode).toLowerCase()}, high ${Math.round(weather.high)}°F`
+                          : null,
+                        leaveBy: leaveBy
+                          ? `${new Intl.DateTimeFormat("en-US", { timeZone: settings.timezone, hour: "numeric", minute: "2-digit" }).format(leaveBy.leaveBy)} for ${leaveBy.destination}`
+                          : null,
+                        actions: todayActions,
+                        events: allSchedule,
+                        spark: todaySpark(plan, today),
+                        pulse: pulse ? pulseSummary(pulse) : undefined,
+                        goals: goalLines,
+                        desk: { review: desk.review.length, working: desk.working.length },
+                      }),
+  });
+
   const statusPanels = (
     <>
       <VitalsPanel weather={weather} city={settings.city} fitness={fitnessStatus} />
@@ -343,8 +377,16 @@ export default function App() {
                 <div className="hidden xl:block space-y-4">{statusPanels}</div>
                 <div className="flex flex-col items-center justify-center gap-4 py-2 xl:py-10">
                   <div className="w-full max-w-[200px] sm:max-w-[320px] xl:max-w-[420px]">
-                    <CoreRing lines={coreLines} status={systemStatus} />
+                    <CoreRing
+                      lines={coreLines}
+                      status={systemStatus}
+                      phase={convo.phase}
+                      replyTick={convo.replyTick}
+                      active={convo.active}
+                      onActivate={convo.tap}
+                    />
                   </div>
+                  <ConversationCaptions convo={convo} googleConnected={connected} />
                   <CommandBar
                     variant="hud"
                     settings={settings}
@@ -354,33 +396,6 @@ export default function App() {
                     onLogWorkout={logWorkout}
                     onAddEvent={addLocalEvent}
                     onAddShopping={addShopping}
-                  />
-                  <ConversationPanel
-                    googleConnected={connected}
-                    timeZone={settings.timezone}
-                    today={today}
-                    onAddTodo={(title, dueDate) => add(title, dueDate)}
-                    buildContext={() =>
-                      buildAskContext({
-                        name: displayName,
-                        now: new Date(),
-                        timeZone: settings.timezone,
-                        modeLabel: DAY_MODE_LABEL[mode],
-                        city: settings.city,
-                        weather: weather
-                          ? `${Math.round(weather.temperature)}°F, ${weatherLabel(weather.weatherCode).toLowerCase()}, high ${Math.round(weather.high)}°F`
-                          : null,
-                        leaveBy: leaveBy
-                          ? `${new Intl.DateTimeFormat("en-US", { timeZone: settings.timezone, hour: "numeric", minute: "2-digit" }).format(leaveBy.leaveBy)} for ${leaveBy.destination}`
-                          : null,
-                        actions: todayActions,
-                        events: allSchedule,
-                        spark: todaySpark(plan, today),
-                        pulse: pulse ? pulseSummary(pulse) : undefined,
-                        goals: goalLines,
-                        desk: { review: desk.review.length, working: desk.working.length },
-                      })
-                    }
                   />
                 </div>
                 <div className="hidden xl:block space-y-4">{ecsPanels}</div>
