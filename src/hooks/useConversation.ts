@@ -3,6 +3,7 @@ import { authHeaders, ensureSession } from "../lib/google";
 import { useSpeechInput } from "./useSpeechInput";
 import { useVoiceOutput, useVoiceSignal } from "./useVoiceOutput";
 import { addDays } from "../../shared/timezone";
+import { isSolarPlanetId, matchPlanetFromSpeech, type SolarPlanetId } from "../../shared/solarPlanets";
 
 export type Turn = { role: "user" | "assistant"; content: string; /** Read-out of the brief, not a real exchange. */ brief?: boolean };
 /** What the Iris ring shows. */
@@ -32,16 +33,26 @@ export function setGreetingEnabled(on: boolean) {
 const YES = /^(yes|yeah|yep|yup|sure|please|save( it)?|do it|ok(ay)?|go ahead)\b/i;
 const GOODBYE = /^(stop|that'?s all|that is all|i'?m good|thanks,? alfred|thank you,? alfred|goodbye|bye( alfred)?|never ?mind)[.!]?$/i;
 
-async function askAlfred(messages: Turn[], context: string, timeZone: string): Promise<{ reply: string; todos: { title: string; due: string }[] }> {
+async function askAlfred(
+  messages: Turn[],
+  context: string,
+  timeZone: string,
+): Promise<{ reply: string; todos: { title: string; due: string }[]; planet?: SolarPlanetId }> {
   await ensureSession();
   const res = await fetch("/api/ask", {
     method: "POST",
     headers: { ...authHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ messages, context, timeZone }),
   });
-  const data = (await res.json().catch(() => ({}))) as { reply?: string; todos?: { title: string; due: string }[]; error?: string };
+  const data = (await res.json().catch(() => ({}))) as {
+    reply?: string;
+    todos?: { title: string; due: string }[];
+    planet?: string;
+    error?: string;
+  };
   if (!res.ok || !data.reply) throw new Error(data.error ?? "Iris couldn't answer. Try again.");
-  return { reply: data.reply, todos: data.todos ?? [] };
+  const planet = data.planet && isSolarPlanetId(data.planet) ? data.planet : undefined;
+  return { reply: data.reply, todos: data.todos ?? [], planet };
 }
 
 /**
@@ -59,6 +70,8 @@ export function useConversation(opts: {
   buildGreeting?: () => string;
   /** The rundown Iris reads when E says "let's do the brief". */
   buildBrief?: () => string;
+  /** Iris chose a solar-system module (open_planet tool or speech match). */
+  onOpenPlanet?: (id: SolarPlanetId) => void;
 }) {
   const [active, setActive] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([]);
@@ -162,9 +175,13 @@ export function useConversation(opts: {
       setBusy(true);
       setError(null);
       try {
-        const { buildContext, timeZone, today, onAddTodo } = optsRef.current;
-        const { reply, todos } = await askAlfred(next, buildContext(), timeZone);
+        const { buildContext, timeZone, today, onAddTodo, onOpenPlanet } = optsRef.current;
+        const { reply, todos, planet } = await askAlfred(next, buildContext(), timeZone);
         for (const t of todos) onAddTodo(t.title, t.due === "today" ? today : t.due === "tomorrow" ? addDays(today, 1) : undefined);
+        const open =
+          planet ??
+          (/\b(open|show|bring( up)?|pull up|go to)\b/i.test(said) ? matchPlanetFromSpeech(said) : null);
+        if (open) onOpenPlanet?.(open);
         setTurns((t) => [...t, { role: "assistant", content: reply }]);
         setReplyTick((n) => n + 1);
         voice.speak(reply, {

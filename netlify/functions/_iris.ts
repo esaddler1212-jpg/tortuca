@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { SOLAR_PLANET_IDS, solarPlanetContextForIris } from "../../shared/solarPlanets";
 
 /** Iris's brain: persona, tools, and one conversational turn (with web search). */
 
@@ -12,6 +13,7 @@ You are speaking out loud through a phone or computer speaker, in a back-and-for
 - Warm, sharp and direct, with a little wit, like a trusted chief of staff who knows the business inside out. Call him "boss" now and then (not every sentence); never "sir".
 - Use the "Right now" notes for anything about his day, schedule, weather, plans or goals. If something isn't in the notes, say you don't have it rather than guessing.
 - When E asks you to remember, add or remind him of something to do, call add_todo (one call per item) and confirm it briefly.
+- When E asks to open, show, pull up, or go to part of IRIS (today's list, plan, email channels, research, hub, meals, apps, vitals, ECS log), call open_planet with the best-matching module and say briefly that you're bringing it up.
 - Never ask for or repeat students' names or personal details from Family Purpose; refer to "a student".
 - For news, scores, prices, store hours, events, people, or anything current you don't already know, use web_search; use web_fetch to read a specific page E names. Then answer in a sentence or two, naming the source out loud ("per KQED"), never reading URLs. Don't search for things in the "Right now" notes.
 - When E tells you something lasting about himself, his work or his preferences (routines, people by role, how he likes things), or says "remember", call remember with one short fact in third person ("E meets the $BAY sponsor every other Thursday"). When he says to forget something, call forget. Use what you remember naturally; don't recite the list. Never remember students' names or details, passwords, or account or card numbers.
@@ -30,6 +32,25 @@ export const ADD_TODO = {
       due: { type: "string", enum: ["today", "tomorrow", "none"], description: "When it's due." },
     },
     required: ["title", "due"],
+    additionalProperties: false,
+  },
+};
+
+export const OPEN_PLANET = {
+  name: "open_planet",
+  description:
+    "Bring an IRIS console module to the front of the solar system UI. Use when E asks to open, show, or go to part of the app.",
+  strict: true,
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      planet: {
+        type: "string",
+        enum: SOLAR_PLANET_IDS,
+        description: `Module id. Hints: ${solarPlanetContextForIris()}`,
+      },
+    },
+    required: ["planet"],
     additionalProperties: false,
   },
 };
@@ -100,13 +121,14 @@ export async function runIris(
   turns: IrisTurn[],
   context: string,
   memory: string[] = [],
-): Promise<{ reply: string; todos: IrisTodo[]; remember: string[]; forget: string[]; searched: boolean; refused: boolean }> {
+): Promise<{ reply: string; todos: IrisTodo[]; remember: string[]; forget: string[]; searched: boolean; refused: boolean; planet: string | null }> {
   const messages: Anthropic.Beta.BetaMessageParam[] = turns.map((t) => ({ role: t.role, content: t.content }));
   const texts: string[] = [];
   const todos: IrisTodo[] = [];
   const remember: string[] = [];
   const forget: string[] = [];
   let searched = false;
+  let planet: string | null = null;
   for (let hop = 0; hop < 3; hop++) {
     const response = await client.beta.messages.create({
       model: MODEL,
@@ -119,10 +141,10 @@ export async function runIris(
         { type: "text", text: `Right now:\n${context.slice(0, 8000)}` },
         ...(memory.length ? [{ type: "text" as const, text: `What you remember about E:\n${memory.map((m) => `- ${m}`).join("\n")}` }] : []),
       ],
-      tools: [ADD_TODO, ...MEMORY_TOOLS, ...WEB_TOOLS],
+      tools: [ADD_TODO, OPEN_PLANET, ...MEMORY_TOOLS, ...WEB_TOOLS],
       messages,
     });
-    if (response.stop_reason === "refusal") return { reply: "", todos: [], remember: [], forget: [], searched, refused: true };
+    if (response.stop_reason === "refusal") return { reply: "", todos: [], remember: [], forget: [], searched, refused: true, planet: null };
     for (const b of response.content) {
       if (b.type === "text") texts.push(b.text);
       else if (b.type === "server_tool_use") searched = true;
@@ -137,11 +159,14 @@ export async function runIris(
         if (typeof i.title === "string" && i.title.trim()) {
           todos.push({ title: i.title.trim().slice(0, 140), due: i.due === "today" || i.due === "tomorrow" ? i.due : "none" });
         }
+      } else if (b.type === "tool_use" && b.name === "open_planet") {
+        const p = String((b.input as { planet?: unknown }).planet ?? "").trim();
+        if (SOLAR_PLANET_IDS.includes(p as (typeof SOLAR_PLANET_IDS)[number])) planet = p;
       }
     }
     if (response.stop_reason !== "pause_turn") break;
     // Long search: hand the partial turn back so Claude picks up where it left off.
     messages.push({ role: "assistant", content: response.content as Anthropic.Beta.BetaContentBlockParam[] });
   }
-  return { reply: forVoice(texts.join(" ")), todos, remember, forget, searched, refused: false };
+  return { reply: forVoice(texts.join(" ")), todos, remember, forget, searched, refused: false, planet };
 }

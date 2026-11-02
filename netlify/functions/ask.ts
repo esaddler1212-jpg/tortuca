@@ -59,7 +59,7 @@ export const handler: Handler = async (event) => {
     // Iris's memory lives with the account's data (shared by phone and computer).
     const key = await resolveDataKey(sessionId);
     const memory = ((await loadUserData(key))?.irisMemory ?? []).map((m) => m.fact);
-    const { reply: text, todos, remember, forget, refused } = await runIris(client, turns, body.context ?? "", memory);
+    const { reply: text, todos, remember, forget, refused, planet } = await runIris(client, turns, body.context ?? "", memory);
     if (refused) return json(200, { reply: "I can't help with that one, boss. Ask me something else?", todos: [] });
     if (remember.length || forget.length) {
       const latest = (await loadUserData(key)) ?? { updatedAt: new Date().toISOString() };
@@ -81,7 +81,7 @@ export const handler: Handler = async (event) => {
           : forget.length
             ? "Done. I've forgotten it."
             : "Sorry, I lost my train of thought. Say that again?");
-    return json(200, { reply, todos });
+    return json(200, { reply, todos, planet: planet && typeof planet === "string" ? planet : undefined });
   } catch (error) {
     if (error instanceof Anthropic.APIConnectionTimeoutError) return json(504, { error: "That one took too long, boss. Try asking a simpler way." });
     if (error instanceof Anthropic.RateLimitError) return json(429, { error: "I'm being rate-limited. Give me a minute." });
