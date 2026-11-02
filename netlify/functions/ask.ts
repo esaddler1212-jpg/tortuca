@@ -3,7 +3,8 @@ import type { Handler } from "@netlify/functions";
 import { getStore } from "@netlify/blobs";
 import { getValidSession, initBlobs, sessionHeader } from "./_shared";
 import { dayKey } from "../../shared/timezone";
-import { runIris } from "./_iris";
+import { matchesForget, runIris } from "./_iris";
+import { loadUserData, resolveDataKey, saveUserData } from "./_userData";
 
 /**
  * POST /api/ask: Iris's conversation brain (Claude). Signed-in only, capped
@@ -55,11 +56,31 @@ export const handler: Handler = async (event) => {
   // Fail fast (Netlify functions have a time limit); no automatic retries.
   const client = new Anthropic({ timeout: 24_000, maxRetries: 0 });
   try {
-    const { reply: text, todos, refused } = await runIris(client, turns, body.context ?? "");
+    // Iris's memory lives with the account's data (shared by phone and computer).
+    const key = await resolveDataKey(sessionId);
+    const memory = ((await loadUserData(key))?.irisMemory ?? []).map((m) => m.fact);
+    const { reply: text, todos, remember, forget, refused } = await runIris(client, turns, body.context ?? "", memory);
     if (refused) return json(200, { reply: "I can't help with that one, boss. Ask me something else?", todos: [] });
+    if (remember.length || forget.length) {
+      const latest = (await loadUserData(key)) ?? { updatedAt: new Date().toISOString() };
+      let facts = (latest.irisMemory ?? []).filter((m) => !forget.some((f) => matchesForget(m.fact, f)));
+      for (const fact of remember) {
+        if (!facts.some((m) => m.fact.toLowerCase() === fact.toLowerCase())) {
+          facts.push({ id: `mem-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`, fact, at: new Date().toISOString() });
+        }
+      }
+      facts = facts.slice(-60);
+      await saveUserData(key, { ...latest, irisMemory: facts });
+    }
     const reply =
       text ||
-      (todos.length ? `Done. I added ${todos.map((t) => t.title).join(" and ")} to your list.` : "Sorry, I lost my train of thought. Say that again?");
+      (todos.length
+        ? `Done. I added ${todos.map((t) => t.title).join(" and ")} to your list.`
+        : remember.length
+          ? "Got it. I'll remember that."
+          : forget.length
+            ? "Done. I've forgotten it."
+            : "Sorry, I lost my train of thought. Say that again?");
     return json(200, { reply, todos });
   } catch (error) {
     if (error instanceof Anthropic.APIConnectionTimeoutError) return json(504, { error: "That one took too long, boss. Try asking a simpler way." });

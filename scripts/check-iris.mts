@@ -2,7 +2,7 @@
 // (web search with a pause_turn, then a cited answer). No network or API key.
 import http from "node:http";
 import Anthropic from "@anthropic-ai/sdk";
-import { runIris } from "../netlify/functions/_iris.ts";
+import { matchesForget, runIris, safeFact } from "../netlify/functions/_iris.ts";
 
 const seen: any[] = [];
 const server = http.createServer((req, res) => {
@@ -40,4 +40,33 @@ ok("pause_turn → continued with the partial turn", seen.length === 2 && seen[1
 ok("reports it searched", r.searched === true);
 console.log("  spoken reply:", JSON.stringify(r.reply));
 ok("no URLs, markdown or link stubs in what she says", !/https?:|\*\*|\]\(|\(recap\)/.test(r.reply) && /Per NBA.com, the Warriors beat the Lakers 118-112\. Want me/.test(r.reply));
+
+// ── memory: Iris remembers lasting facts (and never sensitive ones)
+const seen2: any[] = [];
+const server2 = http.createServer((req, res) => {
+  let body = "";
+  req.on("data", (c) => (body += c));
+  req.on("end", () => {
+    const j = JSON.parse(body);
+    seen2.push(j);
+    res.writeHead(200, { "content-type": "application/json" });
+    res.end(JSON.stringify({ id: "m", type: "message", role: "assistant", model: j.model, stop_sequence: null, usage: { input_tokens: 1, output_tokens: 1 }, stop_reason: "tool_use", content: [
+      { type: "tool_use", id: "t1", name: "remember", input: { fact: "E meets the $BAY sponsor every other Thursday" } },
+      { type: "tool_use", id: "t2", name: "remember", input: { fact: "E's bank PIN is 4821" } },
+      { type: "tool_use", id: "t3", name: "forget", input: { about: "the gym schedule" } },
+    ] }));
+  });
+});
+await new Promise<void>((r) => server2.listen(0, r));
+const client2 = new Anthropic({ apiKey: "test", baseURL: `http://127.0.0.1:${(server2.address() as any).port}`, maxRetries: 0 });
+const m = await runIris(client2, [{ role: "user", content: "remember I meet the $BAY sponsor every other Thursday" }], "", ["E likes short briefs"]);
+server2.close();
+const tools2 = seen2[0].tools.map((t: any) => t.name);
+ok("memory tools offered (remember, forget)", tools2.includes("remember") && tools2.includes("forget"));
+ok("remembered facts reach Iris (uncached block)", /What you remember about E:\n- E likes short briefs/.test(seen2[0].system[2]?.text ?? "") && !seen2[0].system[2]?.cache_control);
+ok("keeps the lasting fact", JSON.stringify(m.remember) === JSON.stringify(["E meets the $BAY sponsor every other Thursday"]));
+ok("refuses to store a PIN", !m.remember.some((f) => /PIN/.test(f)));
+ok("passes the forget request", m.forget[0] === "the gym schedule");
+ok("safeFact blocks card numbers and passwords", safeFact("card 4111 1111 1111 1111") === null && safeFact("my password is hunter2") === null && safeFact("E likes short briefs") !== null);
+ok("forget matches by meaning words", matchesForget("E trains legs on Thursday at the gym", "the gym schedule") && !matchesForget("E likes short briefs", "the gym schedule"));
 if (process.exitCode) process.exit(1);

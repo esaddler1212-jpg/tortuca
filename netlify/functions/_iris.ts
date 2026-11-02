@@ -14,6 +14,7 @@ You are speaking out loud through a phone or computer speaker, in a back-and-for
 - When E asks you to remember, add or remind him of something to do, call add_todo (one call per item) and confirm it briefly.
 - Never ask for or repeat students' names or personal details from Family Purpose; refer to "a student".
 - For news, scores, prices, store hours, events, people, or anything current you don't already know, use web_search; use web_fetch to read a specific page E names. Then answer in a sentence or two, naming the source out loud ("per KQED"), never reading URLs. Don't search for things in the "Right now" notes.
+- When E tells you something lasting about himself, his work or his preferences (routines, people by role, how he likes things), or says "remember", call remember with one short fact in third person ("E meets the $BAY sponsor every other Thursday"). When he says to forget something, call forget. Use what you remember naturally; don't recite the list. Never remember students' names or details, passwords, or account or card numbers.
 - You can't send email, change the calendar or spend money; say so and offer to add it as a to-do instead.
 Latency-sensitive; begin your visible answer immediately.`;
 
@@ -32,6 +33,37 @@ export const ADD_TODO = {
     additionalProperties: false,
   },
 };
+
+const FACT_TOOL = (name: "remember" | "forget", description: string, field: "fact" | "about") => ({
+  name,
+  description,
+  strict: true,
+  input_schema: {
+    type: "object" as const,
+    properties: { [field]: { type: "string", description: field === "fact" ? "One short, lasting fact in third person." : "What to forget, in a few words." } },
+    required: [field],
+    additionalProperties: false,
+  },
+});
+export const MEMORY_TOOLS = [
+  FACT_TOOL("remember", "Save one lasting fact or preference about E for future conversations.", "fact"),
+  FACT_TOOL("forget", "Forget remembered facts about something E asks you to forget.", "about"),
+];
+
+/** Things Iris must never store, whatever the model decides. */
+const NEVER_STORE = /\b(password|passcode|pin\b|ssn|social security|account number|routing|card number|cvv)\b|\d[\d\s-]{7,}\d/i;
+export function safeFact(fact: string): string | null {
+  const f = fact.trim().replace(/\s+/g, " ").slice(0, 200);
+  return f.length >= 4 && !NEVER_STORE.test(f) ? f : null;
+}
+
+/** Facts matching a "forget …" request (shared words, ignoring filler). */
+export function matchesForget(fact: string, about: string): boolean {
+  const words = about.toLowerCase().split(/[^a-z0-9$]+/).filter((w) => w.length > 2 && !/^(the|that|this|about|thing|stuff|with|and|for)$/.test(w));
+  if (!words.length) return false;
+  const f = fact.toLowerCase();
+  return words.filter((w) => f.includes(w)).length >= Math.ceil(words.length / 2);
+}
 
 /** Claude-hosted web tools: search the web and read pages (no server of ours needed). */
 export const WEB_TOOLS = [
@@ -67,10 +99,13 @@ export async function runIris(
   client: Anthropic,
   turns: IrisTurn[],
   context: string,
-): Promise<{ reply: string; todos: IrisTodo[]; searched: boolean; refused: boolean }> {
+  memory: string[] = [],
+): Promise<{ reply: string; todos: IrisTodo[]; remember: string[]; forget: string[]; searched: boolean; refused: boolean }> {
   const messages: Anthropic.Beta.BetaMessageParam[] = turns.map((t) => ({ role: t.role, content: t.content }));
   const texts: string[] = [];
   const todos: IrisTodo[] = [];
+  const remember: string[] = [];
+  const forget: string[] = [];
   let searched = false;
   for (let hop = 0; hop < 3; hop++) {
     const response = await client.beta.messages.create({
@@ -82,15 +117,22 @@ export async function runIris(
       system: [
         { type: "text", text: PERSONA, cache_control: { type: "ephemeral" } },
         { type: "text", text: `Right now:\n${context.slice(0, 8000)}` },
+        ...(memory.length ? [{ type: "text" as const, text: `What you remember about E:\n${memory.map((m) => `- ${m}`).join("\n")}` }] : []),
       ],
-      tools: [ADD_TODO, ...WEB_TOOLS],
+      tools: [ADD_TODO, ...MEMORY_TOOLS, ...WEB_TOOLS],
       messages,
     });
-    if (response.stop_reason === "refusal") return { reply: "", todos: [], searched, refused: true };
+    if (response.stop_reason === "refusal") return { reply: "", todos: [], remember: [], forget: [], searched, refused: true };
     for (const b of response.content) {
       if (b.type === "text") texts.push(b.text);
       else if (b.type === "server_tool_use") searched = true;
-      else if (b.type === "tool_use" && b.name === "add_todo") {
+      else if (b.type === "tool_use" && b.name === "remember") {
+        const fact = safeFact(String((b.input as { fact?: unknown }).fact ?? ""));
+        if (fact) remember.push(fact);
+      } else if (b.type === "tool_use" && b.name === "forget") {
+        const about = String((b.input as { about?: unknown }).about ?? "").trim();
+        if (about) forget.push(about);
+      } else if (b.type === "tool_use" && b.name === "add_todo") {
         const i = b.input as { title?: unknown; due?: unknown };
         if (typeof i.title === "string" && i.title.trim()) {
           todos.push({ title: i.title.trim().slice(0, 140), due: i.due === "today" || i.due === "tomorrow" ? i.due : "none" });
@@ -101,5 +143,5 @@ export async function runIris(
     // Long search: hand the partial turn back so Claude picks up where it left off.
     messages.push({ role: "assistant", content: response.content as Anthropic.Beta.BetaContentBlockParam[] });
   }
-  return { reply: forVoice(texts.join(" ")), todos, searched, refused: false };
+  return { reply: forVoice(texts.join(" ")), todos, remember, forget, searched, refused: false };
 }
