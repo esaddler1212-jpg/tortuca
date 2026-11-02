@@ -3,6 +3,7 @@ import type {
   DebriefSettings,
   GroupMember,
   GroupSession,
+  StudentNote,
 } from "./types";
 import {
   BACKUP_FORMAT,
@@ -46,6 +47,15 @@ export function mergeBackups(base: Backup, incoming: Backup): Backup {
     memberMap.set(normalizeName(m.name), m);
   }
 
+  // Student notes: newest edit (or deletion) wins, by id.
+  const noteMap = new Map<string, StudentNote>(
+    (base.studentNotes ?? []).map((n) => [n.id, n]),
+  );
+  for (const n of incoming.studentNotes ?? []) {
+    const existing = noteMap.get(n.id);
+    if (!existing || n.updatedAt > existing.updatedAt) noteMap.set(n.id, n);
+  }
+
   const checkIns = [...checkInMap.values()].sort((a, b) =>
     a.createdAt.localeCompare(b.createdAt),
   );
@@ -58,6 +68,7 @@ export function mergeBackups(base: Backup, incoming: Backup): Backup {
     checkIns,
     groupSessions: [...sessionMap.values()],
     groupMembers: [...memberMap.values()],
+    studentNotes: [...noteMap.values()],
   };
 }
 
@@ -83,5 +94,6 @@ export function emptyBackup(settings: DebriefSettings): Backup {
     checkIns: [],
     groupMembers: [],
     groupSessions: [],
+    studentNotes: [],
   };
 }

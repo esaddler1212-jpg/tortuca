@@ -3,6 +3,7 @@ import type {
   DebriefSettings,
   GroupMember,
   GroupSession,
+  StudentNote,
 } from "./types";
 import { DEFAULT_DEBRIEF_SETTINGS } from "./types";
 import { dayKeyOf } from "./reports";
@@ -11,6 +12,7 @@ export const CHECKINS_KEY = "familypurpose_checkins";
 export const SETTINGS_KEY = "familypurpose_debrief_settings";
 export const GROUP_MEMBERS_KEY = "familypurpose_group_members";
 export const GROUP_SESSIONS_KEY = "familypurpose_group_sessions";
+export const STUDENT_NOTES_KEY = "familypurpose_student_notes";
 
 /** Keys used before the app was named, kept so early data is not stranded. */
 const RENAMED_KEYS: [from: string, to: string][] = [
@@ -181,4 +183,13 @@ export function saveSession(session: GroupSession): GroupSession {
   else sessions.push(updated);
   saveGroupSessions(sessions);
   return updated;
+}
+
+/** Private student notes (including deleted tombstones, for sync). */
+export function loadStudentNotes(): StudentNote[] {
+  return readJson<StudentNote[]>(STUDENT_NOTES_KEY, []);
+}
+
+export function saveStudentNotes(notes: StudentNote[]): void {
+  localStorage.setItem(STUDENT_NOTES_KEY, JSON.stringify(notes));
 }

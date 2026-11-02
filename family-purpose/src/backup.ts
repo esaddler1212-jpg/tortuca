@@ -3,13 +3,16 @@ import type {
   DebriefSettings,
   GroupMember,
   GroupSession,
+  StudentNote,
 } from "./types";
 import {
   loadAllCheckIns,
   loadDebriefSettings,
   loadGroupMembers,
   loadGroupSessions,
+  loadStudentNotes,
   saveAllCheckIns,
+  saveStudentNotes,
   saveDebriefSettings,
   saveGroupMembers,
   saveGroupSessions,
@@ -26,6 +29,8 @@ export interface Backup {
   checkIns: CheckIn[];
   groupMembers: GroupMember[];
   groupSessions: GroupSession[];
+  /** Private student memory; absent in backups made before notes existed. */
+  studentNotes?: StudentNote[];
 }
 
 export function buildBackup(): Backup {
@@ -37,6 +42,7 @@ export function buildBackup(): Backup {
     checkIns: loadAllCheckIns(),
     groupMembers: loadGroupMembers(),
     groupSessions: loadGroupSessions(),
+    studentNotes: loadStudentNotes(),
   };
 }
 
@@ -84,6 +90,7 @@ export function parseBackup(text: string): Backup {
     groupSessions: Array.isArray(backup.groupSessions)
       ? backup.groupSessions
       : [],
+    studentNotes: Array.isArray(backup.studentNotes) ? backup.studentNotes : [],
   };
 }
 
@@ -92,5 +99,6 @@ export function restoreBackup(backup: Backup): void {
   saveAllCheckIns(backup.checkIns);
   saveGroupMembers(backup.groupMembers);
   saveGroupSessions(backup.groupSessions);
+  saveStudentNotes(backup.studentNotes ?? []);
   saveDebriefSettings(backup.settings);
 }

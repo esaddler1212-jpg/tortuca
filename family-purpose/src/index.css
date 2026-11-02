@@ -1122,3 +1122,23 @@ label {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Student memory (private notes + patterns) */
+.memory-card {
+  margin: -4px 0 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+}
+.memory-title { margin: 0 0 6px; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent); }
+.memory-patterns, .memory-notes { margin: 0 0 8px; padding-left: 18px; font-size: 0.9rem; }
+.memory-patterns li { color: var(--text-muted); }
+.memory-notes li { display: flex; justify-content: space-between; gap: 8px; }
+.memory-delete { border: 0; background: none; color: var(--text-muted); font-size: 1.1rem; line-height: 1; cursor: pointer; padding: 0 4px; }
+.memory-delete:hover { color: var(--danger); }
+.memory-add { display: flex; gap: 8px; }
+.memory-add input { flex: 1; min-width: 0; }
+.memory-save { white-space: nowrap; }
+.memory-private { margin: 6px 0 0; font-size: 0.72rem; color: var(--text-muted); }

@@ -18,6 +18,11 @@ interface GroupMember {
   grade: string;
 }
 
+interface StudentNote {
+  id: string;
+  updatedAt: string;
+}
+
 interface Backup {
   format: string;
   version: number;
@@ -26,6 +31,8 @@ interface Backup {
   checkIns: CheckIn[];
   groupMembers: GroupMember[];
   groupSessions: GroupSession[];
+  /** Private student memory; absent in older backups. */
+  studentNotes?: StudentNote[];
 }
 
 function normalizeName(name: string): string {
@@ -62,6 +69,13 @@ function mergeBackups(base: Backup, incoming: Backup): Backup {
     memberMap.set(normalizeName(m.name), m);
   }
 
+  // Student notes: newest edit (or deletion) wins, by id.
+  const noteMap = new Map((base.studentNotes ?? []).map((n) => [n.id, n]));
+  for (const n of incoming.studentNotes ?? []) {
+    const existing = noteMap.get(n.id);
+    if (!existing || n.updatedAt > existing.updatedAt) noteMap.set(n.id, n);
+  }
+
   return {
     format: BACKUP_FORMAT,
     version: base.version ?? 1,
@@ -72,6 +86,7 @@ function mergeBackups(base: Backup, incoming: Backup): Backup {
     ),
     groupSessions: [...sessionMap.values()],
     groupMembers: [...memberMap.values()],
+    studentNotes: [...noteMap.values()],
   };
 }
 
