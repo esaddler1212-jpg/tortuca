@@ -35,6 +35,10 @@ export default {
       animation: {
         "hud-pulse": "hud-pulse 3s ease-in-out infinite",
         "hud-spin": "hud-spin 12s linear infinite",
+        // Alfred speaking: a ripple per word, and a breathing glow (works even
+        // where the browser doesn't report word boundaries).
+        "hud-word": "hud-word 0.7s ease-out forwards",
+        "hud-talk-glow": "hud-talk-glow 0.45s ease-in-out infinite alternate",
       },
       keyframes: {
         "hud-pulse": {
@@ -44,6 +48,14 @@ export default {
         "hud-spin": {
           from: { transform: "rotate(0deg)" },
           to: { transform: "rotate(360deg)" },
+        },
+        "hud-word": {
+          from: { transform: "scale(1)", opacity: "0.9" },
+          to: { transform: "scale(1.9)", opacity: "0" },
+        },
+        "hud-talk-glow": {
+          from: { transform: "scale(0.94)", opacity: "0.75" },
+          to: { transform: "scale(1.08)", opacity: "1" },
         },
       },
     },

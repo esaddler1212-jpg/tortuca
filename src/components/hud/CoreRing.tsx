@@ -1,3 +1,5 @@
+import { useVoiceSignal } from "../../hooks/useVoiceOutput";
+
 interface Props {
   /** Two short lines in the centre, e.g. ["ALFRED", "ONLINE"] */
   lines: [string, string];
@@ -14,6 +16,9 @@ const COLOR: Record<Props["status"], string> = {
 export function CoreRing({ lines, status }: Props) {
   const color = COLOR[status];
   const c = "currentColor";
+  // Alfred's "face": the core glows and ripples with each word while he speaks.
+  const voice = useVoiceSignal();
+  const talking = voice.speaking;
   const spokes = [0, 60, 120, 180, 240, 300];
   return (
     <div
@@ -29,7 +34,7 @@ export function CoreRing({ lines, status }: Props) {
             <stop offset="100%" stopColor={c} stopOpacity="0" />
           </radialGradient>
         </defs>
-        <circle cx="200" cy="200" r="190" fill="url(#core-glow)" />
+        <circle cx="200" cy="200" r="190" fill="url(#core-glow)" className={talking ? "animate-hud-talk-glow" : ""} style={{ transformOrigin: "200px 200px" }} />
         {/* outer dashed ring, slow spin */}
         <g className="animate-hud-spin" style={{ transformOrigin: "200px 200px", animationDuration: "40s" }}>
           <circle cx="200" cy="200" r="188" stroke={c} strokeOpacity="0.55" strokeWidth="2" strokeDasharray="10 8" />
@@ -54,7 +59,19 @@ export function CoreRing({ lines, status }: Props) {
           />
         ))}
         <circle cx="200" cy="200" r="118" stroke={c} strokeOpacity="0.4" strokeWidth="1.5" />
-        <circle cx="200" cy="200" r="56" stroke={c} strokeOpacity="0.85" strokeWidth="2.5" className="animate-hud-pulse" />
+        <circle cx="200" cy="200" r="56" stroke={c} strokeOpacity="0.85" strokeWidth="2.5" className={talking ? "" : "animate-hud-pulse"} />
+        {talking && (
+          <circle
+            key={voice.tick}
+            cx="200"
+            cy="200"
+            r="56"
+            stroke={c}
+            strokeWidth="3"
+            className="animate-hud-word"
+            style={{ transformOrigin: "200px 200px" }}
+          />
+        )}
         <circle cx="200" cy="200" r="48" fill="#000000" fillOpacity="0.8" />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
@@ -62,7 +79,7 @@ export function CoreRing({ lines, status }: Props) {
           {lines[0]}
         </span>
         <span className="font-display text-[4cqw] leading-tight tracking-[0.15em]" style={{ color: c, textShadow: `0 0 12px ${c}` }}>
-          {lines[1]}
+          {talking ? "SPEAKING" : lines[1]}
         </span>
       </div>
     </div>

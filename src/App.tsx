@@ -11,6 +11,9 @@ import { SparkCard } from "./components/SparkCard";
 import { HubPanel } from "./components/HubPanel";
 import { PulsePanel } from "./components/PulsePanel";
 import { usePulse } from "./hooks/usePulse";
+import { ConversationPanel } from "./components/ConversationPanel";
+import { buildAskContext } from "./lib/askContext";
+import { weatherLabel } from "./lib/weather";
 import { pulseSummary } from "../shared/pulse";
 import { useHub } from "./hooks/useHub";
 import { DEFAULT_ROUTINE, gymDayFor } from "../shared/hub";
@@ -351,6 +354,33 @@ export default function App() {
                     onLogWorkout={logWorkout}
                     onAddEvent={addLocalEvent}
                     onAddShopping={addShopping}
+                  />
+                  <ConversationPanel
+                    googleConnected={connected}
+                    timeZone={settings.timezone}
+                    today={today}
+                    onAddTodo={(title, dueDate) => add(title, dueDate)}
+                    buildContext={() =>
+                      buildAskContext({
+                        name: displayName,
+                        now: new Date(),
+                        timeZone: settings.timezone,
+                        modeLabel: DAY_MODE_LABEL[mode],
+                        city: settings.city,
+                        weather: weather
+                          ? `${Math.round(weather.temperature)}°F, ${weatherLabel(weather.weatherCode).toLowerCase()}, high ${Math.round(weather.high)}°F`
+                          : null,
+                        leaveBy: leaveBy
+                          ? `${new Intl.DateTimeFormat("en-US", { timeZone: settings.timezone, hour: "numeric", minute: "2-digit" }).format(leaveBy.leaveBy)} for ${leaveBy.destination}`
+                          : null,
+                        actions: todayActions,
+                        events: allSchedule,
+                        spark: todaySpark(plan, today),
+                        pulse: pulse ? pulseSummary(pulse) : undefined,
+                        goals: goalLines,
+                        desk: { review: desk.review.length, working: desk.working.length },
+                      })
+                    }
                   />
                 </div>
                 <div className="hidden xl:block space-y-4">{ecsPanels}</div>

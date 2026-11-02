@@ -3,6 +3,31 @@ import { useCallback, useEffect, useState } from "react";
 const MUTE_KEY = "alfred-voice-muted";
 const listeners = new Set<(muted: boolean) => void>();
 
+/** Alfred's voice activity, shared app-wide so the core ring can "talk". */
+export interface VoiceSignal {
+  speaking: boolean;
+  /** Bumps on every spoken word (when the browser reports word boundaries). */
+  tick: number;
+}
+let voiceSignal: VoiceSignal = { speaking: false, tick: 0 };
+const signalListeners = new Set<(s: VoiceSignal) => void>();
+function emitSignal(next: Partial<VoiceSignal>) {
+  voiceSignal = { ...voiceSignal, ...next };
+  signalListeners.forEach((l) => l(voiceSignal));
+}
+
+/** Subscribe to Alfred speaking (any part of the app). */
+export function useVoiceSignal(): VoiceSignal {
+  const [s, setS] = useState(voiceSignal);
+  useEffect(() => {
+    signalListeners.add(setS);
+    return () => {
+      signalListeners.delete(setS);
+    };
+  }, []);
+  return s;
+}
+
 function readMuted(): boolean {
   try {
     return localStorage.getItem(MUTE_KEY) === "1";
@@ -64,9 +89,11 @@ export function useVoiceOutput() {
     window.speechSynthesis.speak(u);
   }, []);
 
-  const speak = useCallback((text: string, opts: { force?: boolean } = {}) => {
-    if (!speechOutputSupported() || !text.trim()) return;
-    if (readMuted() && !opts.force) return;
+  const speak = useCallback((text: string, opts: { force?: boolean; onEnd?: () => void } = {}) => {
+    if (!speechOutputSupported() || !text.trim() || (readMuted() && !opts.force)) {
+      opts.onEnd?.();
+      return;
+    }
     const synth = window.speechSynthesis;
     synth.cancel();
     const u = new SpeechSynthesisUtterance(text);
@@ -76,15 +103,30 @@ export function useVoiceOutput() {
       u.lang = voice.lang;
     }
     u.rate = 1.02;
-    u.onstart = () => setSpeaking(true);
-    u.onend = () => setSpeaking(false);
-    u.onerror = () => setSpeaking(false);
+    let ended = false;
+    const finish = () => {
+      if (ended) return;
+      ended = true;
+      setSpeaking(false);
+      emitSignal({ speaking: false });
+      opts.onEnd?.();
+    };
+    u.onstart = () => {
+      setSpeaking(true);
+      emitSignal({ speaking: true });
+    };
+    u.onboundary = (e) => {
+      if (e.name === "word" || !e.name) emitSignal({ tick: voiceSignal.tick + 1 });
+    };
+    u.onend = finish;
+    u.onerror = finish;
     synth.speak(u);
   }, []);
 
   const stop = useCallback(() => {
     if (speechOutputSupported()) window.speechSynthesis.cancel();
     setSpeaking(false);
+    emitSignal({ speaking: false });
   }, []);
 
   return { supported, muted, setMuted, speak, prime, stop, speaking };

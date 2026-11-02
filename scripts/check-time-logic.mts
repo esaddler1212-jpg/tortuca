@@ -18,6 +18,7 @@ import * as Plan from "../shared/plan.ts";
 import * as Sparks from "../shared/sparks.ts";
 import * as Hub from "../shared/hub.ts";
 import * as Pulse from "../shared/pulse.ts";
+import { buildAskContext } from "../src/lib/askContext.ts";
 
 const TZ = "America/Los_Angeles";
 const settings = { ...DEFAULT_SETTINGS }; // wake 04:15 weekdays, 08:00 days off, 7.5h sleep
@@ -195,6 +196,21 @@ const snap = { fetchedAt: "", quakes: qs, alerts: Pulse.parseWeatherAlerts({ fea
 check("pulse: alerts for near quake, fire, red flag, bad air", Pulse.pulseAlerts(snap, new Date("2026-11-02T20:30:00Z"), "2026-11-02").map((a) => a.id), ["q:nc1", "f:2026-CA-1", "w:nws1", "a:2026-11-02"]);
 check("pulse: old quake doesn't alert", Pulse.pulseAlerts({ ...snap, fires: [], alerts: [], air: null }, new Date("2026-11-03T20:30:00Z"), "d").length, 0);
 check("pulse: summary line", Pulse.pulseSummary({ ...snap, air: Pulse.parseAir({ current: { us_aqi: 40 } }) }), "Red Flag Warning · AQI 40 good · Lake Fire 21 mi · M3.4 quake 7 mi");
+
+// ── conversation context: Family Purpose details never leave the device
+const ctx = buildAskContext({
+  now: new Date("2026-11-02T23:30:00Z"), timeZone: "America/Los_Angeles", modeLabel: "ECS Network", city: "Vallejo",
+  actions: [
+    { id: "1", title: "Check in with Marcus about attendance", source: "follow-up", sourceLabel: "Family Purpose", urgent: true, sort: 0 },
+    { id: "2", title: "Lock $BAY legal", source: "plan", sourceLabel: "Plan · Tortuga", urgent: false, sort: 1 },
+  ],
+  events: [
+    { id: "e1", title: "Session with Jaylen", start: "2026-11-03T16:00:00Z", source: "family-purpose" },
+    { id: "e2", title: "Sponsor call", start: "2026-11-03T20:00:00Z", source: "google" },
+  ],
+});
+check("ask: student names withheld from Alfred's context", [/Marcus|Jaylen/.test(ctx), /Lock \$BAY legal/.test(ctx), /Sponsor call/.test(ctx), /1 Family Purpose item \(student/.test(ctx)], [false, true, true, true]);
+check("ask: knows the local time and day", /Monday, November 2 at 3:30/.test(ctx), true);
 
 // ── same answers regardless of the machine's time zone
 const self = fileURLToPath(import.meta.url);
