@@ -98,6 +98,8 @@ export function buildDebriefText(
       lines.push(
         `Grade: ${c.grade}  |  Period: ${c.classPeriod}  |  Time: ${formatTime(c.createdAt)}`,
       );
+      const device = c.loggedOnDevice?.trim();
+      if (device) lines.push(`Logged on: ${device}`);
       lines.push(`Reason(s): ${formatReasons(c)}`);
       if (c.outcome) {
         const detail = c.outcomeNotes?.trim();

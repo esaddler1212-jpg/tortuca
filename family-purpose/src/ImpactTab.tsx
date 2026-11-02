@@ -11,6 +11,7 @@ import {
 import { buildMailtoUrl } from "./debrief";
 import { PDF_PREP_HINT } from "./lowPowerHint";
 import { yieldToMain } from "./yieldMain";
+import { useReportData } from "./useReportData";
 
 function signed(value: number, suffix = ""): string {
   return value > 0 ? `+${value}${suffix}` : `${value}${suffix}`;
@@ -23,18 +24,24 @@ function changeClass(value: number): string {
 }
 
 export default function ImpactTab({
-  checkIns,
-  sessions,
+  checkIns: localCheckIns,
+  sessions: localSessions,
   settings,
+  dataRevision,
   onCopied,
   onPdfDownloaded,
 }: {
   checkIns: CheckIn[];
   sessions: GroupSession[];
   settings: DebriefSettings;
+  dataRevision: number;
   onCopied: () => void;
   onPdfDownloaded: () => void;
 }) {
+  const mergedData = useReportData(settings, dataRevision);
+  const checkIns = mergedData.loading ? localCheckIns : mergedData.checkIns;
+  const sessions = mergedData.loading ? localSessions : mergedData.sessions;
+
   const choices = useMemo(
     () => periodChoices(checkIns, sessions),
     [checkIns, sessions],
@@ -245,8 +252,11 @@ export default function ImpactTab({
       <div className="card">
         <h2>Share</h2>
         <div className="debrief-preview" aria-label="Impact summary preview">
-          {text}
+          {mergedData.loading ? "Loading check-ins from all devices…" : text}
         </div>
+        {mergedData.cloudIncluded && !mergedData.loading && (
+          <p className="hint">Includes check-ins uploaded from all linked devices.</p>
+        )}
         <div className="btn-row">
           <button
             type="button"

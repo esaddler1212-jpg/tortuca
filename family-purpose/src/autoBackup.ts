@@ -166,20 +166,9 @@ async function runBackupCore(
   options: { allowDownload: boolean; scheduledPacificDay?: string },
 ): Promise<AutoBackupResult> {
   const uploadUrl = settings.backupUploadUrl.trim();
-  let mergedCount = 0;
 
-  if (uploadUrl) {
-    const pull = await pullAndMergeFromCloud(settings);
-    if (pull.error && pull.error.includes("Could not")) {
-      return { error: pull.error };
-    }
-    if (pull.merged && pull.addedCheckIns) {
-      mergedCount = pull.addedCheckIns;
-    }
-  }
-
-  if (!needsBackup() && mergedCount === 0) {
-    return { skipped: true, merged: undefined };
+  if (!needsBackup()) {
+    return { skipped: true };
   }
 
   const fingerprint = dataFingerprint();
@@ -205,49 +194,70 @@ async function runBackupCore(
       if (!response.ok) {
         return {
           error: `Upload failed (${response.status}). Will try again later.`,
-          merged: mergedCount > 0 ? mergedCount : undefined,
         };
       }
       markBackedUp(fingerprint, "upload", markOpts);
-      return {
-        uploaded: true,
-        merged: mergedCount > 0 ? mergedCount : undefined,
-      };
+      return { uploaded: true };
     } catch {
       return {
         error: "Could not reach the backup server. Will try again later.",
-        merged: mergedCount > 0 ? mergedCount : undefined,
       };
     }
   }
 
   if (!options.allowDownload) {
-    return {
-      skipped: true,
-      merged: mergedCount > 0 ? mergedCount : undefined,
-    };
+    return { skipped: true };
   }
 
   try {
     downloadBackup();
     markBackedUp(fingerprint, "download", markOpts);
-    return {
-      downloaded: true,
-      merged: mergedCount > 0 ? mergedCount : undefined,
-    };
+    return { downloaded: true };
   } catch {
     return { error: "Could not save the backup file." };
   }
 }
 
-/** Pull from cloud, merge, and upload local changes — no Downloads file. */
-export async function runCloudSync(
+/** Upload this device's data to the cloud — does not merge other devices locally. */
+export async function runUploadNow(
   settings: DebriefSettings,
 ): Promise<AutoBackupResult> {
   if (!settings.backupUploadUrl.trim()) {
-    return { skipped: true };
+    return { error: "Add a backup upload URL in Settings first." };
   }
-  return runBackupCore(settings, { allowDownload: false });
+
+  const uploadUrl = settings.backupUploadUrl.trim();
+  const fingerprint = dataFingerprint();
+  const backup = buildBackup();
+
+  try {
+    const response = await fetch(uploadUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...backupHeaders(settings),
+      },
+      body: JSON.stringify({
+        deviceLabel: settings.deviceLabel.trim() || "device",
+        exportedAt: backup.exportedAt,
+        backup,
+      }),
+    });
+    if (!response.ok) {
+      return { error: `Upload failed (${response.status}).` };
+    }
+    markBackedUp(fingerprint, "upload");
+    return { uploaded: true };
+  } catch {
+    return { error: "Could not reach the backup server." };
+  }
+}
+
+/** @deprecated Use runUploadNow — live sync was removed. */
+export async function runCloudSync(
+  settings: DebriefSettings,
+): Promise<AutoBackupResult> {
+  return runUploadNow(settings);
 }
 
 /** Once-daily backup at 2:30 PM Pacific when online and there is new data. */
