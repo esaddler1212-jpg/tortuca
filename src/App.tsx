@@ -20,7 +20,10 @@ import { useHub } from "./hooks/useHub";
 import { DEFAULT_ROUTINE, gymDayFor } from "../shared/hub";
 import { PlanPanel } from "./components/PlanPanel";
 import { BusinessResearcherPanel } from "./components/BusinessResearcherPanel";
+import { ChannelsPanel } from "./components/ChannelsPanel";
 import { useBusinessResearch } from "./hooks/useBusinessResearch";
+import { useChannels } from "./hooks/useChannels";
+import { channelsSummary } from "../shared/channels";
 import { fetchUserData } from "./lib/userData";
 import { EMPTY_HUB, type HubState } from "../shared/hub";
 import type { ResearchArea } from "../shared/businessResearch";
@@ -75,6 +78,7 @@ export default function App() {
   const { weather, loading: weatherLoading, error: weatherError } = useWeather(settings);
   const { todos, pending, done, add, toggle, setTodos } = useTodos();
   const { connected, accountEmail, connect, disconnect, connectionError } = useGoogleIntegration();
+  const channelAgent = useChannels(accountEmail);
   const { allEvents, addLocalEvent } = useSchedule(connected);
   const { messages, unread } = useEmails(connected);
   const { snapshot: rawWoodhouse, loading: woodhouseLoading, error: woodhouseError } = useWoodhouse();
@@ -117,6 +121,22 @@ export default function App() {
   const { pulse, error: pulseError } = usePulse(settings.latitude, settings.longitude);
   const { items: shoppingItems, add: addShopping, togglePantry, remove: removeShopping, loadRemote: loadShopping } = useShoppingList();
   const { plan, toggleTask: togglePlanTask, addTask: addPlanTask, removeTask: removePlanTask, setGoals: setPlanGoals, setHandoff, setBudget, toggleSpark, shuffleSpark, noteSpark } = usePlan();
+
+  const onDraftEmail = useCallback(
+    (task: PlanTask, goal?: YearGoal) => {
+      const subject = task.title;
+      const body = [
+        task.deliverable ? `Deliverable: ${task.deliverable}` : "",
+        goal ? `Goal: ${goal.title}` : "",
+        "",
+        "(Edit recipient and body in Channel agents, then approve send.)",
+      ]
+        .filter(Boolean)
+        .join("\n");
+      channelAgent.addDraftForArea(task.area, "", subject, body);
+    },
+    [channelAgent],
+  );
 
   const onResearchTask = useCallback(
     (task: PlanTask, goal?: YearGoal) => {
@@ -355,6 +375,7 @@ export default function App() {
                         pulse: pulse ? pulseSummary(pulse) : undefined,
                         goals: goalLines,
                         desk: { review: desk.review.length, working: desk.working.length },
+                        channels: channelsSummary(channelAgent.channels),
                       }),
   });
 
@@ -489,6 +510,7 @@ export default function App() {
           onSetHandoff={setHandoff}
           onSetBudget={setBudget}
           onResearchTask={onResearchTask}
+          onDraftEmail={onDraftEmail}
         />
 
         <BusinessResearcherPanel
@@ -498,6 +520,18 @@ export default function App() {
           last={bizResearch.last}
           onConnectGoogle={() => void connect()}
           onResearch={(q, a) => runBusinessResearch(q, a)}
+        />
+
+        <ChannelsPanel
+          state={channelAgent.channels}
+          pending={channelAgent.pending}
+          googleConnected={connected}
+          accountEmail={accountEmail}
+          onSaveChannel={channelAgent.saveChannel}
+          onAddDraft={channelAgent.addDraft}
+          onDiscardDraft={channelAgent.discardDraft}
+          onSendDraft={channelAgent.sendDraft}
+          onConnectGoogle={() => void connect()}
         />
 
         <HubPanel

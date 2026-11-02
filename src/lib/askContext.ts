@@ -20,6 +20,7 @@ export function buildAskContext(opts: {
   pulse?: string;
   goals?: string[];
   desk?: { review: number; working: number };
+  channels?: string | null;
 }): string {
   const when = new Intl.DateTimeFormat("en-US", {
     timeZone: opts.timeZone,
@@ -55,6 +56,7 @@ export function buildAskContext(opts: {
       : "",
     fpEvents ? `Plus ${fpEvents} Family Purpose calendar item${fpEvents === 1 ? "" : "s"}.` : "",
     opts.desk && opts.desk.review + opts.desk.working ? `Agent desk: ${opts.desk.review} need E's OK, ${opts.desk.working} with Claude.` : "",
+    opts.channels ? opts.channels : "",
     opts.pulse ? `Bay Area: ${opts.pulse}.` : "",
     opts.spark ? `Today's creative spark: ${opts.spark.mindset} Prompt: ${opts.spark.prompt}` : "",
     opts.goals?.length ? `Year goals: ${opts.goals.slice(0, 6).join("; ")}.` : "",
