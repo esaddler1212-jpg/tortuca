@@ -7,7 +7,9 @@ export function useSolarOrbit(initial = 0) {
   const [userDeg, setUserDeg] = useState(initial);
   const [autoDeg, setAutoDeg] = useState(0);
   const dragging = useRef(false);
+  const pendingDrag = useRef(false);
   const lastX = useRef(0);
+  const startX = useRef(0);
 
   useEffect(() => {
     let raf = 0;
@@ -49,14 +51,19 @@ export function useSolarOrbit(initial = 0) {
 
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     if (e.button !== 0) return;
-    dragging.current = true;
+    pendingDrag.current = true;
+    dragging.current = false;
+    startX.current = e.clientX;
     lastX.current = e.clientX;
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   }, []);
 
   const onPointerMove = useCallback(
     (e: React.PointerEvent) => {
-      if (!dragging.current) return;
+      if (!pendingDrag.current && !dragging.current) return;
+      const dxTotal = e.clientX - startX.current;
+      if (!dragging.current && Math.abs(dxTotal) < 10) return;
+      if (!dragging.current) dragging.current = true;
       const dx = e.clientX - lastX.current;
       lastX.current = e.clientX;
       addSpin(dx * 0.35);
@@ -64,8 +71,14 @@ export function useSolarOrbit(initial = 0) {
     [addSpin],
   );
 
-  const onPointerUp = useCallback(() => {
+  const onPointerUp = useCallback((e: React.PointerEvent) => {
+    pendingDrag.current = false;
     dragging.current = false;
+    try {
+      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    } catch {
+      /* already released */
+    }
   }, []);
 
   return {

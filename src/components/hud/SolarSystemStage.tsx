@@ -52,6 +52,7 @@ function PlanetOrb({
           e.stopPropagation();
           onSelect();
         }}
+        onPointerDown={(e) => e.stopPropagation()}
         aria-current={active ? "true" : undefined}
         aria-label={`Open ${def.label}`}
       >
