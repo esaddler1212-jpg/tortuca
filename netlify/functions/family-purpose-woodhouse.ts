@@ -1,6 +1,6 @@
 import type { Handler } from "@netlify/functions";
+import { loadMergedBackup } from "./_fp-backup";
 import { initBlobs } from "./_shared";
-import { getStore } from "@netlify/blobs";
 import {
   buildFamilyPurposeWoodhouseNode,
   demoFamilyPurposeNode,
@@ -8,19 +8,10 @@ import {
   type FpBackup,
 } from "./_family-purpose-woodhouse";
 
+/** Every device's latest Family Purpose backup, merged (see _fp-backup.ts). */
 async function latestBackup(): Promise<FpBackup | null> {
   try {
-    const store = getStore({ name: "family-purpose-backups" });
-    const { blobs } = await store.list();
-    if (!blobs.length) return null;
-    const sorted = [...blobs].sort(
-      (a, b) => b.uploadedAt.getTime() - a.uploadedAt.getTime(),
-    );
-    const data = await store.get(sorted[0].key, { type: "json" });
-    if (!data || typeof data !== "object") return null;
-    const backup = data as FpBackup & { checkIns?: FpBackup["checkIns"] };
-    if (!Array.isArray(backup.checkIns)) return null;
-    return backup;
+    return ((await loadMergedBackup()) as unknown as FpBackup) ?? null;
   } catch {
     return null;
   }

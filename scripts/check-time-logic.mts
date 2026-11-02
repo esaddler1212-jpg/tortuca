@@ -20,6 +20,8 @@ import * as Hub from "../shared/hub.ts";
 import * as Pulse from "../shared/pulse.ts";
 import { buildAskContext } from "../src/lib/askContext.ts";
 import * as Ex from "../shared/exercises.ts";
+import { buildFamilyPurposeWoodhouseNode } from "../netlify/functions/_family-purpose-woodhouse.ts";
+import { mergeBackups } from "../netlify/functions/_fp-backup.ts";
 import { readFileSync } from "node:fs";
 
 const TZ = "America/Los_Angeles";
@@ -229,6 +231,25 @@ check("gym: closest name ranks first", Ex.searchExercises(lib, "dumbbell shoulde
 check("gym: exact phrase wins", Ex.searchExercises(lib, "walking lunge")[0]?.n, "walking lunge");
 check("gym: search finds walking lunge", Ex.searchExercises(lib, "walking lunge")[0]?.n, "walking lunge");
 check("gym: equipment groups", ["body weight", "ez barbell", "leverage machine", "resistance band"].map(Ex.equipmentGroup), ["Bodyweight", "Barbell", "Machine", "Bands"]);
+
+// ── Family Purpose → IRIS: counts and times only, never student details
+const fpBackup = {
+  settings: { schoolName: "Oak Grove Middle School", groupName: "BOYS Group" },
+  checkIns: [
+    { id: "c1", studentName: "Jaylen Ortiz", grade: "7", classPeriod: "P3", reasons: ["Attendance", "Family"], createdAt: "2026-11-03T16:00:00Z", followUp: { dueAt: "2026-11-03T21:00:00Z", notes: "call home" } },
+    { id: "c2", studentName: "Marcus Lee", grade: "8", classPeriod: "P5", reasons: ["Conflict"], createdAt: "2026-11-01T18:00:00Z", followUp: { dueAt: "2026-11-02T18:00:00Z", notes: "check in" } },
+  ],
+  groupSessions: [{ id: "g1", date: "2026-11-03", topic: "Anger and family stress", notes: "x", attendees: ["Marcus Lee", "Jaylen Ortiz"], updatedAt: "2026-11-03T19:00:00Z" }],
+};
+const fpNode = buildFamilyPurposeWoodhouseNode(fpBackup as any, new Date("2026-11-03T18:00:00Z"), "America/Los_Angeles");
+const fpText = JSON.stringify(fpNode);
+check("FP→IRIS: no names, reasons, notes or group topic", /Jaylen|Ortiz|Marcus|Lee"|Attendance|Family"|Conflict|call home|Anger/.test(fpText), false);
+check("FP→IRIS: counts still right", [fpNode.stats.checkInsToday, fpNode.stats.followUpsDueToday, fpNode.stats.followUpsOverdue, fpNode.stats.groupMeetingsToday], [1, 1, 1, 1]);
+check("FP→IRIS: follow-ups keep their times", fpNode.calendar.filter((c) => c.kind.startsWith("follow_up")).map((c) => [c.title, c.start]), [["Student follow-up (overdue)", "2026-11-02T18:00:00Z"], ["Student follow-up", "2026-11-03T21:00:00Z"]]);
+const devA = { format: "family-purpose-checkins", version: 2, exportedAt: "2026-11-03T10:00:00Z", settings: {}, checkIns: [{ id: "c1", createdAt: "1" }], groupMembers: [], groupSessions: [], studentNotes: [{ id: "n1", updatedAt: "2026-11-01", text: "a" }] };
+const devB = { ...devA, exportedAt: "2026-11-03T11:00:00Z", checkIns: [{ id: "c2", createdAt: "2" }], studentNotes: [{ id: "n1", updatedAt: "2026-11-02", text: "a2" }, { id: "n2", updatedAt: "2026-11-02", text: "b" }] };
+const mergedFp = mergeBackups(devA as any, devB as any);
+check("FP sync: merges check-ins and notes from both devices (newest note wins)", [mergedFp.checkIns.map((c) => c.id), mergedFp.studentNotes?.map((n) => `${n.id}:${n.text}`)], [["c1", "c2"], ["n1:a2", "n2:b"]]);
 
 // ── same answers regardless of the machine's time zone
 const self = fileURLToPath(import.meta.url);

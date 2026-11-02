@@ -5,7 +5,7 @@ import {
 } from "./_family-purpose-woodhouse";
 import type { NodeSnapshot, RegistryEntry } from "./_woodhouse-registry";
 import { normalizeRemoteSnapshot } from "./_woodhouse-registry";
-import { getStore } from "@netlify/blobs";
+import { loadMergedBackup } from "./_fp-backup";
 import { buildEcsRoadmapNode } from "./_ecs-roadmap";
 
 export function demoCommerceSnapshot(): NodeSnapshot {
@@ -41,18 +41,10 @@ export function demoEducationSnapshot(): NodeSnapshot {
 
 async function familyFromBackup(): Promise<NodeSnapshot | null> {
   try {
-    const store = getStore({ name: "family-purpose-backups" });
-    const { blobs } = await store.list();
-    if (!blobs.length) return null;
-    const sorted = [...blobs].sort(
-      (a, b) => b.uploadedAt.getTime() - a.uploadedAt.getTime(),
-    );
-    const data = await store.get(sorted[0].key, { type: "json" });
-    if (!data || typeof data !== "object") return null;
-    const backup = data as FpBackup;
-    if (!Array.isArray(backup.checkIns)) return null;
+    const merged = await loadMergedBackup();
+    if (!merged) return null;
     const tz = process.env.WOODHOUSE_TIMEZONE?.trim() || "America/Los_Angeles";
-    const fp = buildFamilyPurposeWoodhouseNode(backup, new Date(), tz);
+    const fp = buildFamilyPurposeWoodhouseNode(merged as unknown as FpBackup, new Date(), tz);
     return normalizeRemoteSnapshot(
       { id: "family-purpose", displayName: "Family Purpose", nodeType: "education", baseUrl: "" },
       fp,

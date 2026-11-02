@@ -92,6 +92,11 @@ function followState(followUp: FpFollowUp, now: Date, timeZone: string): FollowS
   return dayKeyOfIso(followUp.dueAt, timeZone) === dayKey(now, timeZone) ? "dueToday" : "upcoming";
 }
 
+/**
+ * Family Purpose → IRIS. E chose "counts and times only": no student names,
+ * IDs, reasons or group topics ever leave this function. IRIS (and Iris's AI)
+ * see how many follow-ups are due and when, and when the group meets.
+ */
 export function buildFamilyPurposeWoodhouseNode(
   backup: FpBackup,
   now = new Date(),
@@ -126,9 +131,7 @@ export function buildFamilyPurposeWoodhouseNode(
       kind: "group_meeting",
       title: `${groupName} meeting`,
       start: startOfLocalDay(day, timeZone),
-      detail: session.topic?.trim()
-        ? `${session.topic} · ${session.attendees.length} signed in`
-        : `${session.attendees.length} attendees`,
+      detail: `${session.attendees.length} signed in`,
     });
   }
 
@@ -141,22 +144,14 @@ export function buildFamilyPurposeWoodhouseNode(
       calendar.push({
         id: `followup-${c.id}`,
         kind: state === "overdue" ? "follow_up_overdue" : "follow_up_due",
-        title: `Follow up: ${c.studentName}`,
+        title: state === "overdue" ? "Student follow-up (overdue)" : "Student follow-up",
         start: fu.dueAt,
-        detail: c.reasons?.slice(0, 2).join(", ") || c.classPeriod,
+        detail: "Details in Family Purpose",
       });
     }
   }
 
-  for (const c of todayCheckIns.slice(0, 8)) {
-    calendar.push({
-      id: `checkin-${c.id}`,
-      kind: "check_in_today",
-      title: `Check-in: ${c.studentName}`,
-      start: c.createdAt,
-      detail: `${c.classPeriod} · ${c.reasons?.[0] ?? "Logged"}`,
-    });
-  }
+  // Today's check-ins are counted (stats.checkInsToday), never listed by student.
 
   calendar.sort((a, b) => a.start.localeCompare(b.start));
 
