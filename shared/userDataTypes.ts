@@ -90,5 +90,7 @@ export interface AlfredUserData {
   irisMemory?: { id: string; fact: string; at: string }[];
   /** Bay Area Pulse alert ids already pushed (so each is sent once). */
   pulseSeen?: string[];
+  /** Brand channel registry + outbound drafts (see shared/channels.ts). */
+  channels?: unknown;
   updatedAt: string;
 }

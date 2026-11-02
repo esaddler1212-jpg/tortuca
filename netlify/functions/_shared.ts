@@ -138,8 +138,11 @@ export async function sendGmail(
   subject: string,
   html: string,
   text: string,
+  opts?: { from?: string; replyTo?: string },
 ): Promise<boolean> {
   const raw = [
+    opts?.from ? `From: ${opts.from}` : null,
+    opts?.replyTo ? `Reply-To: ${opts.replyTo}` : null,
     `To: ${to}`,
     `Subject: ${subject}`,
     "MIME-Version: 1.0",
@@ -156,7 +159,9 @@ export async function sendGmail(
     html,
     "",
     "--alfred-boundary--",
-  ].join("\r\n");
+  ]
+    .filter((line): line is string => line !== null)
+    .join("\r\n");
 
   const encoded = Buffer.from(raw)
     .toString("base64")

@@ -43,6 +43,7 @@ interface Props {
   onSetHandoff: (id: string, status: HandoffStatus | null) => void;
   onSetBudget: (b: AiBudget) => void;
   onResearchTask?: (task: PlanTask, goal?: YearGoal) => void;
+  onDraftEmail?: (task: PlanTask, goal?: YearGoal) => void;
   /** Start on this tab (e.g. "year" in the Vantage view). */
   initialTab?: Tab;
 }
@@ -64,12 +65,13 @@ interface TaskRowProps {
   onToggle: (id: string) => void;
   onHandoff: (id: string, status: HandoffStatus | null) => void;
   onResearchTask?: (task: PlanTask, goal?: YearGoal) => void;
+  onDraftEmail?: (task: PlanTask, goal?: YearGoal) => void;
 }
 
 const chip = "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-mono uppercase tracking-wider";
 
 /** One plan task: check off, AI tag, and its prompt. Top-level so open prompts survive re-renders. */
-function TaskRow({ t, plan, month, goal, onToggle, onHandoff, onResearchTask }: TaskRowProps) {
+function TaskRow({ t, plan, month, goal, onToggle, onHandoff, onResearchTask, onDraftEmail }: TaskRowProps) {
   const done = isDone(plan, t);
   const handoff = done ? undefined : plan.handoffs[t.id];
   return (
@@ -99,6 +101,15 @@ function TaskRow({ t, plan, month, goal, onToggle, onHandoff, onResearchTask }: 
                   onClick={() => onResearchTask(t, goal)}
                 >
                   Research
+                </button>
+              ) : null}
+              {onDraftEmail ? (
+                <button
+                  type="button"
+                  className={`${chip} border-alfred-border/60 hover:text-alfred-gold`}
+                  onClick={() => onDraftEmail(t, goal)}
+                >
+                  Draft email
                 </button>
               ) : null}
             </>
@@ -146,7 +157,7 @@ export function PlanPanel(props: Props) {
   const days = daysLeftInYear(today);
   const yearNudges = nudges(plan, today);
   const renderTask = (t: PlanTask) => (
-    <TaskRow key={t.id} t={t} plan={plan} month={month} goal={goalById.get(t.goalId)} onToggle={props.onToggleTask} onHandoff={props.onSetHandoff} onResearchTask={props.onResearchTask} />
+    <TaskRow key={t.id} t={t} plan={plan} month={month} goal={goalById.get(t.goalId)} onToggle={props.onToggleTask} onHandoff={props.onSetHandoff} onResearchTask={props.onResearchTask} onDraftEmail={props.onDraftEmail} />
   );
 
   return (
