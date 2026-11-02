@@ -164,6 +164,8 @@ export interface Exercise {
   reps: string;
   /** Track a weight for this one. */
   weighted?: boolean;
+  /** Matching entry in the exercise library (how-to steps, muscles, swaps). */
+  libId?: string;
 }
 
 export interface GymDay {
@@ -179,11 +181,11 @@ export const DEFAULT_ROUTINE: GymDay[] = [
     title: "Arms & chest",
     workout: "arms",
     exercises: [
-      { id: "bench", name: "Bench press", sets: 4, reps: "8", weighted: true },
-      { id: "incline-db", name: "Incline dumbbell press", sets: 3, reps: "10", weighted: true },
-      { id: "fly", name: "Cable fly", sets: 3, reps: "12", weighted: true },
-      { id: "curl", name: "Dumbbell curl", sets: 3, reps: "12", weighted: true },
-      { id: "dips", name: "Tricep dips", sets: 3, reps: "10" },
+      { id: "bench", name: "Bench press", sets: 4, reps: "8", weighted: true, libId: "0025" },
+      { id: "incline-db", name: "Incline dumbbell press", sets: 3, reps: "10", weighted: true, libId: "0314" },
+      { id: "fly", name: "Cable fly", sets: 3, reps: "12", weighted: true, libId: "0171" },
+      { id: "curl", name: "Dumbbell curl", sets: 3, reps: "12", weighted: true, libId: "0294" },
+      { id: "dips", name: "Tricep dips", sets: 3, reps: "10", libId: "0814" },
     ],
   },
   {
@@ -191,11 +193,11 @@ export const DEFAULT_ROUTINE: GymDay[] = [
     title: "Legs",
     workout: "legs",
     exercises: [
-      { id: "squat", name: "Back squat", sets: 4, reps: "8", weighted: true },
-      { id: "rdl", name: "Romanian deadlift", sets: 3, reps: "10", weighted: true },
-      { id: "lunge", name: "Walking lunges", sets: 3, reps: "12 / leg", weighted: true },
-      { id: "legpress", name: "Leg press", sets: 3, reps: "12", weighted: true },
-      { id: "calf", name: "Calf raises", sets: 4, reps: "15", weighted: true },
+      { id: "squat", name: "Back squat", sets: 4, reps: "8", weighted: true, libId: "0043" },
+      { id: "rdl", name: "Romanian deadlift", sets: 3, reps: "10", weighted: true, libId: "0085" },
+      { id: "lunge", name: "Walking lunges", sets: 3, reps: "12 / leg", weighted: true, libId: "1460" },
+      { id: "legpress", name: "Leg press", sets: 3, reps: "12", weighted: true, libId: "0739" },
+      { id: "calf", name: "Calf raises", sets: 4, reps: "15", weighted: true, libId: "0605" },
     ],
   },
   {
@@ -203,9 +205,9 @@ export const DEFAULT_ROUTINE: GymDay[] = [
     title: "Cardio & core",
     workout: "cardio",
     exercises: [
-      { id: "zone2", name: "Easy run or bike", sets: 1, reps: "30 min" },
-      { id: "intervals", name: "Intervals (30s hard / 60s easy)", sets: 8, reps: "1" },
-      { id: "core", name: "Core circuit: plank, dead bug, side plank", sets: 3, reps: "45s each" },
+      { id: "zone2", name: "Easy run or bike", sets: 1, reps: "30 min", libId: "2138" },
+      { id: "intervals", name: "Intervals (30s hard / 60s easy)", sets: 8, reps: "1", libId: "2612" },
+      { id: "core", name: "Core circuit: plank, dead bug, side plank", sets: 3, reps: "45s each", libId: "0464" },
     ],
   },
 ];

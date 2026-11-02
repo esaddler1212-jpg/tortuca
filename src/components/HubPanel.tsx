@@ -4,7 +4,6 @@ import {
   CalendarPlus,
   Check,
   Copy,
-  Dumbbell,
   ExternalLink,
   Eye,
   ListPlus,
@@ -28,7 +27,6 @@ import {
   extractTodos,
   gymDayFor,
   isSafePublicUrl,
-  lastWeight,
   moneyMonth,
   type FeedItem,
   type FeedTopic,
@@ -40,6 +38,7 @@ import { authHeaders, ensureSession } from "../lib/google";
 import { useSpeechInput } from "../hooks/useSpeechInput";
 import { promptForMemo } from "../lib/promptGenerator";
 import { PromptButton } from "./PromptButton";
+import { GymTab } from "./GymTab";
 
 type Tab = "feed" | "watch" | "gym" | "money" | "memos";
 const TAB_LABEL: Record<Tab, string> = { feed: "Feed", watch: "Watch", gym: "Gym", money: "Money", memos: "Memos" };
@@ -377,77 +376,6 @@ function WatchTab({ hub, update, googleConnected }: Props) {
       <p className="text-[11px] text-alfred-mist">
         <Bell className="inline h-3 w-3" aria-hidden /> Turn on notifications in Settings to get pinged.
       </p>
-    </div>
-  );
-}
-
-// ── Gym ──────────────────────────────────────────────────────────────────
-
-function GymTab({ hub, update, today, onLogWorkout, workoutLoggedToday }: Props) {
-  const next = gymDayFor(hub.routine ?? DEFAULT_ROUTINE, today);
-  if (!next) return <p className="text-sm text-alfred-mist">No gym days set.</p>;
-  const { plan, day, isToday } = next;
-  const log = hub.gymLog[day] ?? {};
-  const doneCount = plan.exercises.filter((e) => log[e.id]?.done).length;
-  const label = isToday ? "Today" : new Date(`${day}T12:00:00Z`).toLocaleDateString("en-US", { weekday: "long", timeZone: "UTC" });
-
-  const setEntry = (id: string, patch: { done?: boolean; weight?: number }) =>
-    update((h) => {
-      const dayLog = { ...(h.gymLog[day] ?? {}), [id]: { ...(h.gymLog[day]?.[id] ?? {}), ...patch } };
-      const finished = plan.exercises.every((e) => dayLog[e.id]?.done);
-      if (finished && isToday && !workoutLoggedToday) setTimeout(() => onLogWorkout(plan.workout), 0);
-      return { ...h, gymLog: { ...h.gymLog, [day]: dayLog } };
-    });
-
-  return (
-    <div className="space-y-3">
-      <div className="flex items-baseline justify-between gap-2">
-        <p className="hud-label flex items-center gap-1.5">
-          <Dumbbell className="h-3.5 w-3.5" aria-hidden /> {label} · {plan.title}
-        </p>
-        <span className="font-mono text-xs text-alfred-mist">
-          {doneCount}/{plan.exercises.length}
-        </span>
-      </div>
-      {!isToday && <p className="text-xs text-alfred-mist">Rest day. Here's what's next.</p>}
-      <ul className="space-y-2">
-        {plan.exercises.map((ex) => {
-          const entry = log[ex.id] ?? {};
-          const prev = lastWeight(hub.gymLog, ex.id, day);
-          return (
-            <li key={ex.id} className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-sm ${entry.done ? "border-alfred-border/30 opacity-60" : "border-alfred-border/60"}`}>
-              <button
-                type="button"
-                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded border ${entry.done ? "border-alfred-gold/60 bg-alfred-gold/20 text-alfred-gold" : "border-alfred-border hover:border-alfred-gold"}`}
-                onClick={() => setEntry(ex.id, { done: !entry.done })}
-                aria-label={entry.done ? `Undo ${ex.name}` : `Done: ${ex.name}`}
-                disabled={!isToday}
-              >
-                {entry.done && <Check className="h-4 w-4" />}
-              </button>
-              <div className="flex-1 min-w-0">
-                <p className={entry.done ? "line-through" : ""}>{ex.name}</p>
-                <p className="text-[11px] text-alfred-mist">
-                  {ex.sets} × {ex.reps}
-                  {prev !== undefined ? ` · last ${prev} lb` : ""}
-                </p>
-              </div>
-              {ex.weighted && isToday && (
-                <input
-                  className="w-16 rounded border border-alfred-border/60 bg-transparent px-1.5 py-1 text-xs text-right"
-                  type="number"
-                  inputMode="decimal"
-                  placeholder={prev !== undefined ? String(prev) : "lb"}
-                  value={entry.weight ?? ""}
-                  onChange={(e) => setEntry(ex.id, { weight: e.target.value === "" ? undefined : Number(e.target.value) })}
-                  aria-label={`${ex.name} weight (lb)`}
-                />
-              )}
-            </li>
-          );
-        })}
-      </ul>
-      {isToday && doneCount === plan.exercises.length && <p className="text-sm text-emerald-400/90">✓ Workout done and logged.</p>}
     </div>
   );
 }
