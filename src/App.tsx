@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNow } from "./hooks/useNow";
 import { nextWakeDay } from "../shared/bedtime";
 import { dayKey, localHour, weekdayOfDay, zonedDateTime } from "../shared/timezone";
@@ -62,6 +62,8 @@ import { buildFitnessStatus } from "./lib/fitness";
 import { assessOvercommitment } from "./lib/overcommitment";
 import { HudHeader, type SystemStatus } from "./components/hud/HudHeader";
 import { CoreRing } from "./components/hud/CoreRing";
+import { EUniverseStage } from "./components/hud/EUniverseStage";
+import { FamilyPurposeDebriefBanner } from "./components/FamilyPurposeDebriefBanner";
 import { WeekWeatherPanel } from "./components/hud/WeekWeatherPanel";
 import {
   LogPanel,
@@ -379,12 +381,49 @@ export default function App() {
                       }),
   });
 
-  const statusPanels = (
-    <>
-      <VitalsPanel weather={weather} city={settings.city} fitness={fitnessStatus} />
-      <NetworkPanel woodhouse={woodhouse} googleConnected={connected} />
-    </>
+  const channelPendingCount = channelAgent.pending.length;
+
+  const universePlanets = useMemo(
+    () =>
+      [
+        { id: "vitals", label: "Vitals", short: "Vitals", angle: 0 },
+        { id: "apps", label: "Woodhouse", short: "Apps", angle: 38 },
+        {
+          id: "today",
+          label: "Today",
+          short: "Today",
+          angle: 76,
+          badge: urgentCount,
+          alert: urgentCount > 0,
+        },
+        { id: "plan", label: "Plan", short: "Plan", angle: 114 },
+        { id: "hub", label: "Hub", short: "Hub", angle: 152 },
+        { id: "research", label: "Research", short: "R&D", angle: 190 },
+        { id: "meal", label: "Meal prep", short: "Meals", angle: 228 },
+        {
+          id: "channels",
+          label: "Channels",
+          short: "Mail",
+          angle: 266,
+          badge: channelPendingCount,
+          alert: channelPendingCount > 0,
+        },
+        { id: "ecs", label: "ECS log", short: "ECS", angle: 304 },
+      ] as const,
+    [urgentCount, channelPendingCount],
   );
+
+  const [orbitFocus, setOrbitFocus] = useState<string | null>(null);
+
+  const focusUniverse = useCallback((id: string) => {
+    setOrbitFocus(id);
+    document.getElementById(`universe-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
+  const familyPurposeAppUrl =
+    settings.familyPurposeNodeUrl?.trim() ||
+    woodhouse?.nodes.find((n) => n.registryId === "family-purpose")?.baseUrl ||
+    "";
 
   const ecsPanels = (
     <>
@@ -407,36 +446,53 @@ export default function App() {
       />
 
       <main className="mx-auto max-w-[1400px] px-4 py-6 space-y-4">
-  {/* Iris: the centerpiece. Phones: her ring + command bar first.
-      Desktop: status | Iris + command | ECS. */}
-        <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)_340px] xl:items-center" aria-label="Iris">
-          <div className="hidden xl:block space-y-4">{statusPanels}</div>
-          <div className="flex flex-col items-center justify-center gap-4 pt-2 pb-4 xl:py-8">
-            <div className="w-full max-w-[300px] sm:max-w-[380px] xl:max-w-[460px]">
-              <CoreRing
-                lines={coreLines}
-                status={systemStatus}
-                phase={convo.phase}
-                replyTick={convo.replyTick}
-                active={convo.active}
-                waiting={convo.pendingGreeting}
-                onActivate={convo.tap}
-              />
-            </div>
-            <ConversationCaptions convo={convo} googleConnected={connected} />
-            <CommandBar
-              variant="hud"
-              settings={settings}
-              leaveBy={leaveBy}
-              bedtime={bedtime}
-              onAddTodo={add}
-              onLogWorkout={logWorkout}
-              onAddEvent={addLocalEvent}
-              onAddShopping={addShopping}
+        <EUniverseStage
+          planets={[...universePlanets]}
+          activeId={orbitFocus}
+          onSelect={focusUniverse}
+          core={
+            <CoreRing
+              lines={coreLines}
+              status={systemStatus}
+              phase={convo.phase}
+              replyTick={convo.replyTick}
+              active={convo.active}
+              waiting={convo.pendingGreeting}
+              onActivate={convo.tap}
             />
-          </div>
-          <div className="hidden xl:block space-y-4">{ecsPanels}</div>
+          }
+          belowCore={
+            <>
+              <ConversationCaptions convo={convo} googleConnected={connected} />
+              <CommandBar
+                variant="hud"
+                settings={settings}
+                leaveBy={leaveBy}
+                bedtime={bedtime}
+                onAddTodo={add}
+                onLogWorkout={logWorkout}
+                onAddEvent={addLocalEvent}
+                onAddShopping={addShopping}
+              />
+            </>
+          }
+        />
+
+        <FamilyPurposeDebriefBanner
+          mode={mode}
+          timeZone={settings.timezone}
+          woodhouse={woodhouse}
+          familyPurposeAppUrl={familyPurposeAppUrl}
+        />
+
+        <div id="universe-vitals" className="scroll-mt-28">
+          <VitalsPanel weather={weather} city={settings.city} fitness={fitnessStatus} />
         </div>
+        <div id="universe-apps" className="scroll-mt-28">
+          <NetworkPanel woodhouse={woodhouse} googleConnected={connected} />
+        </div>
+
+        <div id="universe-today" className="scroll-mt-28">
         <TodayCommandCenter
           settings={settings}
           weather={weather}
@@ -493,6 +549,8 @@ export default function App() {
           onTogglePlanTask={togglePlanTask}
           planDoneToday={planDoneToday}
         />
+        </div>
+        <div id="universe-plan" className="scroll-mt-28">
         <PlanPanel
           key={isVantageMode(mode) ? "plan-year" : "plan-week"}
           initialTab={isVantageMode(mode) ? "year" : "week"}
@@ -512,7 +570,9 @@ export default function App() {
           onResearchTask={onResearchTask}
           onDraftEmail={onDraftEmail}
         />
+        </div>
 
+        <div id="universe-research" className="scroll-mt-28">
         <BusinessResearcherPanel
           googleConnected={connected}
           loading={bizResearch.loading}
@@ -521,7 +581,9 @@ export default function App() {
           onConnectGoogle={() => void connect()}
           onResearch={(q, a) => runBusinessResearch(q, a)}
         />
+        </div>
 
+        <div id="universe-hub" className="scroll-mt-28">
         <HubPanel
           key={`hub-${mode}`}
           hub={hub}
@@ -534,18 +596,9 @@ export default function App() {
           onLogWorkout={logWorkout}
           workoutLoggedToday={fitnessLogs.some((l) => l.date === today)}
         />
-
-        {/* Phones/tablets: the console's status panels, after today's plan */}
-        <div className="xl:hidden grid gap-4 md:grid-cols-2">
-          <div className="space-y-4">{statusPanels}</div>
-          <div className="space-y-4">{ecsPanels}</div>
         </div>
 
-        {commuteLoading && settings.useLiveCommute && (
-          <p className="text-xs text-alfred-mist">Updating live commute…</p>
-        )}
-
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div id="universe-meal" className="scroll-mt-28 grid gap-4 lg:grid-cols-2">
           <MealPrepPanel
             settings={settings}
             items={shoppingItems}
@@ -555,6 +608,15 @@ export default function App() {
           />
         </div>
 
+        <div id="universe-ecs" className="scroll-mt-28 space-y-4">
+          {ecsPanels}
+        </div>
+
+        {commuteLoading && settings.useLiveCommute && (
+          <p className="text-xs text-alfred-mist">Updating live commute…</p>
+        )}
+
+        <div id="universe-channels" className="scroll-mt-28">
         <ChannelsPanel
           state={channelAgent.channels}
           pending={channelAgent.pending}
@@ -566,6 +628,7 @@ export default function App() {
           onSendDraft={channelAgent.sendDraft}
           onConnectGoogle={() => void connect()}
         />
+        </div>
       </main>
 
       <MorningRitualModal

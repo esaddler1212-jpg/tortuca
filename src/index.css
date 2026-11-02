@@ -40,12 +40,13 @@
     @apply bg-alfred-ink text-alfred-cream font-sans min-h-screen;
     background-color: #000000;
     background-image:
+      radial-gradient(circle at 50% 45%, rgb(var(--accent-500) / 0.06) 0%, transparent 42%),
       linear-gradient(rgb(var(--accent-400) / 0.04) 1px, transparent 1px),
       linear-gradient(90deg, rgb(var(--accent-400) / 0.04) 1px, transparent 1px),
       radial-gradient(ellipse 90% 60% at 50% -30%, rgb(var(--accent-500) / 0.12), transparent 55%),
       radial-gradient(ellipse 50% 40% at 100% 80%, rgb(var(--accent-800) / 0.15), transparent),
       radial-gradient(ellipse 40% 30% at 0% 60%, rgb(var(--accent-500) / 0.06), transparent);
-    background-size: 48px 48px, 48px 48px, auto, auto, auto;
+    background-size: auto, 48px 48px, 48px 48px, auto, auto, auto;
   }
 
   ::selection {

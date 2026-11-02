@@ -119,7 +119,11 @@ export function CoreRing({ lines, status, phase = "idle", replyTick = 0, onActiv
             style={{ transformOrigin: "200px 200px" }}
           />
         )}
-        <circle cx="200" cy="200" r="48" fill="#000000" fillOpacity="0.8" />
+        <circle cx="200" cy="200" r="48" fill="#000000" fillOpacity="0.85" />
+        {/* Iris — the eye at the center of E universe */}
+        <ellipse cx="200" cy="200" rx="22" ry="16" fill={c} fillOpacity={talking || listening ? 0.35 : 0.22} />
+        <circle cx="200" cy="200" r="10" fill={c} fillOpacity={talking ? 0.95 : 0.75} className={talking ? "animate-hud-pulse" : ""} />
+        <circle cx="204" cy="196" r="3.5" fill="#000000" fillOpacity="0.85" />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
         <span className="font-display text-[4cqw] leading-tight tracking-[0.15em]" style={{ color: c, textShadow: `0 0 12px ${c}` }}>
