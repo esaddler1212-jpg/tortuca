@@ -51,12 +51,23 @@ export function ChannelsPanel({
   };
 
   return (
-    <section className="panel-hud p-5 space-y-5">
-      <div>
-        <p className="hud-label flex items-center gap-2">
+    <details className="panel-hud p-5 group channels-panel-dropdown">
+      <summary className="cursor-pointer list-none flex items-center justify-between gap-3 text-left [&::-webkit-details-marker]:hidden">
+        <span className="hud-label flex items-center gap-2">
           <Mail className="h-4 w-4" aria-hidden /> Channel agents
-        </p>
-        <p className="text-sm text-alfred-mist mt-1">
+        </span>
+        {pending.length ? (
+          <span className="rounded-full border border-alfred-gold/50 bg-alfred-gold/10 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider text-alfred-gold">
+            {pending.length} need OK
+          </span>
+        ) : (
+          <span className="text-[10px] font-mono uppercase tracking-wider text-alfred-mist group-open:hidden">Expand</span>
+        )}
+      </summary>
+
+      <div className="mt-4 space-y-5 border-t border-alfred-border/50 pt-4">
+      <div>
+        <p className="text-sm text-alfred-mist">
           One lane per business. Iris routes outbound mail; you approve before anything sends. Each From address must be
           set up as Send mail as on your Google account.
         </p>
@@ -180,6 +191,7 @@ export function ChannelsPanel({
       ) : (
         <p className="text-xs text-alfred-mist">No drafts waiting.</p>
       )}
-    </section>
+      </div>
+    </details>
   );
 }

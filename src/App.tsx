@@ -522,18 +522,6 @@ export default function App() {
           onResearch={(q, a) => runBusinessResearch(q, a)}
         />
 
-        <ChannelsPanel
-          state={channelAgent.channels}
-          pending={channelAgent.pending}
-          googleConnected={connected}
-          accountEmail={accountEmail}
-          onSaveChannel={channelAgent.saveChannel}
-          onAddDraft={channelAgent.addDraft}
-          onDiscardDraft={channelAgent.discardDraft}
-          onSendDraft={channelAgent.sendDraft}
-          onConnectGoogle={() => void connect()}
-        />
-
         <HubPanel
           key={`hub-${mode}`}
           hub={hub}
@@ -566,6 +554,18 @@ export default function App() {
             onRemove={removeShopping}
           />
         </div>
+
+        <ChannelsPanel
+          state={channelAgent.channels}
+          pending={channelAgent.pending}
+          googleConnected={connected}
+          accountEmail={accountEmail}
+          onSaveChannel={channelAgent.saveChannel}
+          onAddDraft={channelAgent.addDraft}
+          onDiscardDraft={channelAgent.discardDraft}
+          onSendDraft={channelAgent.sendDraft}
+          onConnectGoogle={() => void connect()}
+        />
       </main>
 
       <MorningRitualModal
