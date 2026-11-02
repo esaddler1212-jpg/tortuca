@@ -113,6 +113,15 @@ function CurriculumPanel({
         </p>
       )}
 
+      {status.students.length > 0 && (
+        <p className="boys-aggregate hint hint-block" aria-label="Curriculum completion summary">
+          <strong>This month ({status.monthLabel}):</strong>{" "}
+          {status.students.filter((s) => s.warmUpDone).length} of {status.students.length} warm-ups ·{" "}
+          {status.students.filter((s) => s.exitTicketDone).length} of {status.students.length} exit tickets
+          {status.isSessionWeek ? " · session week" : ""}.
+        </p>
+      )}
+
       {notOnRoster.length > 0 && (
         <div className="field">
           <label>Joined via student app (add to roster)</label>

@@ -55,6 +55,8 @@ interface Props {
   /** Rendered directly under the greeting (alerts, command bar, console). */
   afterGreeting?: ReactNode;
   /** "Workday", "Weekend", "Off duty after 7 PM"… */
+  /** When true, hide Woodhouse / markets / fitness — those live on other planets. */
+  moduleOnly?: boolean;
   modeLabel?: string;
   /** Speak today's rundown (omitted when the device can't speak). */
   onBriefMe?: () => void;
@@ -105,6 +107,7 @@ export function TodayCommandCenter({
   onBriefMe,
   briefSpeaking = false,
   onStopBrief,
+  moduleOnly = false,
   unreadEmails,
   actions,
   todayTimeline,
@@ -276,7 +279,9 @@ export function TodayCommandCenter({
             alert={actions.filter((a) => a.urgent).length > 0}
           />
           <Chip label={`${todayTimeline.length} on calendar`} />
-          <Chip label={`${woodhouse?.nodes.filter((n) => n.ok).length ?? 0}/${woodhouse?.nodes.length ?? 0} apps online`} />
+          {!moduleOnly && (
+            <Chip label={`${woodhouse?.nodes.filter((n) => n.ok).length ?? 0}/${woodhouse?.nodes.length ?? 0} apps online`} />
+          )}
         </div>
       </section>
 
@@ -389,12 +394,14 @@ export function TodayCommandCenter({
             <QuickAdd onAdd={onAddTodo} />
           </section>
 
-          <FitnessPanel
-            settings={settings}
-            logs={fitnessLogs}
-            events={allSchedule}
-            onLog={onLogWorkout}
-          />
+          {!moduleOnly && (
+            <FitnessPanel
+              settings={settings}
+              logs={fitnessLogs}
+              events={allSchedule}
+              onLog={onLogWorkout}
+            />
+          )}
 
           <section className="panel p-5">
             <h3 className="font-display text-lg text-alfred-gold mb-3 flex items-center gap-2">
@@ -425,8 +432,9 @@ export function TodayCommandCenter({
           </section>
         </div>
 
-        {/* Right rail — apps, markets, inbox */}
-        <div className="lg:col-span-5 space-y-4">
+        {/* Right rail — inbox only in planet mode; full rail when embedded elsewhere */}
+        <div className={`lg:col-span-5 space-y-4 ${moduleOnly ? "lg:col-span-12" : ""}`}>
+          {!moduleOnly && (
           <section className="panel p-5">
             <h3 className="font-display text-lg text-alfred-gold mb-3">Your apps</h3>
             <div className="space-y-2">
@@ -468,7 +476,9 @@ export function TodayCommandCenter({
               ))}
             </div>
           </section>
+          )}
 
+          {!moduleOnly && (
           <section className="panel p-5">
             <h3 className="font-display text-lg text-alfred-gold mb-3">Markets</h3>
             {stocksLoading && !stocks && (
@@ -496,6 +506,7 @@ export function TodayCommandCenter({
               </p>
             )}
           </section>
+          )}
 
           <section className="panel p-5">
             <h3 className="font-display text-lg text-alfred-gold mb-3 flex items-center gap-2">

@@ -41,6 +41,7 @@ export default {
         "hud-talk-glow": "hud-talk-glow 0.45s ease-in-out infinite alternate",
         "hud-listen": "hud-listen 1.1s ease-in-out infinite alternate",
         "hud-burst": "hud-burst 0.9s ease-out forwards",
+        "fade-in": "fade-in 0.35s ease-out forwards",
       },
       keyframes: {
         "hud-pulse": {
@@ -66,6 +67,10 @@ export default {
         "hud-talk-glow": {
           from: { transform: "scale(0.94)", opacity: "0.75" },
           to: { transform: "scale(1.08)", opacity: "1" },
+        },
+        "fade-in": {
+          from: { opacity: "0", transform: "translateY(8px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
         },
       },
     },

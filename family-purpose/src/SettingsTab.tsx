@@ -15,6 +15,30 @@ import {
 } from "./autoBackup";
 import SchoolScheduleCard from "./SchoolScheduleCard";
 import { DeviceSyncHint, SyncNowButton } from "./DeviceSync";
+import { buildSetupStatus } from "./setupStatus";
+
+function SetupStatusCard({ settings }: { settings: DebriefSettings }) {
+  const items = buildSetupStatus(settings);
+  return (
+    <div className="card setup-status-card">
+      <h2>Setup status</h2>
+      <p className="hint hint-block">
+        Quick check before school — everything here stays on your devices unless you turn on cloud backup.
+      </p>
+      <ul className="setup-status-list">
+        {items.map((item) => (
+          <li key={item.id} className={`setup-status-item setup-status-${item.level}`}>
+            <span className="setup-status-dot" aria-hidden />
+            <div>
+              <strong>{item.label}</strong>
+              <p className="hint">{item.detail}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 function DataBackup({ onRestored }: { onRestored: () => void }) {
   const fileInput = useRef<HTMLInputElement>(null);
@@ -116,6 +140,7 @@ export default function SettingsTab({
 
   return (
     <>
+    <SetupStatusCard settings={form} />
     <form
       className="card"
       onSubmit={(e) => {

@@ -89,6 +89,23 @@ In the Netlify dashboard: **Storage → Blobs** (store name `family-purpose-back
 | Upload always fails | Check URL ends with `/api/family-purpose-backup`, key matches env var, redeploy after setting env. |
 | Only Downloads, no upload | **Backup upload URL** empty in Settings — intentional. |
 
+## Connect IRIS (Alfred) and the BOYS student app
+
+Family Purpose is one Netlify site; **IRIS** and **BOYS** use separate sites in the same GitHub repo (`tortuca`).
+
+| App | Netlify base directory | What to configure |
+| --- | --- | --- |
+| **IRIS / Alfred** | repo root (`/`) | `FAMILY_PURPOSE_BACKUP_KEY` — **same secret** as this site. Optional: `WOODHOUSE_FAMILY_PURPOSE_URL` = this site’s URL. In IRIS **Settings → Woodhouse**, register Family Purpose or paste this site URL. |
+| **BOYS student app** | `boys-student/` | Env `VITE_BOYS_API_URL` = **this Family Purpose site URL** (where `/api/boys/*` functions run). |
+| **Family Purpose (this site)** | `family-purpose/` | `FAMILY_PURPOSE_BACKUP_KEY`. In app **Settings**: backup upload URL + key; **BOYS class code** (`PURPOSE-A` / `B` / `C`). |
+
+After deploy:
+
+1. Open Family Purpose on the Chromebook once on Wi‑Fi and **install** the PWA.
+2. Paste backup URL + key on phone and laptop so check-ins merge in the cloud.
+3. Deploy BOYS student app and confirm Group → **Curriculum responses** loads.
+4. Open IRIS during school hours — you should see Family Purpose **counts only** (no student names) on the Woodhouse dashboard once a backup has synced.
+
 ## Local preview (development)
 
 ```bash
