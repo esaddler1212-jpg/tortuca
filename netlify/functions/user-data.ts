@@ -32,6 +32,9 @@ export const handler: Handler = async (event) => {
     }
 
     const incoming = JSON.parse(event.body ?? "{}") as Partial<AlfredUserData>;
+    // Server-owned: only the CoS agent (via /api/cos) writes the inbox.
+    delete incoming.cosInbox;
+    delete incoming.watchState;
     const existing = (await loadUserData(key)) ?? { updatedAt: new Date().toISOString() };
     const merged: AlfredUserData = {
       ...existing,

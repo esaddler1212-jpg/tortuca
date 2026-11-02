@@ -27,6 +27,10 @@ npx netlify dev   # Woodhouse aggregator + Google OAuth
 Deploy from the **repo root** (default `netlify.toml`). See [WOODHOUSE.md](./WOODHOUSE.md)
 for the Woodhouse integration spec and `.env.example` for environment variables.
 
+The **ECS Chief of Staff** panel tracks commitments, decisions, the weekly top 3 and a division
+scorecard; an agent on the iMac and a Claude Code skill post memos into it through `/api/cos`.
+See [alfred-jarvis/README.md](alfred-jarvis/README.md#ecs-chief-of-staff).
+
 ### Family Purpose
 
 Standalone web app for logging student check-ins, running the mentoring group

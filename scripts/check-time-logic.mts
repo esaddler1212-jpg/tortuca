@@ -18,6 +18,7 @@ import * as Plan from "../shared/plan.ts";
 import * as Sparks from "../shared/sparks.ts";
 import * as Hub from "../shared/hub.ts";
 import * as Pulse from "../shared/pulse.ts";
+import * as Cos from "../shared/chiefOfStaff.ts";
 
 const TZ = "America/Los_Angeles";
 const settings = { ...DEFAULT_SETTINGS }; // wake 04:15 weekdays, 08:00 days off, 7.5h sleep
@@ -195,6 +196,47 @@ const snap = { fetchedAt: "", quakes: qs, alerts: Pulse.parseWeatherAlerts({ fea
 check("pulse: alerts for near quake, fire, red flag, bad air", Pulse.pulseAlerts(snap, new Date("2026-11-02T20:30:00Z"), "2026-11-02").map((a) => a.id), ["q:nc1", "f:2026-CA-1", "w:nws1", "a:2026-11-02"]);
 check("pulse: old quake doesn't alert", Pulse.pulseAlerts({ ...snap, fires: [], alerts: [], air: null }, new Date("2026-11-03T20:30:00Z"), "d").length, 0);
 check("pulse: summary line", Pulse.pulseSummary({ ...snap, air: Pulse.parseAir({ current: { us_aqi: 40 } }) }), "Red Flag Warning · AQI 40 good · Lake Fire 21 mi · M3.4 quake 7 mi");
+
+// ── ECS Chief of Staff: weeks, commitments, scorecard, snapshot
+{
+  const t = "2026-11-04"; // Wed
+  check("cos: Monday of Wed Nov 4", Cos.mondayOf(t), "2026-11-02");
+  check("cos: Monday of Sun Nov 8 is Nov 2", Cos.mondayOf("2026-11-08"), "2026-11-02");
+  const base = Cos.normalizeCos(null);
+  check("cos: kickoff due before it's done", Cos.ritualDue(base, t), "kickoff");
+  const kicked = { ...base, weeks: { "2026-11-02": { priorities: ["A", "B", "C"], kickoffAt: "2026-11-02T16:00:00Z", pulse: {} } } };
+  check("cos: nothing due Wed after kickoff", Cos.ritualDue(kicked, t), null);
+  check("cos: close due Friday", Cos.ritualDue(kicked, "2026-11-06"), "close");
+  check("cos: weekend asks for the close even if kickoff was skipped", Cos.ritualDue(base, "2026-11-07"), "close");
+  check("cos: next week's kickoff due Monday", Cos.ritualDue(kicked, "2026-11-09"), "kickoff");
+  const c = (id: string, extra: Partial<Cos.Commitment>): Cos.Commitment =>
+    ({ id, text: id, division: "Tortuga", direction: "mine", createdAt: "2026-11-01T00:00:00Z", ...extra });
+  const list = [
+    c("late", { due: "2026-11-03" }),
+    c("sun", { due: "2026-11-08" }),
+    c("next", { due: "2026-11-09" }),
+    c("none", {}),
+    c("done", { due: "2026-11-01", doneAt: "2026-11-02T00:00:00Z" }),
+  ];
+  const b = Cos.bucketCommitments(list, t);
+  check("cos: buckets (Sunday is still this week; done drops out)",
+    [b.overdue.map((x) => x.id), b.thisWeek.map((x) => x.id), b.later.map((x) => x.id), b.someday.map((x) => x.id)],
+    [["late"], ["sun"], ["next"], ["none"]]);
+  check("cos: waiting 5 days needs a nudge", Cos.needsNudge(c("w", { direction: "theirs", createdAt: "2026-10-30T00:00:00Z" }), t), true);
+  check("cos: nudged yesterday doesn't", Cos.needsNudge(c("w", { direction: "theirs", nudgedAt: "2026-11-03T00:00:00Z" }), t), false);
+  check("cos: my own items never need a nudge", Cos.needsNudge(c("m", { createdAt: "2026-10-01T00:00:00Z" }), t), false);
+  const withCommits = { ...kicked, commitments: [c("x", { due: "2026-11-01" }), c("y", { due: "2026-11-02" })] };
+  const card = Cos.scorecard(withCommits, Plan.EMPTY_PLAN, { money: [{ id: "m", date: "2026-11-03", kind: "in", amount: 250, category: "Tortuga" }] }, t)
+    .find((x) => x.division === "Tortuga")!;
+  check("cos: 2 overdue commitments turn a division red", card.status, "red");
+  check("cos: division revenue counts only its income", card.revenueThisMonth, 250);
+  check("cos: $BAY concept milestone shows as active", card.activeMilestones.includes("$BAY concept + legal locked"), true);
+  const manual = { ...withCommits, weeks: { "2026-11-02": { ...withCommits.weeks["2026-11-02"], pulse: { Tortuga: { status: "green" as const } } } } };
+  check("cos: E's call overrides the auto status", Cos.scorecard(manual, Plan.EMPTY_PLAN, null, t).find((x) => x.division === "Tortuga")!.status, "green");
+  const md = Cos.renderCosMarkdown(withCommits, Plan.EMPTY_PLAN, { money: [], revenueGoal: 1000 }, t);
+  check("cos: snapshot lists the top 3 and overdue items", md.includes("1. A") && md.includes("x (due 2026-11-01, OVERDUE)"), true);
+  check("cos: headlines flag what I owe", Cos.cosHeadlines(withCommits, Plan.EMPTY_PLAN, null, t)[0].startsWith("You owe 2 overdue"), true);
+}
 
 // ── same answers regardless of the machine's time zone
 const self = fileURLToPath(import.meta.url);

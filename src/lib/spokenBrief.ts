@@ -91,6 +91,8 @@ export function buildVantageBrief(opts: {
   spark?: { mindset: string; prompt: string };
   desk?: { review: number; working: number };
   pulse?: string;
+  /** ECS Chief of Staff headlines (shared/chiefOfStaff.ts cosHeadlines). */
+  cos?: string[];
 }): { lines: { label: string; text: string }[]; spoken: string } {
   const lines: { label: string; text: string }[] = [];
   const roadmap = opts.woodhouse?.nodes.find((n) => n.registryId === "ecs-roadmap")?.snapshot;
@@ -98,6 +100,9 @@ export function buildVantageBrief(opts: {
     lines.push({ label: "ECS roadmap", text: roadmap.summary });
     const actions = roadmap.priorityActions.slice(0, 3);
     if (actions.length) lines.push({ label: "Moves that matter", text: actions.join(" · ") });
+  }
+  if (opts.cos?.length) {
+    lines.push({ label: "Chief of Staff", text: opts.cos.slice(0, 3).join(" ").replace(/\.$/, "") });
   }
   const week = upcomingEvents(opts.events, opts.now, 7);
   lines.push({

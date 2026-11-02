@@ -11,7 +11,8 @@ ORDER:
 1. Greeting and the single most important thing today.
 2. Today's calendar: times and what to prepare.
 3. Messages that need E: sponsors, partners, Family Purpose, job leads. Skip newsletters.
-4. ECS Network deadlines coming up this week, from the Woodhouse notes if present.
+4. ECS Network deadlines coming up this week, from the Woodhouse notes if present, plus anything
+   E owes today or is overdue from the Chief of Staff snapshot (ecs/chief-of-staff.md).
 5. Weather in Vallejo in one line.
 6. Close with one sentence of motivation tied to the day's work. "Win or learn" is fair game, but not daily.
 

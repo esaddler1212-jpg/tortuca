@@ -15,6 +15,9 @@ import { pulseSummary } from "../shared/pulse";
 import { useHub } from "./hooks/useHub";
 import { DEFAULT_ROUTINE, gymDayFor } from "../shared/hub";
 import { PlanPanel } from "./components/PlanPanel";
+import { ChiefOfStaffPanel } from "./components/ChiefOfStaffPanel";
+import { useChiefOfStaff } from "./hooks/useChiefOfStaff";
+import { cosHeadlines } from "../shared/chiefOfStaff";
 import { allGoals, allTasks, goalProgress, handoffQueue, planTasksDoneOn, todaySpark, weekFocus } from "../shared/plan";
 import { VantageBriefingPanel } from "./components/hud/VantageBriefingPanel";
 import { OvernightDeltaBanner } from "./components/OvernightDeltaBanner";
@@ -85,6 +88,7 @@ export default function App() {
   const { effectiveMinutes, loading: commuteLoading, error: commuteError } = useCommute(settings);
   const { logs: fitnessLogs, logWorkout, loadRemote: loadFitness } = useFitness(settings);
   const { hub, update: updateHub } = useHub();
+  const { cos, update: updateCos, inbox: cosInbox, refreshInbox: refreshCosInbox } = useChiefOfStaff();
   const { pulse, error: pulseError } = usePulse(settings.latitude, settings.longitude);
   const { items: shoppingItems, add: addShopping, togglePantry, remove: removeShopping, loadRemote: loadShopping } = useShoppingList();
   const { plan, toggleTask: togglePlanTask, addTask: addPlanTask, removeTask: removePlanTask, setGoals: setPlanGoals, setHandoff, setBudget, toggleSpark, shuffleSpark, noteSpark } = usePlan();
@@ -240,8 +244,9 @@ export default function App() {
         spark: todaySpark(plan, today),
         desk: { review: desk.review.length, working: desk.working.length },
         pulse: pulse ? pulseSummary(pulse) : undefined,
+        cos: cosHeadlines(cos, plan, hub, today),
       }),
-    [displayName, settings.timezone, now, woodhouse, goalLines, weather, allSchedule, plan, today, desk, pulse],
+    [displayName, settings.timezone, now, woodhouse, goalLines, weather, allSchedule, plan, today, desk, pulse, cos, hub],
   );
   // "Brief me": Alfred reads today's rundown (or the Vantage briefing in that mode).
   const briefMe = () => {
@@ -398,6 +403,19 @@ export default function App() {
           onSetHandoff={setHandoff}
           onSetBudget={setBudget}
         />
+
+        {/* School hours keep ECS off the screen, unless the agent left something. */}
+        {(mode !== "school" || cosInbox.length > 0) && (
+          <ChiefOfStaffPanel
+            cos={cos}
+            update={updateCos}
+            inbox={cosInbox}
+            onRefreshInbox={() => void refreshCosInbox()}
+            plan={plan}
+            hub={hub}
+            today={today}
+          />
+        )}
 
         <HubPanel
           key={`hub-${mode}`}

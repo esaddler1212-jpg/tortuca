@@ -7,6 +7,7 @@ center through the [Woodhouse protocol](../WOODHOUSE.md).
 | What Alfred does | How |
 |---|---|
 | **Morning briefing** (6:15 AM, spoken) | Calendar, Gmail, Google Tasks, Vallejo weather, and this week's ECS deadlines |
+| **ECS Chief of Staff** (Mon 6:30 AM kickoff, Tue–Thu 5:30 PM follow-ups, Fri 4:30 PM close) | Reads the Chief of Staff panel in the Alfred app (commitments, decisions, division scorecard), writes the memo with Claude, and posts it back to the app with a push. See [Chief of Staff](#ecs-chief-of-staff) |
 | **ECS ops monitor** (Mondays 8 AM) | Reads the Woodhouse feed and ECS docs. Lists deadlines, risks, and the top 3 moves toward $BAY and $100K/month |
 | **Funding scan** (1st and 15th) | Grants and sponsors for $BAY and North Star Network |
 | **Career scan** (Wednesdays 9 AM) | Program Manager roles within 35 minutes of Vallejo that meet your salary floor |
@@ -146,6 +147,36 @@ Both plugins load through one startup hook (`zzz_alfred_tts.pth`) in OpenJarvis'
 OpenJarvis's own files aren't touched and updates won't remove them. If the voice ever fails,
 the briefing still arrives as text.
 
+## ECS Chief of Staff
+
+The Alfred web app has a **Chief of Staff** panel (below the Plan) for running ECS week to week:
+
+- **Brief:** what needs you now, the Monday kickoff (lock the week's top 3) or the Friday close
+  (one win, one lesson), and memos from the agent.
+- **Commitments:** "I owe" and "Waiting on", with who and when. Overdue items and people to nudge
+  surface in the briefing; **Follow-up** opens a ready-to-send nudge for Claude to draft.
+- **Scorecard:** each division (Tortuga, Easy Supply, North Star, 2EASY, ECS) gets an automatic
+  red / yellow / green from plan tasks, roadmap dates and commitments, plus its revenue this month.
+  Tap a color to make the call yourself for the week.
+- **Decisions:** what you decided, why, and when to revisit it.
+
+The iMac agent (`scripts/cos_agent.py`) reads that panel and writes the Monday, weekday and Friday
+memos. To turn it on:
+
+1. Make a token: `openssl rand -hex 24`.
+2. In Netlify (the Alfred site → **Site configuration → Environment variables**) add
+   `COS_AGENT_TOKEN` = that token and `COS_OWNER_EMAIL` = the Google account you sign in to Alfred
+   with. Redeploy.
+3. On the iMac: `echo 'export COS_AGENT_TOKEN="<token>"' >> ~/.zshrc && source ~/.zshrc`,
+   then re-run `./scripts/personalize.sh`.
+4. Test: `~/.openjarvis/.venv/bin/python ~/.openjarvis/cos_agent.py kickoff`. The memo appears
+   in the panel's **From your agent** list.
+
+In Claude Code (or Cowork) with Gmail and Calendar connected, the `ecs-chief-of-staff` skill
+(`.claude/skills/` at the repo root) does the parts that need your mail: it finds promises and
+asks in ECS threads, posts them to the panel as one-tap suggestions, preps upcoming meetings,
+and drafts (never sends) follow-up emails.
+
 ## Things to ask Alfred
 
 - "What's on my plate this week across ECS?"
@@ -164,6 +195,7 @@ the briefing still arrives as text.
 | `personas/alfred/MEMORY.md` | same | Standing facts and 2027 dates. Alfred appends to it, and re-running the script won't overwrite it |
 | `prompts/personas/alfred.md` | `~/.openjarvis/prompts/personas/` | Morning briefing voice |
 | `scripts/woodhouse_sync.py` | `~/.openjarvis/` | Pulls the Woodhouse feed into Alfred's memory |
+| `scripts/cos_agent.py` | `~/.openjarvis/` | ECS Chief of Staff: pulls the snapshot, writes and posts the weekly memos |
 | `plugins/alfred_fish_tts.py` | OpenJarvis's Python packages folder | Fish Audio voice (TTS backend `fish`) |
 | `scripts/personalize.sh` | not installed | Runs the setup |
 

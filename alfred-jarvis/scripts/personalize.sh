@@ -93,6 +93,7 @@ fi
 say "Knowledge folders"
 mkdir -p "$OJ/knowledge/ecs" "$OJ/knowledge/career"
 cp "$HERE/scripts/woodhouse_sync.py" "$OJ/woodhouse_sync.py"
+cp "$HERE/scripts/cos_agent.py" "$OJ/cos_agent.py"
 echo "    Put your ECS docs in $OJ/knowledge/ecs and your resume in $OJ/knowledge/career."
 
 say "Woodhouse sync (launchd, daily 6:00 AM + hourly 8 AM-8 PM)"
@@ -140,7 +141,7 @@ else
     echo "    skipped (re-run with ALFRED_URL=https://... to enable)"
 fi
 
-say "Morning briefing (6:15 weekdays / 8:15 weekends) + weekly agents (always on)"
+say "Morning briefing (6:15 weekdays / 8:15 weekends) + weekly agents + Chief of Staff (always on)"
 "$PY" "$HERE/scripts/install_jobs.py" || echo "    (couldn't install jobs; run: $PY $HERE/scripts/install_jobs.py)"
 
 say "Index knowledge"
@@ -156,6 +157,7 @@ Next:
                  Voice is free by default (macOS "say", voice Daniel). Optional:
                  export MACSAY_VOICE=...       (any name from: say -v '?')
                  export FISH_API_KEY=...       (premium voice; then set tts_backend = "fish")
+                 export COS_AGENT_TOKEN=...    (ECS Chief of Staff; same value as on Netlify)
   2. jarvis connect gdrive          (one Google sign-in covers Gmail, Calendar, and Tasks)
   3. jarvis doctor                  (check engines and connectors)
   4. jarvis digest --fresh          (hear a briefing now)

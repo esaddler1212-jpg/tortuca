@@ -20,7 +20,8 @@ AGENTS = [
         "cron": "0 8 * * 1",  # Mondays 8:00 AM
         "tools": "knowledge_search,knowledge_sql,memory_store,memory_search,think",
         "prompt": (
-            "ECS weekly ops review. Read woodhouse-today.md, the ECS docs, and your MEMORY notes. "
+            "ECS weekly ops review. Read woodhouse-today.md, ecs/chief-of-staff.md (commitments, decisions, "
+            "division scorecard), the ECS docs, and your MEMORY notes. "
             "List this week's ECS Network deadlines, what is at risk, and the three moves that most "
             "advance the $BAY timeline and the $100K/month goal. Store the review as a dated memory note."
         ),

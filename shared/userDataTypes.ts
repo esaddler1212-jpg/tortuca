@@ -86,6 +86,10 @@ export interface AlfredUserData {
   hub?: unknown;
   /** Server-owned watcher results (see shared/hub.ts WatchResult). */
   watchState?: Record<string, unknown>;
+  /** ECS Chief of Staff: commitments, decisions, weekly rhythm (see shared/chiefOfStaff.ts CosState). */
+  cos?: unknown;
+  /** Memos and suggestions posted by the CoS agent (server-owned; see CosInboxItem). */
+  cosInbox?: unknown[];
   /** Bay Area Pulse alert ids already pushed (so each is sent once). */
   pulseSeen?: string[];
   updatedAt: string;
