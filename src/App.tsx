@@ -630,7 +630,10 @@ export default function App() {
 
         {!activePlanet && (
           <>
-            <p className="text-center font-mono text-xs text-cyan-400/50 px-4">
+            <p className="text-center font-mono text-xs text-cyan-400/50 px-4 lg:hidden">
+              Swipe the module dock below Iris · one world open at a time.
+            </p>
+            <p className="hidden text-center font-mono text-xs text-cyan-400/50 px-4 lg:block">
               Tap a planet to visit that world — only one module open at a time. Ask Iris to bring one forward.
             </p>
             <FamilyPurposeDebriefBanner
