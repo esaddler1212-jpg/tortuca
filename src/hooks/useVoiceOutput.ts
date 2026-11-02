@@ -156,7 +156,7 @@ export function useVoiceOutput() {
     window.speechSynthesis.speak(u);
   }, []);
 
-  const speak = useCallback((text: string, opts: { force?: boolean; onEnd?: () => void } = {}) => {
+  const speak = useCallback((text: string, opts: { force?: boolean; onEnd?: () => void; onStart?: () => void } = {}) => {
     if (!speechOutputSupported() || !text.trim() || (readMuted() && !opts.force)) {
       opts.onEnd?.();
       return;
@@ -181,6 +181,7 @@ export function useVoiceOutput() {
     u.onstart = () => {
       setSpeaking(true);
       emitSignal({ speaking: true });
+      opts.onStart?.();
     };
     u.onboundary = (e) => {
       if (e.name === "word" || !e.name) emitSignal({ tick: voiceSignal.tick + 1 });

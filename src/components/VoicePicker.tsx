@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Play } from "lucide-react";
+import { greetingEnabled, setGreetingEnabled } from "../hooks/useConversation";
 import { accentLabel, getVoicePrefs, listEnglishVoices, setVoicePrefs, speechOutputSupported, useVoiceOutput } from "../hooks/useVoiceOutput";
 
 /** Settings: choose Iris's voice and speed (saved on this device). */
@@ -8,6 +9,7 @@ export function VoicePicker() {
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>(() => listEnglishVoices());
   const [name, setName] = useState<string>(() => getVoicePrefs().name ?? "");
   const [rate, setRate] = useState<number>(() => getVoicePrefs().rate);
+  const [greet, setGreet] = useState<boolean>(() => greetingEnabled());
 
   // Voices load asynchronously (and change after you download new ones).
   useEffect(() => {
@@ -68,6 +70,17 @@ export function VoicePicker() {
         }}
         className="w-full accent-current"
       />
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={greet}
+          onChange={(e) => {
+            setGreet(e.target.checked);
+            setGreetingEnabled(e.target.checked);
+          }}
+        />
+        Greet me when I open IRIS (brief, or something else?)
+      </label>
       <p className="text-xs text-alfred-mist leading-relaxed">
         Want more natural voices? On iPhone: Settings → Accessibility → Spoken Content → Voices → English, then download an
         Enhanced or Premium voice (Ava, Zoe and Samantha sound best). Reopen IRIS and pick it here. Saved on this device only.
