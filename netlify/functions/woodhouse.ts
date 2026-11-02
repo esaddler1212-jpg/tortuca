@@ -32,7 +32,10 @@ export const handler: Handler = async (event) => {
   }
 
   const registry = withBuiltinNodes(mergeRegistry(event));
+  // Demo snapshots (fake orders and students) only when explicitly enabled
+  // for development, never in E's real app.
   const useDemo =
+    process.env.WOODHOUSE_DEMO === "1" &&
     !parseRegistryFromEnv().length &&
     !parseRegistryHeader(
       event.headers["x-woodhouse-registry"] ?? event.headers["X-Woodhouse-Registry"],

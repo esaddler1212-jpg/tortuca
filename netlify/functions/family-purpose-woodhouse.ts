@@ -4,6 +4,7 @@ import { getStore } from "@netlify/blobs";
 import {
   buildFamilyPurposeWoodhouseNode,
   demoFamilyPurposeNode,
+  emptyFamilyPurposeNode,
   type FpBackup,
 } from "./_family-purpose-woodhouse";
 
@@ -63,13 +64,15 @@ export const handler: Handler = async (event) => {
   const timeZone = process.env.WOODHOUSE_TIMEZONE?.trim() || "America/Los_Angeles";
   const node = backup
     ? buildFamilyPurposeWoodhouseNode(backup, new Date(), timeZone)
-    : demoFamilyPurposeNode();
+    : process.env.WOODHOUSE_DEMO === "1"
+      ? demoFamilyPurposeNode()
+      : emptyFamilyPurposeNode(new Date(), timeZone);
 
   return {
     statusCode: 200,
     headers: {
       "Content-Type": "application/json",
-      "X-Woodhouse-Source": backup ? "backup" : "demo",
+      "X-Woodhouse-Source": backup ? "backup" : process.env.WOODHOUSE_DEMO === "1" ? "demo" : "empty",
     },
     body: JSON.stringify(node),
   };

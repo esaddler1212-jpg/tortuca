@@ -194,6 +194,23 @@ export function buildFamilyPurposeWoodhouseNode(
   };
 }
 
+/** No Family Purpose data synced yet: say so, with no follow-ups or tasks. */
+export function emptyFamilyPurposeNode(now = new Date(), timeZone = "America/Los_Angeles"): FpWoodhouseNode {
+  const day = dayKey(now, timeZone);
+  return {
+    nodeId: "family-purpose",
+    appName: "Family Purpose",
+    schoolName: "",
+    groupName: "",
+    day,
+    schoolDay: schoolDayInfo(day, timeZone),
+    stats: { checkInsToday: 0, followUpsDueToday: 0, followUpsOverdue: 0, groupMeetingsToday: 0 },
+    calendar: [],
+    priorityActions: [],
+  };
+}
+
+/** Development-only sample data (WOODHOUSE_DEMO=1). Clearly fake; never shown in the real app. */
 export function demoFamilyPurposeNode(now = new Date()): FpWoodhouseNode {
   const day = dayKey(now, "America/Los_Angeles");
   return {
@@ -227,7 +244,7 @@ export function demoFamilyPurposeNode(now = new Date()): FpWoodhouseNode {
       {
         id: "follow-demo",
         kind: "follow_up_due",
-        title: "Follow up: Andre Bell",
+        title: "Follow up: Sample Student (demo)",
         start: new Date(now.getTime() + 2 * 3_600_000).toISOString(),
         detail: "Attendance / tardiness",
       },
