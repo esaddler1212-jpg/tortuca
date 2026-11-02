@@ -59,7 +59,7 @@ export function buildDailyBrief(opts: {
   const { tz, now, weather, leaveBy } = opts;
   const h = localHour(tz, now);
   const hello = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
-  const parts: string[] = [`${hello}${opts.name ? `, ${opts.name}` : ""}.`];
+  const parts: string[] = [`${hello}, boss.`]; // Iris calls E "boss"
   parts.push(`You're in ${DAY_MODE_LABEL[opts.mode].replace(" · ", ", ")} mode.`);
   if (weather) {
     parts.push(
@@ -128,7 +128,7 @@ export function buildVantageBrief(opts: {
   if (opts.goals.length) lines.push({ label: "2026 goals", text: opts.goals.join(" · ") });
 
   const spoken = [
-    `Here's your Vantage Point briefing${opts.name ? `, ${opts.name}` : ""}.`,
+    `Here's your Vantage Point briefing, boss.`,
     ...lines.map((l) => `${l.label}: ${forSpeech(l.text)}.`),
   ].join(" ");
   return { lines, spoken };

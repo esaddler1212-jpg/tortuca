@@ -69,7 +69,7 @@ export function useConversation(opts: {
       setOfferSave(false);
       setActive(false);
       setTurns([]);
-      voice.speak(save ? "Saved to your memos. Anytime, E." : "Anytime, E.", { force: true });
+      voice.speak(save ? "Saved to your memos. Anytime, boss." : "Anytime, boss.", { force: true });
     },
     [voice],
   );

@@ -40,20 +40,78 @@ export function speechOutputSupported(): boolean {
   return typeof window !== "undefined" && "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
 }
 
-/** Known male system voices to skip when looking for Iris's voice. */
-const MALE = /\b(alex|fred|daniel|tom|aaron|arthur|evan|nathan|oliver|george|gordon|reed|rocko|grandpa|eddy|ralph|junior|albert|david|mark|guy|ryan|christopher|eric|andrew|brian|roger|steffan)\b/i;
+/** Known male system voices to skip when picking Iris's default voice. */
+const MALE = /\b(alex|fred|daniel|tom|aaron|arthur|evan|nathan|oliver|george|gordon|reed|rocko|grandpa|eddy|ralph|junior|albert|david|mark|guy|ryan|christopher|eric|andrew|brian|roger|steffan|rishi|lee|thomas|jacques|ralf|hugh)\b/i;
+const FEMALE = /\b(samantha|ava|allison|susan|zoe|nicky|joelle|serena|kate|stephanie|karen|moira|tessa|veena|fiona|catherine|martha|victoria|google us english|google uk english female|zira|aria|jenny|michelle|emma|libby|sonia|natasha|clara)\b/i;
+
+const VOICE_KEY = "iris-voice"; // per device: each device has its own voices
+const RATE_KEY = "iris-voice-rate";
+
+export function getVoicePrefs(): { name: string | null; rate: number } {
+  try {
+    const rate = Number(localStorage.getItem(RATE_KEY));
+    return { name: localStorage.getItem(VOICE_KEY), rate: rate >= 0.7 && rate <= 1.4 ? rate : 1 };
+  } catch {
+    return { name: null, rate: 1 };
+  }
+}
+
+export function setVoicePrefs(prefs: { name?: string | null; rate?: number }) {
+  try {
+    if (prefs.name !== undefined) {
+      if (prefs.name) localStorage.setItem(VOICE_KEY, prefs.name);
+      else localStorage.removeItem(VOICE_KEY);
+    }
+    if (prefs.rate !== undefined) localStorage.setItem(RATE_KEY, String(prefs.rate));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+/** "en-US" → "American", etc. */
+export function accentLabel(lang: string): string {
+  const l = lang.replace("_", "-").toLowerCase();
+  const map: Record<string, string> = {
+    "en-us": "American",
+    "en-gb": "British",
+    "en-au": "Australian",
+    "en-ie": "Irish",
+    "en-za": "South African",
+    "en-in": "Indian",
+    "en-nz": "New Zealand",
+    "en-ca": "Canadian",
+    "en-sc": "Scottish",
+  };
+  return map[l] ?? lang;
+}
+
+/** English voices on this device: female voices first, then by accent and name. */
+export function listEnglishVoices(): SpeechSynthesisVoice[] {
+  if (!speechOutputSupported()) return [];
+  const seen = new Set<string>();
+  return window.speechSynthesis
+    .getVoices()
+    .filter((v) => v.lang.toLowerCase().startsWith("en") && !seen.has(v.name) && seen.add(v.name))
+    .sort((a, b) => {
+      const rank = (v: SpeechSynthesisVoice) => (FEMALE.test(v.name) ? 0 : MALE.test(v.name) ? 2 : 1);
+      return rank(a) - rank(b) || accentLabel(a.lang).localeCompare(accentLabel(b.lang)) || a.name.localeCompare(b.name);
+    });
+}
 
 /**
- * Iris's voice: a US English female voice. "Samantha" on iPhone/Mac, then
- * other known US female voices (Chrome/Android/Windows), then any US English
- * voice that isn't a known male one, then any English voice.
+ * Iris's voice: the one chosen in Settings, else a US English female voice
+ * ("Samantha" on iPhone/Mac, then other known US female voices), never a
+ * known male voice unless that's all there is.
  */
 function pickVoice(): SpeechSynthesisVoice | undefined {
   const voices = window.speechSynthesis.getVoices();
+  const chosen = getVoicePrefs().name;
+  const picked = chosen ? voices.find((v) => v.name === chosen) : undefined;
+  if (picked) return picked;
   const us = voices.filter((v) => v.lang.replace("_", "-").toLowerCase().startsWith("en-us"));
   return (
     us.find((v) => /samantha/i.test(v.name)) ??
-    us.find((v) => /\b(ava|allison|susan|zoe|nicky|joelle|google us english|zira|aria|jenny|michelle|emma)\b/i.test(v.name)) ??
+    us.find((v) => FEMALE.test(v.name)) ??
     us.find((v) => !MALE.test(v.name)) ??
     voices.find((v) => v.lang.startsWith("en") && !MALE.test(v.name)) ??
     voices.find((v) => v.lang.startsWith("en"))
@@ -111,7 +169,7 @@ export function useVoiceOutput() {
       u.voice = voice;
       u.lang = voice.lang;
     }
-    u.rate = 1.0;
+    u.rate = getVoicePrefs().rate;
     let ended = false;
     const finish = () => {
       if (ended) return;
