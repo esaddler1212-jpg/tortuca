@@ -18,6 +18,9 @@ import * as Plan from "../shared/plan.ts";
 import * as Sparks from "../shared/sparks.ts";
 import * as Hub from "../shared/hub.ts";
 import * as Pulse from "../shared/pulse.ts";
+import { buildAskContext } from "../src/lib/askContext.ts";
+import * as Ex from "../shared/exercises.ts";
+import { readFileSync } from "node:fs";
 
 const TZ = "America/Los_Angeles";
 const settings = { ...DEFAULT_SETTINGS }; // wake 04:15 weekdays, 08:00 days off, 7.5h sleep
@@ -195,6 +198,37 @@ const snap = { fetchedAt: "", quakes: qs, alerts: Pulse.parseWeatherAlerts({ fea
 check("pulse: alerts for near quake, fire, red flag, bad air", Pulse.pulseAlerts(snap, new Date("2026-11-02T20:30:00Z"), "2026-11-02").map((a) => a.id), ["q:nc1", "f:2026-CA-1", "w:nws1", "a:2026-11-02"]);
 check("pulse: old quake doesn't alert", Pulse.pulseAlerts({ ...snap, fires: [], alerts: [], air: null }, new Date("2026-11-03T20:30:00Z"), "d").length, 0);
 check("pulse: summary line", Pulse.pulseSummary({ ...snap, air: Pulse.parseAir({ current: { us_aqi: 40 } }) }), "Red Flag Warning · AQI 40 good · Lake Fire 21 mi · M3.4 quake 7 mi");
+
+// ── conversation context: Family Purpose details never leave the device
+const ctx = buildAskContext({
+  now: new Date("2026-11-02T23:30:00Z"), timeZone: "America/Los_Angeles", modeLabel: "ECS Network", city: "Vallejo",
+  actions: [
+    { id: "1", title: "Check in with Marcus about attendance", source: "follow-up", sourceLabel: "Family Purpose", urgent: true, sort: 0 },
+    { id: "2", title: "Lock $BAY legal", source: "plan", sourceLabel: "Plan · Tortuga", urgent: false, sort: 1 },
+  ],
+  events: [
+    { id: "e1", title: "Session with Jaylen", start: "2026-11-03T16:00:00Z", source: "family-purpose" },
+    { id: "e2", title: "Sponsor call", start: "2026-11-03T20:00:00Z", source: "google" },
+  ],
+});
+check("ask: student names withheld from Alfred's context", [/Marcus|Jaylen/.test(ctx), /Lock \$BAY legal/.test(ctx), /Sponsor call/.test(ctx), /1 Family Purpose item \(student/.test(ctx)], [false, true, true, true]);
+check("ask: knows the local time and day", /Monday, November 2 at 3:30/.test(ctx), true);
+
+// ── gym: exercise library, swaps, search
+const lib = JSON.parse(readFileSync(new URL("../public/exercises.json", import.meta.url), "utf8")) as Ex.LibExercise[];
+const byId = new Map(lib.map((x) => [x.id, x]));
+check("gym: library has 1,324 exercises with steps", [lib.length, lib.every((x) => x.n && x.t)], [1324, true]);
+check("gym: every routine exercise links to the library", Hub.DEFAULT_ROUTINE.flatMap((d) => d.exercises).every((e) => e.libId && byId.has(e.libId)), true);
+const bench = byId.get("0025")!;
+const swaps = Ex.swapCandidates(lib, bench, new Set<Ex.EquipmentGroup>(["Dumbbell"]));
+check("gym: bench swap → dumbbell chest moves only", [swaps.length > 3, swaps.every((x) => x.t === "pectorals" && Ex.equipmentGroup(x.eq) === "Dumbbell")], [true, true]);
+check("gym: swaps skip camera-angle duplicates", Ex.swapCandidates(lib, byId.get("0043")!, null, 50).some((x) => /pov\)/.test(x.n)), false);
+check("gym: bench → dumbbell bench press first", swaps[0]?.n, "dumbbell bench press");
+check("gym: partial search still finds something", Ex.searchExercises(lib, "face pull").length > 0, true);
+check("gym: closest name ranks first", Ex.searchExercises(lib, "dumbbell shoulder press")[0]?.n, "dumbbell seated shoulder press");
+check("gym: exact phrase wins", Ex.searchExercises(lib, "walking lunge")[0]?.n, "walking lunge");
+check("gym: search finds walking lunge", Ex.searchExercises(lib, "walking lunge")[0]?.n, "walking lunge");
+check("gym: equipment groups", ["body weight", "ez barbell", "leverage machine", "resistance band"].map(Ex.equipmentGroup), ["Bodyweight", "Barbell", "Machine", "Bands"]);
 
 // ── same answers regardless of the machine's time zone
 const self = fileURLToPath(import.meta.url);
