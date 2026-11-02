@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useNow } from "./hooks/useNow";
 import { nextWakeDay } from "../shared/bedtime";
 import { dayKey, localHour, weekdayOfDay, zonedDateTime } from "../shared/timezone";
@@ -19,6 +19,12 @@ import { pulseSummary } from "../shared/pulse";
 import { useHub } from "./hooks/useHub";
 import { DEFAULT_ROUTINE, gymDayFor } from "../shared/hub";
 import { PlanPanel } from "./components/PlanPanel";
+import { BusinessResearcherPanel } from "./components/BusinessResearcherPanel";
+import { useBusinessResearch } from "./hooks/useBusinessResearch";
+import { fetchUserData } from "./lib/userData";
+import { EMPTY_HUB, type HubState } from "../shared/hub";
+import type { ResearchArea } from "../shared/businessResearch";
+import type { PlanTask, YearGoal } from "../shared/planData";
 import { allGoals, allTasks, goalProgress, handoffQueue, planTasksDoneOn, todaySpark, weekFocus } from "../shared/plan";
 import { VantageBriefingPanel } from "./components/hud/VantageBriefingPanel";
 import { OvernightDeltaBanner } from "./components/OvernightDeltaBanner";
@@ -89,9 +95,39 @@ export default function App() {
   const { effectiveMinutes, loading: commuteLoading, error: commuteError } = useCommute(settings);
   const { logs: fitnessLogs, logWorkout, loadRemote: loadFitness } = useFitness(settings);
   const { hub, update: updateHub } = useHub();
+  const bizResearch = useBusinessResearch(settings.timezone);
+
+  const runBusinessResearch = useCallback(
+    async (query: string, area: ResearchArea, context?: string) => {
+      const result = await bizResearch.research({ query, area, context });
+      if (result) {
+        try {
+          const remote = (await fetchUserData())?.hub as HubState | undefined;
+          if (remote?.updatedAt) {
+            updateHub(() => ({ ...EMPTY_HUB, ...remote, links: { ...(remote.links ?? {}) } }));
+          }
+        } catch {
+          /* offline — server still saved for next sync */
+        }
+      }
+      return result;
+    },
+    [bizResearch, updateHub],
+  );
   const { pulse, error: pulseError } = usePulse(settings.latitude, settings.longitude);
   const { items: shoppingItems, add: addShopping, togglePantry, remove: removeShopping, loadRemote: loadShopping } = useShoppingList();
   const { plan, toggleTask: togglePlanTask, addTask: addPlanTask, removeTask: removePlanTask, setGoals: setPlanGoals, setHandoff, setBudget, toggleSpark, shuffleSpark, noteSpark } = usePlan();
+
+  const onResearchTask = useCallback(
+    (task: PlanTask, goal?: YearGoal) => {
+      const query = task.deliverable ? `${task.title} — ${task.deliverable}` : task.title;
+      const context = goal ? `Year goal: ${goal.title}` : undefined;
+      void runBusinessResearch(query, task.area, context).then((r) => {
+        if (r) setHandoff(task.id, "review");
+      });
+    },
+    [runBusinessResearch, setHandoff],
+  );
 
   useUserDataSync(settings, persist, todos, setTodos, loadFitness, loadShopping);
   const push = usePushNotifications(settings.pushNotificationsEnabled);
@@ -452,6 +488,16 @@ export default function App() {
           onSetGoals={setPlanGoals}
           onSetHandoff={setHandoff}
           onSetBudget={setBudget}
+          onResearchTask={onResearchTask}
+        />
+
+        <BusinessResearcherPanel
+          googleConnected={connected}
+          loading={bizResearch.loading}
+          error={bizResearch.error}
+          last={bizResearch.last}
+          onConnectGoogle={() => void connect()}
+          onResearch={(q, a) => runBusinessResearch(q, a)}
         />
 
         <HubPanel
