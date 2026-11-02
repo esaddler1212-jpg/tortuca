@@ -53,6 +53,8 @@ export function buildDailyBrief(opts: {
   spark?: { mindset: string; prompt: string };
   /** Today's gym session title, if it's a gym day. */
   gym?: string;
+  /** Bay Area Pulse summary, only when something needs attention. */
+  pulse?: string;
 }): string {
   const { tz, now, weather, leaveBy } = opts;
   const h = localHour(tz, now);
@@ -71,6 +73,7 @@ export function buildDailyBrief(opts: {
   const today = dayKey(tz, now);
   const next = upcomingEvents(opts.events, now, 1).find((e) => dayKey(tz, new Date(e.start)) === today);
   if (next) parts.push(`Next on the calendar: ${next.title} at ${time(next.start, tz)}.`);
+  if (opts.pulse) parts.push(`Around the Bay: ${forSpeech(opts.pulse)}.`);
   if (opts.gym) parts.push(`Gym day: ${opts.gym}.`);
   if (opts.spark) parts.push(`Today's spark: ${forSpeech(opts.spark.mindset)} And a prompt: ${forSpeech(opts.spark.prompt)}`);
   return parts.join(" ");
@@ -87,6 +90,7 @@ export function buildVantageBrief(opts: {
   events: CalendarEvent[];
   spark?: { mindset: string; prompt: string };
   desk?: { review: number; working: number };
+  pulse?: string;
 }): { lines: { label: string; text: string }[]; spoken: string } {
   const lines: { label: string; text: string }[] = [];
   const roadmap = opts.woodhouse?.nodes.find((n) => n.registryId === "ecs-roadmap")?.snapshot;
@@ -113,6 +117,7 @@ export function buildVantageBrief(opts: {
       text: rainy.length ? `Rain likely ${rainy.join(", ")}.` : "Dry week ahead.",
     });
   }
+  if (opts.pulse) lines.push({ label: "Bay Area", text: opts.pulse });
   if (opts.desk && opts.desk.review + opts.desk.working > 0) {
     lines.push({
       label: "Agent desk",

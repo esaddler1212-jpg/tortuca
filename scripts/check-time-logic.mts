@@ -17,6 +17,7 @@ import { applyDayMode, dayMode } from "../shared/dayMode.ts";
 import * as Plan from "../shared/plan.ts";
 import * as Sparks from "../shared/sparks.ts";
 import * as Hub from "../shared/hub.ts";
+import * as Pulse from "../shared/pulse.ts";
 
 const TZ = "America/Los_Angeles";
 const settings = { ...DEFAULT_SETTINGS }; // wake 04:15 weekdays, 08:00 days off, 7.5h sleep
@@ -168,6 +169,32 @@ const m = Hub.moneyMonth([
 ], "2026-11");
 check("money: month totals and ECS revenue", [m.income, m.spent, m.net, m.ecsRevenue], [1400, 60, 1340, 400]);
 check("memos: pulls to-dos out of speech", Hub.extractTodos("Okay so I need to call Mike about the shoot. The beat is fire. Remember to send the deck to KQED and then email the principal"), ["Call Mike about the shoot", "Send the deck to KQED", "Email the principal"]);
+
+// ── Bay Area Pulse (Vallejo 38.1041, -122.2566)
+const V = [38.1041, -122.2566] as const;
+check("pulse: Vallejo → SF is ~24 mi", Math.round(Pulse.milesBetween(V[0], V[1], 37.7749, -122.4194)), 24);
+const usgs = { features: [{ id: "nc1", properties: { mag: 3.42, place: "4 km NE of American Canyon, CA", time: Date.parse("2026-11-02T20:00:00Z"), url: "https://e/1" }, geometry: { coordinates: [-122.23, 38.2, 8] } }] };
+const qs = Pulse.parseQuakes(usgs, V[0], V[1]);
+check("pulse: parses USGS quakes with distance", [qs[0].mag, qs[0].miles], [3.4, 7]);
+check("pulse: AQI bands", [Pulse.aqiLevel(42).level, Pulse.aqiLevel(120).level, Pulse.aqiLevel(160).level], ["good", "sensitive", "unhealthy"]);
+check("pulse: parses Open-Meteo air", Pulse.parseAir({ current: { us_aqi: 57.4, pm2_5: 12.34 } }), { aqi: 57, pm25: 12.3, label: "Moderate", level: "moderate" });
+const fires = Pulse.parseFires({ features: [
+  { attributes: { IncidentName: "Lake", IncidentSize: 1200.4, PercentContained: 10, IncidentTypeCategory: "WF", UniqueFireIdentifier: "2026-CA-1" }, geometry: { x: -122.3, y: 38.4 } },
+  { attributes: { IncidentName: "Pile Burn", IncidentTypeCategory: "RX" }, geometry: { x: -122.2, y: 38.1 } },
+] }, V[0], V[1]);
+check("pulse: wildfires only, named, with miles", fires.map((f) => [f.name, f.miles, f.acres]), [["Lake Fire", 21, 1200]]);
+const cams = Pulse.parseCams({ data: [
+  { cctv: { inService: "true", location: { latitude: 38.11, longitude: -122.25, locationName: "TV999 -- I-80 : Magazine St", route: "I-80" }, imageData: { static: { currentImageURL: "https://cwwp2.dot.ca.gov/data/d4/cctv/image/a.jpg" } } } },
+  { cctv: { inService: "false", location: { latitude: 38.11, longitude: -122.25, route: "I-80" }, imageData: { static: { currentImageURL: "https://cwwp2.dot.ca.gov/x.jpg" } } } },
+  { cctv: { inService: "true", location: { latitude: 37.3, longitude: -121.9, route: "I-280" }, imageData: { static: { currentImageURL: "https://cwwp2.dot.ca.gov/y.jpg" } } } },
+] }, V[0], V[1]);
+check("pulse: only in-service commute cams nearby", cams.map((c) => [c.route, c.name]), [["I-80", "Magazine St"]]);
+const fl = Pulse.parseFlights({ ac: [{ hex: "a1", flight: "UAL123 ", t: "B738", alt_baro: 5000, lat: 38.12, lon: -122.26 }, { hex: "a2", alt_baro: "ground", lat: 38.1, lon: -122.25 }] }, V[0], V[1]);
+check("pulse: airborne flights only, trimmed callsign", [fl.count, fl.nearest[0].callsign, fl.nearest[0].altitudeFt], [1, "UAL123", 5000]);
+const snap = { fetchedAt: "", quakes: qs, alerts: Pulse.parseWeatherAlerts({ features: [{ properties: { id: "nws1", event: "Red Flag Warning", severity: "Severe", headline: "Red Flag Warning until 8 PM" } }] }), air: Pulse.parseAir({ current: { us_aqi: 165 } }), fires, cams, flights: fl, unavailable: [] };
+check("pulse: alerts for near quake, fire, red flag, bad air", Pulse.pulseAlerts(snap, new Date("2026-11-02T20:30:00Z"), "2026-11-02").map((a) => a.id), ["q:nc1", "f:2026-CA-1", "w:nws1", "a:2026-11-02"]);
+check("pulse: old quake doesn't alert", Pulse.pulseAlerts({ ...snap, fires: [], alerts: [], air: null }, new Date("2026-11-03T20:30:00Z"), "d").length, 0);
+check("pulse: summary line", Pulse.pulseSummary({ ...snap, air: Pulse.parseAir({ current: { us_aqi: 40 } }) }), "Red Flag Warning · AQI 40 good · Lake Fire 21 mi · M3.4 quake 7 mi");
 
 // ── same answers regardless of the machine's time zone
 const self = fileURLToPath(import.meta.url);
