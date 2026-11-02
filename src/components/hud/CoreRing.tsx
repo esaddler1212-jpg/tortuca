@@ -12,6 +12,8 @@ interface Props {
   onActivate?: () => void;
   /** A conversation is open (idle means "your turn"). */
   active?: boolean;
+  /** Iris has a greeting ready and is waiting for a first tap. */
+  waiting?: boolean;
 }
 
 const COLOR: Record<Props["status"], string> = {
@@ -21,7 +23,7 @@ const COLOR: Record<Props["status"], string> = {
 };
 
 /** Large animated core ring at the centre of the operator console. */
-export function CoreRing({ lines, status, phase = "idle", replyTick = 0, onActivate, active = false }: Props) {
+export function CoreRing({ lines, status, phase = "idle", replyTick = 0, onActivate, active = false, waiting = false }: Props) {
   const color = COLOR[status];
   const c = "currentColor";
   // Iris's "face": the core glows and ripples with each word while she speaks.
@@ -29,13 +31,23 @@ export function CoreRing({ lines, status, phase = "idle", replyTick = 0, onActiv
   const talking = voice.speaking || phase === "speaking";
   const listening = phase === "listening";
   const thinking = phase === "thinking";
-  const label = talking ? "SPEAKING" : thinking ? "THINKING" : listening ? "LISTENING" : active ? "YOUR TURN" : lines[1];
+  const label = talking
+    ? "SPEAKING"
+    : thinking
+      ? "THINKING"
+      : listening
+        ? "LISTENING"
+        : active
+          ? "YOUR TURN"
+          : waiting
+            ? "TAP TO START"
+            : lines[1];
   const spokes = [0, 60, 120, 180, 240, 300];
   return (
     <div
       className={`relative mx-auto aspect-square w-full max-w-[420px] [container-type:inline-size] ${onActivate ? "cursor-pointer select-none rounded-full outline-none focus-visible:ring-2 focus-visible:ring-alfred-gold" : ""}`}
       style={{ color, WebkitTapHighlightColor: "transparent" }}
-      aria-label={onActivate ? (active ? `Iris is ${label.toLowerCase()}. Tap to ${listening ? "stop listening" : "talk"}` : "Talk to Iris") : `${lines[0]} ${lines[1]}`}
+      aria-label={onActivate ? (waiting && !active ? "Tap to start: Iris has your brief ready" : active ? `Iris is ${label.toLowerCase()}. Tap to ${listening ? "stop listening" : "talk"}` : "Talk to Iris") : `${lines[0]} ${lines[1]}`}
       role={onActivate ? "button" : "img"}
       tabIndex={onActivate ? 0 : undefined}
       onClick={onActivate}
@@ -92,7 +104,7 @@ export function CoreRing({ lines, status, phase = "idle", replyTick = 0, onActiv
           stroke={c}
           strokeOpacity={listening || thinking ? 1 : 0.85}
           strokeWidth={listening ? 4 : 2.5}
-          className={talking ? "" : listening ? "animate-hud-listen" : "animate-hud-pulse"}
+          className={talking ? "" : listening || waiting ? "animate-hud-listen" : "animate-hud-pulse"}
           style={{ transformOrigin: "200px 200px" }}
         />
         {talking && (

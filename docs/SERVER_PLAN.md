@@ -19,8 +19,16 @@ ready to go when we turn it on.
 | 3 | **GPT Researcher** | "Research this" button on any task or goal → a sourced report in a few minutes | ~1 GB |
 | 4 | **browser-use** | Automates sites that have no API (portals, forms, submission pages) | ~1–1.5 GB (runs a browser) |
 | later | changedetection.io (full) | Watches pages that need JavaScript, with screenshots (upgrade to Alfred's Watch tab) | ~0.5 GB |
+| later | **Postiz** | Schedule posts for $BAY, 2EASY and Easy Supply across IG, TikTok, YouTube and more (needs Postgres + Redis) | ~1–1.5 GB |
+| later | **Pipecat** | Faster, interruptible real-time voice for Iris (streams audio instead of browser speech) | ~0.5–1 GB |
+| later | **Kokoro TTS** | A more natural voice for Iris, generated on the server (82M-parameter open model) | ~1 GB |
+| later | **Graphiti** (full) | Upgrade Iris's memory-lite to a knowledge graph of people, projects and dates (needs Neo4j/FalkorDB) | ~1–2 GB |
+| later | **OpenMAIC** | North Star lesson builder (you build lessons; students don't log in) | ~1 GB + Postgres |
+| later | **Paperclip** | Agents that work Claude-ready tasks around the clock (costs Claude credits) | ~1–2 GB + Postgres |
 
-**Total:** about 5–6 GB in use, so rent **8 GB of memory** for headroom.
+**Total (first four):** about 5–6 GB in use, so rent **8 GB of memory** for headroom. Adding the "later" apps means moving up to a 16 GB server.
+
+**Not on this server:** ComfyUI and Maestro need an NVIDIA GPU (rent a GPU machine by the hour when there's a video to make); openWakeWord and Home Assistant belong on a device at home (a newer computer or a Raspberry Pi). Already covered without a server: web search and page reading (Iris uses Claude's built-in tools instead of SearXNG/crawl4ai), document reading (Claude reads PDFs; no Docling needed), push alerts (IRIS has them; ntfy only as a backup), and Remotion videos (rendered on request in a Claude Code session).
 
 ## Server to rent
 

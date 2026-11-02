@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { VoicePicker } from "./VoicePicker";
+import { IrisMemoryPanel } from "./IrisMemoryPanel";
 import { X } from "lucide-react";
 import { OPEN_SETTINGS_EVENT } from "../lib/settingsEvents";
 import type { UserSettings } from "../types";
@@ -147,7 +149,7 @@ export function SettingsDrawer({
             <div className="space-y-6">
               <div>
                 <label className="block text-sm text-alfred-mist mb-2" htmlFor="preferred-name">
-                  Your name (Iris greets you by it)
+                  Your name (shown in your greeting; Iris calls you boss)
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -375,6 +377,14 @@ export function SettingsDrawer({
                 >
                   Save weekly review
                 </button>
+              </div>
+              <div className="border-t border-alfred-border pt-6">
+                <h3 className="text-sm font-medium mb-2 text-alfred-gold">Iris&apos;s voice</h3>
+                <VoicePicker />
+              </div>
+              <div className="border-t border-alfred-border pt-6">
+                <h3 className="text-sm font-medium mb-2 text-alfred-gold">What Iris remembers</h3>
+                <IrisMemoryPanel googleConnected={googleConnected} />
               </div>
               <div className="border-t border-alfred-border pt-6">
                 <h3 className="text-sm font-medium mb-2 text-alfred-gold">Morning digest &amp; push</h3>

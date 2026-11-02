@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useNow } from "./hooks/useNow";
 import { nextWakeDay } from "../shared/bedtime";
-import { dayKey, weekdayOfDay, zonedDateTime } from "../shared/timezone";
+import { dayKey, localHour, weekdayOfDay, zonedDateTime } from "../shared/timezone";
 import { applyDayMode, dayMode, DAY_MODE_LABEL, isVantageMode, resolveMode } from "../shared/dayMode";
 import { useFocusChoice } from "./hooks/useFocusChoice";
 import { useVoiceOutput } from "./hooks/useVoiceOutput";
@@ -248,8 +248,8 @@ export default function App() {
     [displayName, settings.timezone, now, woodhouse, goalLines, weather, allSchedule, plan, today, desk, pulse],
   );
   // "Brief me": Iris reads today's rundown (or the Vantage briefing in that mode).
-  const briefMe = () => {
-    const text = isVantageMode(mode)
+  const briefText = () =>
+    isVantageMode(mode)
       ? vantage.spoken
       : buildDailyBrief({
           name: displayName,
@@ -271,8 +271,7 @@ export default function App() {
             return g?.isToday ? g.plan.title : undefined;
           })(),
         });
-    voiceOut.speak(text, { force: true });
-  };
+  const briefMe = () => voiceOut.speak(briefText(), { force: true });
 
   // Sunday: plan the week (week-ahead weather under the greeting).
   const isSunday = weekdayOfDay(dayKey(settings.timezone, now)) === "Sun";
@@ -282,6 +281,16 @@ export default function App() {
 
   // Talk to Iris: tap the core ring. Context is rebuilt fresh at each turn.
   const convo = useConversation({
+    // On open: "Good morning, boss. Want to go over the brief, or …?"
+    buildGreeting: () => {
+      const h = localHour(settings.timezone, new Date());
+      const hello = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+      return isVantageMode(mode)
+        ? `${hello}, boss. Want to go over your Vantage Point briefing, or did you have something else in mind?`
+        : `${hello}, boss. Want to go over the brief, or did you have something else in mind?`;
+    },
+    // Her greeting already said hello, so the brief starts with the content.
+    buildBrief: () => briefText().replace(/^Good (morning|afternoon|evening), boss\.\s*/, ""),
     timeZone: settings.timezone,
     today,
     onAddTodo: (title, dueDate) => add(title, dueDate),
@@ -341,6 +350,36 @@ export default function App() {
       />
 
       <main className="mx-auto max-w-[1400px] px-4 py-6 space-y-4">
+  {/* Iris: the centerpiece. Phones: her ring + command bar first.
+      Desktop: status | Iris + command | ECS. */}
+        <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)_340px] xl:items-center" aria-label="Iris">
+          <div className="hidden xl:block space-y-4">{statusPanels}</div>
+          <div className="flex flex-col items-center justify-center gap-4 pt-2 pb-4 xl:py-8">
+            <div className="w-full max-w-[300px] sm:max-w-[380px] xl:max-w-[460px]">
+              <CoreRing
+                lines={coreLines}
+                status={systemStatus}
+                phase={convo.phase}
+                replyTick={convo.replyTick}
+                active={convo.active}
+                waiting={convo.pendingGreeting}
+                onActivate={convo.tap}
+              />
+            </div>
+            <ConversationCaptions convo={convo} googleConnected={connected} />
+            <CommandBar
+              variant="hud"
+              settings={settings}
+              leaveBy={leaveBy}
+              bedtime={bedtime}
+              onAddTodo={add}
+              onLogWorkout={logWorkout}
+              onAddEvent={addLocalEvent}
+              onAddShopping={addShopping}
+            />
+          </div>
+          <div className="hidden xl:block space-y-4">{ecsPanels}</div>
+        </div>
         <TodayCommandCenter
           settings={settings}
           weather={weather}
@@ -371,35 +410,6 @@ export default function App() {
                 <p className="text-sm text-amber-300/90 panel px-4 py-2">{commuteError}</p>
               )}
 
-              {/* Operator console. Phones: ring + command only (status panels come later).
-                  Desktop: status | core + command | ECS. */}
-              <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)_340px]">
-                <div className="hidden xl:block space-y-4">{statusPanels}</div>
-                <div className="flex flex-col items-center justify-center gap-4 py-2 xl:py-10">
-                  <div className="w-full max-w-[200px] sm:max-w-[320px] xl:max-w-[420px]">
-                    <CoreRing
-                      lines={coreLines}
-                      status={systemStatus}
-                      phase={convo.phase}
-                      replyTick={convo.replyTick}
-                      active={convo.active}
-                      onActivate={convo.tap}
-                    />
-                  </div>
-                  <ConversationCaptions convo={convo} googleConnected={connected} />
-                  <CommandBar
-                    variant="hud"
-                    settings={settings}
-                    leaveBy={leaveBy}
-                    bedtime={bedtime}
-                    onAddTodo={add}
-                    onLogWorkout={logWorkout}
-                    onAddEvent={addLocalEvent}
-                    onAddShopping={addShopping}
-                  />
-                </div>
-                <div className="hidden xl:block space-y-4">{ecsPanels}</div>
-              </div>
             </>
           }
           unreadEmails={unread}

@@ -86,6 +86,8 @@ export interface AlfredUserData {
   hub?: unknown;
   /** Server-owned watcher results (see shared/hub.ts WatchResult). */
   watchState?: Record<string, unknown>;
+  /** Lasting facts Iris remembers about E (server-owned; see netlify/functions/_iris.ts). */
+  irisMemory?: { id: string; fact: string; at: string }[];
   /** Bay Area Pulse alert ids already pushed (so each is sent once). */
   pulseSeen?: string[];
   updatedAt: string;

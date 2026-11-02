@@ -1,12 +1,33 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { authHeaders, ensureSession } from "../lib/google";
 import { useSpeechInput } from "./useSpeechInput";
 import { useVoiceOutput, useVoiceSignal } from "./useVoiceOutput";
 import { addDays } from "../../shared/timezone";
 
-export type Turn = { role: "user" | "assistant"; content: string };
+export type Turn = { role: "user" | "assistant"; content: string; /** Read-out of the brief, not a real exchange. */ brief?: boolean };
 /** What the Iris ring shows. */
 export type ConversationPhase = "idle" | "listening" | "thinking" | "speaking";
+
+/** Answers to "go over the brief, or something else?" */
+const WANTS_BRIEF = /\b(brief|briefing|rundown|run ?down|run it|go over|yes|yeah|yep|yup|sure|let'?s do it|let'?s go|go ahead|please)\b/i;
+const NOTHING = /^(no|nope|nah|i'?m good|i'?m straight|nothing|not now|later|all good|never ?mind)\b/i;
+const GREET_KEY = "iris-greet"; // "0" = don't greet on open
+const AWAY_MS = 30 * 60_000; // greet again after 30+ minutes away
+
+export function greetingEnabled(): boolean {
+  try {
+    return localStorage.getItem(GREET_KEY) !== "0";
+  } catch {
+    return true;
+  }
+}
+export function setGreetingEnabled(on: boolean) {
+  try {
+    localStorage.setItem(GREET_KEY, on ? "1" : "0");
+  } catch {
+    /* storage unavailable */
+  }
+}
 
 const YES = /^(yes|yeah|yep|yup|sure|please|save( it)?|do it|ok(ay)?|go ahead)\b/i;
 const GOODBYE = /^(stop|that'?s all|that is all|i'?m good|thanks,? alfred|thank you,? alfred|goodbye|bye( alfred)?|never ?mind)[.!]?$/i;
@@ -34,6 +55,10 @@ export function useConversation(opts: {
   today: string;
   /** Save the finished conversation (e.g. to Memos). */
   onSaveTranscript?: (text: string) => void;
+  /** "Good morning, boss. Want to go over the brief…?" */
+  buildGreeting?: () => string;
+  /** The rundown Iris reads when E says "let's do the brief". */
+  buildBrief?: () => string;
 }) {
   const [active, setActive] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([]);
@@ -44,6 +69,12 @@ export function useConversation(opts: {
   const [offerSave, setOfferSave] = useState(false);
   const offerSaveRef = useRef(offerSave);
   offerSaveRef.current = offerSave;
+  /** Iris has a greeting ready but the browser needs a tap before she can speak. */
+  const [pendingGreeting, setPendingGreeting] = useState(false);
+  const pendingGreetingRef = useRef(pendingGreeting);
+  pendingGreetingRef.current = pendingGreeting;
+  /** She just asked "brief, or something else?" and is waiting for the answer. */
+  const awaitingChoiceRef = useRef(false);
   /** Bumps when a reply arrives (the ring bursts). */
   const [replyTick, setReplyTick] = useState(0);
   const voice = useVoiceOutput();
@@ -69,14 +100,15 @@ export function useConversation(opts: {
       setOfferSave(false);
       setActive(false);
       setTurns([]);
-      voice.speak(save ? "Saved to your memos. Anytime, E." : "Anytime, E.", { force: true });
+      voice.speak(save ? "Saved to your memos. Anytime, boss." : "Anytime, boss.", { force: true });
     },
     [voice],
   );
 
   /** Ending: if we actually talked, Iris offers to save the transcript. */
   const wrapUp = useCallback(() => {
-    if (!turnsRef.current.some((t) => t.role === "assistant") || !optsRef.current.onSaveTranscript) {
+    // Only offer to save when there was a real exchange (not just the brief).
+    if (!turnsRef.current.some((t) => t.role === "assistant" && !t.brief) || !optsRef.current.onSaveTranscript) {
       finish(false);
       return;
     }
@@ -96,6 +128,30 @@ export function useConversation(opts: {
       if (offerSaveRef.current) {
         finish(YES.test(said));
         return;
+      }
+      if (awaitingChoiceRef.current) {
+        awaitingChoiceRef.current = false;
+        const brief = optsRef.current.buildBrief?.();
+        if (brief && WANTS_BRIEF.test(said)) {
+          const text = `${brief} Anything else, boss?`;
+          // Keep the brief in the conversation so follow-up questions have context.
+          setTurns((t) => [...t, { role: "user", content: said, brief: true }, { role: "assistant", content: text, brief: true }]);
+          setReplyTick((n) => n + 1);
+          voice.speak(text, {
+            force: true,
+            onEnd: () => {
+              if (activeRef.current) listenRef.current();
+            },
+          });
+          return;
+        }
+        if (NOTHING.test(said)) {
+          setActive(false);
+          setTurns([]);
+          voice.speak("Alright. I'm here when you need me.", { force: true });
+          return;
+        }
+        // Anything else: a normal conversation starting with what E said.
       }
       if (GOODBYE.test(said)) {
         wrapUp();
@@ -132,10 +188,70 @@ export function useConversation(opts: {
     if (speech.supported) speech.start();
   };
 
+  /** Iris greets E and asks: brief, or something else? Then listens. */
+  const greet = useCallback(
+    (fromTap: boolean) => {
+      const text = optsRef.current.buildGreeting?.();
+      if (!text) return;
+      setPendingGreeting(false);
+      setActive(true);
+      setError(null);
+      awaitingChoiceRef.current = true;
+      let started = false;
+      voice.speak(text, {
+        force: true,
+        onStart: () => {
+          started = true;
+        },
+        onEnd: () => {
+          if (activeRef.current) listenRef.current();
+        },
+      });
+      if (!fromTap) {
+        // Browsers (iPhone especially) block speech until the first tap.
+        // If she couldn't start talking, wait for a tap on the ring instead.
+        setTimeout(() => {
+          if (!started) {
+            voice.stop();
+            awaitingChoiceRef.current = false;
+            setActive(false);
+            setPendingGreeting(true);
+          }
+        }, 1500);
+      }
+    },
+    [voice],
+  );
+
+  // Greet on open, and again when coming back after 30+ minutes away.
+  // (Runs once; greetRef keeps the latest greet without re-arming the timer.)
+  const greetRef = useRef(greet);
+  greetRef.current = greet;
+  useEffect(() => {
+    if (!optsRef.current.buildGreeting || !greetingEnabled()) return;
+    const first = setTimeout(() => {
+      if (!activeRef.current) greetRef.current(false);
+    }, 1200);
+    let hiddenAt = 0;
+    const onVis = () => {
+      if (document.visibilityState === "hidden") hiddenAt = Date.now();
+      else if (hiddenAt && Date.now() - hiddenAt > AWAY_MS && !activeRef.current && greetingEnabled()) greetRef.current(false);
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      clearTimeout(first);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, []);
+
   /** Tap on the ring: start, or interrupt Iris and listen, or stop listening. */
   const tap = useCallback(() => {
     voice.prime(); // iPhone: unlock speech inside the tap
     setError(null);
+    if (!activeRef.current && pendingGreetingRef.current) {
+      greet(true);
+      return;
+    }
     if (!activeRef.current) {
       setActive(true);
       if (speech.supported) speech.start();
@@ -147,7 +263,7 @@ export function useConversation(opts: {
     }
     voice.stop();
     if (speech.supported) speech.start();
-  }, [speech, voice]);
+  }, [speech, voice, greet]);
 
   /** End button: offer to save first (if there's anything to save). */
   const end = useCallback(() => {
@@ -176,6 +292,7 @@ export function useConversation(opts: {
     setHandsFree,
     replyTick,
     offerSave,
+    pendingGreeting,
     saveTranscript: () => finish(true),
     skipSave: () => finish(false),
     tap,

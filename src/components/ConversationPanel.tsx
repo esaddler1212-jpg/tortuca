@@ -9,8 +9,8 @@ export function ConversationCaptions({ convo, googleConnected }: { convo: Conver
   const chip = "inline-flex items-center gap-1 rounded-full border px-3 py-1 text-[11px] font-mono uppercase tracking-wider";
   if (!convo.active) {
     return (
-      <p className="text-center text-[11px] font-mono uppercase tracking-[0.2em] text-alfred-mist" aria-hidden>
-        Tap Iris to talk
+      <p className={`text-center text-[11px] font-mono uppercase tracking-[0.2em] ${convo.pendingGreeting ? "text-alfred-gold" : "text-alfred-mist"}`} aria-hidden>
+        {convo.pendingGreeting ? "Iris has your brief ready · tap her to start" : "Tap Iris to talk"}
       </p>
     );
   }
