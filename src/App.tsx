@@ -9,6 +9,9 @@ import { buildDailyBrief, buildVantageBrief } from "./lib/spokenBrief";
 import { usePlan } from "./hooks/usePlan";
 import { SparkCard } from "./components/SparkCard";
 import { HubPanel } from "./components/HubPanel";
+import { PulsePanel } from "./components/PulsePanel";
+import { usePulse } from "./hooks/usePulse";
+import { pulseSummary } from "../shared/pulse";
 import { useHub } from "./hooks/useHub";
 import { DEFAULT_ROUTINE, gymDayFor } from "../shared/hub";
 import { PlanPanel } from "./components/PlanPanel";
@@ -82,6 +85,7 @@ export default function App() {
   const { effectiveMinutes, loading: commuteLoading, error: commuteError } = useCommute(settings);
   const { logs: fitnessLogs, logWorkout, loadRemote: loadFitness } = useFitness(settings);
   const { hub, update: updateHub } = useHub();
+  const { pulse, error: pulseError } = usePulse(settings.latitude, settings.longitude);
   const { items: shoppingItems, add: addShopping, togglePantry, remove: removeShopping, loadRemote: loadShopping } = useShoppingList();
   const { plan, toggleTask: togglePlanTask, addTask: addPlanTask, removeTask: removePlanTask, setGoals: setPlanGoals, setHandoff, setBudget, toggleSpark, shuffleSpark, noteSpark } = usePlan();
 
@@ -235,8 +239,9 @@ export default function App() {
         events: allSchedule,
         spark: todaySpark(plan, today),
         desk: { review: desk.review.length, working: desk.working.length },
+        pulse: pulse ? pulseSummary(pulse) : undefined,
       }),
-    [displayName, settings.timezone, now, woodhouse, goalLines, weather, allSchedule, plan, today, desk],
+    [displayName, settings.timezone, now, woodhouse, goalLines, weather, allSchedule, plan, today, desk, pulse],
   );
   // "Brief me": Alfred reads today's rundown (or the Vantage briefing in that mode).
   const briefMe = () => {
@@ -253,6 +258,10 @@ export default function App() {
           actions: todayActions,
           events: allSchedule,
           spark: todaySpark(plan, today),
+          pulse:
+            pulse && (pulse.alerts.length || (pulse.air && pulse.air.aqi > 100) || pulse.fires.some((f) => f.miles <= 30))
+              ? pulseSummary(pulse)
+              : undefined,
           gym: (() => {
             const g = gymDayFor(hub.routine ?? DEFAULT_ROUTINE, today);
             return g?.isToday ? g.plan.title : undefined;
@@ -314,6 +323,7 @@ export default function App() {
             <>
               <SparkCard plan={plan} today={today} onToggle={toggleSpark} onShuffle={shuffleSpark} onNote={noteSpark} />
               {isVantageMode(mode) && <VantageBriefingPanel lines={vantage.lines} spoken={vantage.spoken} />}
+              <PulsePanel key={`pulse-${isVantageMode(mode)}`} pulse={pulse} error={pulseError} city={settings.city} defaultOpen={isVantageMode(mode)} />
               {isSunday && weather?.week && <WeekWeatherPanel week={weather.week} city={settings.city} />}
               {showWeeklyReview && <WeeklyReview review={weeklyReview} />}
               <InstallAppBanner />

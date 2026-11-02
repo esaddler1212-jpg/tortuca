@@ -86,5 +86,7 @@ export interface AlfredUserData {
   hub?: unknown;
   /** Server-owned watcher results (see shared/hub.ts WatchResult). */
   watchState?: Record<string, unknown>;
+  /** Bay Area Pulse alert ids already pushed (so each is sent once). */
+  pulseSeen?: string[];
   updatedAt: string;
 }
