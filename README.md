@@ -27,6 +27,10 @@ npx netlify dev   # Woodhouse aggregator + Google OAuth
 Deploy from the **repo root** (default `netlify.toml`). See [WOODHOUSE.md](./WOODHOUSE.md)
 for the Woodhouse integration spec and `.env.example` for environment variables.
 
+**Business Researcher** (IRIS): panel on the main console runs sourced market/ops briefs via
+`POST /api/business-research` (requires `ANTHROPIC_API_KEY` + Google connect). Reports land in
+**Hub → Memos**; Claude-tagged plan tasks have a **Research** chip.
+
 ### Family Purpose
 
 Standalone web app for logging student check-ins, running the mentoring group
