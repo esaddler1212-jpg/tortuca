@@ -114,6 +114,22 @@ export interface CheckIn {
   createdAt: string;
 }
 
+/**
+ * A private note in a student's memory ("responds well to basketball goals").
+ * Lives on your devices and in your backup only; never shared or sent to AI.
+ * Deleted notes keep a tombstone so the deletion syncs across devices.
+ */
+export interface StudentNote {
+  id: string;
+  /** Lowercased, trimmed student name (how the app matches students). */
+  studentKey: string;
+  studentName: string;
+  text: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+}
+
 /** A student on the group's standing roster. */
 export interface GroupMember {
   name: string;

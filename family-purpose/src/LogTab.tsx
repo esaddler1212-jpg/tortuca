@@ -21,6 +21,7 @@ import {
   suggestedPeriod,
 } from "./schedule";
 import ScheduleBanner from "./ScheduleBanner";
+import StudentMemoryCard from "./StudentMemoryCard";
 
 /** Re-renders on the minute so the live bell period stays accurate. */
 function useClock(): Date {
@@ -124,6 +125,9 @@ function CheckInForm({
       clear();
       setShowSuggestions(false);
     };
+
+  /** A student seen before: show their memory (patterns + private notes). */
+  const knownStudent = studentName.trim() ? findStudent(roster, studentName) : undefined;
 
   const alreadyLoggedToday =
     studentName.trim().length > 0 && todayNames.has(normalizeName(studentName));
@@ -247,6 +251,8 @@ function CheckInForm({
           </p>
         )}
       </div>
+
+      {knownStudent && <StudentMemoryCard name={knownStudent.name} />}
 
       <div className="row-2">
         <div className="field">
