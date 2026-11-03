@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Activity, AlertTriangle, Camera, ChevronDown, ChevronUp, Flame, Plane, Waves, Wind, X } from "lucide-react";
+import { Activity, AlertTriangle, Camera, ChevronDown, ChevronUp, ExternalLink, Flame, Globe2, Plane, Waves, Wind, X } from "lucide-react";
 import { pulseSummary, type PulseSnapshot } from "../../shared/pulse";
+import { GODS_EYE_DEFAULT, loadGodsEyeUrl, normalizeGodsEyeUrl, saveGodsEyeUrl } from "../../shared/godsEye";
 
 const AQI_COLOR: Record<string, string> = {
   good: "text-emerald-300",
@@ -27,6 +28,107 @@ interface Props {
   defaultOpen?: boolean;
 }
 
+/**
+ * Link to E's own God's Eye globe. Saved on this device only, since the globe
+ * runs on one machine. IRIS just opens it in a new tab.
+ */
+function GodsEyeLink() {
+  const [url, setUrl] = useState<string | null>(() => loadGodsEyeUrl());
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [bad, setBad] = useState(false);
+
+  const startEdit = () => {
+    setDraft(url ?? GODS_EYE_DEFAULT);
+    setBad(false);
+    setEditing(true);
+  };
+  const save = () => {
+    const next = normalizeGodsEyeUrl(draft);
+    if (!next) {
+      setBad(true);
+      return;
+    }
+    saveGodsEyeUrl(next);
+    setUrl(next);
+    setEditing(false);
+  };
+  const unlink = () => {
+    saveGodsEyeUrl(null);
+    setUrl(null);
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <form
+        className="space-y-1.5 rounded-md border border-alfred-border/60 p-3"
+        onSubmit={(e) => {
+          e.preventDefault();
+          save();
+        }}
+      >
+        <label htmlFor="gods-eye-url" className="hud-label flex items-center gap-1.5">
+          <Globe2 className="h-3.5 w-3.5" aria-hidden /> God's Eye address
+        </label>
+        <input
+          id="gods-eye-url"
+          className="w-full rounded border border-alfred-border/60 bg-transparent px-2 py-1.5 font-mono text-sm"
+          value={draft}
+          onChange={(e) => {
+            setDraft(e.target.value);
+            setBad(false);
+          }}
+          inputMode="url"
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
+          placeholder={GODS_EYE_DEFAULT}
+        />
+        {bad && <p className="text-xs text-amber-300">That doesn't look like a web address. Try localhost:4173.</p>}
+        <p className="text-[11px] text-alfred-mist">Where the globe runs once it's installed, usually {GODS_EYE_DEFAULT.replace("http://", "")}.</p>
+        <div className="flex gap-2">
+          <button type="submit" className="btn-ghost px-3 py-1 text-xs text-alfred-gold">
+            Save
+          </button>
+          <button type="button" className="btn-ghost px-3 py-1 text-xs" onClick={() => setEditing(false)}>
+            Cancel
+          </button>
+          {url && (
+            <button type="button" className="btn-ghost ml-auto px-3 py-1 text-xs text-alfred-mist" onClick={unlink}>
+              Unlink
+            </button>
+          )}
+        </div>
+      </form>
+    );
+  }
+
+  if (!url) {
+    return (
+      <button type="button" className="flex items-center gap-1.5 text-[11px] text-alfred-mist hover:text-alfred-gold" onClick={startEdit}>
+        <Globe2 className="h-3.5 w-3.5" aria-hidden /> Link God's Eye globe
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <a
+        href={url}
+        target="_blank"
+        rel="noreferrer noopener"
+        className="flex flex-1 items-center justify-center gap-2 rounded-md border border-alfred-gold/50 bg-alfred-gold/10 px-3 py-2 font-mono text-xs uppercase tracking-wider text-alfred-gold hover:bg-alfred-gold/20"
+      >
+        <Globe2 className="h-4 w-4" aria-hidden /> Open God's Eye <ExternalLink className="h-3 w-3" aria-hidden />
+      </a>
+      <button type="button" className="btn-ghost px-2 py-2 text-[11px] text-alfred-mist" onClick={startEdit} aria-label="Change God's Eye address">
+        Edit
+      </button>
+    </div>
+  );
+}
+
 /** Bay Area Pulse: alerts, air, fires, quakes, commute cams, flights overhead. */
 export function PulsePanel({ pulse, error, city, defaultOpen = false }: Props) {
   const [open, setOpen] = useState(defaultOpen);
@@ -46,6 +148,12 @@ export function PulsePanel({ pulse, error, city, defaultOpen = false }: Props) {
         </span>
         {open ? <ChevronUp className="h-4 w-4 shrink-0 text-alfred-mist" /> : <ChevronDown className="h-4 w-4 shrink-0 text-alfred-mist" />}
       </button>
+
+      {open && (
+        <div className="mt-4">
+          <GodsEyeLink />
+        </div>
+      )}
 
       {open && pulse && (
         <div className="mt-4 space-y-4">

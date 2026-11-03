@@ -18,6 +18,7 @@ import * as Plan from "../shared/plan.ts";
 import * as Sparks from "../shared/sparks.ts";
 import * as Hub from "../shared/hub.ts";
 import * as Pulse from "../shared/pulse.ts";
+import { normalizeGodsEyeUrl } from "../shared/godsEye.ts";
 import { buildAskContext } from "../src/lib/askContext.ts";
 import * as Ex from "../shared/exercises.ts";
 import { buildFamilyPurposeWoodhouseNode } from "../netlify/functions/_family-purpose-woodhouse.ts";
@@ -200,6 +201,12 @@ const snap = { fetchedAt: "", quakes: qs, alerts: Pulse.parseWeatherAlerts({ fea
 check("pulse: alerts for near quake, fire, red flag, bad air", Pulse.pulseAlerts(snap, new Date("2026-11-02T20:30:00Z"), "2026-11-02").map((a) => a.id), ["q:nc1", "f:2026-CA-1", "w:nws1", "a:2026-11-02"]);
 check("pulse: old quake doesn't alert", Pulse.pulseAlerts({ ...snap, fires: [], alerts: [], air: null }, new Date("2026-11-03T20:30:00Z"), "d").length, 0);
 check("pulse: summary line", Pulse.pulseSummary({ ...snap, air: Pulse.parseAir({ current: { us_aqi: 40 } }) }), "Red Flag Warning · AQI 40 good · Lake Fire 21 mi · M3.4 quake 7 mi");
+check("god's eye: host:port gets http", normalizeGodsEyeUrl("localhost:4173"), "http://localhost:4173");
+check("god's eye: LAN IP", normalizeGodsEyeUrl(" 192.168.1.20:4173 "), "http://192.168.1.20:4173");
+check("god's eye: full https kept", normalizeGodsEyeUrl("https://globe.example.lan/"), "https://globe.example.lan");
+check("god's eye: rejects javascript:", normalizeGodsEyeUrl("javascript:alert(1)"), null);
+check("god's eye: rejects credentials", normalizeGodsEyeUrl("http://user:pw@localhost:4173"), null);
+check("god's eye: empty is null", normalizeGodsEyeUrl("  "), null);
 
 // ── conversation context: Family Purpose details never leave the device
 const ctx = buildAskContext({
