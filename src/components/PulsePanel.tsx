@@ -1,6 +1,9 @@
-import { useState } from "react";
-import { Activity, AlertTriangle, Camera, ChevronDown, ChevronUp, ExternalLink, Flame, Globe2, Plane, Waves, Wind, X } from "lucide-react";
+import { lazy, Suspense, useState, type FormEvent } from "react";
+import { Activity, AlertTriangle, Camera, ChevronDown, ChevronUp, ExternalLink, Flame, Globe2, List, Map as MapIcon, Plane, Satellite, Search, Ship, Waves, Wind, X } from "lucide-react";
 import { pulseSummary, type PulseSnapshot } from "../../shared/pulse";
+import { describePass, nextVisible } from "../../shared/skyText";
+import type { FlightFix } from "../../shared/flight";
+import type { MapLayer } from "./PulseMap";
 import { GODS_EYE_DEFAULT, loadGodsEyeUrl, normalizeGodsEyeUrl, saveGodsEyeUrl } from "../../shared/godsEye";
 
 const AQI_COLOR: Record<string, string> = {
@@ -20,10 +23,80 @@ function ago(iso?: string): string {
   return h < 48 ? `${h}h ago` : `${Math.round(h / 24)}d ago`;
 }
 
+const PulseMap = lazy(() => import("./PulseMap"));
+
+const VIEW_KEY = "iris-pulse-view";
+const LAYER_LABELS: [MapLayer, string][] = [
+  ["planes", "Planes"],
+  ["quakes", "Quakes"],
+  ["fires", "Fires"],
+  ["cams", "Cams"],
+  ["ships", "Ships"],
+];
+
+function loadView(): "list" | "map" {
+  try {
+    return localStorage.getItem(VIEW_KEY) === "map" ? "map" : "list";
+  } catch {
+    return "list";
+  }
+}
+
+type FlightResult = { ok: true; flight: FlightFix; spoken: string } | { ok: false; spoken: string };
+
+/** "Track a flight": live position + landing estimate, shown on the map too. */
+function TrackFlight({ lat, lon, timeZone, onResult }: { lat: number; lon: number; timeZone: string; onResult: (f: FlightFix | null) => void }) {
+  const [q, setQ] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [answer, setAnswer] = useState<string | null>(null);
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!q.trim() || busy) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/flight?${new URLSearchParams({ q: q.trim(), lat: lat.toFixed(4), lon: lon.toFixed(4), tz: timeZone })}`);
+      const data = (await res.json()) as FlightResult;
+      setAnswer(data.spoken);
+      onResult(data.ok ? data.flight : null);
+    } catch {
+      setAnswer("The flight tracker isn't answering right now.");
+      onResult(null);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div>
+      <form className="flex gap-2" onSubmit={submit}>
+        <label htmlFor="track-flight" className="sr-only">
+          Track a flight
+        </label>
+        <input
+          id="track-flight"
+          className="min-w-0 flex-1 rounded border border-alfred-border/60 bg-transparent px-2 py-1.5 font-mono text-sm uppercase placeholder:normal-case"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Track a flight, e.g. UA 123"
+          autoCapitalize="characters"
+          autoCorrect="off"
+          spellCheck={false}
+        />
+        <button type="submit" className="btn-ghost px-3 py-1.5 text-xs" disabled={busy} aria-label="Track flight">
+          <Search className="h-4 w-4" aria-hidden />
+        </button>
+      </form>
+      {(busy || answer) && <p className="mt-1.5 text-xs text-alfred-mist" aria-live="polite">{busy ? "Looking it up…" : answer}</p>}
+    </div>
+  );
+}
+
 interface Props {
   pulse: PulseSnapshot | null;
   error: boolean;
   city: string;
+  lat: number;
+  lon: number;
+  timeZone: string;
   /** Start open (Vantage) or as a one-line strip (workdays). */
   defaultOpen?: boolean;
 }
@@ -130,9 +203,22 @@ function GodsEyeLink() {
 }
 
 /** Bay Area Pulse: alerts, air, fires, quakes, commute cams, flights overhead. */
-export function PulsePanel({ pulse, error, city, defaultOpen = false }: Props) {
+export function PulsePanel({ pulse, error, city, lat, lon, timeZone, defaultOpen = false }: Props) {
   const [open, setOpen] = useState(defaultOpen);
   const [cam, setCam] = useState<string | null>(null);
+  const [view, setView] = useState<"list" | "map">(loadView);
+  const [layers, setLayers] = useState<Record<MapLayer, boolean>>({ planes: true, quakes: true, fires: true, cams: true, ships: true });
+  const [tracked, setTracked] = useState<FlightFix | null>(null);
+  const pickView = (v: "list" | "map") => {
+    setView(v);
+    try {
+      localStorage.setItem(VIEW_KEY, v);
+    } catch {
+      /* fine */
+    }
+  };
+  const iss = pulse ? nextVisible(pulse.iss) : null;
+  const moving = pulse?.ships?.filter((s) => (s.speedKt ?? 0) >= 0.5).length ?? 0;
   const urgent = Boolean(pulse && (pulse.alerts.length || (pulse.air && pulse.air.aqi > 100) || pulse.fires.some((f) => f.miles <= 30)));
 
   return (
@@ -157,6 +243,50 @@ export function PulsePanel({ pulse, error, city, defaultOpen = false }: Props) {
 
       {open && pulse && (
         <div className="mt-4 space-y-4">
+          <div className="flex items-center gap-2" role="group" aria-label="Pulse view">
+            {(
+              [
+                ["list", "List", List],
+                ["map", "Map", MapIcon],
+              ] as const
+            ).map(([v, label, Icon]) => (
+              <button
+                key={v}
+                type="button"
+                aria-pressed={view === v}
+                onClick={() => pickView(v)}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-wider ${
+                  view === v ? "border-alfred-gold bg-alfred-gold/15 text-alfred-gold" : "border-alfred-border/60 text-alfred-mist"
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" aria-hidden /> {label}
+              </button>
+            ))}
+          </div>
+
+          {view === "map" && (
+            <div className="space-y-2">
+              <Suspense fallback={<div className="flex h-[340px] items-center justify-center rounded-md border border-alfred-border/60 text-xs text-alfred-mist">Loading map…</div>}>
+                <PulseMap pulse={pulse} lat={lat} lon={lon} layers={layers} tracked={tracked} onCam={setCam} />
+              </Suspense>
+              <div className="flex flex-wrap gap-1.5" role="group" aria-label="Map layers">
+                {LAYER_LABELS.filter(([k]) => k !== "ships" || pulse.ships !== undefined).map(([k, label]) => (
+                  <button
+                    key={k}
+                    type="button"
+                    aria-pressed={layers[k]}
+                    onClick={() => setLayers((l) => ({ ...l, [k]: !l[k] }))}
+                    className={`rounded-full border px-2.5 py-0.5 text-[11px] ${layers[k] ? "border-cyan-300/60 text-cyan-100" : "border-alfred-border/40 text-alfred-mist/70 line-through"}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <TrackFlight lat={lat} lon={lon} timeZone={timeZone} onResult={setTracked} />
+
           {pulse.alerts.length > 0 && (
             <ul className="space-y-1.5">
               {pulse.alerts.map((a) => (
@@ -193,6 +323,33 @@ export function PulsePanel({ pulse, error, city, defaultOpen = false }: Props) {
                 </>
               ) : (
                 <p className="text-xs text-alfred-mist">No data</p>
+              )}
+            </div>
+            <div className="hud-tile">
+              <p className="flex items-center gap-1 font-mono text-[10px] uppercase text-alfred-mist">
+                <Satellite className="h-3 w-3" aria-hidden /> ISS overhead
+              </p>
+              {pulse.iss === undefined ? (
+                <p className="text-xs text-alfred-mist">No data</p>
+              ) : iss ? (
+                <p className="text-[12px] leading-snug">{describePass(iss, timeZone)}</p>
+              ) : (
+                <p className="text-xs text-alfred-mist">No visible passes in the next 2 days</p>
+              )}
+            </div>
+            <div className="hud-tile">
+              <p className="flex items-center gap-1 font-mono text-[10px] uppercase text-alfred-mist">
+                <Ship className="h-3 w-3" aria-hidden /> Ships in the Bay
+              </p>
+              {pulse.ships === undefined ? (
+                <p className="text-[11px] leading-snug text-alfred-mist">Add a free AISStream key to see ships</p>
+              ) : pulse.ships === null ? (
+                <p className="text-xs text-alfred-mist">No data</p>
+              ) : (
+                <>
+                  <p className="font-mono text-lg">{pulse.ships.length}</p>
+                  <p className="text-[11px] text-alfred-mist">{moving} moving</p>
+                </>
               )}
             </div>
           </div>
@@ -283,7 +440,7 @@ export function PulsePanel({ pulse, error, city, defaultOpen = false }: Props) {
           )}
 
           <p className="text-[10px] text-alfred-mist">
-            Updated {ago(pulse.fetchedAt)} · USGS · NWS · Open-Meteo · NIFC · Caltrans · adsb.lol
+            Updated {ago(pulse.fetchedAt)} · USGS · NWS · Open-Meteo · NIFC · Caltrans · adsb.lol · CelesTrak{pulse.ships ? " · AISStream" : ""}
             {pulse.unavailable.length ? ` · unavailable: ${pulse.unavailable.join(", ")}` : ""}
           </p>
         </div>

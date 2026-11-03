@@ -16,6 +16,7 @@ import { useConversation } from "./hooks/useConversation";
 import { buildAskContext } from "./lib/askContext";
 import { weatherLabel } from "./lib/weather";
 import { pulseSummary } from "../shared/pulse";
+import { issContext } from "../shared/skyText";
 import { useHub } from "./hooks/useHub";
 import { DEFAULT_ROUTINE, gymDayFor } from "../shared/hub";
 import { PlanPanel } from "./components/PlanPanel";
@@ -304,7 +305,15 @@ export default function App() {
         events: allSchedule,
         spark: todaySpark(plan, today),
         desk: { review: desk.review.length, working: desk.working.length },
-        pulse: pulse ? pulseSummary(pulse) : undefined,
+        pulse: pulse
+          ? [
+              pulseSummary(pulse),
+              issContext(pulse.iss, settings.timezone),
+              pulse.ships ? `${pulse.ships.length} ships in the Bay (${pulse.ships.filter((x) => (x.speedKt ?? 0) >= 0.5).length} moving)` : "",
+            ]
+              .filter(Boolean)
+              .join(". ")
+          : undefined,
       }),
     [displayName, settings.timezone, now, woodhouse, goalLines, weather, allSchedule, plan, today, desk, pulse],
   );
@@ -462,7 +471,16 @@ export default function App() {
                 <>
                   <SparkCard plan={plan} today={today} onToggle={toggleSpark} onShuffle={shuffleSpark} onNote={noteSpark} />
                   {isVantageMode(mode) && <VantageBriefingPanel lines={vantage.lines} spoken={vantage.spoken} />}
-                  <PulsePanel key={`pulse-${isVantageMode(mode)}`} pulse={pulse} error={pulseError} city={settings.city} defaultOpen={isVantageMode(mode)} />
+                  <PulsePanel
+                    key={`pulse-${isVantageMode(mode)}`}
+                    pulse={pulse}
+                    error={pulseError}
+                    city={settings.city}
+                    lat={settings.latitude}
+                    lon={settings.longitude}
+                    timeZone={settings.timezone}
+                    defaultOpen={isVantageMode(mode)}
+                  />
                   {isSunday && weather?.week && <WeekWeatherPanel week={weather.week} city={settings.city} />}
                   {showWeeklyReview && <WeeklyReview review={weeklyReview} />}
                   <InstallAppBanner />

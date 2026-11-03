@@ -15,7 +15,7 @@ export const handler: Handler = async (event) => {
     const s = data.settings;
     if (!s?.pushNotificationsEnabled || !pushTargets(data).length) continue;
     if (!Number.isFinite(s.latitude) || !Number.isFinite(s.longitude)) continue;
-    const snapshot = await buildPulse(s.latitude, s.longitude, { cams: false, flights: false });
+    const snapshot = await buildPulse(s.latitude, s.longitude, { cams: false, flights: false, sky: false, ships: false });
     const seen = new Set(data.pulseSeen ?? []);
     const fresh = pulseAlerts(snapshot, new Date(), dayKey(s.timezone)).filter((a) => !seen.has(a.id));
     if (!fresh.length) continue;

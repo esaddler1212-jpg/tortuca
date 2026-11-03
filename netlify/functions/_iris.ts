@@ -17,6 +17,7 @@ You are speaking out loud through a phone or computer speaker, in a back-and-for
 - Never ask for or repeat students' names or personal details from Family Purpose; refer to "a student".
 - For news, scores, prices, store hours, events, people, or anything current you don't already know, use web_search; use web_fetch to read a specific page E names. Then answer in a sentence or two, naming the source out loud ("per KQED"), never reading URLs. Don't search for things in the "Right now" notes.
 - When E tells you something lasting about himself, his work or his preferences (routines, people by role, how he likes things), or says "remember", call remember with one short fact in third person ("E meets the $BAY sponsor every other Thursday"). When he says to forget something, call forget. Use what you remember naturally; don't recite the list. Never remember students' names or details, passwords, or account or card numbers.
+- When E asks where a flight is, when it lands, or how high it is ("where's UA 123?"), call track_flight with the flight number and answer from its result in a sentence or two. For ISS or satellite sightings, use the "Right now" notes.
 - You can't send email, change the calendar or spend money; say so and offer to add it as a to-do instead.
 Latency-sensitive; begin your visible answer immediately.`;
 
@@ -32,6 +33,21 @@ export const ADD_TODO = {
       due: { type: "string", enum: ["today", "tomorrow", "none"], description: "When it's due." },
     },
     required: ["title", "due"],
+    additionalProperties: false,
+  },
+};
+
+export const TRACK_FLIGHT = {
+  name: "track_flight",
+  description:
+    "Live position of a flight from public ADS-B data: altitude, speed, distance from E, route and estimated landing time. Use when E asks where a flight is or when it lands.",
+  strict: true,
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      flight: { type: "string", description: "Flight number as E said it, e.g. 'UA 123', 'Southwest 2201', or a tail number like 'N123AB'." },
+    },
+    required: ["flight"],
     additionalProperties: false,
   },
 };
@@ -121,6 +137,7 @@ export async function runIris(
   turns: IrisTurn[],
   context: string,
   memory: string[] = [],
+  tools: { trackFlight?: (flight: string) => Promise<string> } = {},
 ): Promise<{ reply: string; todos: IrisTodo[]; remember: string[]; forget: string[]; searched: boolean; refused: boolean; planet: string | null }> {
   const messages: Anthropic.Beta.BetaMessageParam[] = turns.map((t) => ({ role: t.role, content: t.content }));
   const texts: string[] = [];
@@ -129,7 +146,7 @@ export async function runIris(
   const forget: string[] = [];
   let searched = false;
   let planet: string | null = null;
-  for (let hop = 0; hop < 3; hop++) {
+  for (let hop = 0; hop < 4; hop++) {
     const response = await client.beta.messages.create({
       model: MODEL,
       max_tokens: 2048,
@@ -141,7 +158,7 @@ export async function runIris(
         { type: "text", text: `Right now:\n${context.slice(0, 8000)}` },
         ...(memory.length ? [{ type: "text" as const, text: `What you remember about E:\n${memory.map((m) => `- ${m}`).join("\n")}` }] : []),
       ],
-      tools: [ADD_TODO, OPEN_PLANET, ...MEMORY_TOOLS, ...WEB_TOOLS],
+      tools: [ADD_TODO, OPEN_PLANET, ...(tools.trackFlight ? [TRACK_FLIGHT] : []), ...MEMORY_TOOLS, ...WEB_TOOLS],
       messages,
     });
     if (response.stop_reason === "refusal") return { reply: "", todos: [], remember: [], forget: [], searched, refused: true, planet: null };
@@ -163,6 +180,27 @@ export async function runIris(
         const p = String((b.input as { planet?: unknown }).planet ?? "").trim();
         if (SOLAR_PLANET_IDS.includes(p as (typeof SOLAR_PLANET_IDS)[number])) planet = p;
       }
+    }
+    const lookups = response.content.filter((b) => b.type === "tool_use" && b.name === "track_flight");
+    if (response.stop_reason === "tool_use" && lookups.length && tools.trackFlight) {
+      // Iris needs the flight data to answer: run it and hand the results back.
+      // Every tool call in the turn gets a result (the app runs the others).
+      messages.push({ role: "assistant", content: response.content as Anthropic.Beta.BetaContentBlockParam[] });
+      const results: Anthropic.Beta.BetaToolResultBlockParam[] = [];
+      for (const b of response.content) {
+        if (b.type !== "tool_use") continue;
+        let content = "Done.";
+        if (b.name === "track_flight") {
+          try {
+            content = await tools.trackFlight(String((b.input as { flight?: unknown }).flight ?? ""));
+          } catch {
+            content = "The flight tracker isn't answering right now.";
+          }
+        }
+        results.push({ type: "tool_result", tool_use_id: b.id, content });
+      }
+      messages.push({ role: "user", content: results });
+      continue;
     }
     if (response.stop_reason !== "pause_turn") break;
     // Long search: hand the partial turn back so Claude picks up where it left off.
