@@ -25,6 +25,7 @@ ready to go when we turn it on.
 | later | **Graphiti** (full) | Upgrade Iris's memory-lite to a knowledge graph of people, projects and dates (needs Neo4j/FalkorDB) | ~1–2 GB |
 | later | **OpenMAIC** | North Star lesson builder (you build lessons; students don't log in) | ~1 GB + Postgres |
 | later | **Paperclip** | Agents that work Claude-ready tasks around the clock (costs Claude credits) | ~1–2 GB + Postgres |
+| later | **God's Eye View** | Full 3D live-data globe (flights, ships, quakes, fires). Private only, over a VPN. Setup playbook: `.claude/skills/gods-eye-view/SKILL.md` | ~1–2 GB |
 
 **Total (first four):** about 5–6 GB in use, so rent **8 GB of memory** for headroom. Adding the "later" apps means moving up to a 16 GB server.
 
