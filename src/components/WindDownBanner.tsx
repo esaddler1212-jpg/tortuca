@@ -1,14 +1,15 @@
-import { format } from "date-fns";
+import { clockTime } from "../../shared/timezone";
 import { Moon, X } from "lucide-react";
 import { useState } from "react";
 import type { BedtimePlan } from "../lib/bedtime";
 import { isPastLightsOut } from "../lib/bedtime";
 
 interface Props {
+  timeZone: string;
   bedtime: BedtimePlan;
 }
 
-export function WindDownBanner({ bedtime }: Props) {
+export function WindDownBanner({ bedtime, timeZone }: Props) {
   const [dismissed, setDismissed] = useState(false);
   const now = new Date();
   const pastLights = isPastLightsOut(bedtime, now);
@@ -28,8 +29,8 @@ export function WindDownBanner({ bedtime }: Props) {
         </p>
         <p className="text-xs text-alfred-mist mt-1">
           {pastLights
-            ? `Target was ${format(bedtime.lightsOut, "h:mm a")} — rest when you can.`
-            : `Lights out ${format(bedtime.lightsOut, "h:mm a")} · wake ${format(bedtime.wakeUp, "h:mm a")}`}
+            ? `Target was ${clockTime(bedtime.lightsOut, timeZone)} — rest when you can.`
+            : `Lights out ${clockTime(bedtime.lightsOut, timeZone)} · wake ${clockTime(bedtime.wakeUp, timeZone)}`}
         </p>
         <p className="text-xs text-alfred-mist/70 mt-0.5">{bedtime.reason}</p>
       </div>

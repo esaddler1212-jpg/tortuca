@@ -11,7 +11,7 @@ import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { computeSuggestedBedtime, nextWakeDay } from "../shared/bedtime.ts";
 import { computeServerLeaveBy } from "../shared/leaveByLite.ts";
-import { addDays, localHour, weekdayOfDay, zonedDateTime } from "../shared/timezone.ts";
+import { addDays, clockTime, localHour, weekdayOfDay, zonedDateTime } from "../shared/timezone.ts";
 import { DEFAULT_SETTINGS } from "../src/types.ts";
 import { applyDayMode, dayMode } from "../shared/dayMode.ts";
 import * as Plan from "../shared/plan.ts";
@@ -434,6 +434,9 @@ check(
   check("iris sees: gym week", IC.gymContext({ workoutsThisWeek: 1, target: 3, loggedToday: false, next: { title: "Legs", day: "Thu", isToday: false } }), "Gym: 1 of 3 workouts this week. Next session: Legs on Thu.");
   check("iris sees: shopping list (not pantry)", IC.shoppingContext([{ name: "Chicken", inPantry: false }, { name: "Rice", inPantry: true }, { name: "Spinach", inPantry: false }]), "Shopping list (2): Chicken, Spinach.");
 }
+
+// Times on screen use the IRIS time zone, not the device's (iMac, travel).
+check("clock: event and leave-by times in IRIS time zone", [clockTime("2026-11-04T19:00:00Z", "America/Los_Angeles"), clockTime(new Date("2026-11-04T15:20:00Z"), "America/Los_Angeles"), clockTime("bad", TZ)], ["11:00 AM", "7:20 AM", ""]);
 
 if (failures) {
   console.error(`\n${failures} check(s) failed`);

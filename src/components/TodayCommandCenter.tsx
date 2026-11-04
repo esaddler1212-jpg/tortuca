@@ -1,10 +1,10 @@
+import { clockTime } from "../../shared/timezone";
 import { useMemo, useState, type ReactNode } from "react";
 import { dayKey, localHour } from "../../shared/timezone";
 import { useDailyChecks } from "../hooks/useDailyChecks";
 import { PromptButton } from "./PromptButton";
 import { promptForEvent, promptForTask, promptForTodo } from "../lib/promptGenerator";
 import type { PlanTask, YearGoal } from "../../shared/planData";
-import { format, parseISO } from "date-fns";
 import type { CalendarEvent } from "../types";
 import type { EmailMessage } from "../types";
 import type { UserSettings } from "../types";
@@ -54,6 +54,8 @@ interface Props {
   displayName?: string;
   /** Rendered directly under the greeting (alerts, command bar, console). */
   afterGreeting?: ReactNode;
+  /** Rendered after Do today and the timeline (spark, weekly review, install tip). */
+  afterLists?: ReactNode;
   /** "Workday", "Weekend", "Off duty after 7 PM"… */
   /** When true, hide Woodhouse / markets / fitness — those live on other planets. */
   moduleOnly?: boolean;
@@ -109,6 +111,7 @@ export function TodayCommandCenter({
   eveningMode,
   displayName,
   afterGreeting,
+  afterLists,
   modeLabel,
   onBriefMe,
   briefSpeaking = false,
@@ -209,10 +212,10 @@ export function TodayCommandCenter({
               <p className="text-alfred-mist mt-2 flex items-center gap-2 text-sm">
                 <CloudSun className="h-4 w-4 text-alfred-gold shrink-0" />
                 {Math.round(weather.temperature)}° · {weatherLabel(weather.weatherCode)} · Sunset{" "}
-                {format(parseISO(weather.sunset), "h:mm a")} · {settings.city}
+                {clockTime(weather.sunset, settings.timezone)} · {settings.city}
               </p>
             )}
-            <blockquote className="mt-4 border-l-2 border-cyan-400/50 pl-4 max-w-xl">
+            <blockquote className="mt-4 hidden border-l-2 border-cyan-400/50 pl-4 max-w-xl sm:block">
               <p className="text-sm text-alfred-cream/90 leading-relaxed flex gap-2 font-mono">
                 <Quote className="h-4 w-4 text-alfred-gold/70 shrink-0 mt-0.5" aria-hidden />
                 <span>&ldquo;{dailyQuote.text}&rdquo;</span>
@@ -226,7 +229,7 @@ export function TodayCommandCenter({
                 <Clock className="h-3.5 w-3.5" /> Departure window
               </p>
               <p className="font-mono text-4xl font-semibold text-alfred-cream mt-1 hud-glow-text">
-                {format(leaveBy.leaveBy, "h:mm a")}
+                {clockTime(leaveBy.leaveBy, settings.timezone)}
               </p>
               <p className="text-sm text-alfred-mist mt-1">
                 → {leaveBy.destination}
@@ -235,7 +238,7 @@ export function TodayCommandCenter({
                 <p className="text-xs text-alfred-gold/90 mt-1">{leaveBy.scheduleLabel}</p>
               )}
               <p className="text-xs text-alfred-mist/80">
-                Arrive {format(leaveBy.arriveBy, "h:mm a")} ({leaveBy.reason}) · {leaveBy.commuteMinutes}
+                Arrive {clockTime(leaveBy.arriveBy, settings.timezone)} ({leaveBy.reason}) · {leaveBy.commuteMinutes}
                 min drive + {leaveBy.bufferMinutes} min buffer
                 {leaveBy.dismissal ? ` · ${leaveBy.dismissal}` : ""}
               </p>
@@ -247,7 +250,7 @@ export function TodayCommandCenter({
             </div>
           )}
           {!leaveBy && !eveningMode && isWindDownTime(bedtime) && (
-            <BedtimeCard bedtime={bedtime} />
+            <BedtimeCard bedtime={bedtime} timeZone={settings.timezone} />
           )}
           {!leaveBy && eveningMode && (tomorrowLeaveBy || eveningWrap.bedtime) && (
             <div className="flex flex-col sm:flex-row gap-3 shrink-0">
@@ -257,7 +260,7 @@ export function TodayCommandCenter({
                     <Clock className="h-3.5 w-3.5" /> Tomorrow
                   </p>
                   <p className="font-display text-2xl font-semibold text-alfred-cream mt-1">
-                    Leave by {format(tomorrowLeaveBy.leaveBy, "h:mm a")}
+                    Leave by {clockTime(tomorrowLeaveBy.leaveBy, settings.timezone)}
                   </p>
                   <p className="text-xs text-alfred-mist/80 mt-1">
                     {tomorrowLeaveBy.scheduleLabel ?? tomorrowLeaveBy.reason}
@@ -266,7 +269,7 @@ export function TodayCommandCenter({
                 </div>
               )}
               {eveningWrap.bedtime && (
-                <BedtimeCard bedtime={eveningWrap.bedtime} />
+                <BedtimeCard bedtime={eveningWrap.bedtime} timeZone={settings.timezone} />
               )}
             </div>
           )}
@@ -330,7 +333,7 @@ export function TodayCommandCenter({
             )}
             {eveningWrap.bedtime && (
               <Chip
-                label={`Lights out ${format(eveningWrap.bedtime.lightsOut, "h:mm a")}`}
+                label={`Lights out ${clockTime(eveningWrap.bedtime.lightsOut, settings.timezone)}`}
                 alert={isPastLightsOut(eveningWrap.bedtime)}
               />
             )}
@@ -350,7 +353,7 @@ export function TodayCommandCenter({
                 </span>
               )}
             </h3>
-            <ul className="space-y-2 max-h-80 overflow-y-auto">
+            <ul className="space-y-2 lg:max-h-80 lg:overflow-y-auto">
               {openActions.length === 0 && (
                 <li className="text-sm text-alfred-mist">
                   {doneCount ? "All done for today. Nice work." : "All clear. Nothing queued."}
@@ -359,7 +362,7 @@ export function TodayCommandCenter({
               {openActions.map((a, i) => (
                 <li
                   key={a.id}
-                  className={`flex items-start gap-3 rounded-lg border px-3 py-2 text-sm ${
+                  className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 text-sm ${
                     i === 0
                       ? "border-alfred-gold/60 bg-alfred-gold/10 shadow-hud"
                       : a.urgent
@@ -367,12 +370,15 @@ export function TodayCommandCenter({
                         : "border-alfred-border/60"
                   }`}
                 >
+                  {/* 24 pt box you see, 44 pt area you tap */}
                   <button
                     type="button"
-                    className="mt-0.5 h-6 w-6 shrink-0 rounded border border-alfred-border hover:border-alfred-gold hover:bg-alfred-gold/10"
+                    className="group -m-2.5 flex h-11 w-11 shrink-0 items-center justify-center"
                     onClick={() => completeAction(a)}
                     aria-label={`Cross off: ${a.title}`}
-                  />
+                  >
+                    <span className="h-6 w-6 rounded border border-alfred-border group-hover:border-alfred-gold group-hover:bg-alfred-gold/10 group-active:bg-alfred-gold/25" />
+                  </button>
                   <div className="flex-1 min-w-0">
                     {i === 0 && <p className="hud-label !text-[10px] mb-0.5">Up next</p>}
                     <p>{a.title}</p>
@@ -396,12 +402,14 @@ export function TodayCommandCenter({
                     <li key={d.id} className="flex items-start gap-3 rounded-lg border border-alfred-border/30 px-3 py-1.5 text-sm opacity-70">
                       <button
                         type="button"
-                        className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded border border-alfred-gold/60 bg-alfred-gold/20 text-alfred-gold"
+                        className="-m-2.5 flex h-11 w-11 shrink-0 items-center justify-center"
                         onClick={d.undo}
                         aria-label={`Undo: ${d.title}`}
                         title="Tap to undo"
                       >
-                        <Check className="h-4 w-4" />
+                        <span className="flex h-6 w-6 items-center justify-center rounded border border-alfred-gold/60 bg-alfred-gold/20 text-alfred-gold">
+                          <Check className="h-4 w-4" />
+                        </span>
                       </button>
                       <div className="flex-1 min-w-0">
                         <p className="line-through decoration-alfred-gold/70">{d.title}</p>
@@ -428,7 +436,7 @@ export function TodayCommandCenter({
             <h3 className="font-display text-lg text-alfred-gold mb-3 flex items-center gap-2">
               <Calendar className="h-4 w-4" /> Today&apos;s timeline
             </h3>
-            <ul className="space-y-2 max-h-80 overflow-y-auto">
+            <ul className="space-y-2 lg:max-h-80 lg:overflow-y-auto">
               {todayTimeline.length === 0 && (
                 <li className="text-sm text-alfred-mist">Nothing else on the calendar today.</li>
               )}
@@ -438,7 +446,7 @@ export function TodayCommandCenter({
                   className="flex gap-3 rounded-lg border border-alfred-border/60 px-3 py-2 bg-alfred-ink/30"
                 >
                   <span className="text-xs text-alfred-gold w-16 shrink-0 pt-0.5">
-                    {format(parseISO(ev.start), "h:mm a")}
+                    {clockTime(ev.start, settings.timezone)}
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">{ev.title}</p>
@@ -571,11 +579,13 @@ export function TodayCommandCenter({
           )}
         </div>
       </div>
+
+      {afterLists}
     </div>
   );
 }
 
-function BedtimeCard({ bedtime }: { bedtime: BedtimePlan }) {
+function BedtimeCard({ bedtime, timeZone }: { bedtime: BedtimePlan; timeZone: string }) {
   const now = new Date();
   const pastLights = isPastLightsOut(bedtime, now);
   const windingDown = isWindDownTime(bedtime, now) && !pastLights;
@@ -594,10 +604,10 @@ function BedtimeCard({ bedtime }: { bedtime: BedtimePlan }) {
         <Moon className="h-3.5 w-3.5" /> Sleep protocol
       </p>
       <p className="font-mono text-2xl font-semibold text-alfred-cream mt-1 hud-glow-text">
-        {format(bedtime.lightsOut, "h:mm a")}
+        {clockTime(bedtime.lightsOut, timeZone)}
       </p>
       <p className="text-xs text-alfred-mist/80 mt-1">
-        Wind down {format(bedtime.windDownStart, "h:mm a")} · Wake {format(bedtime.wakeUp, "h:mm a")}
+        Wind down {clockTime(bedtime.windDownStart, timeZone)} · Wake {clockTime(bedtime.wakeUp, timeZone)}
       </p>
       <p className="text-xs text-alfred-mist/70 mt-1">{bedtime.reason}</p>
       {bedtime.earlyWake && (
@@ -619,7 +629,7 @@ function Chip({ label, alert, onClick }: { label: string; alert?: boolean; onCli
   }`;
   if (!onClick) return <span className={cls}>{label}</span>;
   return (
-    <button type="button" onClick={onClick} className={`${cls} min-h-[32px]`}>
+    <button type="button" onClick={onClick} className={`${cls} min-h-[36px]`}>
       {label} ›
     </button>
   );
