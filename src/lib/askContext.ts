@@ -22,6 +22,8 @@ export function buildAskContext(opts: {
   desk?: { review: number; working: number };
   channels?: string | null;
   solarPlanets?: string | null;
+  /** Inbox headlines, memos, money, gym, shopping (see shared/irisContext.ts). */
+  extras?: string[];
 }): string {
   const when = new Intl.DateTimeFormat("en-US", {
     timeZone: opts.timeZone,
@@ -59,6 +61,7 @@ export function buildAskContext(opts: {
     opts.desk && opts.desk.review + opts.desk.working ? `Agent desk: ${opts.desk.review} need E's OK, ${opts.desk.working} with Claude.` : "",
     opts.channels ? opts.channels : "",
     opts.solarPlanets ? `IRIS modules (open with open_planet): ${opts.solarPlanets}.` : "",
+    ...(opts.extras ?? []),
     opts.pulse ? `Bay Area: ${opts.pulse}.` : "",
     opts.spark ? `Today's creative spark: ${opts.spark.mindset} Prompt: ${opts.spark.prompt}` : "",
     opts.goals?.length ? `Year goals: ${opts.goals.slice(0, 6).join("; ")}.` : "",

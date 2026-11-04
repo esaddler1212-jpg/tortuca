@@ -21,6 +21,7 @@ import * as Usage from "../shared/irisUsage.ts";
 import { matchPlanetFromSpeech, HUD_TABS, HUD_MORE } from "../shared/solarPlanets.ts";
 import { hudGauges } from "../shared/hudGauges.ts";
 import { commuteMinutesFor, inCommuteWindow } from "../shared/commute.ts";
+import * as IC from "../shared/irisContext.ts";
 import * as Pulse from "../shared/pulse.ts";
 import { normalizeGodsEyeUrl } from "../shared/godsEye.ts";
 import * as Sky from "../shared/sky.ts";
@@ -408,6 +409,30 @@ check(
   check("commute: live off → usual minutes", commuteMinutesFor({ ...cs, useLiveCommute: false }, live, at), 35);
   const lb = computeServerLeaveBy({ ...settings, timezone: "America/Los_Angeles", schoolStartTime: "08:00", arriveBufferMinutes: 5, commuteMinutes: 35 } as never, new Date("2026-11-04T15:00:00Z"), 48);
   check("commute: server leave-by uses live minutes", lb && new Date(lb.leaveBy).toISOString(), "2026-11-04T15:07:00.000Z");
+}
+
+// ── What Iris can see: inbox, memos, money, gym, shopping (privacy first)
+{
+  const mail = [
+    { from: "Jordan Lee <jordan@sponsor.com>", subject: "Sponsor deck feedback", date: "2026-11-04T17:00:00Z", unread: true },
+    { from: '"Ms. Rivera" <rivera@vallejo.k12.ca.us>', subject: "Field trip forms", date: "2026-11-04T16:00:00Z", unread: true },
+    { from: "Shopify <no-reply@shopify.com>", subject: "Easy Supply order #1042", date: "2026-11-04T15:00:00Z", unread: false },
+    { from: "Dana Brooks <dana@gmail.com>", subject: "Question about my son's grades", date: "2026-11-04T14:00:00Z", unread: true },
+    { from: "Coach T <t@gmail.com>", subject: "Practice moved", date: "2026-11-04T13:00:00Z", unread: false },
+  ];
+  const inbox = IC.inboxContext(mail, "America/Los_Angeles", { schoolNames: ["Coach T"] });
+  check("iris sees: inbox senders + subjects, unread first", inbox.includes('[unread] Jordan Lee: "Sponsor deck feedback"') && inbox.includes('Shopify: "Easy Supply order #1042"'), true);
+  check("iris sees: school/family emails counted, not named", [inbox.includes("Rivera"), inbox.includes("Field trip"), inbox.includes("Dana"), inbox.includes("son's"), inbox.includes("Coach T"), inbox.includes("Plus 3 school or family emails (details withheld)")], [false, false, false, false, false, true]);
+  check("iris sees: never an email address", /@/.test(inbox), false);
+  const memos = IC.memosContext([
+    { at: "2026-11-04T18:00:00Z", text: "Conversation with Iris\nYou: hi" },
+    { at: "2026-11-04T17:00:00Z", text: "Idea: $BAY episode in Oakland at the lake" },
+    { at: "2026-11-03T17:00:00Z", text: "Call the student's parent about attendance" },
+  ], "America/Los_Angeles");
+  check("iris sees: memos, skips chat transcripts, withholds school notes", [memos.includes("$BAY episode"), memos.includes("Conversation"), memos.includes("attendance"), memos.includes("1 school-related memo")], [true, false, false, true]);
+  check("iris sees: money", IC.moneyContext({ income: 1250, spent: 410.5, net: 839.5, ecsRevenue: 900, topSpend: [["Food", 220], ["Gas", 120]] }, "November", 2000), "Money (November, from the Money tab): in $1,250, out $411, net $840. ECS revenue $900 of $2,000 goal. Top spending: Food $220, Gas $120.");
+  check("iris sees: gym week", IC.gymContext({ workoutsThisWeek: 1, target: 3, loggedToday: false, next: { title: "Legs", day: "Thu", isToday: false } }), "Gym: 1 of 3 workouts this week. Next session: Legs on Thu.");
+  check("iris sees: shopping list (not pantry)", IC.shoppingContext([{ name: "Chicken", inPantry: false }, { name: "Rice", inPantry: true }, { name: "Spinach", inPantry: false }]), "Shopping list (2): Chicken, Spinach.");
 }
 
 if (failures) {

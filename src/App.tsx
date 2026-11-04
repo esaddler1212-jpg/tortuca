@@ -18,8 +18,9 @@ import { buildAskContext } from "./lib/askContext";
 import { weatherLabel } from "./lib/weather";
 import { pulseSummary } from "../shared/pulse";
 import { issContext } from "../shared/skyText";
+import { gymContext, inboxContext, memosContext, moneyContext, shoppingContext } from "../shared/irisContext";
 import { useHub } from "./hooks/useHub";
-import { DEFAULT_ROUTINE, gymDayFor } from "../shared/hub";
+import { DEFAULT_ROUTINE, gymDayFor, moneyMonth } from "../shared/hub";
 import { PlanPanel } from "./components/PlanPanel";
 import { BusinessResearcherPanel } from "./components/BusinessResearcherPanel";
 import { ChannelsPanel } from "./components/ChannelsPanel";
@@ -457,11 +458,41 @@ export default function App() {
                         actions: todayActions,
                         events: allSchedule,
                         spark: todaySpark(plan, today),
-                        pulse: pulse ? pulseSummary(pulse) : undefined,
+                        pulse: pulse
+                          ? [
+                              pulseSummary(pulse),
+                              issContext(pulse.iss, settings.timezone),
+                              pulse.ships ? `${pulse.ships.length} ships in the Bay (${pulse.ships.filter((x) => (x.speedKt ?? 0) >= 0.5).length} moving)` : "",
+                            ]
+                              .filter(Boolean)
+                              .join(". ")
+                          : undefined,
                         goals: goalLines,
                         desk: { review: desk.review.length, working: desk.working.length },
                         channels: channelsSummary(channelAgent.channels),
                         solarPlanets: solarPlanetContextForIris(),
+                        extras: (() => {
+                          const tz = settings.timezone;
+                          const schoolNames = [settings.schoolName].filter(Boolean) as string[];
+                          const month = today.slice(0, 7);
+                          const gym = gymDayFor(hub.routine ?? DEFAULT_ROUTINE, today);
+                          return [
+                            connected ? inboxContext(messages, tz, { schoolNames }) : "",
+                            memosContext(hub.memos, tz, { schoolNames }),
+                            moneyContext(
+                              moneyMonth(hub.money, month),
+                              new Date(`${month}-15T12:00:00Z`).toLocaleDateString("en-US", { month: "long", timeZone: "UTC" }),
+                              hub.revenueGoal,
+                            ),
+                            gymContext({
+                              workoutsThisWeek: Object.values(fitnessStatus.weekCounts).reduce((a, b) => a + b, 0),
+                              target: 3,
+                              loggedToday: Boolean(fitnessStatus.loggedToday),
+                              next: gym ? { title: gym.plan.title, day: gym.plan.weekday, isToday: gym.isToday } : null,
+                            }),
+                            shoppingContext(shoppingItems),
+                          ].filter(Boolean);
+                        })(),
                       }),
     onOpenPlanet: focusPlanet,
   });
