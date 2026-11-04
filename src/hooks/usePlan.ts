@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { EMPTY_PLAN, type AiBudget, type HandoffStatus, type PlanState, type SparkEntry } from "../../shared/plan";
 import { YEAR_GOALS, type PlanTask, type YearGoal } from "../../shared/planData";
 import { fetchUserData, saveUserDataRemote } from "../lib/userData";
+import { onRemoteData } from "../lib/remoteSync";
 import { loadJson, saveJson } from "../lib/storage";
 
 const PLAN_KEY = "alfred-plan-v1";
@@ -31,6 +32,22 @@ export function usePlan() {
   const [plan, setPlan] = useState<PlanState>(initialPlan);
   const loadedRemote = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fromRemote = useRef(false);
+  const latest = useRef(plan);
+  latest.current = plan;
+
+  // Another device changed it: take the newer copy (unless an edit here is about to save).
+  useEffect(
+    () =>
+      onRemoteData((data) => {
+        const remote = data.plan as PlanState | undefined;
+        if (!remote || timer.current || !(remote.updatedAt > latest.current.updatedAt)) return;
+        fromRemote.current = true;
+        setPlan(normalize(remote));
+      }),
+     
+    [],
+  );
 
   // Pull the synced copy once; keep whichever is newer.
   useEffect(() => {
@@ -51,8 +68,13 @@ export function usePlan() {
   useEffect(() => {
     saveJson(PLAN_KEY, plan);
     if (!loadedRemote.current) return;
+    if (fromRemote.current) {
+      fromRemote.current = false;
+      return;
+    }
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => {
+      timer.current = null;
       void saveUserDataRemote({ plan: plan as never }).catch(() => undefined);
     }, 1500);
     return () => {

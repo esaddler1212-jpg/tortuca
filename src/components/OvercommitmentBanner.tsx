@@ -34,7 +34,7 @@ export function OvercommitmentBanner({ warning }: Props) {
       </div>
       <button
         type="button"
-        className="btn-ghost p-1 shrink-0"
+        className="btn-ghost flex h-11 w-11 shrink-0 items-center justify-center"
         onClick={() => setDismissed(true)}
         aria-label="Dismiss"
       >

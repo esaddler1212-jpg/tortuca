@@ -26,12 +26,12 @@ const ago = (iso?: string) => {
 
 /** A marker drawn as a small glyph (no image files to load). */
 function glyph(text: string, cls: string, rotate?: number, size = 26) {
-  const turn = rotate !== undefined ? ` style="transform:rotate(${Math.round(rotate)}deg)"` : "";
+  const hit = Math.max(size, 40);
   return L.divIcon({
     className: "pulse-pin",
-    html: `<span class="pulse-pin-glyph ${cls}"${turn}>${text}</span>`,
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
+    html: `<span class="pulse-pin-hit"><span class="pulse-pin-glyph ${cls}" style="width:${size}px;height:${size}px${rotate !== undefined ? `;transform:rotate(${Math.round(rotate)}deg)` : ""}">${text}</span></span>`,
+    iconSize: [hit, hit],
+    iconAnchor: [hit / 2, hit / 2],
     popupAnchor: [0, -size / 2],
   });
 }

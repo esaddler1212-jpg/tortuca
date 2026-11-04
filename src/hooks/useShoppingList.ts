@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ShoppingItem } from "../types";
 import { loadJson, saveJson } from "../lib/storage";
 import { saveUserDataRemote } from "../lib/userData";
@@ -10,8 +10,15 @@ export function useShoppingList() {
     loadJson<ShoppingItem[]>(SHOPPING_KEY, []),
   );
 
+  // Push only real edits made here: not what we just loaded on open, and not
+  // a copy that came from another device (that would overwrite newer data).
+  const skipPush = useRef(true);
   useEffect(() => {
     saveJson(SHOPPING_KEY, items);
+    if (skipPush.current) {
+      skipPush.current = false;
+      return;
+    }
     const timer = setTimeout(() => {
       void saveUserDataRemote({ shoppingList: items });
     }, 600);
@@ -56,7 +63,11 @@ export function useShoppingList() {
   }, []);
 
   const loadRemote = useCallback((remote: ShoppingItem[]) => {
-    if (remote.length > 0) setItems(remote);
+    setItems((prev) => {
+      if (JSON.stringify(prev) === JSON.stringify(remote)) return prev;
+      skipPush.current = true;
+      return remote;
+    });
   }, []);
 
   return { items, add, togglePantry, remove, clearPurchased, loadRemote };

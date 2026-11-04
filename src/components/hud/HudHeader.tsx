@@ -44,7 +44,7 @@ export function HudHeader({ timeZone, status, alerts, operator, focusChoice, onF
   const time = useClock(timeZone);
   const s = STATUS_TEXT[status];
   return (
-    <header className="sticky top-0 z-10 border-b border-cyan-400/15 bg-black/80 backdrop-blur-xl">
+    <header className="safe-top sticky top-0 z-10 border-b border-cyan-400/15 bg-black/80 backdrop-blur-xl">
       <div className="mx-auto max-w-[1400px] px-4 py-3 flex items-center gap-4">
         <div className="flex items-center gap-3 min-w-0">
           <HudRing className="h-9 w-9 shrink-0" />
@@ -73,10 +73,20 @@ export function HudHeader({ timeZone, status, alerts, operator, focusChoice, onF
         <div className="ml-auto flex items-center gap-2">
           <span className="md:hidden font-mono text-xs text-cyan-100 tabular-nums">{time.slice(0, 5)}</span>
           {/* Focus menu: Auto, Family Purpose, ECS Network, or the Vantage Point briefing on demand */}
-          <label className="relative flex items-center">
+          <label className="relative flex min-h-[44px] items-center">
             <span className="sr-only">Focus</span>
+            {/* What you see: compact label. What you tap: the real picker on top, invisible,
+                at 16px so iPhone opens its picker without zooming the page. */}
+            <span
+              className="pointer-events-none flex items-center rounded-full border border-cyan-400/30 bg-cyan-950/40 py-1.5 pl-3 pr-7 font-mono text-[11px] uppercase tracking-wider text-cyan-200 whitespace-nowrap"
+              aria-hidden
+            >
+              <span className="sm:hidden">{focusChoice === "auto" ? "Auto" : FOCUS_CHOICE_LABEL[focusChoice]}</span>
+              <span className="hidden sm:inline">{focusChoice === "auto" ? "Focus: Auto" : FOCUS_CHOICE_LABEL[focusChoice]}</span>
+            </span>
             <select
-              className="appearance-none max-w-[7.5rem] sm:max-w-none truncate rounded-full border border-cyan-400/30 bg-cyan-950/40 py-1.5 pl-3 pr-7 font-mono text-[11px] uppercase tracking-wider text-cyan-200 focus:outline-none focus:border-cyan-300"
+              className="absolute inset-0 h-full w-full cursor-pointer appearance-none opacity-0"
+              style={{ fontSize: 16 }}
               value={focusChoice}
               onChange={(e) => onFocusChoice(e.target.value as FocusChoice)}
               aria-label="Focus"
@@ -89,7 +99,7 @@ export function HudHeader({ timeZone, status, alerts, operator, focusChoice, onF
             </select>
             <ChevronDown className="pointer-events-none absolute right-2 h-3.5 w-3.5 text-cyan-300/70" aria-hidden />
           </label>
-          <span className="relative p-2 text-cyan-300/80" aria-label={`${alerts} alerts`} title={`${alerts} urgent`}>
+          <span className="relative flex h-11 w-11 items-center justify-center text-cyan-300/80" aria-label={`${alerts} alerts`} title={`${alerts} urgent`}>
             <Bell className="h-5 w-5" />
             {alerts > 0 && (
               <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-cyan-400 text-[10px] font-mono text-black leading-4 text-center">
@@ -97,7 +107,7 @@ export function HudHeader({ timeZone, status, alerts, operator, focusChoice, onF
               </span>
             )}
           </span>
-          <button type="button" className="p-2 text-cyan-300/80 hover:text-cyan-200" onClick={openSettings} aria-label="Settings">
+          <button type="button" className="flex h-11 w-11 items-center justify-center text-cyan-300/80 hover:text-cyan-200" onClick={openSettings} aria-label="Settings">
             <Settings className="h-5 w-5" />
           </button>
           <span className="hidden sm:flex items-center gap-2 rounded-full border border-cyan-400/25 pl-3 pr-1 py-1 font-mono text-xs uppercase tracking-widest text-cyan-200">

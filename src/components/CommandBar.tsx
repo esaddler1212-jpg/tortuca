@@ -105,7 +105,7 @@ export function CommandBar({
     return (
       <section className="mx-auto w-full max-w-md">
         <form
-          className="flex items-center gap-2 rounded-full border border-cyan-400/40 bg-cyan-950/30 pl-4 pr-1.5 py-1.5 shadow-hud focus-within:border-cyan-300"
+          className="flex items-center gap-2 rounded-full border border-cyan-400/40 bg-cyan-950/30 pl-4 pr-1 py-0.5 shadow-hud focus-within:border-cyan-300"
           onSubmit={(e) => {
             e.preventDefault();
             voiceOut.prime();
@@ -118,16 +118,16 @@ export function CommandBar({
           </label>
           <input
             id="alfred-command"
-            className="flex-1 min-w-0 bg-transparent font-mono text-sm uppercase tracking-[0.2em] text-cyan-100 placeholder:text-cyan-300/70 focus:outline-none"
+            className="h-11 flex-1 min-w-0 bg-transparent font-mono text-sm uppercase tracking-[0.1em] sm:tracking-[0.2em] text-cyan-100 placeholder:text-cyan-300/70 focus:outline-none"
             placeholder={voice.listening ? "Listening..." : "Awaiting command..."}
             value={shownText}
             onChange={(e) => setText(e.target.value)}
           />
-          {speakerButton("rounded-full p-2 text-cyan-300/70 hover:bg-cyan-400/15")}
+          {speakerButton("flex h-11 w-11 items-center justify-center rounded-full text-cyan-300/70 hover:bg-cyan-400/15")}
           {micButton(
-            `rounded-full p-2 hover:bg-cyan-400/15 ${voice.listening ? "text-black bg-cyan-300 animate-hud-pulse" : "text-cyan-300"}`,
+            `flex h-11 w-11 items-center justify-center rounded-full hover:bg-cyan-400/15 ${voice.listening ? "text-black bg-cyan-300 animate-hud-pulse" : "text-cyan-300"}`,
           )}
-          <button type="submit" className="rounded-full p-2 text-cyan-300 hover:bg-cyan-400/15" aria-label="Run command">
+          <button type="submit" className="flex h-11 w-11 items-center justify-center rounded-full text-cyan-300 hover:bg-cyan-400/15" aria-label="Run command">
             <Send className="h-4 w-4" />
           </button>
         </form>

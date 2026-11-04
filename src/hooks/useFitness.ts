@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { FitnessLog } from "../types";
 import { workoutSlot } from "../lib/fitness";
 import type { UserSettings } from "../types";
@@ -12,8 +12,15 @@ export function useFitness(settings: UserSettings) {
     loadJson<FitnessLog[]>(FITNESS_KEY, []),
   );
 
+  // Push only real edits made here: not what we just loaded on open, and not
+  // a copy that came from another device (that would overwrite newer data).
+  const skipPush = useRef(true);
   useEffect(() => {
     saveJson(FITNESS_KEY, logs);
+    if (skipPush.current) {
+      skipPush.current = false;
+      return;
+    }
     const timer = setTimeout(() => {
       void saveUserDataRemote({ fitnessLogs: logs });
     }, 600);
@@ -41,7 +48,11 @@ export function useFitness(settings: UserSettings) {
   );
 
   const loadRemote = useCallback((remote: FitnessLog[]) => {
-    if (remote.length > 0) setLogs(remote);
+    setLogs((prev) => {
+      if (JSON.stringify(prev) === JSON.stringify(remote)) return prev;
+      skipPush.current = true;
+      return remote;
+    });
   }, []);
 
   return { logs, logWorkout, loadRemote };

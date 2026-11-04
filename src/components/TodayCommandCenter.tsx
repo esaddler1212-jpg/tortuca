@@ -63,6 +63,12 @@ interface Props {
   briefSpeaking?: boolean;
   onStopBrief?: () => void;
   unreadEmails: number;
+  /** Tapping "N unread" opens the Inbox module. */
+  onOpenInbox?: () => void;
+  /** Tapping the Pulse heads-up opens Vitals. */
+  onOpenVitals?: () => void;
+  /** Bay Area Pulse line, only when something nearby needs attention. */
+  pulseAlert?: string;
   actions: TodayAction[];
   todayTimeline: CalendarEvent[];
   allSchedule: CalendarEvent[];
@@ -109,6 +115,9 @@ export function TodayCommandCenter({
   onStopBrief,
   moduleOnly = false,
   unreadEmails,
+  onOpenInbox,
+  onOpenVitals,
+  pulseAlert,
   actions,
   todayTimeline,
   allSchedule,
@@ -175,7 +184,7 @@ export function TodayCommandCenter({
               {onBriefMe && (
                 <button
                   type="button"
-                  className="btn-ghost !py-1 !px-2.5 text-xs border border-alfred-gold/30 rounded-full"
+                  className="btn-ghost min-h-[40px] !py-1 !px-3.5 text-xs border border-alfred-gold/30 rounded-full"
                   onClick={() => (briefSpeaking ? onStopBrief?.() : onBriefMe())}
                   aria-label={briefSpeaking ? "Stop" : "Brief me out loud"}
                 >
@@ -273,7 +282,7 @@ export function TodayCommandCenter({
         <div className="flex flex-wrap gap-2 mt-4">
           {modeLabel && <Chip label={modeLabel} />}
           <Chip label={`${pendingTodos.length} tasks`} alert={pendingTodos.length > 5} />
-          <Chip label={`${unreadEmails} unread`} alert={unreadEmails > 0} />
+          <Chip label={`${unreadEmails} unread`} alert={unreadEmails > 0} onClick={onOpenInbox} />
           <Chip
             label={`${actions.filter((a) => a.urgent).length} urgent`}
             alert={actions.filter((a) => a.urgent).length > 0}
@@ -284,6 +293,18 @@ export function TodayCommandCenter({
           )}
         </div>
       </section>
+
+      {pulseAlert && (
+        <button
+          type="button"
+          onClick={onOpenVitals}
+          className="panel flex min-h-[44px] w-full items-center gap-2 border-amber-400/50 px-4 py-2.5 text-left text-sm text-amber-100"
+        >
+          <span className="font-mono text-[10px] uppercase tracking-wider text-amber-300">Bay Area Pulse</span>
+          <span className="min-w-0 flex-1 truncate">{pulseAlert}</span>
+          <span className="shrink-0 text-xs text-amber-300">Vitals ›</span>
+        </button>
+      )}
 
       {afterGreeting}
 
@@ -508,6 +529,7 @@ export function TodayCommandCenter({
           </section>
           )}
 
+          {!moduleOnly && (
           <section className="panel p-5">
             <h3 className="font-display text-lg text-alfred-gold mb-3 flex items-center gap-2">
               <Mail className="h-4 w-4" /> Inbox
@@ -546,6 +568,7 @@ export function TodayCommandCenter({
               ))}
             </ul>
           </section>
+          )}
         </div>
       </div>
     </div>
@@ -590,15 +613,15 @@ function BedtimeCard({ bedtime }: { bedtime: BedtimePlan }) {
   );
 }
 
-function Chip({ label, alert }: { label: string; alert?: boolean }) {
+function Chip({ label, alert, onClick }: { label: string; alert?: boolean; onClick?: () => void }) {
+  const cls = `rounded-full border px-3 py-1 text-xs ${
+    alert ? "border-alfred-gold/50 bg-alfred-gold/10 text-alfred-gold" : "border-alfred-border text-alfred-mist"
+  }`;
+  if (!onClick) return <span className={cls}>{label}</span>;
   return (
-    <span
-      className={`rounded-full border px-3 py-1 text-xs ${
-        alert ? "border-alfred-gold/50 bg-alfred-gold/10 text-alfred-gold" : "border-alfred-border text-alfred-mist"
-      }`}
-    >
-      {label}
-    </span>
+    <button type="button" onClick={onClick} className={`${cls} min-h-[32px]`}>
+      {label} ›
+    </button>
   );
 }
 
@@ -620,7 +643,7 @@ function QuickAdd({ onAdd }: { onAdd: (t: string) => void }) {
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
-      <button type="submit" className="btn-gold px-3">
+      <button type="submit" className="btn-gold flex min-h-[44px] min-w-[44px] items-center justify-center px-3" aria-label="Add to-do">
         <Check className="h-4 w-4" />
       </button>
     </form>

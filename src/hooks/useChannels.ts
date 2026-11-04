@@ -12,6 +12,7 @@ import {
 } from "../../shared/channels";
 import type { Area } from "../../shared/planData";
 import { fetchUserData, saveUserDataRemote } from "../lib/userData";
+import { onRemoteData } from "../lib/remoteSync";
 import { authHeaders, ensureSession } from "../lib/google";
 import { loadJson, saveJson } from "../lib/storage";
 
@@ -23,6 +24,23 @@ export function useChannels(accountEmail?: string) {
   );
   const loadedRemote = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fromRemote = useRef(false);
+  const lastPushed = useRef("");
+  const latest = useRef(state);
+  latest.current = state;
+
+  // Another device changed it: take the newer copy (unless an edit here is about to save).
+  useEffect(
+    () =>
+      onRemoteData((data) => {
+        const remote = data.channels as ChannelsState | undefined;
+        if (!remote || timer.current || !(remote.updatedAt > latest.current.updatedAt)) return;
+        fromRemote.current = true;
+        setState(normalizeChannels(remote, accountEmail));
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
   useEffect(() => {
     setState((s) => normalizeChannels(s, accountEmail));
@@ -33,7 +51,11 @@ export function useChannels(accountEmail?: string) {
       try {
         const remote = (await fetchUserData())?.channels as ChannelsState | undefined;
         if (remote && remote.updatedAt > state.updatedAt) {
-          setState(normalizeChannels(remote, accountEmail));
+          const next = normalizeChannels(remote, accountEmail);
+          lastPushed.current = JSON.stringify(next);
+          setState(next);
+        } else {
+          lastPushed.current = JSON.stringify(latest.current);
         }
       } catch {
         /* offline */
@@ -47,8 +69,17 @@ export function useChannels(accountEmail?: string) {
   useEffect(() => {
     saveJson(CHANNELS_KEY, state);
     if (!loadedRemote.current) return;
+    if (fromRemote.current) {
+      fromRemote.current = false;
+      lastPushed.current = JSON.stringify(state);
+      return;
+    }
+    // Re-applying the same content (e.g. on sign-in) isn't an edit.
+    if (JSON.stringify(state) === lastPushed.current) return;
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => {
+      timer.current = null;
+      lastPushed.current = JSON.stringify(state);
       void saveUserDataRemote({ channels: state }).catch(() => undefined);
     }, 1500);
     return () => {

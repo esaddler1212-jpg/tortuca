@@ -41,7 +41,7 @@ export function PromptButton({ build, label = "Prompt", onUsed }: { build: () =>
     <>
       <button
         type="button"
-        className="inline-flex items-center gap-1 rounded-full border border-alfred-gold/30 px-2 py-0.5 text-[11px] font-mono uppercase tracking-wider text-alfred-gold hover:bg-alfred-gold/10"
+        className="inline-flex min-h-[36px] items-center gap-1 rounded-full border border-alfred-gold/30 px-3 text-[11px] font-mono uppercase tracking-wider text-alfred-gold hover:bg-alfred-gold/10"
         onClick={() => setPrompt(build())}
         aria-label={`${label}: open a Claude prompt for this`}
       >

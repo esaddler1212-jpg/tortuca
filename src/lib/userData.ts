@@ -1,6 +1,7 @@
 import type { UserSettings, TodoItem } from "../types";
 import type { AlfredUserData, SyncedUserSettings } from "../../shared/userDataTypes";
 import { authHeaders, ensureSession } from "./google";
+import { markRemoteStamp } from "./remoteSync";
 
 export function toSyncedSettings(settings: UserSettings): SyncedUserSettings {
   return {
@@ -46,7 +47,9 @@ export async function saveUserDataRemote(patch: Partial<AlfredUserData>): Promis
     body: JSON.stringify(patch),
   });
   if (!res.ok) return null;
-  return (await res.json()) as AlfredUserData;
+  const saved = (await res.json()) as AlfredUserData;
+  if (saved?.updatedAt) markRemoteStamp(saved.updatedAt);
+  return saved;
 }
 
 export async function syncSettings(settings: UserSettings): Promise<void> {
@@ -59,19 +62,6 @@ export async function syncTodos(todos: TodoItem[]): Promise<void> {
 
 export async function syncFitness(logs: import("../types").FitnessLog[]): Promise<void> {
   await saveUserDataRemote({ fitnessLogs: logs });
-}
-
-export async function fetchLiveCommuteMinutes(
-  origin: string,
-  destination: string,
-): Promise<number | null> {
-  const url = new URL("/api/commute", window.location.origin);
-  url.searchParams.set("origin", origin);
-  url.searchParams.set("destination", destination);
-  const res = await fetch(url);
-  if (!res.ok) return null;
-  const data = (await res.json()) as { minutes?: number | null };
-  return data.minutes ?? null;
 }
 
 export async function fetchVapidPublicKey(): Promise<string | null> {

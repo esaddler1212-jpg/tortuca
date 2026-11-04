@@ -10,6 +10,7 @@ import { usePlan } from "./hooks/usePlan";
 import { SparkCard } from "./components/SparkCard";
 import { HubPanel } from "./components/HubPanel";
 import { PulsePanel } from "./components/PulsePanel";
+import { InboxPanel } from "./components/InboxPanel";
 import { usePulse } from "./hooks/usePulse";
 import { ConversationCaptions } from "./components/ConversationPanel";
 import { useConversation } from "./hooks/useConversation";
@@ -17,8 +18,9 @@ import { buildAskContext } from "./lib/askContext";
 import { weatherLabel } from "./lib/weather";
 import { pulseSummary } from "../shared/pulse";
 import { issContext } from "../shared/skyText";
+import { gymContext, inboxContext, memosContext, moneyContext, shoppingContext } from "../shared/irisContext";
 import { useHub } from "./hooks/useHub";
-import { DEFAULT_ROUTINE, gymDayFor } from "../shared/hub";
+import { DEFAULT_ROUTINE, gymDayFor, moneyMonth } from "../shared/hub";
 import { PlanPanel } from "./components/PlanPanel";
 import { BusinessResearcherPanel } from "./components/BusinessResearcherPanel";
 import { ChannelsPanel } from "./components/ChannelsPanel";
@@ -29,7 +31,7 @@ import { fetchUserData } from "./lib/userData";
 import { EMPTY_HUB, type HubState } from "../shared/hub";
 import type { ResearchArea } from "../shared/businessResearch";
 import type { PlanTask, YearGoal } from "../shared/planData";
-import { allGoals, allTasks, goalProgress, handoffQueue, planTasksDoneOn, todaySpark, weekFocus } from "../shared/plan";
+import { allGoals, allTasks, goalProgress, handoffQueue, isDone, monthTasks, planTasksDoneOn, sparkDone, todaySpark, weekFocus } from "../shared/plan";
 import { VantageBriefingPanel } from "./components/hud/VantageBriefingPanel";
 import { OvernightDeltaBanner } from "./components/OvernightDeltaBanner";
 import { OvercommitmentBanner } from "./components/OvercommitmentBanner";
@@ -63,8 +65,10 @@ import { buildFitnessStatus } from "./lib/fitness";
 import { assessOvercommitment } from "./lib/overcommitment";
 import { HudHeader, type SystemStatus } from "./components/hud/HudHeader";
 import { CoreRing } from "./components/hud/CoreRing";
-import { SolarSystemStage } from "./components/hud/SolarSystemStage";
-import { PlanetModuleDock } from "./components/hud/PlanetModuleDock";
+import { HudCore, HudCoreCompact } from "./components/hud/HudCore";
+import { UpNextPanel, UrgentLine } from "./components/hud/HudHome";
+import { GlassModule, HudTabBar, MoreSheet, type TabBadge } from "./components/hud/HudNav";
+import { hudGauges, type GaugeId } from "../shared/hudGauges";
 import { SOLAR_PLANETS, type SolarPlanetId } from "../shared/solarPlanets";
 import { FamilyPurposeDebriefBanner } from "./components/FamilyPurposeDebriefBanner";
 import { WeekWeatherPanel } from "./components/hud/WeekWeatherPanel";
@@ -86,7 +90,7 @@ export default function App() {
   const { connected, accountEmail, connect, disconnect, connectionError } = useGoogleIntegration();
   const channelAgent = useChannels(accountEmail);
   const { allEvents, addLocalEvent } = useSchedule(connected);
-  const { messages, unread } = useEmails(connected);
+  const { messages, unread, loading: emailsLoading, error: emailsError, refresh: refreshEmails } = useEmails(connected);
   const { snapshot: rawWoodhouse, loading: woodhouseLoading, error: woodhouseError } = useWoodhouse();
   // Workday vs off duty: Family Purpose tasks hide on weekends, holidays and after 7 PM.
   // Clock picks the mode; the header's Focus menu can override it until the next switch.
@@ -102,7 +106,8 @@ export default function App() {
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", themeColor);
   }, [mode]);
   const { snapshot: stocks, loading: stocksLoading } = useStocks();
-  const { effectiveMinutes, loading: commuteLoading, error: commuteError } = useCommute(settings);
+  const commute = useCommute(settings, connected);
+  const effectiveMinutes = commute.effectiveMinutes;
   const { logs: fitnessLogs, logWorkout, loadRemote: loadFitness } = useFitness(settings);
   const { hub, update: updateHub } = useHub();
   const bizResearch = useBusinessResearch(settings.timezone);
@@ -347,33 +352,70 @@ export default function App() {
   const isSunday = weekdayOfDay(dayKey(settings.timezone, now)) === "Sun";
 
   const channelPendingCount = channelAgent.pending.length;
+  // Pulse lives in Vitals now; Today shows a one-line heads-up only when it matters.
+  const pulseUrgent = Boolean(pulse && (pulse.alerts.length || (pulse.air && pulse.air.aqi > 100) || pulse.fires.some((f) => f.miles <= 30)));
 
-  const solarPlanetViews = useMemo(
-    () =>
-      SOLAR_PLANETS.map((p) => ({
-        id: p.id,
-        badge:
-          p.id === "today"
-            ? urgentCount
-            : p.id === "channels"
-              ? channelPendingCount
-              : undefined,
-        alert:
-          (p.id === "today" && urgentCount > 0) ||
-          (p.id === "channels" && channelPendingCount > 0),
-      })),
-    [urgentCount, channelPendingCount],
+  // Badges for the bottom tab bar and the More sheet.
+  const badges = useMemo<Partial<Record<SolarPlanetId, TabBadge>>>(
+    () => ({
+      today: { alert: urgentCount > 0, count: urgentCount || undefined },
+      inbox: { alert: unread > 0, count: unread || undefined },
+      vitals: { alert: pulseUrgent },
+      channels: { alert: channelPendingCount > 0, count: channelPendingCount || undefined },
+    }),
+    [urgentCount, unread, pulseUrgent, channelPendingCount],
   );
 
-  const [activePlanet, setActivePlanet] = useState<SolarPlanetId | null>(null);
-  const [bringFrontId, setBringFrontId] = useState<SolarPlanetId | null>(null);
-  const [spinNonce, setSpinNonce] = useState(0);
+  // The four gauges around Iris's core.
+  const gauges = useMemo(() => {
+    const month = today.slice(0, 7);
+    const mTasks = monthTasks(plan, month);
+    return hudGauges({
+      todosPending: pending.length,
+      todosDone: done.filter((t) => t.completedAt?.startsWith(today)).length,
+      urgent: urgentCount,
+      unread,
+      temp: weather?.temperature,
+      aqi: pulse?.air?.aqi,
+      pulseUrgent,
+      workouts: Object.values(fitnessStatus.weekCounts).reduce((a, b) => a + b, 0),
+      workoutTarget: 3,
+      monthDone: mTasks.filter((t) => isDone(plan, t)).length,
+      monthTotal: mTasks.length,
+      monthLabel: new Date(`${month}-15T12:00:00Z`).toLocaleDateString("en-US", { month: "short", timeZone: "UTC" }).toUpperCase(),
+    });
+  }, [today, plan, pending, done, urgentCount, unread, weather, pulse, pulseUrgent, fitnessStatus]);
 
+  // One amber line under the core: what matters right now.
+  const urgentItems = useMemo(() => {
+    const fmt = (d: Date) => new Intl.DateTimeFormat("en-US", { timeZone: settings.timezone, hour: "numeric", minute: "2-digit" }).format(d);
+    const items: string[] = [];
+    if (leaveBy) items.push(`Leave by ${fmt(leaveBy.leaveBy)}`);
+    const soon = todayTimeline.find((e) => {
+      const t = Date.parse(e.start);
+      return t > now.getTime() && t - now.getTime() < 3 * 3_600_000;
+    });
+    if (soon) items.push(`${soon.title.slice(0, 28)} ${fmt(new Date(soon.start))}`);
+    if (pulseUrgent && pulse) items.push(pulse.alerts[0]?.event ?? (pulse.air && pulse.air.aqi > 100 ? `AQI ${pulse.air.aqi}` : "Fire nearby"));
+    return items.slice(0, 3);
+  }, [leaveBy, todayTimeline, now, pulseUrgent, pulse, settings.timezone]);
+
+  const [activePlanet, setActivePlanet] = useState<SolarPlanetId | null>(null);
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  /** Open a module (tab, corner readout, More, or Iris's open_planet). */
   const focusPlanet = useCallback((id: SolarPlanetId) => {
+    setMoreOpen(false);
     setActivePlanet(id);
-    setBringFrontId(id);
-    setSpinNonce((n) => n + 1);
+    const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: 0, behavior: still ? "auto" : "smooth" });
   }, []);
+  const closeModule = useCallback(() => {
+    setActivePlanet(null);
+    window.scrollTo({ top: 0 });
+  }, []);
+  /** Tapping the open tab again closes it. */
+  const onTab = useCallback((id: SolarPlanetId) => (activePlanet === id && !moreOpen ? closeModule() : focusPlanet(id)), [activePlanet, moreOpen, closeModule, focusPlanet]);
 
   const coreLines: [string, string] =
     systemStatus === "ok" ? ["IRIS", "ONLINE"] : systemStatus === "degraded" ? ["IRIS", "DEGRADED"] : ["IRIS", "OFFLINE"];
@@ -416,14 +458,57 @@ export default function App() {
                         actions: todayActions,
                         events: allSchedule,
                         spark: todaySpark(plan, today),
-                        pulse: pulse ? pulseSummary(pulse) : undefined,
+                        pulse: pulse
+                          ? [
+                              pulseSummary(pulse),
+                              issContext(pulse.iss, settings.timezone),
+                              pulse.ships ? `${pulse.ships.length} ships in the Bay (${pulse.ships.filter((x) => (x.speedKt ?? 0) >= 0.5).length} moving)` : "",
+                            ]
+                              .filter(Boolean)
+                              .join(". ")
+                          : undefined,
                         goals: goalLines,
                         desk: { review: desk.review.length, working: desk.working.length },
                         channels: channelsSummary(channelAgent.channels),
                         solarPlanets: solarPlanetContextForIris(),
+                        extras: (() => {
+                          const tz = settings.timezone;
+                          const schoolNames = [settings.schoolName].filter(Boolean) as string[];
+                          const month = today.slice(0, 7);
+                          const gym = gymDayFor(hub.routine ?? DEFAULT_ROUTINE, today);
+                          return [
+                            connected ? inboxContext(messages, tz, { schoolNames }) : "",
+                            memosContext(hub.memos, tz, { schoolNames }),
+                            moneyContext(
+                              moneyMonth(hub.money, month),
+                              new Date(`${month}-15T12:00:00Z`).toLocaleDateString("en-US", { month: "long", timeZone: "UTC" }),
+                              hub.revenueGoal,
+                            ),
+                            gymContext({
+                              workoutsThisWeek: Object.values(fitnessStatus.weekCounts).reduce((a, b) => a + b, 0),
+                              target: 3,
+                              loggedToday: Boolean(fitnessStatus.loggedToday),
+                              next: gym ? { title: gym.plan.title, day: gym.plan.weekday, isToday: gym.isToday } : null,
+                            }),
+                            shoppingContext(shoppingItems),
+                          ].filter(Boolean);
+                        })(),
                       }),
     onOpenPlanet: focusPlanet,
   });
+
+  // Iris's ring: the centre of the HUD (tap to talk). Same ring in the full and compact core.
+  const coreRing = (
+    <CoreRing
+      lines={coreLines}
+      status={systemStatus}
+      phase={convo.phase}
+      replyTick={convo.replyTick}
+      active={convo.active}
+      waiting={convo.pendingGreeting}
+      onActivate={convo.tap}
+    />
+  );
 
   const familyPurposeAppUrl =
     settings.familyPurposeNodeUrl?.trim() ||
@@ -440,7 +525,35 @@ export default function App() {
   const renderPlanetModule = (id: SolarPlanetId) => {
     switch (id) {
       case "vitals":
-        return <VitalsPanel weather={weather} city={settings.city} fitness={fitnessStatus} />;
+        return (
+          <>
+            <VitalsPanel weather={weather} city={settings.city} fitness={fitnessStatus} />
+            <PulsePanel
+              pulse={pulse}
+              error={pulseError}
+              city={settings.city}
+              lat={settings.latitude}
+              lon={settings.longitude}
+              timeZone={settings.timezone}
+              defaultOpen
+            />
+            {isSunday && weather?.week && <WeekWeatherPanel week={weather.week} city={settings.city} />}
+          </>
+        );
+      case "inbox":
+        return (
+          <InboxPanel
+            messages={messages}
+            unread={unread}
+            loading={emailsLoading}
+            error={emailsError}
+            googleConnected={connected}
+            timeZone={settings.timezone}
+            onRefresh={() => void refreshEmails()}
+            onConnectGoogle={() => void connect()}
+            onAddTodo={(title) => add(title)}
+          />
+        );
       case "apps":
         return <NetworkPanel woodhouse={woodhouse} googleConnected={connected} />;
       case "today":
@@ -472,28 +585,17 @@ export default function App() {
                 <>
                   <SparkCard plan={plan} today={today} onToggle={toggleSpark} onShuffle={shuffleSpark} onNote={noteSpark} />
                   {isVantageMode(mode) && <VantageBriefingPanel lines={vantage.lines} spoken={vantage.spoken} />}
-                  <PulsePanel
-                    key={`pulse-${isVantageMode(mode)}`}
-                    pulse={pulse}
-                    error={pulseError}
-                    city={settings.city}
-                    lat={settings.latitude}
-                    lon={settings.longitude}
-                    timeZone={settings.timezone}
-                    defaultOpen={isVantageMode(mode)}
-                  />
-                  {isSunday && weather?.week && <WeekWeatherPanel week={weather.week} city={settings.city} />}
                   {showWeeklyReview && <WeeklyReview review={weeklyReview} />}
                   <InstallAppBanner />
                   <OvernightDeltaBanner delta={overnightDelta} />
                   {overcommitment && <OvercommitmentBanner warning={overcommitment} />}
                   {showWindDown && <WindDownBanner bedtime={bedtime} />}
-                  {commuteError && settings.useLiveCommute && (
-                    <p className="text-sm text-amber-300/90 panel px-4 py-2">{commuteError}</p>
-                  )}
                 </>
               }
               unreadEmails={unread}
+              onOpenInbox={() => focusPlanet("inbox")}
+              onOpenVitals={() => focusPlanet("vitals")}
+              pulseAlert={pulseUrgent ? pulseSummary(pulse!) : undefined}
               actions={todayActions}
               todayTimeline={todayTimeline}
               allSchedule={allSchedule}
@@ -599,7 +701,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen pb-20 relative">
+    <div className="min-h-screen min-h-[100dvh] safe-bottom relative">
       <div className="hud-vignette" aria-hidden />
       <div className="hud-scanline" aria-hidden />
       <HudHeader
@@ -611,50 +713,41 @@ export default function App() {
         onFocusChoice={focus.choose}
       />
 
-      <main className={`mx-auto max-w-[1400px] px-4 py-6 space-y-4 ${activePlanet ? "planet-visit" : ""}`}>
-        <SolarSystemStage
-          planets={solarPlanetViews}
-          activeId={activePlanet}
-          focusedId={activePlanet}
-          bringFrontId={bringFrontId}
-          spinNonce={spinNonce}
-          onSelect={focusPlanet}
-          sun={
-            <CoreRing
-              lines={coreLines}
-              status={systemStatus}
-              phase={convo.phase}
-              replyTick={convo.replyTick}
-              active={convo.active}
-              waiting={convo.pendingGreeting}
-              onActivate={convo.tap}
-            />
-          }
-          underSun={
-            <>
-              <ConversationCaptions convo={convo} googleConnected={connected} />
-              <CommandBar
-                variant="hud"
-                settings={settings}
-                leaveBy={leaveBy}
-                bedtime={bedtime}
-                onAddTodo={add}
-                onLogWorkout={logWorkout}
-                onAddEvent={addLocalEvent}
-                onAddShopping={addShopping}
-              />
-            </>
-          }
-        />
-
-        {!activePlanet && (
+      <main className={`mx-auto px-4 py-4 space-y-4 hud-with-tabbar ${activePlanet ? "max-w-[1100px]" : "max-w-[560px]"}`}>
+        {activePlanet ? (
           <>
-            <p className="text-center font-mono text-xs text-cyan-400/50 px-4 lg:hidden">
-              Swipe the module dock below Iris · one world open at a time.
-            </p>
-            <p className="hidden text-center font-mono text-xs text-cyan-400/50 px-4 lg:block">
-              Tap a planet to visit that world — only one module open at a time. Ask Iris to bring one forward.
-            </p>
+            <HudCoreCompact
+              core={coreRing}
+              readout={gauges.find((g) => g.id === (activePlanet as GaugeId))?.value ?? (SOLAR_PLANETS.find((p) => p.id === activePlanet)?.label ?? "").toUpperCase()}
+              alert={badges[activePlanet]?.alert}
+            />
+            <ConversationCaptions convo={convo} googleConnected={connected} />
+            <GlassModule key={activePlanet} id={activePlanet} onClose={closeModule}>
+              {renderPlanetModule(activePlanet)}
+            </GlassModule>
+          </>
+        ) : (
+          <>
+            <HudCore gauges={gauges} core={coreRing} onOpen={(id) => focusPlanet(id)} />
+            <ConversationCaptions convo={convo} googleConnected={connected} />
+            <UrgentLine items={urgentItems} />
+            <CommandBar
+              variant="hud"
+              settings={settings}
+              leaveBy={leaveBy}
+              bedtime={bedtime}
+              onAddTodo={add}
+              onLogWorkout={logWorkout}
+              onAddEvent={addLocalEvent}
+              onAddShopping={addShopping}
+            />
+            <UpNextPanel
+              todos={pending}
+              onToggle={toggle}
+              spark={todaySpark(plan, today)}
+              sparkDone={sparkDone(plan, today)}
+              onOpenToday={() => focusPlanet("today")}
+            />
             <FamilyPurposeDebriefBanner
               mode={mode}
               timeZone={settings.timezone}
@@ -663,17 +756,10 @@ export default function App() {
             />
           </>
         )}
-
-        {activePlanet && (
-          <PlanetModuleDock planetId={activePlanet} onClose={() => setActivePlanet(null)}>
-            {renderPlanetModule(activePlanet)}
-          </PlanetModuleDock>
-        )}
-
-        {!activePlanet && commuteLoading && settings.useLiveCommute && (
-          <p className="text-xs text-alfred-mist">Updating live commute…</p>
-        )}
       </main>
+
+      <MoreSheet open={moreOpen} badges={badges} onPick={focusPlanet} onClose={() => setMoreOpen(false)} />
+      <HudTabBar active={activePlanet} moreOpen={moreOpen} badges={badges} onTab={onTab} onMore={() => setMoreOpen((o) => !o)} />
 
       <MorningRitualModal
         settings={settings}
@@ -695,6 +781,18 @@ export default function App() {
         onSaveWoodhouseNodes={(nodes) => {
           persist({ ...settings, woodhouseNodes: nodes });
         }}
+        commuteStatus={
+          !settings.useLiveCommute
+            ? "Live traffic is off. Leave-by uses your usual minutes."
+            : commute.configured === false
+              ? "Live traffic needs GOOGLE_MAPS_API_KEY in Netlify. Until then, leave-by uses your usual minutes."
+              : commute.hasAddresses === false
+                ? "Add both addresses and save, and the server will check traffic on school mornings."
+                : commute.live
+                  ? `Last live check: ${commute.live.minutes} min at ${new Date(commute.live.fetchedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: settings.timezone })}${commute.usingLive ? " (in use now)" : ""}. Checked every 15 min on school mornings.`
+                  : "The server checks traffic every 15 minutes on school mornings."
+        }
+        onRefreshCommute={() => void commute.refresh()}
         onSaveCommute={(patch) => {
           persist({ ...settings, ...patch });
         }}

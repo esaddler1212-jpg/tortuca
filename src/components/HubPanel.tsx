@@ -61,7 +61,7 @@ interface Props {
 
 const newId = (p: string) => `${p}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
 const money = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
-const pill = "rounded-full border px-2.5 py-1 text-[11px] font-mono uppercase tracking-wider";
+const pill = "min-h-[36px] rounded-full border px-3 py-1 text-[11px] font-mono uppercase tracking-wider";
 
 function timeAgo(iso: string | undefined, now = Date.now()): string {
   if (!iso) return "";
@@ -90,7 +90,7 @@ export function HubPanel(props: Props) {
             type="button"
             role="tab"
             aria-selected={tab === t}
-            className={`rounded-full py-1.5 text-[11px] font-mono uppercase tracking-wider ${tab === t ? "bg-alfred-gold/20 text-alfred-gold" : "text-alfred-mist"}`}
+            className={`min-h-[40px] rounded-full text-[11px] font-mono uppercase tracking-wider ${tab === t ? "bg-alfred-gold/20 text-alfred-gold" : "text-alfred-mist"}`}
             onClick={() => setTab(t)}
           >
             {TAB_LABEL[t]}
@@ -605,14 +605,14 @@ function MemosTab({ hub, update, onAddTodo }: Props) {
           {speech.supported && (
             <button
               type="button"
-              className={`btn-ghost p-2 border ${speech.listening ? "border-alfred-gold text-alfred-gold animate-pulse" : "border-alfred-border/60"}`}
+              className={`btn-ghost flex h-11 w-11 items-center justify-center border ${speech.listening ? "border-alfred-gold text-alfred-gold animate-pulse" : "border-alfred-border/60"}`}
               onClick={() => (speech.listening ? speech.stop() : speech.start())}
               aria-label={speech.listening ? "Stop recording" : "Record a voice memo"}
             >
               {speech.listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
             </button>
           )}
-          <button type="button" className="btn-gold p-2" onClick={save} aria-label="Save memo">
+          <button type="button" className="btn-gold flex h-11 w-11 items-center justify-center" onClick={save} aria-label="Save memo">
             <Check className="h-4 w-4" />
           </button>
         </div>
@@ -700,7 +700,7 @@ function LinksRow({ hub, update }: Props) {
           <ExternalLink className="h-3 w-3" aria-hidden /> Notes
         </a>
       )}
-      <button type="button" className="ml-auto text-[11px] text-alfred-mist underline" onClick={() => setEditing(true)}>
+      <button type="button" className="ml-auto min-h-[40px] text-[11px] text-alfred-mist underline" onClick={() => setEditing(true)}>
         {b || n ? "Edit links" : "Add booking & notes links"}
       </button>
     </div>
