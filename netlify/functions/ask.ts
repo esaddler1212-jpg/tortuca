@@ -5,6 +5,8 @@ import { getValidSession, initBlobs, sessionHeader } from "./_shared";
 import { dayKey } from "../../shared/timezone";
 import { matchesForget, runIris } from "./_iris";
 import { lookupFlight } from "./_flight";
+import { recordUsage } from "./_irisUsage";
+import type { IrisTrace } from "../../shared/irisUsage";
 import { coords } from "./_pulse";
 import { loadUserData, resolveDataKey, saveUserData } from "./_userData";
 
@@ -57,15 +59,20 @@ export const handler: Handler = async (event) => {
 
   // Fail fast (Netlify functions have a time limit); no automatic retries.
   const client = new Anthropic({ timeout: 24_000, maxRetries: 0 });
+  const started = Date.now();
+  const tz = body.timeZone || "America/Los_Angeles";
+  const blank = { model: "claude-opus-5-5", inTok: 0, outTok: 0, cacheRead: 0, cacheWrite: 0, searches: 0, fetches: 0, tools: [] as string[], hops: 0 };
+  const log = (usage: typeof blank, outcome: IrisTrace["outcome"]) =>
+    recordUsage(who, { at: new Date().toISOString(), ms: Date.now() - started, ...usage, outcome }, tz);
   try {
     // Iris's memory lives with the account's data (shared by phone and computer).
     const key = await resolveDataKey(sessionId);
     const memory = ((await loadUserData(key))?.irisMemory ?? []).map((m) => m.fact);
-    const tz = body.timeZone || "America/Los_Angeles";
     const here = coords({ lat: String(body.lat ?? ""), lon: String(body.lon ?? "") });
-    const { reply: text, todos, remember, forget, refused, planet } = await runIris(client, turns, body.context ?? "", memory, {
+    const { reply: text, todos, remember, forget, refused, planet, usage } = await runIris(client, turns, body.context ?? "", memory, {
       trackFlight: async (flight) => (await lookupFlight(flight, tz, here.lat, here.lon)).spoken,
     });
+    await log(usage, refused ? "refused" : "ok");
     if (refused) return json(200, { reply: "I can't help with that one, boss. Ask me something else?", todos: [] });
     if (remember.length || forget.length) {
       const latest = (await loadUserData(key)) ?? { updatedAt: new Date().toISOString() };
@@ -89,6 +96,10 @@ export const handler: Handler = async (event) => {
             : "Sorry, I lost my train of thought. Say that again?");
     return json(200, { reply, todos, planet: planet && typeof planet === "string" ? planet : undefined });
   } catch (error) {
+    await log(
+      blank,
+      error instanceof Anthropic.APIConnectionTimeoutError ? "timeout" : error instanceof Anthropic.RateLimitError ? "rate_limited" : "error",
+    );
     if (error instanceof Anthropic.APIConnectionTimeoutError) return json(504, { error: "That one took too long, boss. Try asking a simpler way." });
     if (error instanceof Anthropic.RateLimitError) return json(429, { error: "I'm being rate-limited. Give me a minute." });
     if (error instanceof Anthropic.AuthenticationError) return json(503, { error: "Iris's API key was rejected. Check ANTHROPIC_API_KEY in Netlify." });

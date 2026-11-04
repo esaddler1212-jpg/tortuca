@@ -116,6 +116,19 @@ export const WEB_TOOLS = [
   { type: "web_fetch_20260209" as const, name: "web_fetch" as const, max_uses: 2 },
 ];
 
+/** What one turn used (tokens, tools, which model served). */
+export type IrisTurnUsage = {
+  model: string;
+  inTok: number;
+  outTok: number;
+  cacheRead: number;
+  cacheWrite: number;
+  searches: number;
+  fetches: number;
+  tools: string[];
+  hops: number;
+};
+
 export type IrisTurn = { role: "user" | "assistant"; content: string };
 export type IrisTodo = { title: string; due: "today" | "tomorrow" | "none" };
 
@@ -141,7 +154,16 @@ export async function runIris(
   context: string,
   memory: string[] = [],
   tools: { trackFlight?: (flight: string) => Promise<string> } = {},
-): Promise<{ reply: string; todos: IrisTodo[]; remember: string[]; forget: string[]; searched: boolean; refused: boolean; planet: string | null }> {
+): Promise<{
+  reply: string;
+  todos: IrisTodo[];
+  remember: string[];
+  forget: string[];
+  searched: boolean;
+  refused: boolean;
+  planet: string | null;
+  usage: IrisTurnUsage;
+}> {
   const messages: Anthropic.Beta.BetaMessageParam[] = turns.map((t) => ({ role: t.role, content: t.content }));
   const texts: string[] = [];
   const todos: IrisTodo[] = [];
@@ -149,6 +171,7 @@ export async function runIris(
   const forget: string[] = [];
   let searched = false;
   let planet: string | null = null;
+  const usage: IrisTurnUsage = { model: MODEL, inTok: 0, outTok: 0, cacheRead: 0, cacheWrite: 0, searches: 0, fetches: 0, tools: [], hops: 0 };
   for (let hop = 0; hop < 4; hop++) {
     const response = await client.beta.messages.create({
       model: MODEL,
@@ -164,7 +187,18 @@ export async function runIris(
       tools: [ADD_TODO, OPEN_PLANET, ...(tools.trackFlight ? [TRACK_FLIGHT] : []), ...MEMORY_TOOLS, ...WEB_TOOLS],
       messages,
     });
-    if (response.stop_reason === "refusal") return { reply: "", todos: [], remember: [], forget: [], searched, refused: true, planet: null };
+    // Numbers only, for the usage log (never the words).
+    const u = response.usage;
+    usage.hops++;
+    usage.model = response.model || usage.model;
+    usage.inTok += u?.input_tokens ?? 0;
+    usage.outTok += u?.output_tokens ?? 0;
+    usage.cacheRead += u?.cache_read_input_tokens ?? 0;
+    usage.cacheWrite += u?.cache_creation_input_tokens ?? 0;
+    usage.searches += u?.server_tool_use?.web_search_requests ?? 0;
+    usage.fetches += u?.server_tool_use?.web_fetch_requests ?? 0;
+    for (const b of response.content) if (b.type === "tool_use") usage.tools.push(b.name);
+    if (response.stop_reason === "refusal") return { reply: "", todos: [], remember: [], forget: [], searched, refused: true, planet: null, usage };
     for (const b of response.content) {
       if (b.type === "text") texts.push(b.text);
       else if (b.type === "server_tool_use") searched = true;
@@ -209,5 +243,5 @@ export async function runIris(
     // Long search: hand the partial turn back so Claude picks up where it left off.
     messages.push({ role: "assistant", content: response.content as Anthropic.Beta.BetaContentBlockParam[] });
   }
-  return { reply: forVoice(texts.join(" ")), todos, remember, forget, searched, refused: false, planet };
+  return { reply: forVoice(texts.join(" ")), todos, remember, forget, searched, refused: false, planet, usage };
 }

@@ -104,4 +104,6 @@ ok("runs the lookup with what E said", asked[0] === "UA 123");
 const back = seen3[1]?.messages.at(-1);
 ok("hands the flight data back as a tool_result", back?.role === "user" && back.content[0].type === "tool_result" && back.content[0].tool_use_id === "tf1" && /36000 feet/.test(back.content[0].content));
 ok("answers from it", /United 123 is cruising/.test(f.reply));
+ok("usage: adds up tokens across hops", r.usage.hops === 2 && r.usage.inTok === 20 && r.usage.outTok === 20);
+ok("usage: records tool names, never words", JSON.stringify(f.usage.tools) === JSON.stringify(["track_flight"]) && !JSON.stringify(f.usage).includes("UA 123"));
 if (process.exitCode) process.exit(1);
