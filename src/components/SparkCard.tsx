@@ -40,7 +40,7 @@ export function SparkCard({ plan, today, onToggle, onShuffle, onNote }: Props) {
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <button
           type="button"
-          className={`inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-xs font-mono uppercase tracking-wider ${done ? "border-alfred-gold bg-alfred-gold/15 text-alfred-gold" : "border-alfred-border/60 text-alfred-mist hover:text-alfred-gold"}`}
+          className={`inline-flex min-h-[40px] items-center gap-1 rounded-md border px-3 py-1.5 text-xs font-mono uppercase tracking-wider ${done ? "border-alfred-gold bg-alfred-gold/15 text-alfred-gold" : "border-alfred-border/60 text-alfred-mist hover:text-alfred-gold"}`}
           onClick={() => onToggle(today)}
           aria-pressed={done}
         >
@@ -49,7 +49,7 @@ export function SparkCard({ plan, today, onToggle, onShuffle, onNote }: Props) {
         {!done && (
           <button
             type="button"
-            className="inline-flex items-center gap-1 rounded-md border border-alfred-border/60 px-3 py-1.5 text-xs font-mono uppercase tracking-wider text-alfred-mist hover:text-alfred-gold"
+            className="inline-flex min-h-[40px] items-center gap-1 rounded-md border border-alfred-border/60 px-3 py-1.5 text-xs font-mono uppercase tracking-wider text-alfred-mist hover:text-alfred-gold"
             onClick={() => onShuffle(today)}
           >
             <Shuffle className="h-3.5 w-3.5" aria-hidden /> Another one
@@ -57,7 +57,7 @@ export function SparkCard({ plan, today, onToggle, onShuffle, onNote }: Props) {
         )}
         <button
           type="button"
-          className="inline-flex items-center gap-1 rounded-md border border-alfred-border/60 px-3 py-1.5 text-xs font-mono uppercase tracking-wider text-alfred-mist hover:text-alfred-gold"
+          className="inline-flex min-h-[40px] items-center gap-1 rounded-md border border-alfred-border/60 px-3 py-1.5 text-xs font-mono uppercase tracking-wider text-alfred-mist hover:text-alfred-gold"
           onClick={() => {
             setNote(savedNote);
             setNoteOpen((o) => !o);

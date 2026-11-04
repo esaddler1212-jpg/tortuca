@@ -1,5 +1,5 @@
+import { clockTime } from "../../shared/timezone";
 import { useEffect, useState } from "react";
-import { format } from "date-fns";
 import { Clock, Dumbbell, Moon, Quote, X } from "lucide-react";
 import type { UserSettings } from "../types";
 import type { LeaveByPlan } from "../lib/leaveBy";
@@ -52,7 +52,7 @@ export function MorningRitualModal({ settings, fitness, leaveBy, onLogWorkout }:
             <p className="hud-label mb-1">Morning protocol</p>
             <h2 className="font-display text-2xl font-semibold tracking-wide mt-1">RISE AND OPERATE</h2>
           </div>
-          <button type="button" className="btn-ghost p-2" onClick={dismiss} aria-label="Close">
+          <button type="button" className="btn-ghost flex h-11 w-11 items-center justify-center" onClick={dismiss} aria-label="Close">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -68,7 +68,7 @@ export function MorningRitualModal({ settings, fitness, leaveBy, onLogWorkout }:
         {leaveBy && (
           <p className="text-sm text-alfred-mist mb-4 flex items-center gap-2">
             <Clock className="h-4 w-4 text-alfred-gold shrink-0" />
-            Leave by {format(leaveBy.leaveBy, "h:mm a")} for {leaveBy.destination}
+            Leave by {clockTime(leaveBy.leaveBy, settings.timezone)} for {leaveBy.destination}
             {leaveBy.scheduleLabel ? ` · ${leaveBy.scheduleLabel}` : ""}
           </p>
         )}
@@ -90,7 +90,7 @@ export function MorningRitualModal({ settings, fitness, leaveBy, onLogWorkout }:
           ))}
         </div>
 
-        <button type="button" className="btn-ghost w-full text-sm text-alfred-mist" onClick={dismiss}>
+        <button type="button" className="btn-ghost min-h-[44px] w-full text-sm text-alfred-mist" onClick={dismiss}>
           <Moon className="inline h-3.5 w-3.5 mr-1" />
           Skip for now — I&apos;ll train later
         </button>

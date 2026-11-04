@@ -65,3 +65,10 @@ export function localHour(timeZone: string, date = new Date()): number {
     new Intl.DateTimeFormat("en-US", { timeZone, hour: "numeric", hourCycle: "h23" }).format(date),
   );
 }
+
+/** "7:05 AM" in the IRIS time zone (not the device's), for leave-by, events and bedtime. */
+export function clockTime(date: Date | string, timeZone: string): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  if (Number.isNaN(d.getTime())) return "";
+  return new Intl.DateTimeFormat("en-US", { timeZone, hour: "numeric", minute: "2-digit" }).format(d).replace(/\u202f/g, " ");
+}

@@ -581,15 +581,20 @@ export default function App() {
               onBriefMe={voiceOut.supported ? briefMe : undefined}
               briefSpeaking={voiceOut.speaking}
               onStopBrief={voiceOut.stop}
+              // Things that need you sit above the list; everything else goes below it.
               afterGreeting={
                 <>
-                  <SparkCard plan={plan} today={today} onToggle={toggleSpark} onShuffle={shuffleSpark} onNote={noteSpark} />
                   {isVantageMode(mode) && <VantageBriefingPanel lines={vantage.lines} spoken={vantage.spoken} />}
-                  {showWeeklyReview && <WeeklyReview review={weeklyReview} />}
-                  <InstallAppBanner />
-                  <OvernightDeltaBanner delta={overnightDelta} />
                   {overcommitment && <OvercommitmentBanner warning={overcommitment} />}
-                  {showWindDown && <WindDownBanner bedtime={bedtime} />}
+                  {showWindDown && <WindDownBanner bedtime={bedtime} timeZone={settings.timezone} />}
+                </>
+              }
+              afterLists={
+                <>
+                  <SparkCard plan={plan} today={today} onToggle={toggleSpark} onShuffle={shuffleSpark} onNote={noteSpark} />
+                  {showWeeklyReview && <WeeklyReview review={weeklyReview} />}
+                  <OvernightDeltaBanner delta={overnightDelta} />
+                  <InstallAppBanner />
                 </>
               }
               unreadEmails={unread}
