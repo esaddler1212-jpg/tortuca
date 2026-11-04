@@ -1,4 +1,4 @@
-/** IRIS solar system — each console module is a planet orbiting Iris (the sun). */
+/** IRIS modules (ids kept from the old solar-system layout; Iris opens them with open_planet). */
 
 export type SolarPlanetId =
   | "vitals"
@@ -35,6 +35,10 @@ export const SOLAR_PLANETS: SolarPlanetDef[] = [
 ];
 
 export const SOLAR_PLANET_IDS = SOLAR_PLANETS.map((p) => p.id);
+
+/** HUD navigation: four tabs always on the bottom bar; the rest live under "More". */
+export const HUD_TABS: SolarPlanetId[] = ["today", "vitals", "inbox", "plan"];
+export const HUD_MORE: SolarPlanetId[] = SOLAR_PLANET_IDS.filter((id) => !HUD_TABS.includes(id));
 
 export function solarPlanetContextForIris(): string {
   return SOLAR_PLANETS.map((p) => `${p.id}: ${p.hint}`).join("; ");

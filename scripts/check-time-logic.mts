@@ -18,7 +18,8 @@ import * as Plan from "../shared/plan.ts";
 import * as Sparks from "../shared/sparks.ts";
 import * as Hub from "../shared/hub.ts";
 import * as Usage from "../shared/irisUsage.ts";
-import { matchPlanetFromSpeech } from "../shared/solarPlanets.ts";
+import { matchPlanetFromSpeech, HUD_TABS, HUD_MORE } from "../shared/solarPlanets.ts";
+import { hudGauges } from "../shared/hudGauges.ts";
 import * as Pulse from "../shared/pulse.ts";
 import { normalizeGodsEyeUrl } from "../shared/godsEye.ts";
 import * as Sky from "../shared/sky.ts";
@@ -374,6 +375,19 @@ check(
   ["open my inbox", "show my email", "any unread mail", "draft an email to the sponsor", "show the map", "where are the planes", "earthquakes near me", "open today", "show my schedule"].map(matchPlanetFromSpeech),
   ["inbox", "inbox", "inbox", "channels", "vitals", "vitals", "vitals", "today", "today"],
 );
+
+// ── HUD gauges and tabs
+{
+  const base = { todosPending: 3, todosDone: 1, urgent: 0, unread: 0, temp: 61.6, aqi: 38, pulseUrgent: false, workouts: 2, workoutTarget: 3, monthDone: 2, monthTotal: 7, monthLabel: "NOV" };
+  const g = Object.fromEntries(hudGauges(base).map((x) => [x.id, x]));
+  check("hud: today fills as the list gets done", [g.today.value, g.today.fill, g.today.alert], ["3 TASKS", 0.25, false]);
+  check("hud: inbox clear vs unread (amber)", [g.inbox.value, hudGauges({ ...base, unread: 4 })[1].value, hudGauges({ ...base, unread: 4 })[1].alert, hudGauges({ ...base, unread: 40 })[1].fill], ["CLEAR", "4 NEW", true, 1]);
+  check("hud: vitals shows weather + workouts, amber on Pulse alert", [g.vitals.value, Math.round(g.vitals.fill * 100), hudGauges({ ...base, pulseUrgent: true })[2].caption], ["62° · AQI 38", 67, "VITALS · PULSE ALERT"]);
+  check("hud: no weather yet", hudGauges({ ...base, temp: undefined, aqi: undefined })[2].value, "--°");
+  check("hud: plan month progress", [g.plan.value, Math.round(g.plan.fill * 100)], ["NOV · 2/7", 29]);
+  check("hud: empty list reads all clear, urgent shows in caption", [hudGauges({ ...base, todosPending: 0, todosDone: 0 })[0].value, hudGauges({ ...base, urgent: 2 })[0].caption], ["ALL CLEAR", "TODAY · 2 URGENT"]);
+  check("hud: 4 tabs + everything else under More, no module lost", [HUD_TABS.join(","), [...HUD_TABS, ...HUD_MORE].length], ["today,vitals,inbox,plan", 10]);
+}
 
 if (failures) {
   console.error(`\n${failures} check(s) failed`);

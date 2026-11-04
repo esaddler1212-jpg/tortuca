@@ -118,7 +118,7 @@ export function CommandBar({
           </label>
           <input
             id="alfred-command"
-            className="h-11 flex-1 min-w-0 bg-transparent font-mono text-sm uppercase tracking-[0.2em] text-cyan-100 placeholder:text-cyan-300/70 focus:outline-none"
+            className="h-11 flex-1 min-w-0 bg-transparent font-mono text-sm uppercase tracking-[0.1em] sm:tracking-[0.2em] text-cyan-100 placeholder:text-cyan-300/70 focus:outline-none"
             placeholder={voice.listening ? "Listening..." : "Awaiting command..."}
             value={shownText}
             onChange={(e) => setText(e.target.value)}

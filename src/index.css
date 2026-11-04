@@ -240,3 +240,32 @@ html {
 
 .pulse-pin-hit { display: flex; height: 100%; width: 100%; align-items: center; justify-content: center; }
 .pulse-map.leaflet-container .leaflet-bar a { width: 40px; height: 40px; line-height: 40px; font-size: 20px; }
+
+/* ── HUD glass (A + B hybrid) ── */
+.hud-glass {
+  border: 1px solid rgb(94 231 255 / 0.32);
+  border-radius: 10px;
+  background: linear-gradient(160deg, rgb(94 231 255 / 0.11), rgb(94 231 255 / 0.03) 55%, rgb(2 7 11 / 0.6));
+  box-shadow: inset 0 0 28px rgb(94 231 255 / 0.08), 0 10px 40px rgb(0 0 0 / 0.45);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.hud-glass-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: rgb(94 231 255 / 0.9);
+  margin: -1px;
+  pointer-events: none;
+}
+.hud-glass-module { transition: transform 0.2s ease-out; }
+@keyframes hud-sheet {
+  from { opacity: 0; transform: translateY(24px) perspective(800px) rotateX(6deg); }
+  to { opacity: 1; transform: none; }
+}
+.animate-hud-sheet { animation: hud-sheet 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.hud-gauge-fill { transition: d 0.6s ease; filter: drop-shadow(0 0 5px currentColor); }
+.hud-callout { stroke-dasharray: 400; stroke-dashoffset: 400; animation: hud-callout-in 0.9s 0.2s ease-out forwards; }
+@keyframes hud-callout-in { to { stroke-dashoffset: 0; } }
+/* Leave room for the bottom tab bar + iPhone home bar. */
+.hud-with-tabbar { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
