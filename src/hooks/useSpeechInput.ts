@@ -35,7 +35,7 @@ const ERROR_MESSAGES: Record<string, string> = {
     "Microphone access is blocked. iPhone: Settings → Safari → Microphone → Allow (and Settings → Privacy → Speech Recognition). Computer: allow the mic in the address bar.",
   "service-not-allowed":
     "Speech recognition is turned off. iPhone: Settings → General → Keyboard → Enable Dictation, and Settings → Siri.",
-  "no-speech": "Didn't hear anything. Tap the mic and try again.",
+  "no-speech": "Didn't catch that. Tap and try again.",
   "audio-capture": "No microphone found.",
   network: "Speech recognition needs an internet connection.",
 };
@@ -49,6 +49,8 @@ export function useSpeechInput(onFinal: (text: string) => void) {
   const [listening, setListening] = useState(false);
   const [interim, setInterim] = useState("");
   const [error, setError] = useState<string | null>(null);
+  /** Raw error code ("no-speech", "not-allowed"…) so callers can treat silence gently. */
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const recRef = useRef<SpeechRecognitionLike | null>(null);
   const onFinalRef = useRef(onFinal);
   onFinalRef.current = onFinal;
@@ -83,7 +85,9 @@ export function useSpeechInput(onFinal: (text: string) => void) {
       setInterim((finalText + live).trim());
     };
     rec.onerror = (e) => {
-      if (e.error !== "aborted") setError(ERROR_MESSAGES[e.error] ?? `Voice input error: ${e.error}`);
+      if (e.error === "aborted") return;
+      setErrorCode(e.error);
+      setError(ERROR_MESSAGES[e.error] ?? `Voice input error: ${e.error}`);
     };
     rec.onend = () => {
       setListening(false);
@@ -93,6 +97,7 @@ export function useSpeechInput(onFinal: (text: string) => void) {
     };
     recRef.current = rec;
     setError(null);
+    setErrorCode(null);
     setInterim("");
     try {
       rec.start();
@@ -102,5 +107,5 @@ export function useSpeechInput(onFinal: (text: string) => void) {
     }
   }, []);
 
-  return { supported, listening, interim, error, start, stop };
+  return { supported, listening, interim, error, errorCode, start, stop };
 }
