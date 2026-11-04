@@ -4,6 +4,8 @@ import { getStore } from "@netlify/blobs";
 import { getValidSession, initBlobs, sessionHeader } from "./_shared";
 import { dayKey } from "../../shared/timezone";
 import { matchesForget, runIris } from "./_iris";
+import { lookupFlight } from "./_flight";
+import { coords } from "./_pulse";
 import { loadUserData, resolveDataKey, saveUserData } from "./_userData";
 
 /**
@@ -32,7 +34,7 @@ export const handler: Handler = async (event) => {
   const session = sessionId ? await getValidSession(sessionId) : null;
   if (!sessionId || !session) return json(401, { error: "Connect Google first so only you can talk to Iris." });
 
-  let body: { messages?: Turn[]; context?: string; timeZone?: string };
+  let body: { messages?: Turn[]; context?: string; timeZone?: string; lat?: number; lon?: number };
   try {
     body = JSON.parse(event.body ?? "{}");
   } catch {
@@ -59,7 +61,11 @@ export const handler: Handler = async (event) => {
     // Iris's memory lives with the account's data (shared by phone and computer).
     const key = await resolveDataKey(sessionId);
     const memory = ((await loadUserData(key))?.irisMemory ?? []).map((m) => m.fact);
-    const { reply: text, todos, remember, forget, refused, planet } = await runIris(client, turns, body.context ?? "", memory);
+    const tz = body.timeZone || "America/Los_Angeles";
+    const here = coords({ lat: String(body.lat ?? ""), lon: String(body.lon ?? "") });
+    const { reply: text, todos, remember, forget, refused, planet } = await runIris(client, turns, body.context ?? "", memory, {
+      trackFlight: async (flight) => (await lookupFlight(flight, tz, here.lat, here.lon)).spoken,
+    });
     if (refused) return json(200, { reply: "I can't help with that one, boss. Ask me something else?", todos: [] });
     if (remember.length || forget.length) {
       const latest = (await loadUserData(key)) ?? { updatedAt: new Date().toISOString() };

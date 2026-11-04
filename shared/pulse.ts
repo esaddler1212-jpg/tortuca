@@ -1,3 +1,6 @@
+import type { SkyPass } from "./skyText";
+import type { Ship } from "./ships";
+
 /**
  * Bay Area Pulse: what's happening around you right now, from free public
  * feeds (the same keyless sources God's Eye View uses): USGS quakes, NWS
@@ -12,6 +15,8 @@ export interface Quake {
   time: string;
   miles: number;
   url: string;
+  lat?: number;
+  lon?: number;
 }
 export interface WeatherAlert {
   id: string;
@@ -33,6 +38,8 @@ export interface Fire {
   contained?: number;
   discovered?: string;
   miles: number;
+  lat?: number;
+  lon?: number;
 }
 export interface Cam {
   id: string;
@@ -40,6 +47,8 @@ export interface Cam {
   route: string;
   image: string;
   miles: number;
+  lat?: number;
+  lon?: number;
 }
 export interface Flight {
   hex: string;
@@ -47,6 +56,11 @@ export interface Flight {
   type?: string;
   altitudeFt?: number;
   miles: number;
+  lat?: number;
+  lon?: number;
+  /** Heading over the ground, degrees (rotates the plane on the map). */
+  track?: number;
+  speedKt?: number;
 }
 export interface PulseSnapshot {
   fetchedAt: string;
@@ -55,7 +69,12 @@ export interface PulseSnapshot {
   air: Air | null;
   fires: Fire[];
   cams: Cam[];
-  flights: { count: number; nearest: Flight[] } | null;
+  /** `all` (up to 40) is for the map; `nearest` for the list. */
+  flights: { count: number; nearest: Flight[]; all?: Flight[] } | null;
+  /** ISS passes over the next two days (see shared/sky.ts). */
+  iss?: SkyPass[];
+  /** Ships in the Bay; null when the feed failed, undefined when no AISStream key is set. */
+  ships?: Ship[] | null;
   /** Sources that failed this time (shown quietly, never breaks the card). */
   unavailable: string[];
 }
@@ -89,6 +108,8 @@ export function parseQuakes(json: unknown, lat: number, lon: number): Quake[] {
       place: String(p.place ?? "Unknown location"),
       time: new Date(Number(p.time)).toISOString(),
       miles: Math.round(milesBetween(lat, lon, qLat, qLon)),
+      lat: qLat,
+      lon: qLon,
       url: String(p.url ?? `https://earthquake.usgs.gov/earthquakes/eventpage/${f.id}`),
     });
   }
@@ -153,6 +174,8 @@ export function parseFires(json: unknown, lat: number, lon: number): Fire[] {
       contained: Number.isFinite(contained) ? Math.round(contained) : undefined,
       discovered: Number.isFinite(disc) ? new Date(disc).toISOString() : undefined,
       miles: Math.round(milesBetween(lat, lon, fy, fx)),
+      lat: fy,
+      lon: fx,
     });
   }
   return out.sort((a, b) => a.miles - b.miles);
@@ -183,13 +206,13 @@ export function parseCams(json: unknown, lat: number, lon: number, limit = 6, ma
     if (miles > maxMiles) continue;
     // "TV999 -- I-80 : Magazine St" → "Magazine St" (route is shown separately).
     const label = locationName.replace(/^[A-Za-z0-9_-]+\s*--\s*/, "").replace(/^[^:]*:\s*/, "").trim() || route;
-    out.push({ id: image, name: label, route, image, miles: round1(miles) });
+    out.push({ id: image, name: label, route, image, miles: round1(miles), lat: cLat, lon: cLon });
   }
   return out.sort((a, b) => a.miles - b.miles).slice(0, limit);
 }
 
 /** adsb.lol /v2/lat/../lon/../dist/.. → overhead aircraft, nearest first. */
-export function parseFlights(json: unknown, lat: number, lon: number, limit = 5): { count: number; nearest: Flight[] } {
+export function parseFlights(json: unknown, lat: number, lon: number, limit = 5): { count: number; nearest: Flight[]; all: Flight[] } {
   const ac = ((json as { ac?: unknown[] })?.ac ?? []) as Record<string, unknown>[];
   const airborne: Flight[] = [];
   for (const a of ac) {
@@ -197,16 +220,22 @@ export function parseFlights(json: unknown, lat: number, lon: number, limit = 5)
     const fLon = Number(a.lon);
     if (!Number.isFinite(fLat) || !Number.isFinite(fLon) || a.alt_baro === "ground") continue;
     const alt = Number(a.alt_baro);
+    const track = Number(a.track ?? a.true_heading);
+    const gs = Number(a.gs);
     airborne.push({
       hex: String(a.hex ?? ""),
       callsign: String(a.flight ?? a.r ?? a.hex ?? "").trim() || "Unknown",
       type: a.t ? String(a.t) : undefined,
       altitudeFt: Number.isFinite(alt) ? Math.round(alt) : undefined,
       miles: round1(milesBetween(lat, lon, fLat, fLon)),
+      lat: fLat,
+      lon: fLon,
+      track: Number.isFinite(track) ? Math.round(track) : undefined,
+      speedKt: Number.isFinite(gs) ? Math.round(gs) : undefined,
     });
   }
   airborne.sort((x, y) => x.miles - y.miles);
-  return { count: airborne.length, nearest: airborne.slice(0, limit) };
+  return { count: airborne.length, nearest: airborne.slice(0, limit), all: airborne.slice(0, 40) };
 }
 
 // ── What deserves a push notification ────────────────────────────────────

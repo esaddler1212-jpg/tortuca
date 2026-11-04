@@ -149,16 +149,12 @@ Rules (same as IRIS):
 
 ## Step 6: Connect it to IRIS
 
-Small change in this repo (open a PR, E merges):
-1. Add a `VITE_GODS_EYE_URL` setting (default empty). Example:
-   `http://localhost:4173` or the server's private address.
-2. In `src/components/PulsePanel.tsx`, when it's set, show an **"Open God's Eye"**
-   link in the header. When empty, show nothing.
-3. Optional: Iris can say "Want me to open the globe?" when E asks about
-   flights, ships or quakes. It only opens the link, it never reads the globe's
-   data or keys.
-4. Run `npm run test:time` and `npm run build`, then screenshot the Pulse panel at
-   phone width.
+Already built (PR #43): the Bay Area Pulse has a **Link God's Eye globe**
+button. On the device that runs the globe, open IRIS → Today → Bay Area Pulse →
+**Link God's Eye globe**, enter the address (usually `localhost:4173`) and Save.
+It then shows **Open God's Eye**. The address is saved on that device only
+(`localStorage` key `iris-gods-eye-url`, logic in `shared/godsEye.ts`); IRIS
+only opens the link, it never reads the globe's data or keys.
 
 ## Step 7: Check it works
 
@@ -169,7 +165,7 @@ Small change in this repo (open a PR, E merges):
 - [ ] ALPR/CCTV layers are off
 - [ ] Not reachable from another device (unless E asked for home-network sharing)
 - [ ] `git status` in the IRIS repo shows no keys; `.env` exists only in the clone
-- [ ] IRIS Pulse shows the "Open God's Eye" link (if Step 6 was done)
+- [ ] IRIS Pulse → Link God's Eye globe saved, and **Open God's Eye** opens it
 
 Tell E what's on, what's off, what each key costs, and how to start it next time
 (`cd gods-eye-view && nvm use 24 && npm run dev`, or Pinokio → Start).

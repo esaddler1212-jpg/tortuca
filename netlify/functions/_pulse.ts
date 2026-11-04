@@ -7,6 +7,8 @@ import {
   parseWeatherAlerts,
   type PulseSnapshot,
 } from "../../shared/pulse";
+import { issForecast } from "./_sky";
+import { bayShips } from "./_ships";
 
 const UA = "IRIS personal dashboard (alfred2.netlify.app)";
 
@@ -32,7 +34,11 @@ async function caltransD4(): Promise<unknown> {
 }
 
 /** Fetch every feed in parallel; each failure is recorded, never thrown. */
-export async function buildPulse(lat: number, lon: number, opts: { cams?: boolean; flights?: boolean } = {}): Promise<PulseSnapshot> {
+export async function buildPulse(
+  lat: number,
+  lon: number,
+  opts: { cams?: boolean; flights?: boolean; sky?: boolean; ships?: boolean } = {},
+): Promise<PulseSnapshot> {
   const since = new Date(Date.now() - 7 * 86_400_000).toISOString().slice(0, 10);
   const la = lat.toFixed(4);
   const lo = lon.toFixed(4);
@@ -46,7 +52,7 @@ export async function buildPulse(lat: number, lon: number, opts: { cams?: boolea
     }
   };
 
-  const [quakes, alerts, air, fires, cams, flights] = await Promise.all([
+  const [quakes, alerts, air, fires, cams, flights, iss, ships] = await Promise.all([
     attempt(
       "Earthquakes",
       async () =>
@@ -97,9 +103,11 @@ export async function buildPulse(lat: number, lon: number, opts: { cams?: boolea
     opts.flights === false
       ? Promise.resolve(null)
       : attempt("Flights", async () => parseFlights(await getJson(`https://api.adsb.lol/v2/lat/${lat.toFixed(3)}/lon/${lon.toFixed(3)}/dist/22`), lat, lon), null),
+    opts.sky === false ? Promise.resolve(undefined) : attempt("ISS passes", () => issForecast(lat, lon), undefined),
+    opts.ships === false ? Promise.resolve(undefined) : attempt("Ships", () => bayShips(), null),
   ]);
 
-  return { fetchedAt: new Date().toISOString(), quakes, alerts, air, fires, cams, flights, unavailable };
+  return { fetchedAt: new Date().toISOString(), quakes, alerts, air, fires, cams, flights, iss, ships, unavailable };
 }
 
 /** Accept only real coordinates (defaults to Vallejo). */

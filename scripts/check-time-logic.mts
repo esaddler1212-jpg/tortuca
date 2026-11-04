@@ -18,6 +18,10 @@ import * as Plan from "../shared/plan.ts";
 import * as Sparks from "../shared/sparks.ts";
 import * as Hub from "../shared/hub.ts";
 import * as Pulse from "../shared/pulse.ts";
+import { normalizeGodsEyeUrl } from "../shared/godsEye.ts";
+import * as Sky from "../shared/sky.ts";
+import * as Fl from "../shared/flight.ts";
+import { parseAisMessages } from "../shared/ships.ts";
 import { buildAskContext } from "../src/lib/askContext.ts";
 import * as Ex from "../shared/exercises.ts";
 import { buildFamilyPurposeWoodhouseNode } from "../netlify/functions/_family-purpose-woodhouse.ts";
@@ -200,6 +204,56 @@ const snap = { fetchedAt: "", quakes: qs, alerts: Pulse.parseWeatherAlerts({ fea
 check("pulse: alerts for near quake, fire, red flag, bad air", Pulse.pulseAlerts(snap, new Date("2026-11-02T20:30:00Z"), "2026-11-02").map((a) => a.id), ["q:nc1", "f:2026-CA-1", "w:nws1", "a:2026-11-02"]);
 check("pulse: old quake doesn't alert", Pulse.pulseAlerts({ ...snap, fires: [], alerts: [], air: null }, new Date("2026-11-03T20:30:00Z"), "d").length, 0);
 check("pulse: summary line", Pulse.pulseSummary({ ...snap, air: Pulse.parseAir({ current: { us_aqi: 40 } }) }), "Red Flag Warning · AQI 40 good · Lake Fire 21 mi · M3.4 quake 7 mi");
+check("god's eye: host:port gets http", normalizeGodsEyeUrl("localhost:4173"), "http://localhost:4173");
+check("god's eye: LAN IP", normalizeGodsEyeUrl(" 192.168.1.20:4173 "), "http://192.168.1.20:4173");
+check("god's eye: full https kept", normalizeGodsEyeUrl("https://globe.example.lan/"), "https://globe.example.lan");
+check("god's eye: rejects javascript:", normalizeGodsEyeUrl("javascript:alert(1)"), null);
+check("god's eye: rejects credentials", normalizeGodsEyeUrl("http://user:pw@localhost:4173"), null);
+check("god's eye: empty is null", normalizeGodsEyeUrl("  "), null);
+check("pulse: flights carry map position + heading", [fl.nearest[0].lat, fl.nearest[0].lon, fl.all.length], [38.12, -122.26, 1]);
+check("pulse: quakes/fires/cams carry map position", [qs[0].lat, fires[0].lon, cams[0].lat], [38.2, -122.3, 38.11]);
+
+// ── ISS passes (sample TLE from June 2019, checked against that week)
+const ISS1 = "1 25544U 98067A   19156.50900463  .00003075  00000-0  59442-4 0  9992";
+const ISS2 = "2 25544  51.6433  59.2583 0008217  16.4489 347.6017 15.51174618173442";
+const passes = Sky.issPasses(ISS1, ISS2, V[0], V[1], new Date("2019-06-05T12:00:00Z"), 48);
+check("sky: finds several ISS passes in 2 days", passes.length >= 4 && passes.length <= 14, true);
+check("sky: passes last 2–12 minutes", passes.every((p) => { const m = (Date.parse(p.end) - Date.parse(p.start)) / 60000; return m >= 1 && m <= 12; }), true);
+check("sky: peak inside pass, elevation sane", passes.every((p) => p.start <= p.peak && p.peak <= p.end && p.maxElevation >= 10 && p.maxElevation <= 90), true);
+check("sky: some passes visible (June evenings), not all", passes.some((p) => p.visible) && passes.some((p) => !p.visible), true);
+check("sky: visible passes are at dusk/dawn locally", passes.filter((p) => p.visible).every((p) => { const h = Number(new Date(p.start).toLocaleString("en-US", { hour: "numeric", hourCycle: "h23", timeZone: "America/Los_Angeles" })); return h >= 20 || h <= 5; }), true);
+check("sky: compass", [Sky.compass(0), Sky.compass(44), Sky.compass(315), Sky.compass(359)], ["N", "NE", "NW", "N"]);
+check("sky: describe tonight", Sky.describePass({ start: "2026-11-04T02:42:00Z", peak: "", end: "", maxElevation: 54, from: "NW", peakDir: "N", to: "SE", visible: true, visibleMinutes: 5 }, "America/Los_Angeles", new Date("2026-11-03T20:00:00Z")), "Tonight 6:42 PM, NW to SE, 54° high, about 5 min");
+
+// ── Flight tracking
+check("flight: callsigns from speech", ["UA 123", "ua123", "United 123", "flight DL 45", "UAL123", "N123AB", "B6 615", "hello", "XX 12"].map(Fl.toCallsign), ["UAL123", "UAL123", "UAL123", "DAL45", "UAL123", "N123AB", "JBU615", null, null]);
+const fix = Fl.parseCallsignResponse({ ac: [
+  { hex: "old", flight: "UAL123  ", lat: 1, lon: 1, seen_pos: 400 },
+  { hex: "a1b2c3", flight: "UAL123  ", t: "B39M", r: "N37502", lat: 39.5, lon: -119.8, alt_baro: 36000, gs: 450, track: 250, baro_rate: 0, seen_pos: 2 },
+] }, "UAL123");
+check("flight: freshest fix wins", [fix?.hex, fix?.airline, fix?.altitudeFt, fix?.speedKt], ["a1b2c3", "United", 36000, 450]);
+const route = Fl.parseRoute([{ callsign: "UAL123", plausible: 1, _airports: [
+  { iata: "ORD", name: "Chicago O'Hare", location: "Chicago", lat: 41.98, lon: -87.9 },
+  { iata: "SFO", name: "San Francisco Intl", location: "San Francisco", lat: 37.62, lon: -122.38 },
+] }]);
+check("flight: route origin → destination", [route.origin?.code, route.destination?.code], ["ORD", "SFO"]);
+check("flight: implausible route ignored", Fl.parseRoute([{ plausible: 0, _airports: [{ iata: "A" }, { iata: "B" }] }]), {});
+const eta = Fl.withEta(fix!, route, new Date("2026-11-03T20:00:00Z"));
+check("flight: miles to go + ETA from speed", [eta.milesToGo, eta.eta?.slice(0, 16)], [191, "2026-11-03T20:32"]);
+check("flight: spoken answer", Fl.describeFlight(eta, "America/Los_Angeles", V[0], V[1]), "United 123 from Chicago to San Francisco is at 36000 feet, 518 mph, about 164 miles from you. Estimated landing around 12:32 PM, 191 miles to go.");
+check("flight: on the ground", Fl.describeFlight({ ...eta, onGround: true }, "America/Los_Angeles"), "United 123 from Chicago to San Francisco is on the ground right now.");
+
+// ── Ships (AISStream)
+const ships = parseAisMessages([
+  { MessageType: "PositionReport", MetaData: { MMSI: 1, ShipName: "MSC ANNA@@@" }, Message: { PositionReport: { Latitude: 37.81, Longitude: -122.36, Sog: 12.3, Cog: 270.4, NavigationalStatus: 0 } } },
+  { MessageType: "PositionReport", MetaData: { MMSI: 1, ShipName: "MSC ANNA" }, Message: { PositionReport: { Latitude: 37.80, Longitude: -122.40, Sog: 12.5, Cog: 271, NavigationalStatus: 0 } } },
+  { MessageType: "PositionReport", MetaData: { MMSI: 2, ShipName: "" }, Message: { PositionReport: { Latitude: 38.06, Longitude: -122.25, Sog: 0, Cog: 360, NavigationalStatus: 5 } } },
+  { MessageType: "ShipStaticData", MetaData: { MMSI: 2 }, Message: { ShipStaticData: { Name: "VALLEJO", Type: 60, Destination: "SF FERRY BLDG" } } },
+  { MessageType: "ShipStaticData", MetaData: { MMSI: 1 }, Message: { ShipStaticData: { Type: 71 } } },
+  { MessageType: "PositionReport", MetaData: { MMSI: 3 }, Message: { PositionReport: { Latitude: 91, Longitude: 0 } } },
+]);
+check("ships: one per vessel, latest position, moving first", ships.map((x) => [x.name, x.lon, x.speedKt, x.status, x.kind]), [["MSC ANNA", -122.4, 12.5, "underway", "Cargo"], ["VALLEJO", -122.25, 0, "moored", "Passenger"]]);
+check("ships: unknown course dropped", ships[1].course, undefined);
 
 // ── conversation context: Family Purpose details never leave the device
 const ctx = buildAskContext({
