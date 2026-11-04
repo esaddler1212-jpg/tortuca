@@ -105,7 +105,8 @@ export default function App() {
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", themeColor);
   }, [mode]);
   const { snapshot: stocks, loading: stocksLoading } = useStocks();
-  const { effectiveMinutes, loading: commuteLoading, error: commuteError } = useCommute(settings);
+  const commute = useCommute(settings, connected);
+  const effectiveMinutes = commute.effectiveMinutes;
   const { logs: fitnessLogs, logWorkout, loadRemote: loadFitness } = useFitness(settings);
   const { hub, update: updateHub } = useHub();
   const bizResearch = useBusinessResearch(settings.timezone);
@@ -558,9 +559,6 @@ export default function App() {
                   <OvernightDeltaBanner delta={overnightDelta} />
                   {overcommitment && <OvercommitmentBanner warning={overcommitment} />}
                   {showWindDown && <WindDownBanner bedtime={bedtime} />}
-                  {commuteError && settings.useLiveCommute && (
-                    <p className="text-sm text-amber-300/90 panel px-4 py-2">{commuteError}</p>
-                  )}
                 </>
               }
               unreadEmails={unread}
@@ -725,7 +723,6 @@ export default function App() {
               woodhouse={woodhouse}
               familyPurposeAppUrl={familyPurposeAppUrl}
             />
-            {commuteLoading && settings.useLiveCommute && <p className="text-xs text-alfred-mist">Updating live commute…</p>}
           </>
         )}
       </main>
@@ -753,6 +750,18 @@ export default function App() {
         onSaveWoodhouseNodes={(nodes) => {
           persist({ ...settings, woodhouseNodes: nodes });
         }}
+        commuteStatus={
+          !settings.useLiveCommute
+            ? "Live traffic is off. Leave-by uses your usual minutes."
+            : commute.configured === false
+              ? "Live traffic needs GOOGLE_MAPS_API_KEY in Netlify. Until then, leave-by uses your usual minutes."
+              : commute.hasAddresses === false
+                ? "Add both addresses and save, and the server will check traffic on school mornings."
+                : commute.live
+                  ? `Last live check: ${commute.live.minutes} min at ${new Date(commute.live.fetchedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: settings.timezone })}${commute.usingLive ? " (in use now)" : ""}. Checked every 15 min on school mornings.`
+                  : "The server checks traffic every 15 minutes on school mornings."
+        }
+        onRefreshCommute={() => void commute.refresh()}
         onSaveCommute={(patch) => {
           persist({ ...settings, ...patch });
         }}

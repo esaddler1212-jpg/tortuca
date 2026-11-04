@@ -12,6 +12,8 @@ export interface LeaveByLite {
 export function computeServerLeaveBy(
   settings: SyncedUserSettings,
   forDate = new Date(),
+  /** Live traffic minutes when fresh (see shared/commute.ts); else the manual number. */
+  commuteMinutes?: number,
 ): LeaveByLite | null {
   const tz = settings.timezone;
   if (isWeekend(forDate, tz)) return null;
@@ -19,7 +21,7 @@ export function computeServerLeaveBy(
   const day = dayKey(tz, forDate);
   if (NO_SCHOOL_DAYS.has(day)) return null;
   const arriveBy = zonedDateTime(day, settings.schoolStartTime || "08:00", tz);
-  const commute = settings.commuteMinutes;
+  const commute = commuteMinutes ?? settings.commuteMinutes;
   const buffer = settings.arriveBufferMinutes;
   const leaveBy = new Date(arriveBy.getTime() - (commute + buffer) * 60_000);
   const destination = settings.schoolName || "school";

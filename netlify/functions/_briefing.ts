@@ -2,6 +2,7 @@ import { getDailyQuote } from "../../shared/dailyQuote";
 import type { AlfredUserData } from "../../shared/userDataTypes";
 import type { StoredSession } from "./_shared";
 import { computeServerLeaveBy } from "../../shared/leaveByLite";
+import { commuteMinutesFor } from "../../shared/commute";
 
 export interface DigestContent {
   subject: string;
@@ -66,7 +67,8 @@ export async function buildMorningDigest(
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(new Date());
   const urgent = pending.filter((t) => t.dueDate === today);
   const weather = await fetchWeather(settings.latitude, settings.longitude);
-  const leavePlan = computeServerLeaveBy(settings, new Date());
+  const liveMinutes = commuteMinutesFor(settings, userData.liveCommute);
+  const leavePlan = computeServerLeaveBy(settings, new Date(), liveMinutes);
 
   const lines: string[] = [];
   lines.push("Good morning.");
@@ -91,7 +93,7 @@ export async function buildMorningDigest(
   if (urgent.length > 0) {
     lines.push(`${urgent.length} task${urgent.length === 1 ? "" : "s"} due today.`);
   }
-  lines.push(`Leave-by uses ${settings.useLiveCommute ? "live" : "manual"} commute (${settings.commuteMinutes} min + ${settings.arriveBufferMinutes} min buffer).`);
+  lines.push(`Leave-by uses ${liveMinutes !== settings.commuteMinutes ? "live traffic" : "your usual"} commute (${liveMinutes} min + ${settings.arriveBufferMinutes} min buffer).`);
   lines.push(`Open IRIS for your full command center.`);
 
   const subject = `IRIS morning briefing — ${new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "short", month: "short", day: "numeric" }).format(new Date())}`;
@@ -108,7 +110,7 @@ export async function buildMorningDigest(
       <h2 style="font-size: 16px; color: #4ade80;">Today's focus</h2>
       <ul>${topTasks.length ? topTasks.map((t) => `<li>${t}</li>`).join("") : "<li>All clear</li>"}</ul>
       ${urgent.length ? `<p><strong>${urgent.length}</strong> due today.</p>` : ""}
-      <p style="color: #666; font-size: 13px;">Commute: ${settings.commuteMinutes} min drive + ${settings.arriveBufferMinutes} min buffer${settings.useLiveCommute ? " (live traffic when available)" : ""}.</p>
+      <p style="color: #666; font-size: 13px;">Commute: ${liveMinutes} min drive + ${settings.arriveBufferMinutes} min buffer${settings.useLiveCommute ? " (live traffic when available)" : ""}.</p>
       <p style="margin-top: 24px; font-size: 13px; color: #888;">— Iris, at your service.</p>
     </div>
   `;

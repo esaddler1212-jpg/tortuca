@@ -5,6 +5,7 @@ import { initBlobs } from "./_shared";
 import type { SyncedTodo } from "../../shared/userDataTypes";
 import { computeSuggestedBedtime, nextWakeDay } from "../../shared/bedtime";
 import { computeServerLeaveBy } from "../../shared/leaveByLite";
+import { commuteMinutesFor } from "../../shared/commute";
 import { dayKey, zonedDateTime } from "../../shared/timezone";
 
 export const config: Config = {
@@ -30,7 +31,7 @@ export const handler: Handler = async (event) => {
     const tz = settings.timezone;
     const day = dayKey(tz, now);
 
-    const leavePlan = computeServerLeaveBy(settings, now);
+    const leavePlan = computeServerLeaveBy(settings, now, commuteMinutesFor(settings, data.liveCommute, now));
     if (leavePlan) {
       const msUntilLeave = leavePlan.leaveBy.getTime() - now.getTime();
       const leaveKey = `${day}-leave`;

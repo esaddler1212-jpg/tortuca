@@ -23,6 +23,9 @@ interface Props {
   push: PushState;
   onSaveCity: (city: string) => Promise<boolean>;
   onSaveWoodhouseNodes: (nodes: WoodhouseRegistryEntry[]) => void;
+  /** Plain-language live-traffic status (server-side commute). */
+  commuteStatus?: string;
+  onRefreshCommute?: () => void;
   onSaveCommute: (
     patch: Partial<
       Pick<
@@ -66,6 +69,8 @@ export function SettingsDrawer({
   push,
   onSaveCity,
   onSaveWoodhouseNodes,
+  commuteStatus,
+  onRefreshCommute,
   onSaveCommute,
   onSaveNotifications,
   onConnectGoogle,
@@ -211,16 +216,26 @@ export function SettingsDrawer({
                   <p className="text-xs text-alfred-mist/70">
                     Bell schedule auto-detects Wednesday early release and minimum days from Family Purpose.
                   </p>
-                  <label className="text-xs text-alfred-mist" htmlFor="commute">Commute fallback (minutes)</label>
+                  <label className="text-xs text-alfred-mist" htmlFor="commute">Usual commute (minutes)</label>
                   <input id="commute" type="number" min={1} className="input-field" value={commute} onChange={(e) => setCommute(e.target.value)} />
                   <label className="text-xs text-alfred-mist" htmlFor="home-address">Home address</label>
-                  <input id="home-address" className="input-field" value={homeAddress} onChange={(e) => setHomeAddress(e.target.value)} placeholder="1001 North Regatta Dr, Vallejo, CA" />
+                  <input id="home-address" className="input-field" value={homeAddress} onChange={(e) => setHomeAddress(e.target.value)} placeholder="Your home address" />
                   <label className="text-xs text-alfred-mist" htmlFor="school-address">School / destination address</label>
-                  <input id="school-address" className="input-field" value={schoolAddress} onChange={(e) => setSchoolAddress(e.target.value)} placeholder="2050 Minert Rd, Concord, CA" />
-                  <label className="flex items-center gap-2 text-sm text-alfred-mist mt-2">
+                  <input id="school-address" className="input-field" value={schoolAddress} onChange={(e) => setSchoolAddress(e.target.value)} placeholder="School or work address" />
+                  <label className="flex min-h-[44px] items-center gap-2 text-sm text-alfred-mist mt-2">
                     <input type="checkbox" checked={useLiveCommute} onChange={(e) => setUseLiveCommute(e.target.checked)} />
-                    Use live Google Maps commute (requires GOOGLE_MAPS_API_KEY)
+                    Use live traffic (the server checks it on school mornings)
                   </label>
+                  {commuteStatus && (
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-xs text-alfred-mist/80">{commuteStatus}</p>
+                      {onRefreshCommute && googleConnected && useLiveCommute && (
+                        <button type="button" className="btn-ghost min-h-[40px] shrink-0 px-3 text-xs" onClick={onRefreshCommute}>
+                          Check now
+                        </button>
+                      )}
+                    </div>
+                  )}
                   <label className="text-xs text-alfred-mist" htmlFor="buffer">Arrival buffer (minutes)</label>
                   <input id="buffer" type="number" min={0} className="input-field" value={buffer} onChange={(e) => setBuffer(e.target.value)} />
                 </div>

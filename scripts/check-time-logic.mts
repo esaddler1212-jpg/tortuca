@@ -20,6 +20,7 @@ import * as Hub from "../shared/hub.ts";
 import * as Usage from "../shared/irisUsage.ts";
 import { matchPlanetFromSpeech, HUD_TABS, HUD_MORE } from "../shared/solarPlanets.ts";
 import { hudGauges } from "../shared/hudGauges.ts";
+import { commuteMinutesFor, inCommuteWindow } from "../shared/commute.ts";
 import * as Pulse from "../shared/pulse.ts";
 import { normalizeGodsEyeUrl } from "../shared/godsEye.ts";
 import * as Sky from "../shared/sky.ts";
@@ -387,6 +388,26 @@ check(
   check("hud: plan month progress", [g.plan.value, Math.round(g.plan.fill * 100)], ["NOV · 2/7", 29]);
   check("hud: empty list reads all clear, urgent shows in caption", [hudGauges({ ...base, todosPending: 0, todosDone: 0 })[0].value, hudGauges({ ...base, urgent: 2 })[0].caption], ["ALL CLEAR", "TODAY · 2 URGENT"]);
   check("hud: 4 tabs + everything else under More, no module lost", [HUD_TABS.join(","), [...HUD_TABS, ...HUD_MORE].length], ["today,vitals,inbox,plan", 10]);
+}
+
+// ── Server-side live commute
+{
+  const cs = { timezone: "America/Los_Angeles", schoolStartTime: "08:00", useLiveCommute: true, commuteMinutes: 35 };
+  // Wed Nov 4 2026, PST (UTC-8)
+  check("commute: checks traffic 4–8 AM on school days only", [
+    inCommuteWindow(cs, new Date("2026-11-04T11:30:00Z")), // 3:30 AM
+    inCommuteWindow(cs, new Date("2026-11-04T12:15:00Z")), // 4:15 AM
+    inCommuteWindow(cs, new Date("2026-11-04T15:45:00Z")), // 7:45 AM
+    inCommuteWindow(cs, new Date("2026-11-04T16:30:00Z")), // 8:30 AM
+    inCommuteWindow(cs, new Date("2026-11-07T15:00:00Z")), // Saturday 7 AM
+  ], [false, true, true, false, false]);
+  const at = new Date("2026-11-04T15:00:00Z");
+  const live = { minutes: 48, fetchedAt: "2026-11-04T14:45:00Z" };
+  check("commute: fresh live minutes win", commuteMinutesFor(cs, live, at), 48);
+  check("commute: stale live minutes fall back", commuteMinutesFor(cs, { ...live, fetchedAt: "2026-11-04T13:00:00Z" }, at), 35);
+  check("commute: live off → usual minutes", commuteMinutesFor({ ...cs, useLiveCommute: false }, live, at), 35);
+  const lb = computeServerLeaveBy({ ...settings, timezone: "America/Los_Angeles", schoolStartTime: "08:00", arriveBufferMinutes: 5, commuteMinutes: 35 } as never, new Date("2026-11-04T15:00:00Z"), 48);
+  check("commute: server leave-by uses live minutes", lb && new Date(lb.leaveBy).toISOString(), "2026-11-04T15:07:00.000Z");
 }
 
 if (failures) {

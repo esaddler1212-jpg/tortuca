@@ -1,62 +1,39 @@
 import type { Handler } from "@netlify/functions";
+import { getValidSession, initBlobs, sessionHeader } from "./_shared";
+import { loadUserData, resolveDataKey, saveUserData } from "./_userData";
+import { googleCommute } from "./_commute";
+import { commuteMinutesFor } from "../../shared/commute";
 
-interface DistanceMatrixResponse {
-  rows?: Array<{
-    elements?: Array<{
-      status: string;
-      duration?: { value: number; text: string };
-      distance?: { value: number; text: string };
-    }>;
-  }>;
-}
-
+/**
+ * GET: the account's live commute (set by commute-scheduled) and whether live
+ * traffic is configured. POST: refresh it now. Signed-in only, so nobody else
+ * can spend the Google Maps key.
+ */
 export const handler: Handler = async (event) => {
-  if (event.httpMethod !== "GET") {
-    return { statusCode: 405, body: "Method not allowed" };
+  initBlobs(event);
+  const json = (code: number, body: unknown) => ({ statusCode: code, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" }, body: JSON.stringify(body) });
+  const sessionId = sessionHeader(event);
+  if (!sessionId || !(await getValidSession(sessionId))) return json(401, { error: "Connect Google to use live commute." });
+  const configured = Boolean(process.env.GOOGLE_MAPS_API_KEY);
+  const key = await resolveDataKey(sessionId);
+  let data = (await loadUserData(key)) ?? { updatedAt: new Date().toISOString() };
+  const s = data.settings;
+
+  if (event.httpMethod === "POST" && configured && s?.homeAddress && s.schoolAddress) {
+    const live = await googleCommute(s.homeAddress, s.schoolAddress);
+    if (live) {
+      data = { ...((await loadUserData(key)) ?? data), liveCommute: live };
+      await saveUserData(key, data);
+    }
+  } else if (event.httpMethod !== "GET" && event.httpMethod !== "POST") {
+    return json(405, { error: "GET or POST" });
   }
 
-  const origin = event.queryStringParameters?.origin?.trim();
-  const destination = event.queryStringParameters?.destination?.trim();
-  if (!origin || !destination) {
-    return { statusCode: 400, body: JSON.stringify({ error: "origin and destination required" }) };
-  }
-
-  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-  if (!apiKey) {
-    return {
-      statusCode: 200,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ demo: true, minutes: null, message: "Add GOOGLE_MAPS_API_KEY for live commute" }),
-    };
-  }
-
-  const url = new URL("https://maps.googleapis.com/maps/api/distancematrix/json");
-  url.searchParams.set("origins", origin);
-  url.searchParams.set("destinations", destination);
-  url.searchParams.set("mode", "driving");
-  url.searchParams.set("departure_time", "now");
-  url.searchParams.set("key", apiKey);
-
-  const res = await fetch(url);
-  if (!res.ok) {
-    return { statusCode: 502, body: JSON.stringify({ error: "Distance Matrix API error" }) };
-  }
-
-  const data = (await res.json()) as DistanceMatrixResponse;
-  const element = data.rows?.[0]?.elements?.[0];
-  if (!element || element.status !== "OK" || !element.duration) {
-    return { statusCode: 422, body: JSON.stringify({ error: "Could not calculate route", status: element?.status }) };
-  }
-
-  const minutes = Math.max(1, Math.ceil(element.duration.value / 60));
-  return {
-    statusCode: 200,
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      minutes,
-      durationText: element.duration.text,
-      distanceText: element.distance?.text,
-      fetchedAt: new Date().toISOString(),
-    }),
-  };
+  const live = data.liveCommute ?? null;
+  return json(200, {
+    configured,
+    hasAddresses: Boolean(s?.homeAddress && s.schoolAddress),
+    live,
+    minutes: s ? commuteMinutesFor(s, live) : null,
+  });
 };

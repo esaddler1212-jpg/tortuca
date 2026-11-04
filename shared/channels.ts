@@ -96,14 +96,15 @@ export function defaultChannels(primaryEmail?: string): ChannelConfig[] {
 export function normalizeChannels(raw: Partial<ChannelsState> | null | undefined, primaryEmail?: string): ChannelsState {
   const base = defaultChannels(primaryEmail);
   if (!raw?.channels?.length) {
-    return { ...EMPTY_CHANNELS, channels: base, drafts: raw?.drafts ?? [], updatedAt: raw?.updatedAt ?? new Date().toISOString() };
+    // A fresh device starts "oldest", so the account's real drafts always win.
+    return { ...EMPTY_CHANNELS, channels: base, drafts: raw?.drafts ?? [], updatedAt: raw?.updatedAt ?? new Date(0).toISOString() };
   }
   const byId = new Map(raw.channels.map((c) => [c.id, c]));
   const channels = base.map((d) => ({ ...d, ...byId.get(d.id) }));
   return {
     channels,
     drafts: raw.drafts ?? [],
-    updatedAt: raw.updatedAt ?? new Date().toISOString(),
+    updatedAt: raw.updatedAt ?? new Date(0).toISOString(),
   };
 }
 

@@ -12,8 +12,8 @@ const VALLEJO_COMMUTE_DEFAULTS: Partial<UserSettings> = {
   latitude: 38.1041,
   longitude: -122.2566,
   timezone: "America/Los_Angeles",
-  homeAddress: "1001 North Regatta Dr, Vallejo, CA 94591",
-  schoolAddress: "2050 Minert Rd, Concord, CA 94518",
+  homeAddress: "",
+  schoolAddress: "",
   commuteMinutes: 35,
   useLiveCommute: true,
 };
@@ -31,9 +31,6 @@ export function loadSettings(): UserSettings {
       parsed.latitude === 40.7128
     ) {
       return { ...parsed, ...VALLEJO_COMMUTE_DEFAULTS };
-    }
-    if (parsed.homeAddress === "Vallejo, CA") {
-      return { ...parsed, homeAddress: VALLEJO_COMMUTE_DEFAULTS.homeAddress! };
     }
     return parsed;
   } catch {
