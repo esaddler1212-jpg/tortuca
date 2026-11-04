@@ -324,6 +324,28 @@ if (!process.env.TIME_CHECK_CHILD) {
   check("identical results in UTC and America/Los_Angeles", utc === la, true);
 }
 
+// ── Uptime watchers (Uptime Kuma idea)
+{
+  const w = { id: "u1", name: "ECS site", url: "https://example.com", uptime: true };
+  const t = (m: number) => new Date(Date.parse("2026-11-04T12:00:00Z") + m * 60_000).toISOString();
+  const a = Hub.evaluateUptime(w, undefined, { status: 200, ms: 210 }, t(0));
+  check("uptime: first check up, no alert", [a.result.up, a.alert, a.result.history], [true, null, ["u"]]);
+  const b = Hub.evaluateUptime(w, a.result, { status: 503, ms: 90 }, t(10));
+  check("uptime: one failure is a blip (no alert yet)", [b.result.up, b.alert, b.result.fails], [true, null, 1]);
+  const c = Hub.evaluateUptime(w, b.result, { error: "timed out", ms: 10000 }, t(20));
+  check("uptime: two in a row → down alert", [c.result.up, c.alert, c.result.downSince], [false, "🔴 ECS site is down (timed out)", t(10)]);
+  const d = Hub.evaluateUptime(w, c.result, { status: 500 }, t(30));
+  check("uptime: still down, no repeat alert", [d.result.up, d.alert], [false, null]);
+  const e = Hub.evaluateUptime(w, d.result, { status: 200, ms: 180 }, t(55));
+  check("uptime: back up with how long", [e.result.up, e.alert, e.result.fails, e.result.downSince], [true, "🟢 ECS site is back up (down 45 min)", 0, undefined]);
+  check("uptime: login wall counts as up", [Hub.isUpStatus(401), Hub.isUpStatus(403), Hub.isUpStatus(404), Hub.isUpStatus(301)], [true, true, false, true]);
+  check("uptime: percent from history", Hub.uptimePercent(e.result.history), 40);
+  check("uptime: durations", [Hub.durationText(30_000), Hub.durationText(90 * 60_000), Hub.durationText(120 * 60_000)], ["1 min", "1 h 30 min", "2 h"]);
+  let h: ReturnType<typeof Hub.evaluateUptime>["result"] | undefined;
+  for (let i = 0; i < 200; i++) h = Hub.evaluateUptime(w, h, { status: 200 }, t(i * 10)).result;
+  check("uptime: keeps 24 h of checks", h!.history!.length, 144);
+}
+
 if (failures) {
   console.error(`\n${failures} check(s) failed`);
   process.exit(1);

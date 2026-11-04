@@ -97,6 +97,8 @@ export interface Watcher {
   url: string;
   /** Optional: alert when this text appears on the page (e.g. "applications open"). */
   lookFor?: string;
+  /** Uptime watcher (Uptime Kuma idea): checked every 10 minutes, alerts when it goes down or comes back. */
+  uptime?: boolean;
 }
 
 /** Server-owned result of the last check, keyed by watcher id. */
@@ -109,6 +111,79 @@ export interface WatchResult {
   /** A short line of what's new, when we can tell. */
   snippet?: string;
   error?: string;
+  /** Uptime watchers: is it up, how fast it answered, recent checks (newest last). */
+  up?: boolean;
+  ms?: number;
+  status?: number;
+  history?: UptimeMark[];
+  /** Failed checks in a row (alert at 2, so one blip doesn't wake you). */
+  fails?: number;
+  downSince?: string;
+}
+
+/** One uptime check: "u" up, "d" down. */
+export type UptimeMark = "u" | "d";
+const UPTIME_HISTORY = 144; // 24 h at one check per 10 minutes
+
+/** Responding counts as up; a login wall (401/403) still means the site is up. */
+export function isUpStatus(status: number): boolean {
+  return (status >= 200 && status < 400) || status === 401 || status === 403;
+}
+
+/** Turn one probe into the new state and, when it flips, an alert. */
+export function evaluateUptime(
+  w: Watcher,
+  prev: WatchResult | undefined,
+  probe: { status?: number; ms?: number; error?: string },
+  now: string,
+): { result: WatchResult; alert: string | null } {
+  const ok = probe.status !== undefined && isUpStatus(probe.status);
+  const fails = ok ? 0 : (prev?.fails ?? 0) + 1;
+  const history = [...(prev?.history ?? []), ok ? "u" : "d"].slice(-UPTIME_HISTORY) as UptimeMark[];
+  const wasDown = prev?.up === false;
+  const reason = probe.error ?? (probe.status !== undefined ? `HTTP ${probe.status}` : "no answer");
+  let alert: string | null = null;
+  let up = prev?.up ?? true;
+  let downSince = prev?.downSince;
+  if (ok) {
+    if (wasDown) alert = `🟢 ${w.name} is back up${downSince ? ` (down ${durationText(Date.parse(now) - Date.parse(downSince))})` : ""}`;
+    up = true;
+    downSince = undefined;
+  } else if (fails >= 2 && !wasDown) {
+    up = false;
+    downSince = prev?.checkedAt ?? now;
+    alert = `🔴 ${w.name} is down (${reason})`;
+  } else if (fails >= 2) {
+    up = false;
+  }
+  return {
+    result: {
+      checkedAt: now,
+      up,
+      ms: probe.ms,
+      status: probe.status,
+      history,
+      fails,
+      downSince,
+      changedAt: alert ? now : prev?.changedAt,
+      error: ok ? undefined : reason,
+    },
+    alert,
+  };
+}
+
+/** Share of recent checks that were up, e.g. 99.3. */
+export function uptimePercent(history: UptimeMark[] | undefined): number | null {
+  if (!history?.length) return null;
+  const up = history.filter((m) => m === "u").length;
+  return Math.round((up / history.length) * 1000) / 10;
+}
+
+export function durationText(ms: number): string {
+  const m = Math.max(1, Math.round(ms / 60_000));
+  if (m < 60) return `${m} min`;
+  const h = Math.floor(m / 60);
+  return m % 60 ? `${h} h ${m % 60} min` : `${h} h`;
 }
 
 /** Page HTML → comparable text (scripts, styles and tags removed). */
