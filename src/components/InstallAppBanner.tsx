@@ -77,7 +77,7 @@ export function InstallAppBanner() {
           </p>
         )}
       </div>
-      <button type="button" className="btn-ghost p-1 shrink-0" onClick={dismiss} aria-label="Dismiss">
+      <button type="button" className="btn-ghost flex h-11 w-11 shrink-0 items-center justify-center" onClick={dismiss} aria-label="Dismiss">
         <X className="h-4 w-4" />
       </button>
     </section>

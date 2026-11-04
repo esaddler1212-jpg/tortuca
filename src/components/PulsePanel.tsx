@@ -81,7 +81,7 @@ function TrackFlight({ lat, lon, timeZone, onResult }: { lat: number; lon: numbe
           autoCorrect="off"
           spellCheck={false}
         />
-        <button type="submit" className="btn-ghost px-3 py-1.5 text-xs" disabled={busy} aria-label="Track flight">
+        <button type="submit" className="btn-ghost flex h-11 w-11 items-center justify-center" disabled={busy} aria-label="Track flight">
           <Search className="h-4 w-4" aria-hidden />
         </button>
       </form>
@@ -179,7 +179,7 @@ function GodsEyeLink() {
 
   if (!url) {
     return (
-      <button type="button" className="flex items-center gap-1.5 text-[11px] text-alfred-mist hover:text-alfred-gold" onClick={startEdit}>
+      <button type="button" className="flex min-h-[40px] items-center gap-1.5 text-[11px] text-alfred-mist hover:text-alfred-gold" onClick={startEdit}>
         <Globe2 className="h-3.5 w-3.5" aria-hidden /> Link God's Eye globe
       </button>
     );
@@ -255,7 +255,7 @@ export function PulsePanel({ pulse, error, city, lat, lon, timeZone, defaultOpen
                 type="button"
                 aria-pressed={view === v}
                 onClick={() => pickView(v)}
-                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-wider ${
+                className={`inline-flex min-h-[40px] items-center gap-1.5 rounded-full border px-4 font-mono text-[11px] uppercase tracking-wider ${
                   view === v ? "border-alfred-gold bg-alfred-gold/15 text-alfred-gold" : "border-alfred-border/60 text-alfred-mist"
                 }`}
               >
@@ -276,7 +276,7 @@ export function PulsePanel({ pulse, error, city, lat, lon, timeZone, defaultOpen
                     type="button"
                     aria-pressed={layers[k]}
                     onClick={() => setLayers((l) => ({ ...l, [k]: !l[k] }))}
-                    className={`rounded-full border px-2.5 py-0.5 text-[11px] ${layers[k] ? "border-cyan-300/60 text-cyan-100" : "border-alfred-border/40 text-alfred-mist/70 line-through"}`}
+                    className={`min-h-[36px] rounded-full border px-3.5 text-[12px] ${layers[k] ? "border-cyan-300/60 text-cyan-100" : "border-alfred-border/40 text-alfred-mist/70 line-through"}`}
                   >
                     {label}
                   </button>
@@ -383,7 +383,7 @@ export function PulsePanel({ pulse, error, city, lat, lon, timeZone, defaultOpen
               <ul className="space-y-1 text-sm">
                 {pulse.quakes.slice(0, 4).map((q) => (
                   <li key={q.id}>
-                    <a href={q.url} target="_blank" rel="noreferrer" className="flex justify-between gap-2 hover:text-alfred-gold">
+                    <a href={q.url} target="_blank" rel="noreferrer" className="flex min-h-[40px] items-center justify-between gap-2 hover:text-alfred-gold">
                       <span className="truncate">
                         <span className={`font-mono ${q.mag >= 3.5 ? "text-amber-200" : ""}`}>M{q.mag}</span> {q.place}
                       </span>
@@ -423,7 +423,7 @@ export function PulsePanel({ pulse, error, city, lat, lon, timeZone, defaultOpen
               <ul className="space-y-1 text-sm">
                 {pulse.flights.nearest.map((f) => (
                   <li key={f.hex}>
-                    <a href={`https://globe.adsb.lol/?icao=${encodeURIComponent(f.hex)}`} target="_blank" rel="noreferrer" className="flex justify-between gap-2 hover:text-alfred-gold">
+                    <a href={`https://globe.adsb.lol/?icao=${encodeURIComponent(f.hex)}`} target="_blank" rel="noreferrer" className="flex min-h-[40px] items-center justify-between gap-2 hover:text-alfred-gold">
                       <span className="font-mono">
                         {f.callsign}
                         {f.type ? <span className="text-alfred-mist"> · {f.type}</span> : null}

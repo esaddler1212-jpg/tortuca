@@ -18,6 +18,7 @@ import * as Plan from "../shared/plan.ts";
 import * as Sparks from "../shared/sparks.ts";
 import * as Hub from "../shared/hub.ts";
 import * as Usage from "../shared/irisUsage.ts";
+import { matchPlanetFromSpeech } from "../shared/solarPlanets.ts";
 import * as Pulse from "../shared/pulse.ts";
 import { normalizeGodsEyeUrl } from "../shared/godsEye.ts";
 import * as Sky from "../shared/sky.ts";
@@ -366,6 +367,13 @@ if (!process.env.TIME_CHECK_CHILD) {
   for (let i = 0; i < 260; i++) big = Usage.addTrace(big, base, "2026-11-04");
   check("usage: keeps 200 traces but full day totals", [big.traces.length, big.days["2026-11-04"].calls], [200, 260]);
 }
+
+// ── Voice → module routing
+check(
+  "planets: inbox, drafts, vitals (Pulse) and today by voice",
+  ["open my inbox", "show my email", "any unread mail", "draft an email to the sponsor", "show the map", "where are the planes", "earthquakes near me", "open today", "show my schedule"].map(matchPlanetFromSpeech),
+  ["inbox", "inbox", "inbox", "channels", "vitals", "vitals", "vitals", "today", "today"],
+);
 
 if (failures) {
   console.error(`\n${failures} check(s) failed`);

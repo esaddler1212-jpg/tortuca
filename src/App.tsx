@@ -10,6 +10,7 @@ import { usePlan } from "./hooks/usePlan";
 import { SparkCard } from "./components/SparkCard";
 import { HubPanel } from "./components/HubPanel";
 import { PulsePanel } from "./components/PulsePanel";
+import { InboxPanel } from "./components/InboxPanel";
 import { usePulse } from "./hooks/usePulse";
 import { ConversationCaptions } from "./components/ConversationPanel";
 import { useConversation } from "./hooks/useConversation";
@@ -86,7 +87,7 @@ export default function App() {
   const { connected, accountEmail, connect, disconnect, connectionError } = useGoogleIntegration();
   const channelAgent = useChannels(accountEmail);
   const { allEvents, addLocalEvent } = useSchedule(connected);
-  const { messages, unread } = useEmails(connected);
+  const { messages, unread, loading: emailsLoading, error: emailsError, refresh: refreshEmails } = useEmails(connected);
   const { snapshot: rawWoodhouse, loading: woodhouseLoading, error: woodhouseError } = useWoodhouse();
   // Workday vs off duty: Family Purpose tasks hide on weekends, holidays and after 7 PM.
   // Clock picks the mode; the header's Focus menu can override it until the next switch.
@@ -347,6 +348,8 @@ export default function App() {
   const isSunday = weekdayOfDay(dayKey(settings.timezone, now)) === "Sun";
 
   const channelPendingCount = channelAgent.pending.length;
+  // Pulse lives in Vitals now; Today shows a one-line heads-up only when it matters.
+  const pulseUrgent = Boolean(pulse && (pulse.alerts.length || (pulse.air && pulse.air.aqi > 100) || pulse.fires.some((f) => f.miles <= 30)));
 
   const solarPlanetViews = useMemo(
     () =>
@@ -357,12 +360,16 @@ export default function App() {
             ? urgentCount
             : p.id === "channels"
               ? channelPendingCount
-              : undefined,
+              : p.id === "inbox"
+                ? unread
+                : undefined,
         alert:
           (p.id === "today" && urgentCount > 0) ||
-          (p.id === "channels" && channelPendingCount > 0),
+          (p.id === "channels" && channelPendingCount > 0) ||
+          (p.id === "inbox" && unread > 0) ||
+          (p.id === "vitals" && pulseUrgent),
       })),
-    [urgentCount, channelPendingCount],
+    [urgentCount, channelPendingCount, unread, pulseUrgent],
   );
 
   const [activePlanet, setActivePlanet] = useState<SolarPlanetId | null>(null);
@@ -440,7 +447,35 @@ export default function App() {
   const renderPlanetModule = (id: SolarPlanetId) => {
     switch (id) {
       case "vitals":
-        return <VitalsPanel weather={weather} city={settings.city} fitness={fitnessStatus} />;
+        return (
+          <>
+            <VitalsPanel weather={weather} city={settings.city} fitness={fitnessStatus} />
+            <PulsePanel
+              pulse={pulse}
+              error={pulseError}
+              city={settings.city}
+              lat={settings.latitude}
+              lon={settings.longitude}
+              timeZone={settings.timezone}
+              defaultOpen
+            />
+            {isSunday && weather?.week && <WeekWeatherPanel week={weather.week} city={settings.city} />}
+          </>
+        );
+      case "inbox":
+        return (
+          <InboxPanel
+            messages={messages}
+            unread={unread}
+            loading={emailsLoading}
+            error={emailsError}
+            googleConnected={connected}
+            timeZone={settings.timezone}
+            onRefresh={() => void refreshEmails()}
+            onConnectGoogle={() => void connect()}
+            onAddTodo={(title) => add(title)}
+          />
+        );
       case "apps":
         return <NetworkPanel woodhouse={woodhouse} googleConnected={connected} />;
       case "today":
@@ -472,17 +507,6 @@ export default function App() {
                 <>
                   <SparkCard plan={plan} today={today} onToggle={toggleSpark} onShuffle={shuffleSpark} onNote={noteSpark} />
                   {isVantageMode(mode) && <VantageBriefingPanel lines={vantage.lines} spoken={vantage.spoken} />}
-                  <PulsePanel
-                    key={`pulse-${isVantageMode(mode)}`}
-                    pulse={pulse}
-                    error={pulseError}
-                    city={settings.city}
-                    lat={settings.latitude}
-                    lon={settings.longitude}
-                    timeZone={settings.timezone}
-                    defaultOpen={isVantageMode(mode)}
-                  />
-                  {isSunday && weather?.week && <WeekWeatherPanel week={weather.week} city={settings.city} />}
                   {showWeeklyReview && <WeeklyReview review={weeklyReview} />}
                   <InstallAppBanner />
                   <OvernightDeltaBanner delta={overnightDelta} />
@@ -494,6 +518,9 @@ export default function App() {
                 </>
               }
               unreadEmails={unread}
+              onOpenInbox={() => focusPlanet("inbox")}
+              onOpenVitals={() => focusPlanet("vitals")}
+              pulseAlert={pulseUrgent ? pulseSummary(pulse!) : undefined}
               actions={todayActions}
               todayTimeline={todayTimeline}
               allSchedule={allSchedule}
@@ -599,7 +626,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen pb-20 relative">
+    <div className="min-h-screen min-h-[100dvh] safe-bottom relative">
       <div className="hud-vignette" aria-hidden />
       <div className="hud-scanline" aria-hidden />
       <HudHeader
