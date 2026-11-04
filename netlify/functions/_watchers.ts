@@ -1,24 +1,35 @@
 import { createHash } from "node:crypto";
-import { evaluateCheck, pageText, newSnippet, type WatchResult, type Watcher } from "../../shared/hub";
+import { evaluateCheck, evaluateUptime, pageText, newSnippet, type WatchResult, type Watcher } from "../../shared/hub";
 import type { AlfredUserData } from "../../shared/userDataTypes";
-import { fetchPublicText } from "./_fetchText";
+import { fetchPublicText, probeUrl } from "./_fetchText";
 import { loadUserData, pushAll, pushTargets, saveUserData } from "./_userData";
 
 /** Check one user's watchers; save results; push an alert for each change. */
 export async function runWatchers(
   key: string,
   data: AlfredUserData,
-  opts: { notify: boolean },
+  opts: { notify: boolean; only?: "uptime" | "pages" },
 ): Promise<{ state: Record<string, WatchResult>; alerts: string[] }> {
-  const watchers = ((data.hub as { watchers?: Watcher[] } | undefined)?.watchers ?? []).slice(0, 20);
+  const all = ((data.hub as { watchers?: Watcher[] } | undefined)?.watchers ?? []).slice(0, 20);
+  const watchers = all.filter((w) => (opts.only === "uptime" ? w.uptime : opts.only === "pages" ? !w.uptime : true));
   const prevState = (data.watchState ?? {}) as Record<string, WatchResult & { text?: string }>;
-  const state: Record<string, WatchResult & { text?: string }> = {};
+  // Start from the results we're not re-checking now (dropping deleted watchers).
+  const keep = new Set(all.map((w) => w.id));
+  const state: Record<string, WatchResult & { text?: string }> = Object.fromEntries(
+    Object.entries(prevState).filter(([id]) => keep.has(id) && !watchers.some((w) => w.id === id)),
+  );
   const alerts: string[] = [];
   const now = new Date().toISOString();
 
   await Promise.all(
     watchers.map(async (w) => {
       const prev = prevState[w.id];
+      if (w.uptime) {
+        const { result, alert } = evaluateUptime(w, prev, await probeUrl(w.url), now);
+        state[w.id] = result;
+        if (alert) alerts.push(alert);
+        return;
+      }
       try {
         const text = pageText(await fetchPublicText(w.url, 8000));
         const hash = createHash("sha256").update(text).digest("hex");
@@ -35,10 +46,14 @@ export async function runWatchers(
 
   // Re-read so edits made while pages were loading aren't overwritten.
   const latest = (await loadUserData(key)) ?? data;
-  await saveUserData(key, { ...latest, watchState: state });
+  // Save only what this run checked, on top of the latest saved results (the
+  // uptime and page jobs can overlap), and drop results for deleted watchers.
+  const checked = Object.fromEntries(watchers.filter((w) => state[w.id]).map((w) => [w.id, state[w.id]]));
+  const merged = { ...((latest.watchState ?? {}) as Record<string, WatchResult>), ...checked };
+  await saveUserData(key, { ...latest, watchState: Object.fromEntries(Object.entries(merged).filter(([id]) => keep.has(id))) });
   if (opts.notify && alerts.length && pushTargets(data).length && data.settings?.pushNotificationsEnabled) {
     await pushAll(data, {
-      title: alerts.length === 1 ? "IRIS · Watcher" : `IRIS · ${alerts.length} watchers`,
+      title: opts.only === "uptime" ? "IRIS · Uptime" : alerts.length === 1 ? "IRIS · Watcher" : `IRIS · ${alerts.length} watchers`,
       body: alerts.join(" · ").slice(0, 180),
       url: "/",
     });

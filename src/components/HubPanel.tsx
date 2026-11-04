@@ -24,10 +24,12 @@ import {
   FEED_TOPICS,
   INCOME_CATEGORIES,
   REVENUE_LADDER,
+  durationText,
   extractTodos,
   gymDayFor,
   isSafePublicUrl,
   moneyMonth,
+  uptimePercent,
   type FeedItem,
   type FeedTopic,
   type HubState,
@@ -269,6 +271,7 @@ function WatchTab({ hub, update, googleConnected }: Props) {
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [lookFor, setLookFor] = useState("");
+  const [uptime, setUptime] = useState(false);
 
   const call = async (method: "GET" | "POST") => {
     await ensureSession();
@@ -310,7 +313,9 @@ function WatchTab({ hub, update, googleConnected }: Props) {
           </button>
         )}
       </div>
-      <p className="text-xs text-alfred-mist">Iris checks these pages every 3 hours and pings your phone when they change.</p>
+      <p className="text-xs text-alfred-mist">
+        Iris checks pages every 3 hours and pings your phone when they change. Uptime watchers are checked every 10 minutes and ping you if a site goes down or comes back.
+      </p>
       {!googleConnected && <p className="text-sm text-alfred-mist">Connect Google in Settings to use watchers.</p>}
       {msg && <p className="text-xs text-alfred-gold">{msg}</p>}
       <ul className="space-y-2">
@@ -322,12 +327,15 @@ function WatchTab({ hub, update, googleConnected }: Props) {
               <div className="flex items-start justify-between gap-2">
                 <a href={w.url} target="_blank" rel="noreferrer" className="min-w-0">
                   <p className="truncate">{w.name}</p>
-                  <p className="text-[11px] text-alfred-mist truncate">{w.lookFor ? `Looking for "${w.lookFor}"` : "Any change"}</p>
+                  <p className="text-[11px] text-alfred-mist truncate">{w.uptime ? "Uptime · every 10 min" : w.lookFor ? `Looking for "${w.lookFor}"` : "Any change"}</p>
                 </a>
                 <button type="button" className="btn-ghost p-1" onClick={() => update((h) => ({ ...h, watchers: h.watchers.filter((x) => x.id !== w.id) }))} aria-label={`Stop watching ${w.name}`}>
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
               </div>
+              {w.uptime ? (
+                <UptimeStatus r={r} />
+              ) : (
               <p className="mt-1 text-[11px] font-mono text-alfred-mist">
                 {!r
                   ? "Not checked yet"
@@ -341,6 +349,7 @@ function WatchTab({ hub, update, googleConnected }: Props) {
                         ? `Changed ${timeAgo(r.changedAt)}`
                         : `No change · checked ${timeAgo(r.checkedAt)}`}
               </p>
+              )}
               {fresh && r?.snippet && <p className="mt-1 text-xs text-alfred-cream/80">“{r.snippet}”</p>}
             </li>
           );
@@ -356,7 +365,12 @@ function WatchTab({ hub, update, googleConnected }: Props) {
           }
           update((h) => ({
             ...h,
-            watchers: [...h.watchers, { id: newId("w"), name: name.trim(), url: url.trim(), lookFor: lookFor.trim() || undefined }].slice(0, 20),
+            watchers: [
+              ...h.watchers,
+              uptime
+                ? { id: newId("w"), name: name.trim(), url: url.trim(), uptime: true }
+                : { id: newId("w"), name: name.trim(), url: url.trim(), lookFor: lookFor.trim() || undefined },
+            ].slice(0, 20),
           }));
           setName("");
           setUrl("");
@@ -364,10 +378,38 @@ function WatchTab({ hub, update, googleConnected }: Props) {
           setMsg(null);
         }}
       >
-        <input className="input-field" placeholder="What is it? (e.g. Festival submissions)" value={name} onChange={(e) => setName(e.target.value)} aria-label="Watcher name" />
+        <div className="flex gap-1.5" role="group" aria-label="What to watch for">
+          {(
+            [
+              [false, "Page changes"],
+              [true, "Uptime"],
+            ] as const
+          ).map(([v, label]) => (
+            <button
+              key={label}
+              type="button"
+              aria-pressed={uptime === v}
+              onClick={() => setUptime(v)}
+              className={`${pill} ${uptime === v ? "border-alfred-gold bg-alfred-gold/15 text-alfred-gold" : "border-alfred-border/60 text-alfred-mist"}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <input
+          className="input-field"
+          placeholder={uptime ? "What is it? (e.g. ECS Network site)" : "What is it? (e.g. Festival submissions)"}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          aria-label="Watcher name"
+        />
         <input className="input-field" placeholder="https://…" value={url} onChange={(e) => setUrl(e.target.value)} aria-label="Page URL" inputMode="url" />
         <div className="flex gap-2">
-          <input className="input-field flex-1" placeholder='Optional: alert when it says… ("now open")' value={lookFor} onChange={(e) => setLookFor(e.target.value)} aria-label="Text to look for" />
+          {uptime ? (
+            <p className="flex-1 self-center text-[11px] text-alfred-mist">Pings you after two failed checks in a row, and again when it's back.</p>
+          ) : (
+            <input className="input-field flex-1" placeholder='Optional: alert when it says… ("now open")' value={lookFor} onChange={(e) => setLookFor(e.target.value)} aria-label="Text to look for" />
+          )}
           <button type="submit" className="btn-gold" aria-label="Add watcher">
             <Plus className="h-4 w-4" />
           </button>
@@ -376,6 +418,30 @@ function WatchTab({ hub, update, googleConnected }: Props) {
       <p className="text-[11px] text-alfred-mist">
         <Bell className="inline h-3 w-3" aria-hidden /> Turn on notifications in Settings to get pinged.
       </p>
+    </div>
+  );
+}
+
+/** Up/down dot, speed, 24 h uptime and the last few hours of checks. */
+function UptimeStatus({ r }: { r?: WatchResult }) {
+  if (!r?.history?.length) return <p className="mt-1 text-[11px] font-mono text-alfred-mist">Not checked yet</p>;
+  const pct = uptimePercent(r.history);
+  const down = r.up === false;
+  const recent = r.history.slice(-36);
+  return (
+    <div className="mt-1 space-y-1">
+      <p className={`text-[11px] font-mono ${down ? "text-red-300" : "text-alfred-mist"}`}>
+        <span className={`mr-1.5 inline-block h-2 w-2 rounded-full ${down ? "bg-red-400" : r.fails ? "bg-amber-300" : "bg-emerald-400"}`} aria-hidden />
+        {down
+          ? `Down${r.downSince ? ` for ${durationText(Date.now() - Date.parse(r.downSince))}` : ""}${r.error ? ` · ${r.error}` : ""}`
+          : `Up${r.ms !== undefined ? ` · ${r.ms} ms` : ""}${r.fails ? " · last check failed" : ""}`}
+        {pct !== null ? ` · ${pct}% (24 h)` : ""} · {timeAgo(r.checkedAt)}
+      </p>
+      <div className="flex h-2 gap-px" aria-label={`Last ${recent.length} checks: ${recent.filter((m) => m === "d").length} down`}>
+        {recent.map((m, i) => (
+          <span key={i} className={`flex-1 rounded-[1px] ${m === "u" ? "bg-emerald-400/70" : "bg-red-400/80"}`} />
+        ))}
+      </div>
     </div>
   );
 }

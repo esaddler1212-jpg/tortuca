@@ -118,6 +118,30 @@ function pickVoice(): SpeechSynthesisVoice | undefined {
   );
 }
 
+/** Each speak() call gets a number; pieces from an older call are ignored. */
+let speakRun = 0;
+
+/** Split a reply into sentences (merging short ones, splitting very long ones at commas). */
+export function speechChunks(text: string, max = 180): string[] {
+  // Break after . ! ? followed by a space (so "3.5" and "$4.50" stay whole).
+  const sentences = text.replace(/\s+/g, " ").trim().split(/(?<=[.!?]["')\]]?)\s+/);
+  const out: string[] = [];
+  for (const raw of sentences) {
+    let s = raw.trim();
+    if (!s) continue;
+    while (s.length > max) {
+      const cut = Math.max(s.lastIndexOf(", ", max), s.lastIndexOf("; ", max), s.lastIndexOf(" ", max));
+      const at = cut > max / 3 ? cut + 1 : max;
+      out.push(s.slice(0, at).trim());
+      s = s.slice(at).trim();
+    }
+    const last = out[out.length - 1];
+    if (last && last.length + s.length + 1 <= max && last.length < 60) out[out.length - 1] = `${last} ${s}`;
+    else if (s) out.push(s);
+  }
+  return out.length ? out : [text];
+}
+
 /**
  * Text-to-speech for Iris's replies (browser speech synthesis: Apple voices
  * on iPhone/Mac, system voices elsewhere). Mute state is shared app-wide and
@@ -163,35 +187,53 @@ export function useVoiceOutput() {
     }
     const synth = window.speechSynthesis;
     synth.cancel();
-    const u = new SpeechSynthesisUtterance(text);
+    const run = ++speakRun;
+    // Sentence-sized pieces: Chrome stops long utterances partway (~15 s),
+    // and short pieces let a tap cut her off cleanly.
+    const parts = speechChunks(text);
     const voice = pickVoice();
-    if (voice) {
-      u.voice = voice;
-      u.lang = voice.lang;
-    }
-    u.rate = getVoicePrefs().rate;
+    const rate = getVoicePrefs().rate;
+    let started = false;
     let ended = false;
     const finish = () => {
       if (ended) return;
       ended = true;
-      setSpeaking(false);
-      emitSignal({ speaking: false });
+      if (run === speakRun) {
+        setSpeaking(false);
+        emitSignal({ speaking: false });
+      }
       opts.onEnd?.();
     };
-    u.onstart = () => {
-      setSpeaking(true);
-      emitSignal({ speaking: true });
-      opts.onStart?.();
-    };
-    u.onboundary = (e) => {
-      if (e.name === "word" || !e.name) emitSignal({ tick: voiceSignal.tick + 1 });
-    };
-    u.onend = finish;
-    u.onerror = finish;
-    synth.speak(u);
+    parts.forEach((part, i) => {
+      const u = new SpeechSynthesisUtterance(part);
+      if (voice) {
+        u.voice = voice;
+        u.lang = voice.lang;
+      }
+      u.rate = rate;
+      u.onstart = () => {
+        if (run !== speakRun) return;
+        setSpeaking(true);
+        emitSignal({ speaking: true });
+        if (!started) {
+          started = true;
+          opts.onStart?.();
+        }
+      };
+      u.onboundary = (e) => {
+        if (e.name === "word" || !e.name) emitSignal({ tick: voiceSignal.tick + 1 });
+      };
+      // Only the last piece ends the reply; a cancel (new reply or tap) ends it too.
+      u.onend = () => {
+        if (i === parts.length - 1 || run !== speakRun) finish();
+      };
+      u.onerror = finish;
+      synth.speak(u);
+    });
   }, []);
 
   const stop = useCallback(() => {
+    speakRun++;
     if (speechOutputSupported()) window.speechSynthesis.cancel();
     setSpeaking(false);
     emitSignal({ speaking: false });

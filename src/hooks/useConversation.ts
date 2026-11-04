@@ -31,18 +31,38 @@ export function setGreetingEnabled(on: boolean) {
 }
 
 const YES = /^(yes|yeah|yep|yup|sure|please|save( it)?|do it|ok(ay)?|go ahead)\b/i;
-const GOODBYE = /^(stop|that'?s all|that is all|i'?m good|thanks,? alfred|thank you,? alfred|goodbye|bye( alfred)?|never ?mind)[.!]?$/i;
+const NO = /^(no|nope|nah|don'?t|skip|not this time)\b/i;
+/** "Thanks, Iris", "that's all", "bye boss", "okay I'm good"… ends the conversation. */
+export const GOODBYE =
+  /^(?:(?:ok(?:ay)?|alright|cool|perfect|great)[,.!]?\s*)?(?:stop|that'?s (?:all|it)|that is all|i(?:'?m| am) (?:good|done|straight)|we'?re (?:good|done)|thanks?(?: you)?(?: so much)?|thank you|goodbye|bye(?: bye)?|good ?night|later|peace|never ?mind)(?:[,.!]?\s*(?:iris|boss|girl))?(?:[,.!]?\s*(?:that'?s all|for now|bye))?[.!]*$/i;
+
+/** What Iris says while a slower answer (web search, flight lookup) is on its way. */
+const FILLERS = ["One sec.", "Let me check.", "On it.", "Give me a second, boss.", "Checking now."];
+const FILLER_AFTER_MS = 2500;
+const ASK_TIMEOUT_MS = 35_000;
+/** Pick the conversation back up if E taps her again within this window. */
+const RESUME_MS = 10 * 60_000;
+/** Small pause before listening again, so the mic doesn't catch the end of her voice. */
+const RELISTEN_DELAY_MS = 250;
 
 async function askAlfred(
   messages: Turn[],
   context: string,
   timeZone: string,
+  extra: { signal?: AbortSignal; location?: { lat: number; lon: number } } = {},
 ): Promise<{ reply: string; todos: { title: string; due: string }[]; planet?: SolarPlanetId }> {
   await ensureSession();
   const res = await fetch("/api/ask", {
     method: "POST",
     headers: { ...authHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ messages, context, timeZone }),
+    // Brief read-outs are local; the model only needs the real exchange.
+    body: JSON.stringify({
+      messages: messages.map(({ role, content }) => ({ role, content })),
+      context,
+      timeZone,
+      ...(extra.location ? { lat: extra.location.lat, lon: extra.location.lon } : {}),
+    }),
+    signal: extra.signal,
   });
   const data = (await res.json().catch(() => ({}))) as {
     reply?: string;
@@ -72,10 +92,14 @@ export function useConversation(opts: {
   buildBrief?: () => string;
   /** Iris chose a solar-system module (open_planet tool or speech match). */
   onOpenPlanet?: (id: SolarPlanetId) => void;
+  /** Where E is (for "how far is that flight from me"). */
+  location?: { lat: number; lon: number };
 }) {
   const [active, setActive] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [busy, setBusy] = useState(false);
+  const busyRef = useRef(busy);
+  busyRef.current = busy;
   const [error, setError] = useState<string | null>(null);
   const [handsFree, setHandsFree] = useState(true);
   /** Iris asked "save this conversation?" and is waiting for yes/no. */
@@ -102,6 +126,26 @@ export function useConversation(opts: {
   const turnsRef = useRef(turns);
   turnsRef.current = turns;
   const listenRef = useRef<() => void>(() => undefined);
+  /** Bumps per question; an older answer that arrives late is dropped. */
+  const requestRef = useRef(0);
+  const abortRef = useRef<AbortController | null>(null);
+  /** The last conversation, so a quick follow-up tap picks up where it left off. */
+  const lastRef = useRef<{ turns: Turn[]; at: number } | null>(null);
+
+  /** Listen again after she finishes (short pause so the mic doesn't hear her). */
+  const relisten = () => {
+    setTimeout(() => {
+      if (activeRef.current) listenRef.current();
+    }, RELISTEN_DELAY_MS);
+  };
+
+  /** Cancel a question still in flight (E tapped, ended, or asked again). */
+  const cancelPending = () => {
+    requestRef.current++;
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setBusy(false);
+  };
 
   const transcript = () =>
     turnsRef.current.map((t) => `${t.role === "user" ? "You" : "Iris"}: ${t.content}`).join("\n");
@@ -110,6 +154,7 @@ export function useConversation(opts: {
   const finish = useCallback(
     (save: boolean) => {
       if (save && turnsRef.current.length) optsRef.current.onSaveTranscript?.(transcript());
+      if (turnsRef.current.length) lastRef.current = { turns: turnsRef.current, at: Date.now() };
       setOfferSave(false);
       setActive(false);
       setTurns([]);
@@ -129,7 +174,7 @@ export function useConversation(opts: {
     voice.speak("Want me to save this conversation to your memos?", {
       force: true,
       onEnd: () => {
-        if (activeRef.current && offerSaveRef.current) listenRef.current();
+        if (offerSaveRef.current) relisten();
       },
     });
   }, [finish, voice]);
@@ -139,8 +184,13 @@ export function useConversation(opts: {
       const said = text.trim();
       if (!said) return;
       if (offerSaveRef.current) {
-        finish(YES.test(said));
-        return;
+        // A real question instead of yes/no: drop the offer and keep talking.
+        const words = said.split(/\s+/).length;
+        if (YES.test(said) || NO.test(said) || words <= 4) {
+          finish(YES.test(said));
+          return;
+        }
+        setOfferSave(false);
       }
       if (awaitingChoiceRef.current) {
         awaitingChoiceRef.current = false;
@@ -150,12 +200,7 @@ export function useConversation(opts: {
           // Keep the brief in the conversation so follow-up questions have context.
           setTurns((t) => [...t, { role: "user", content: said, brief: true }, { role: "assistant", content: text, brief: true }]);
           setReplyTick((n) => n + 1);
-          voice.speak(text, {
-            force: true,
-            onEnd: () => {
-              if (activeRef.current) listenRef.current();
-            },
-          });
+          voice.speak(text, { force: true, onEnd: relisten });
           return;
         }
         if (NOTHING.test(said)) {
@@ -172,11 +217,21 @@ export function useConversation(opts: {
       }
       const next = [...turnsRef.current, { role: "user" as const, content: said }];
       setTurns(next);
+      cancelPending();
+      const id = requestRef.current;
+      const ctrl = new AbortController();
+      abortRef.current = ctrl;
+      const timeout = setTimeout(() => ctrl.abort(), ASK_TIMEOUT_MS);
+      // Slow answer (web search, flight lookup): say something so it doesn't feel dead.
+      const filler = setTimeout(() => {
+        if (requestRef.current === id && !window.speechSynthesis?.speaking) voice.speak(FILLERS[Math.floor(Math.random() * FILLERS.length)], { force: true });
+      }, FILLER_AFTER_MS);
       setBusy(true);
       setError(null);
       try {
-        const { buildContext, timeZone, today, onAddTodo, onOpenPlanet } = optsRef.current;
-        const { reply, todos, planet } = await askAlfred(next, buildContext(), timeZone);
+        const { buildContext, timeZone, today, onAddTodo, onOpenPlanet, location } = optsRef.current;
+        const { reply, todos, planet } = await askAlfred(next, buildContext(), timeZone, { signal: ctrl.signal, location });
+        if (requestRef.current !== id) return; // E moved on
         for (const t of todos) onAddTodo(t.title, t.due === "today" ? today : t.due === "tomorrow" ? addDays(today, 1) : undefined);
         const open =
           planet ??
@@ -188,13 +243,33 @@ export function useConversation(opts: {
           force: true,
           // Hands-free: listen again once Iris finishes talking.
           onEnd: () => {
-            if (activeRef.current && handsFreeRef.current) listenRef.current();
+            if (handsFreeRef.current) relisten();
           },
         });
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Iris couldn't answer.");
+        if (requestRef.current !== id) return; // cancelled on purpose
+        const timedOut = ctrl.signal.aborted;
+        const offline = typeof navigator !== "undefined" && navigator.onLine === false;
+        const message = timedOut
+          ? "That took too long, boss. Tap me and ask again."
+          : offline
+            ? "Looks like you're offline, boss. I'll be here when you're back."
+            : e instanceof TypeError
+              ? "I lost the connection, boss. Tap me to try again."
+              : e instanceof Error
+                ? e.message
+                : "I couldn't answer that one. Tap me to try again.";
+        // Drop the unanswered question so asking again doesn't double it up.
+        setTurns((t) => (t[t.length - 1]?.role === "user" ? t.slice(0, -1) : t));
+        setError(message);
+        voice.speak(message, { force: true });
       } finally {
-        setBusy(false);
+        clearTimeout(timeout);
+        clearTimeout(filler);
+        if (requestRef.current === id) {
+          abortRef.current = null;
+          setBusy(false);
+        }
       }
     },
     [voice, finish, wrapUp],
@@ -220,9 +295,7 @@ export function useConversation(opts: {
         onStart: () => {
           started = true;
         },
-        onEnd: () => {
-          if (activeRef.current) listenRef.current();
-        },
+        onEnd: relisten,
       });
       if (!fromTap) {
         // Browsers (iPhone especially) block speech until the first tap.
@@ -270,6 +343,10 @@ export function useConversation(opts: {
       return;
     }
     if (!activeRef.current) {
+      // Tapped again soon after: pick the last conversation back up.
+      const last = lastRef.current;
+      if (last && Date.now() - last.at < RESUME_MS) setTurns(last.turns);
+      lastRef.current = null;
       setActive(true);
       if (speech.supported) speech.start();
       return;
@@ -278,6 +355,8 @@ export function useConversation(opts: {
       speech.stop();
       return;
     }
+    // Interrupt: stop talking (or drop a slow answer) and listen.
+    if (busyRef.current) cancelPending();
     voice.stop();
     if (speech.supported) speech.start();
   }, [speech, voice, greet]);
@@ -286,6 +365,7 @@ export function useConversation(opts: {
   const end = useCallback(() => {
     speech.stop();
     voice.stop();
+    cancelPending();
     if (offerSaveRef.current) finish(false);
     else wrapUp();
   }, [speech, voice, finish, wrapUp]);
@@ -302,7 +382,8 @@ export function useConversation(opts: {
     active,
     phase,
     turns,
-    error: error ?? speech.error,
+    // Silence mid-conversation isn't an error: the ring just shows "your turn".
+    error: error ?? (active && speech.errorCode === "no-speech" ? null : speech.error),
     interim: speech.interim,
     micSupported: speech.supported,
     handsFree,

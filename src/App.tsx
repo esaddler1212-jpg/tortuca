@@ -393,6 +393,7 @@ export default function App() {
     timeZone: settings.timezone,
     today,
     onAddTodo: (title, dueDate) => add(title, dueDate),
+    location: { lat: settings.latitude, lon: settings.longitude },
     // "Save this conversation?" → yes: the transcript becomes a memo.
     onSaveTranscript: (text) =>
       updateHub((h) => ({

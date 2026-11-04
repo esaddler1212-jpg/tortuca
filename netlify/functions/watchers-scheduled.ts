@@ -10,9 +10,9 @@ export const handler: Handler = async (event) => {
   initBlobs(event);
   let checked = 0;
   for (const { sessionId, data } of await listAllUserData()) {
-    const watchers = (data.hub as { watchers?: unknown[] } | undefined)?.watchers ?? [];
-    if (!watchers.length) continue;
-    await runWatchers(sessionId, data, { notify: true });
+    const watchers = (data.hub as { watchers?: { uptime?: boolean }[] } | undefined)?.watchers ?? [];
+    if (!watchers.some((w) => !w.uptime)) continue;
+    await runWatchers(sessionId, data, { notify: true, only: "pages" });
     checked++;
   }
   return { statusCode: 200, body: JSON.stringify({ checked }) };

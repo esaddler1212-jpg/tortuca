@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { VoicePicker } from "./VoicePicker";
 import { IrisMemoryPanel } from "./IrisMemoryPanel";
+import { IrisUsagePanel } from "./IrisUsagePanel";
 import { X } from "lucide-react";
 import { OPEN_SETTINGS_EVENT } from "../lib/settingsEvents";
 import type { UserSettings } from "../types";
@@ -385,6 +386,10 @@ export function SettingsDrawer({
               <div className="border-t border-alfred-border pt-6">
                 <h3 className="text-sm font-medium mb-2 text-alfred-gold">What Iris remembers</h3>
                 <IrisMemoryPanel googleConnected={googleConnected} />
+              </div>
+              <div className="border-t border-alfred-border pt-6">
+                <h3 className="text-sm font-medium mb-2 text-alfred-gold">Iris usage</h3>
+                <IrisUsagePanel googleConnected={googleConnected} timeZone={settings.timezone} />
               </div>
               <div className="border-t border-alfred-border pt-6">
                 <h3 className="text-sm font-medium mb-2 text-alfred-gold">Morning digest &amp; push</h3>
