@@ -19,6 +19,7 @@ import * as Sparks from "../shared/sparks.ts";
 import * as Hub from "../shared/hub.ts";
 import * as Usage from "../shared/irisUsage.ts";
 import { matchModuleFromSpeech, HUD_TABS, HUD_MORE, HUD_MODULE_IDS } from "../shared/hudModules.ts";
+import { IRIS_TEAM } from "../shared/irisTeam.ts";
 import { hudGauges } from "../shared/hudGauges.ts";
 import { commuteMinutesFor, inCommuteWindow } from "../shared/commute.ts";
 import * as IC from "../shared/irisContext.ts";
@@ -391,6 +392,8 @@ check(
   check("hud: empty list reads all clear, urgent shows in caption", [hudGauges({ ...base, todosPending: 0, todosDone: 0 })[0].value, hudGauges({ ...base, urgent: 2 })[0].caption], ["ALL CLEAR", "TODAY · 2 URGENT"]);
   check("hud: 4 tabs + everything else under More, no module lost", [HUD_TABS.join(","), [...HUD_TABS, ...HUD_MORE].length], ["today,vitals,inbox,plan", 10]);
   check("hud: every module id is unique", new Set(HUD_MODULE_IDS).size, HUD_MODULE_IDS.length);
+  check("iris team: six specialists", IRIS_TEAM.length, 6);
+  check("iris team: scout opens research module", IRIS_TEAM.find((s) => s.id === "scout")?.module, "research");
   check("hud: research is in More, not tabs", HUD_MORE.includes("research") && !HUD_TABS.includes("research"), true);
 }
 
