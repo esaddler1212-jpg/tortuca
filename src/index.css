@@ -59,7 +59,7 @@
     pointer-events: none;
     position: fixed;
     inset: 0;
-    z-index: 50;
+    z-index: 5;
     background: repeating-linear-gradient(
       0deg,
       transparent,
@@ -73,7 +73,7 @@
     pointer-events: none;
     position: fixed;
     inset: 0;
-    z-index: 49;
+    z-index: 4;
     background: radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.35) 100%);
   }
 
@@ -240,10 +240,12 @@ html {
 :root {
   --hud-tabbar-height: 52px;
   /** Iris ring row + captions chrome (sits above tab bar). */
-  --hud-iris-dock-height: 5.75rem;
+  --hud-iris-dock-height: 6.5rem;
 }
-.hud-with-tabbar { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
-.hud-with-iris-dock { padding-bottom: calc(148px + env(safe-area-inset-bottom)); }
+.hud-with-tabbar { padding-bottom: calc(var(--hud-tabbar-height) + 24px + env(safe-area-inset-bottom)); }
+.hud-with-iris-dock {
+  padding-bottom: calc(var(--hud-tabbar-height) + var(--hud-iris-dock-height) + 28px + env(safe-area-inset-bottom));
+}
 .hud-more-sheet {
   bottom: calc(var(--hud-tabbar-height) + 10px + env(safe-area-inset-bottom, 0px));
   max-height: calc(100dvh - var(--hud-tabbar-height) - 24px - env(safe-area-inset-bottom, 0px));

@@ -25,12 +25,13 @@ export function HudTabBar({
 }) {
   const moreActive = moreOpen || (active !== null && MORE_IDS.includes(active));
   const moreAlert = MORE_IDS.some((id) => badges[id]?.alert);
-  const tab = (key: string, label: string, on: boolean, alert: boolean | undefined, count: number | undefined, onClick: () => void) => (
+  const tab = (key: string, label: string, on: boolean, alert: boolean | undefined, count: number | undefined, onClick: () => void, extra?: { expanded?: boolean }) => (
     <button
       key={key}
       type="button"
       onClick={onClick}
       aria-current={on ? "page" : undefined}
+      aria-expanded={extra?.expanded}
       aria-label={`${label}${count ? `, ${count}` : ""}${alert ? ", needs attention" : ""}`}
       className={`relative flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 border-t-2 font-mono text-[10px] uppercase tracking-[0.12em] transition-colors ${
         on ? (alert ? "border-amber-300 text-amber-200" : "border-cyan-300 text-cyan-50") : alert ? "border-amber-400/60 text-amber-300" : "border-cyan-900/80 text-cyan-300/70"
@@ -53,7 +54,7 @@ export function HudTabBar({
     >
       <div className="mx-auto flex max-w-[640px] gap-1 px-2">
         {TAB_IDS.map((id) => tab(id, labelOf(id), active === id && !moreOpen, badges[id]?.alert, badges[id]?.count, () => onTab(id)))}
-        {tab("more", "More", moreActive, moreAlert, undefined, onMore)}
+        {tab("more", "More", moreActive, moreAlert, undefined, onMore, { expanded: moreOpen })}
       </div>
     </nav>
   );
@@ -78,7 +79,12 @@ export function MoreSheet({
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
   }, [open, onClose]);
   if (!open) return null;
   return (
@@ -122,14 +128,25 @@ export function MoreSheet({
 }
 
 /** A module opened as a glass panel. Swipe down on its header (or tap ✕) to close. */
-export function GlassModule({ id, onClose, children }: { id: HudModuleId; onClose: () => void; children: ReactNode }) {
+export function GlassModule({
+  id,
+  onClose,
+  animateEntry = true,
+  children,
+}: {
+  id: HudModuleId;
+  onClose: () => void;
+  /** Slide-in only when opening from home — not when switching tabs. */
+  animateEntry?: boolean;
+  children: ReactNode;
+}) {
   const label = labelOf(id);
   const [drag, setDrag] = useState(0);
   const startY = useRef<number | null>(null);
   const dragRef = useRef(0);
   return (
     <section
-      className="hud-glass hud-glass-module animate-hud-sheet relative"
+      className={`hud-glass hud-glass-module relative ${animateEntry ? "animate-hud-sheet" : ""}`}
       aria-label={`${label} module`}
       style={drag ? { transform: `translateY(${drag}px)`, transition: "none" } : undefined}
     >
@@ -163,7 +180,7 @@ export function GlassModule({ id, onClose, children }: { id: HudModuleId; onClos
         </button>
       </header>
       <div className="mx-auto h-1 w-10 -translate-y-1 rounded-full bg-cyan-300/30" aria-hidden />
-      <div className="space-y-4 px-3 pb-4 pt-1 sm:px-4">{children}</div>
+      <div className="space-y-4 px-3 pb-6 pt-1 sm:px-4 sm:pb-8">{children}</div>
     </section>
   );
 }

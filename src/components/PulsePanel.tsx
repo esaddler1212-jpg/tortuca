@@ -447,7 +447,7 @@ export function PulsePanel({ pulse, error, city, lat, lon, timeZone, defaultOpen
       )}
 
       {cam && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/80 p-3" role="dialog" aria-modal aria-label="Traffic camera" onClick={() => setCam(null)}>
+        <div className="fixed inset-0 z-[52] flex items-center justify-center bg-black/80 p-3" role="dialog" aria-modal aria-label="Traffic camera" onClick={() => setCam(null)}>
           <img src={cam} alt="Live traffic camera" className="max-h-[80vh] w-full max-w-xl rounded border border-alfred-border/60" />
           <button type="button" className="btn-ghost absolute right-4 top-4 p-2" onClick={() => setCam(null)} aria-label="Close">
             <X className="h-5 w-5" />

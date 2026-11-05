@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNow } from "./hooks/useNow";
 import { nextWakeDay } from "../shared/bedtime";
 import { dayKey, localHour, weekdayOfDay, zonedDateTime } from "../shared/timezone";
@@ -63,7 +63,7 @@ import { UpNextPanel, UrgentLine } from "./components/hud/HudHome";
 import { IrisDock } from "./components/hud/IrisDock";
 import { GlassModule, HudTabBar, MoreSheet, type TabBadge } from "./components/hud/HudNav";
 import { hudGauges } from "../shared/hudGauges";
-import { moduleContextForIris, type HudModuleId } from "../shared/hudModules";
+import { HUD_MORE, HUD_TABS, moduleContextForIris, type HudModuleId } from "../shared/hudModules";
 import {
   LazyBusinessResearcherPanel,
   LazyChannelsPanel,
@@ -73,6 +73,7 @@ import {
   LazyPlanPanel,
   LazyTodayCommandCenter,
   ModuleLoading,
+  prefetchHudModules,
 } from "./lazyModules";
 import { FamilyPurposeDebriefBanner } from "./components/FamilyPurposeDebriefBanner";
 import { WeekWeatherPanel } from "./components/hud/WeekWeatherPanel";
@@ -415,7 +416,29 @@ export default function App() {
   }, []);
   const closeModule = useCallback(() => {
     setActiveModule(null);
-    window.scrollTo({ top: 0 });
+    const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: 0, behavior: still ? "auto" : "smooth" });
+  }, []);
+
+  const moduleFromHome = useRef(true);
+  const animateModuleEntry = activeModule !== null && moduleFromHome.current;
+  useEffect(() => {
+    moduleFromHome.current = activeModule === null;
+  }, [activeModule]);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    prefetchHudModules([...HUD_MORE]);
+  }, [moreOpen]);
+
+  useEffect(() => {
+    const warm = () => prefetchHudModules([...HUD_TABS, ...HUD_MORE]);
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(warm);
+      return () => window.cancelIdleCallback(id);
+    }
+    const t = window.setTimeout(warm, 1500);
+    return () => window.clearTimeout(t);
   }, []);
 
   useEffect(() => {
@@ -714,7 +737,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen min-h-[100dvh] safe-bottom relative">
+    <div className="min-h-screen min-h-[100dvh] relative">
       <div className="hud-vignette" aria-hidden />
       <div className="hud-scanline" aria-hidden />
       <HudHeader
@@ -731,8 +754,10 @@ export default function App() {
       >
         {activeModule ? (
           <>
-            <GlassModule key={activeModule} id={activeModule} onClose={closeModule}>
-              <Suspense fallback={<ModuleLoading />}>{renderModule(activeModule)}</Suspense>
+            <GlassModule id={activeModule} onClose={closeModule} animateEntry={animateModuleEntry}>
+              <Suspense fallback={<ModuleLoading />} key={activeModule}>
+                {renderModule(activeModule)}
+              </Suspense>
             </GlassModule>
           </>
         ) : (

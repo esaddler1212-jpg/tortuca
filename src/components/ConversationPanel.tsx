@@ -11,7 +11,6 @@ export function ConversationCaptions({ convo, googleConnected }: { convo: Conver
     return (
       <p
         className={`text-center text-[11px] font-mono uppercase tracking-[0.2em] sm:text-left ${convo.pendingGreeting ? "text-alfred-gold" : "text-alfred-mist"}`}
-        aria-hidden
       >
         {convo.pendingGreeting ? "Iris has your brief ready · tap her to start" : "Tap Iris to talk"}
       </p>

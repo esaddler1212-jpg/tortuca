@@ -136,6 +136,18 @@ export function SettingsDrawer({
     return () => window.removeEventListener(OPEN_SETTINGS_EVENT, onOpen);
   }, []);
 
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
   const save = async () => {
     const ok = await onSaveCity(city);
     if (ok) setOpen(false);
@@ -144,10 +156,21 @@ export function SettingsDrawer({
   return (
     <>
       {open && (
-        <div className="fixed inset-0 z-30 flex justify-end bg-black/50" role="dialog" aria-modal>
-          <div className="panel h-full w-full max-w-md p-6 overflow-y-auto border-l border-alfred-border">
+        <div
+          className="fixed inset-0 z-[48] flex justify-end bg-black/50"
+          role="dialog"
+          aria-modal
+          aria-labelledby="settings-drawer-title"
+          onClick={() => setOpen(false)}
+        >
+          <div
+            className="panel h-full w-full max-w-md p-6 overflow-y-auto border-l border-alfred-border"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-6">
-              <h2 className="font-display text-2xl text-alfred-gold">Preferences</h2>
+              <h2 id="settings-drawer-title" className="font-display text-2xl text-alfred-gold">
+                Preferences
+              </h2>
               <button type="button" className="btn-ghost p-2" onClick={() => setOpen(false)} aria-label="Close">
                 <X className="h-5 w-5" />
               </button>

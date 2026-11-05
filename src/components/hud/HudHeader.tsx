@@ -99,10 +99,10 @@ export function HudHeader({ timeZone, status, alerts, operator, focusChoice, onF
             </select>
             <ChevronDown className="pointer-events-none absolute right-2 h-3.5 w-3.5 text-cyan-300/70" aria-hidden />
           </label>
-          <span className="relative flex h-11 w-11 items-center justify-center text-cyan-300/80" aria-label={`${alerts} alerts`} title={`${alerts} urgent`}>
-            <Bell className="h-5 w-5" />
+          <span className="relative flex h-11 w-11 items-center justify-center text-cyan-300/80" role="status" title={`${alerts} urgent`}>
+            <Bell className="h-5 w-5" aria-hidden />
             {alerts > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-cyan-400 text-[10px] font-mono text-black leading-4 text-center">
+              <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-cyan-400 text-[10px] font-mono text-black leading-4 text-center" aria-label={`${alerts} urgent alerts`}>
                 {alerts}
               </span>
             )}
