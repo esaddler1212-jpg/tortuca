@@ -58,11 +58,12 @@ import { buildFitnessStatus } from "./lib/fitness";
 import { assessOvercommitment } from "./lib/overcommitment";
 import { HudHeader, type SystemStatus } from "./components/hud/HudHeader";
 import { CoreRing } from "./components/hud/CoreRing";
-import { HudCore, HudCoreCompact } from "./components/hud/HudCore";
+import { HudCore } from "./components/hud/HudCore";
 import { UpNextPanel, UrgentLine } from "./components/hud/HudHome";
+import { IrisDock } from "./components/hud/IrisDock";
 import { GlassModule, HudTabBar, MoreSheet, type TabBadge } from "./components/hud/HudNav";
-import { hudGauges, type GaugeId } from "../shared/hudGauges";
-import { moduleContextForIris, moduleLabel, type HudModuleId } from "../shared/hudModules";
+import { hudGauges } from "../shared/hudGauges";
+import { moduleContextForIris, type HudModuleId } from "../shared/hudModules";
 import {
   LazyBusinessResearcherPanel,
   LazyChannelsPanel,
@@ -416,6 +417,11 @@ export default function App() {
     setActiveModule(null);
     window.scrollTo({ top: 0 });
   }, []);
+
+  useEffect(() => {
+    if (activeModule === "inbox" && connected) void refreshEmails();
+  }, [activeModule, connected, refreshEmails]);
+
   /** Tapping the open tab again closes it. */
   const onTab = useCallback((id: HudModuleId) => (activeModule === id && !moreOpen ? closeModule() : focusModule(id)), [activeModule, moreOpen, closeModule, focusModule]);
 
@@ -720,15 +726,11 @@ export default function App() {
         onFocusChoice={focus.choose}
       />
 
-      <main className={`mx-auto px-4 py-4 space-y-4 hud-with-tabbar ${activeModule ? "max-w-[1100px]" : "max-w-[560px]"}`}>
+      <main
+        className={`mx-auto px-4 py-4 space-y-4 ${activeModule ? "hud-with-iris-dock max-w-[1100px]" : "hud-with-tabbar max-w-[560px]"}`}
+      >
         {activeModule ? (
           <>
-            <HudCoreCompact
-              core={coreRing}
-              readout={gauges.find((g) => g.id === (activeModule as GaugeId))?.value ?? moduleLabel(activeModule).toUpperCase()}
-              alert={badges[activeModule]?.alert}
-            />
-            <ConversationCaptions convo={convo} googleConnected={connected} />
             <GlassModule key={activeModule} id={activeModule} onClose={closeModule}>
               <Suspense fallback={<ModuleLoading />}>{renderModule(activeModule)}</Suspense>
             </GlassModule>
@@ -764,6 +766,8 @@ export default function App() {
           </>
         )}
       </main>
+
+      <IrisDock show={activeModule !== null} core={coreRing} convo={convo} googleConnected={connected} />
 
       <MoreSheet open={moreOpen} badges={badges} onPick={focusModule} onClose={() => setMoreOpen(false)} />
       <HudTabBar active={activeModule} moreOpen={moreOpen} badges={badges} onTab={onTab} onMore={() => setMoreOpen((o) => !o)} />
