@@ -1,5 +1,6 @@
 import type { HudModuleId } from "./hudModules";
 import { HUD_MODULE_IDS } from "./hudModules";
+import { agentGuardrailsPrompt } from "./agentGuardrails";
 
 /** Specialists on Iris's team — one owner per HUD module (except Team). They report to Iris; Iris reports to E. */
 export type IrisSpecialistId =
@@ -150,7 +151,8 @@ export function teamContextForIris(): string {
     `They return findings; you relay who helped in one short phrase, then their summary in spoken form (no markdown). ` +
     `When Right now says BLOCK consult_specialist or DUPLICATE BLOCKED, do not call consult_specialist for that work — relay the prior report in one short spoken answer only. ` +
     `If consult_specialist returns DUPLICATE BLOCKED, never re-run that specialist; relay the stored report. ` +
-    `Skip delegation for one-line facts already in Right now. Roster: ${roster}.`
+    `Skip delegation for one-line facts already in Right now. Roster: ${roster}. ` +
+    agentGuardrailsPrompt()
   );
 }
 

@@ -11,6 +11,12 @@ import {
   teamEfficiencySummary,
   type IrisDelegateLog,
 } from "../../shared/irisTeamActivity";
+import {
+  RESEARCH_DAILY_LIMIT,
+  RESEARCH_MIN_QUERY_CHARS,
+  sanitizeDelegateTask,
+  sanitizeResearchQuery,
+} from "../../shared/agentGuardrails";
 import { runBusinessResearch } from "./_businessResearch";
 import { createScribeDraft } from "./_scribeDraft";
 import { resolveDataKey } from "./_userData";
@@ -18,7 +24,6 @@ import {
   appendHubMemo,
   incrementResearchUsage,
   researchUsageCount,
-  RESEARCH_DAILY_LIMIT,
 } from "./_researchMemo";
 
 export interface SpecialistConsultResult {
@@ -71,7 +76,7 @@ export async function consultSpecialist(
     };
   }
 
-  const task = input.task.trim().slice(0, 500);
+  const task = sanitizeDelegateTask(input.task);
   if (!task) {
     return { specialist: input.specialist, summary: "Need a clear task for the team.", module: def.module, memoSaved: false };
   }
@@ -102,8 +107,8 @@ export async function consultSpecialist(
 
   switch (input.specialist) {
     case "scout": {
-      const query = (input.query?.trim() || task).slice(0, 800);
-      if (query.length < 8) {
+      const query = sanitizeResearchQuery(input.query?.trim() || task);
+      if (query.length < RESEARCH_MIN_QUERY_CHARS) {
         return {
           specialist: "scout",
           summary: "Scout needs a sharper research question (at least a few words).",

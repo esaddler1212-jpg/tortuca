@@ -3,7 +3,16 @@ import type { Handler } from "@netlify/functions";
 import { getStore } from "@netlify/blobs";
 import { getValidSession, initBlobs, sessionHeader } from "./_shared";
 import { dayKey } from "../../shared/timezone";
-import { matchesForget, runIris } from "./_iris";
+import {
+  ASK_DAILY_TURN_LIMIT,
+  clampIrisContext,
+  DELEGATE_MAX_REPORT_CHARS,
+  DELEGATE_MAX_TASK_CHARS,
+  IRIS_MAX_MEMORY_FACTS,
+  matchesForget,
+  normalizeAskTurns,
+} from "../../shared/agentGuardrails";
+import { runIris } from "./_iris";
 import { consultSpecialist } from "./_irisSpecialists";
 import { lookupFlight } from "./_flight";
 import { recordUsage } from "./_irisUsage";
@@ -19,9 +28,7 @@ import { loadUserData, resolveDataKey, saveUserData } from "./_userData";
  * app (it adds to Do today), so this returns the reply text plus any to-dos.
  */
 
-const DAILY_LIMIT = 150; // turns per account per day: a guard against runaway cost
-const MAX_TURNS = 12;
-const MAX_CHARS = 2000;
+const DAILY_LIMIT = ASK_DAILY_TURN_LIMIT;
 
 type Turn = { role: "user" | "assistant"; content: string };
 
@@ -45,11 +52,7 @@ export const handler: Handler = async (event) => {
   } catch {
     return json(400, { error: "Bad request" });
   }
-  const turns = (body.messages ?? [])
-    .filter((m) => (m.role === "user" || m.role === "assistant") && typeof m.content === "string" && m.content.trim())
-    .slice(-MAX_TURNS)
-    .map((m) => ({ role: m.role, content: m.content.slice(0, MAX_CHARS) }));
-  while (turns.length && turns[0].role !== "user") turns.shift();
+  const turns = normalizeAskTurns(body.messages ?? []);
   if (!turns.length || turns[turns.length - 1].role !== "user") return json(400, { error: "Say something first." });
 
   // Daily cap per account.
@@ -77,7 +80,7 @@ export const handler: Handler = async (event) => {
     const { reply: text, todos, remember, forget, refused, module, specialist, delegateReport, delegateDeduped, usage } = await runIris(
       client,
       turns,
-      body.context ?? "",
+      clampIrisContext(body.context ?? ""),
       memory,
       {
         trackFlight: async (flight) => (await lookupFlight(flight, tz, here.lat, here.lon)).spoken,
@@ -105,7 +108,7 @@ export const handler: Handler = async (event) => {
           facts.push({ id: `mem-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`, fact, at: new Date().toISOString() });
         }
       }
-      facts = facts.slice(-60);
+      facts = facts.slice(-IRIS_MAX_MEMORY_FACTS);
       await saveUserData(key, { ...latest, irisMemory: facts });
     }
     if (specialist && !delegateDeduped && isIrisSpecialistId(specialist)) {
@@ -114,8 +117,8 @@ export const handler: Handler = async (event) => {
       const entry = toSyncedDelegateLog({
         specialist: specialist as IrisSpecialistId,
         at: new Date().toISOString(),
-        task: lastUser.slice(0, 500),
-        report: delegateReport?.slice(0, 800),
+        task: lastUser.slice(0, DELEGATE_MAX_TASK_CHARS),
+        report: delegateReport?.slice(0, DELEGATE_MAX_REPORT_CHARS),
       });
       const irisDelegateHistory = mergeDelegateHistories(latest.irisDelegateHistory, [entry]);
       await saveUserData(key, { ...latest, irisDelegateHistory });

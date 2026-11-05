@@ -1,0 +1,42 @@
+# Agent guardrails (IRIS / Tortuca)
+
+This repo runs **Iris** (voice chief of staff), **eleven module specialists** (`consult_specialist`), and **Scout / Business Researcher** on Netlify Functions. Treat these rules as non-negotiable when changing AI behavior or adding tools.
+
+## Runtime policy (enforced in code)
+
+| Area | Rule | Where |
+|------|------|--------|
+| Auth | `/api/ask` and `/api/business-research` require a valid Google session | `netlify/functions/ask.ts`, `business-research.ts` |
+| Cost caps | Ask turns per account per day; research runs per day | `shared/agentGuardrails.ts` |
+| Context size | Truncate ask history, Iris “Right now”, research context | `normalizeAskTurns`, `clampIrisContext` |
+| Memory | `safeFact()` blocks credentials and long digit sequences; max fact count | `shared/agentGuardrails.ts`, `ask.ts` |
+| Delegates | Duplicate / overlapping specialist work blocked | `shared/irisTeamActivity.ts` |
+| Scout | Min query length + daily research limit before `runBusinessResearch` | `_irisSpecialists.ts` |
+| Refusal | Model `stop_reason === "refusal"` → safe spoken decline | `_iris.ts`, `_businessResearch.ts` |
+| Privacy | No student names in Iris context (Family Purpose); inbox subjects only | ask context builders, persona |
+| Secrets | API keys only in Netlify env; run `npm run scan:secrets` before release | `.gitleaks.toml` |
+
+**Single source of truth for numeric limits:** `shared/agentGuardrails.ts`. Do not duplicate caps in handlers without importing from there.
+
+## Adding a new agent capability
+
+1. **Prefer server tools** with strict JSON schemas (`strict: true`, `additionalProperties: false`).
+2. **Validate all tool inputs** in TypeScript before side effects (network, blobs, drafts, email).
+3. **Add rate or daily limits** if the tool calls an external API or runs a sub-agent loop.
+4. **Log usage** via `_irisUsage` / research usage stores where applicable.
+5. **Extend** `scripts/check-agent-guardrails.mts` and run `npm run test:os`.
+
+## Cursor / Cloud agents working on this repo
+
+- Minimize scope; match existing patterns in `netlify/functions/` and `shared/`.
+- Never commit `.env`, tokens, or real student/parent PII in fixtures.
+- Do not weaken `safeFact`, duplicate-delegate checks, or session gates without explicit product approval.
+- Do not embed third-party agent marketplaces (Voicebox, n8n flows, etc.) into the PWA unless requested — optional docs/links only.
+- Before opening a PR: `npm run test:os` (build, time, iris, research, HUD audit, guardrails audit).
+
+## Testing
+
+```bash
+npm run test:guardrails   # limits + safeFact + wiring checks
+npm run test:os           # full gate including guardrails
+```

@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { inferResearchTemplate, type ResearchTemplate } from "../../shared/businessResearch";
+import { RESEARCH_MAX_CONTEXT_CHARS, RESEARCH_MAX_HOPS } from "../../shared/agentGuardrails";
 import { MODEL, WEB_TOOLS } from "./_iris";
 
 const BASE = `You are IRIS's Business Researcher for E (Eric Saddler II), founder of ECS Network in Vallejo, CA.
@@ -61,7 +62,7 @@ export async function runBusinessResearch(
     `Research question: ${req.query.trim()}`,
     req.area !== "General" ? `ECS area focus: ${req.area}` : "",
     `Brief template: ${template}`,
-    req.context.trim() ? `Additional context:\n${req.context.trim().slice(0, 4000)}` : "",
+    req.context.trim() ? `Additional context:\n${req.context.trim().slice(0, RESEARCH_MAX_CONTEXT_CHARS)}` : "",
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -70,7 +71,7 @@ export async function runBusinessResearch(
   const parts: string[] = [];
   let searched = false;
 
-  for (let hop = 0; hop < 6; hop++) {
+  for (let hop = 0; hop < RESEARCH_MAX_HOPS; hop++) {
     const response = await client.beta.messages.create({
       model: MODEL,
       max_tokens: 8192,

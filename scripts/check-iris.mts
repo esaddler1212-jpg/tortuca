@@ -2,7 +2,8 @@
 // (web search with a pause_turn, then a cited answer). No network or API key.
 import http from "node:http";
 import Anthropic from "@anthropic-ai/sdk";
-import { matchesForget, runIris, safeFact } from "../netlify/functions/_iris.ts";
+import { matchesForget, safeFact } from "../shared/agentGuardrails.ts";
+import { runIris } from "../netlify/functions/_iris.ts";
 
 const seen: any[] = [];
 const server = http.createServer((req, res) => {
