@@ -769,7 +769,7 @@ export default function App() {
 
       <IrisDock show={activeModule !== null} core={coreRing} convo={convo} googleConnected={connected} />
 
-      <MoreSheet open={moreOpen} badges={badges} onPick={focusModule} onClose={() => setMoreOpen(false)} />
+      <MoreSheet open={moreOpen} badges={badges} onPick={focusModule} onClose={() => setMoreOpen(false)} irisDockVisible={activeModule !== null} />
       <HudTabBar active={activeModule} moreOpen={moreOpen} badges={badges} onTab={onTab} onMore={() => setMoreOpen((o) => !o)} />
 
       <MorningRitualModal
