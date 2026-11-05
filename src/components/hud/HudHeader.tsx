@@ -9,7 +9,7 @@ export type SystemStatus = "ok" | "degraded" | "offline";
 const STATUS_TEXT: Record<SystemStatus, { label: string; dot: string; text: string }> = {
   ok: { label: "Optimal", dot: "bg-cyan-400", text: "text-cyan-300" },
   degraded: { label: "Degraded", dot: "bg-amber-400", text: "text-amber-300" },
-  offline: { label: "Offline", dot: "bg-red-400", text: "text-red-300" },
+  offline: { label: "Network", dot: "bg-red-400", text: "text-red-300" },
 };
 
 function useClock(timeZone: string) {

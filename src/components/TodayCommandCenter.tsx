@@ -57,7 +57,7 @@ interface Props {
   /** Rendered after Do today and the timeline (spark, weekly review, install tip). */
   afterLists?: ReactNode;
   /** "Workday", "Weekend", "Off duty after 7 PM"… */
-  /** When true, hide Woodhouse / markets / fitness — those live on other planets. */
+  /** When true, hide Woodhouse / markets / fitness — those live in other modules. */
   moduleOnly?: boolean;
   modeLabel?: string;
   /** Speak today's rundown (omitted when the device can't speak). */
@@ -461,7 +461,7 @@ export function TodayCommandCenter({
           </section>
         </div>
 
-        {/* Right rail — inbox only in planet mode; full rail when embedded elsewhere */}
+        {/* Right rail — inbox only in module mode; full rail when embedded elsewhere */}
         <div className={`lg:col-span-5 space-y-4 ${moduleOnly ? "lg:col-span-12" : ""}`}>
           {!moduleOnly && (
           <section className="panel p-5">

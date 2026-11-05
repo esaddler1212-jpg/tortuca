@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ChevronDown, X } from "lucide-react";
-import { HUD_MORE as MORE_IDS, HUD_TABS as TAB_IDS, SOLAR_PLANETS, type SolarPlanetId } from "../../../shared/solarPlanets";
+import { HUD_MORE as MORE_IDS, HUD_TABS as TAB_IDS, HUD_MODULES, moduleLabel, type HudModuleId } from "../../../shared/hudModules";
 
-const labelOf = (id: SolarPlanetId) => SOLAR_PLANETS.find((p) => p.id === id)?.label ?? id;
+const labelOf = (id: HudModuleId) => moduleLabel(id);
 
 export interface TabBadge {
   count?: number;
@@ -17,10 +17,10 @@ export function HudTabBar({
   onTab,
   onMore,
 }: {
-  active: SolarPlanetId | null;
+  active: HudModuleId | null;
   moreOpen: boolean;
-  badges: Partial<Record<SolarPlanetId, TabBadge>>;
-  onTab: (id: SolarPlanetId) => void;
+  badges: Partial<Record<HudModuleId, TabBadge>>;
+  onTab: (id: HudModuleId) => void;
   onMore: () => void;
 }) {
   const moreActive = moreOpen || (active !== null && MORE_IDS.includes(active));
@@ -64,8 +64,8 @@ export function MoreSheet({
   onClose,
 }: {
   open: boolean;
-  badges: Partial<Record<SolarPlanetId, TabBadge>>;
-  onPick: (id: SolarPlanetId) => void;
+  badges: Partial<Record<HudModuleId, TabBadge>>;
+  onPick: (id: HudModuleId) => void;
   onClose: () => void;
 }) {
   useEffect(() => {
@@ -93,7 +93,7 @@ export function MoreSheet({
         </div>
         <div className="grid grid-cols-3 gap-2">
           {MORE_IDS.map((id) => {
-            const def = SOLAR_PLANETS.find((p) => p.id === id);
+            const def = HUD_MODULES.find((p) => p.id === id);
             const b = badges[id];
             return (
               <button
@@ -117,7 +117,7 @@ export function MoreSheet({
 }
 
 /** A module opened as a glass panel. Swipe down on its header (or tap ✕) to close. */
-export function GlassModule({ id, onClose, children }: { id: SolarPlanetId; onClose: () => void; children: ReactNode }) {
+export function GlassModule({ id, onClose, children }: { id: HudModuleId; onClose: () => void; children: ReactNode }) {
   const label = labelOf(id);
   const [drag, setDrag] = useState(0);
   const startY = useRef<number | null>(null);

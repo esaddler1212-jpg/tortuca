@@ -3,7 +3,7 @@ import { authHeaders, ensureSession } from "../lib/google";
 import { useSpeechInput } from "./useSpeechInput";
 import { useVoiceOutput, useVoiceSignal } from "./useVoiceOutput";
 import { addDays } from "../../shared/timezone";
-import { isSolarPlanetId, matchPlanetFromSpeech, type SolarPlanetId } from "../../shared/solarPlanets";
+import { isHudModuleId, matchModuleFromSpeech, type HudModuleId } from "../../shared/hudModules";
 
 export type Turn = { role: "user" | "assistant"; content: string; /** Read-out of the brief, not a real exchange. */ brief?: boolean };
 /** What the Iris ring shows. */
@@ -50,7 +50,7 @@ async function askAlfred(
   context: string,
   timeZone: string,
   extra: { signal?: AbortSignal; location?: { lat: number; lon: number } } = {},
-): Promise<{ reply: string; todos: { title: string; due: string }[]; planet?: SolarPlanetId }> {
+): Promise<{ reply: string; todos: { title: string; due: string }[]; module?: HudModuleId }> {
   await ensureSession();
   const res = await fetch("/api/ask", {
     method: "POST",
@@ -67,12 +67,12 @@ async function askAlfred(
   const data = (await res.json().catch(() => ({}))) as {
     reply?: string;
     todos?: { title: string; due: string }[];
-    planet?: string;
+    module?: string;
     error?: string;
   };
   if (!res.ok || !data.reply) throw new Error(data.error ?? "Iris couldn't answer. Try again.");
-  const planet = data.planet && isSolarPlanetId(data.planet) ? data.planet : undefined;
-  return { reply: data.reply, todos: data.todos ?? [], planet };
+  const module = data.module && isHudModuleId(data.module) ? data.module : undefined;
+  return { reply: data.reply, todos: data.todos ?? [], module };
 }
 
 /**
@@ -90,8 +90,8 @@ export function useConversation(opts: {
   buildGreeting?: () => string;
   /** The rundown Iris reads when E says "let's do the brief". */
   buildBrief?: () => string;
-  /** Iris chose a solar-system module (open_planet tool or speech match). */
-  onOpenPlanet?: (id: SolarPlanetId) => void;
+  /** Iris opened a HUD module (open_module tool or speech match). */
+  onOpenModule?: (id: HudModuleId) => void;
   /** Where E is (for "how far is that flight from me"). */
   location?: { lat: number; lon: number };
 }) {
@@ -229,14 +229,14 @@ export function useConversation(opts: {
       setBusy(true);
       setError(null);
       try {
-        const { buildContext, timeZone, today, onAddTodo, onOpenPlanet, location } = optsRef.current;
-        const { reply, todos, planet } = await askAlfred(next, buildContext(), timeZone, { signal: ctrl.signal, location });
+        const { buildContext, timeZone, today, onAddTodo, onOpenModule, location } = optsRef.current;
+        const { reply, todos, module } = await askAlfred(next, buildContext(), timeZone, { signal: ctrl.signal, location });
         if (requestRef.current !== id) return; // E moved on
         for (const t of todos) onAddTodo(t.title, t.due === "today" ? today : t.due === "tomorrow" ? addDays(today, 1) : undefined);
         const open =
-          planet ??
-          (/\b(open|show|bring( up)?|pull up|go to)\b/i.test(said) ? matchPlanetFromSpeech(said) : null);
-        if (open) onOpenPlanet?.(open);
+          module ??
+          (/\b(open|show|bring( up)?|pull up|go to)\b/i.test(said) ? matchModuleFromSpeech(said) : null);
+        if (open) onOpenModule?.(open);
         setTurns((t) => [...t, { role: "assistant", content: reply }]);
         setReplyTick((n) => n + 1);
         voice.speak(reply, {

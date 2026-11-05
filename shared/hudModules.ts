@@ -1,6 +1,6 @@
-/** IRIS modules (ids kept from the old solar-system layout; Iris opens them with open_planet). */
+/** IRIS HUD modules — bottom tabs, corner gauges, and Iris `open_module`. */
 
-export type SolarPlanetId =
+export type HudModuleId =
   | "vitals"
   | "apps"
   | "today"
@@ -12,16 +12,16 @@ export type SolarPlanetId =
   | "channels"
   | "ecs";
 
-export interface SolarPlanetDef {
-  id: SolarPlanetId;
+export interface HudModuleDef {
+  id: HudModuleId;
   label: string;
   short: string;
-  /** Hint for Iris when choosing open_planet */
+  /** Hint for Iris when choosing open_module */
   hint: string;
   color: string;
 }
 
-export const SOLAR_PLANETS: SolarPlanetDef[] = [
+export const HUD_MODULES: HudModuleDef[] = [
   { id: "vitals", label: "Vitals", short: "Vitals", hint: "weather, fitness, Bay Area Pulse map (quakes, fires, flights, ISS, ships)", color: "#67e8f9" },
   { id: "apps", label: "Woodhouse", short: "Apps", hint: "connected apps and sync status", color: "#a5b4fc" },
   { id: "today", label: "Today", short: "Today", hint: "do today, schedule, todos, leave-by", color: "#fde047" },
@@ -34,30 +34,26 @@ export const SOLAR_PLANETS: SolarPlanetDef[] = [
   { id: "ecs", label: "ECS log", short: "ECS", hint: "roadmap, timeline, messages log", color: "#c4b5fd" },
 ];
 
-export const SOLAR_PLANET_IDS = SOLAR_PLANETS.map((p) => p.id);
+export const HUD_MODULE_IDS = HUD_MODULES.map((m) => m.id);
 
-/** HUD navigation: four tabs always on the bottom bar; the rest live under "More". */
-export const HUD_TABS: SolarPlanetId[] = ["today", "vitals", "inbox", "plan"];
-export const HUD_MORE: SolarPlanetId[] = SOLAR_PLANET_IDS.filter((id) => !HUD_TABS.includes(id));
+/** Primary bottom tab bar; everything else is under More. */
+export const HUD_TABS: HudModuleId[] = ["today", "vitals", "inbox", "plan"];
+export const HUD_MORE: HudModuleId[] = HUD_MODULE_IDS.filter((id) => !HUD_TABS.includes(id));
 
-export function solarPlanetContextForIris(): string {
-  return SOLAR_PLANETS.map((p) => `${p.id}: ${p.hint}`).join("; ");
+export function moduleContextForIris(): string {
+  return HUD_MODULES.map((m) => `${m.id}: ${m.hint}`).join("; ");
 }
 
-export function isSolarPlanetId(id: string): id is SolarPlanetId {
-  return (SOLAR_PLANET_IDS as string[]).includes(id);
+export function isHudModuleId(id: string): id is HudModuleId {
+  return (HUD_MODULE_IDS as string[]).includes(id);
 }
 
-/** Degrees to rotate orbit so this planet sits at the front (6 o'clock). */
-export function orbitSpinToFront(planetId: SolarPlanetId, count = SOLAR_PLANETS.length): number {
-  const idx = SOLAR_PLANETS.findIndex((p) => p.id === planetId);
-  if (idx < 0) return 0;
-  const slot = (360 / count) * idx;
-  return 180 - slot;
+export function moduleLabel(id: HudModuleId): string {
+  return HUD_MODULES.find((m) => m.id === id)?.label ?? id;
 }
 
-/** Client-side fallback when Iris didn't call open_planet. */
-export function matchPlanetFromSpeech(text: string): SolarPlanetId | null {
+/** Client-side fallback when Iris didn't call open_module. */
+export function matchModuleFromSpeech(text: string): HudModuleId | null {
   const t = text.toLowerCase();
   if (/\b(channel|draft|write an? email|compose)\b/.test(t)) return "channels";
   if (/\b(inbox|email|e-mail|mail|gmail|unread)\b/.test(t)) return "inbox";

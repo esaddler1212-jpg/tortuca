@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useNow } from "./hooks/useNow";
 import { nextWakeDay } from "../shared/bedtime";
 import { dayKey, localHour, weekdayOfDay, zonedDateTime } from "../shared/timezone";
@@ -8,9 +8,7 @@ import { useVoiceOutput } from "./hooks/useVoiceOutput";
 import { buildDailyBrief, buildVantageBrief } from "./lib/spokenBrief";
 import { usePlan } from "./hooks/usePlan";
 import { SparkCard } from "./components/SparkCard";
-import { HubPanel } from "./components/HubPanel";
 import { PulsePanel } from "./components/PulsePanel";
-import { InboxPanel } from "./components/InboxPanel";
 import { usePulse } from "./hooks/usePulse";
 import { ConversationCaptions } from "./components/ConversationPanel";
 import { useConversation } from "./hooks/useConversation";
@@ -21,9 +19,6 @@ import { issContext } from "../shared/skyText";
 import { gymContext, inboxContext, memosContext, moneyContext, shoppingContext } from "../shared/irisContext";
 import { useHub } from "./hooks/useHub";
 import { DEFAULT_ROUTINE, gymDayFor, moneyMonth } from "../shared/hub";
-import { PlanPanel } from "./components/PlanPanel";
-import { BusinessResearcherPanel } from "./components/BusinessResearcherPanel";
-import { ChannelsPanel } from "./components/ChannelsPanel";
 import { useBusinessResearch } from "./hooks/useBusinessResearch";
 import { useChannels } from "./hooks/useChannels";
 import { channelsSummary } from "../shared/channels";
@@ -38,7 +33,6 @@ import { OvercommitmentBanner } from "./components/OvercommitmentBanner";
 import { MorningRitualModal } from "./components/MorningRitualModal";
 import { WindDownBanner } from "./components/WindDownBanner";
 import { CommandBar } from "./components/CommandBar";
-import { TodayCommandCenter } from "./components/TodayCommandCenter";
 import { WeeklyReview } from "./components/WeeklyReview";
 import { SettingsDrawer } from "./components/SettingsDrawer";
 import { useSettings } from "./hooks/useSettings";
@@ -54,7 +48,6 @@ import { usePushNotifications } from "./hooks/usePushNotifications";
 import { useOvernightDelta } from "./hooks/useOvernightDelta";
 import { useFitness } from "./hooks/useFitness";
 import { useShoppingList } from "./hooks/useShoppingList";
-import { MealPrepPanel } from "./components/MealPrepPanel";
 import { orchestrationToCalendarEvents } from "./lib/familyCalendar";
 import { computeLeaveBy, filterTodayTimeline } from "./lib/leaveBy";
 import { computeSuggestedBedtime, isWindDownTime } from "./lib/bedtime";
@@ -69,7 +62,17 @@ import { HudCore, HudCoreCompact } from "./components/hud/HudCore";
 import { UpNextPanel, UrgentLine } from "./components/hud/HudHome";
 import { GlassModule, HudTabBar, MoreSheet, type TabBadge } from "./components/hud/HudNav";
 import { hudGauges, type GaugeId } from "../shared/hudGauges";
-import { SOLAR_PLANETS, type SolarPlanetId } from "../shared/solarPlanets";
+import { moduleContextForIris, moduleLabel, type HudModuleId } from "../shared/hudModules";
+import {
+  LazyBusinessResearcherPanel,
+  LazyChannelsPanel,
+  LazyHubPanel,
+  LazyInboxPanel,
+  LazyMealPrepPanel,
+  LazyPlanPanel,
+  LazyTodayCommandCenter,
+  ModuleLoading,
+} from "./lazyModules";
 import { FamilyPurposeDebriefBanner } from "./components/FamilyPurposeDebriefBanner";
 import { WeekWeatherPanel } from "./components/hud/WeekWeatherPanel";
 import {
@@ -79,7 +82,6 @@ import {
   VitalsPanel,
 } from "./components/hud/HudPanels";
 import { InstallAppBanner } from "./components/InstallAppBanner";
-import { solarPlanetContextForIris } from "../shared/solarPlanets";
 
 export default function App() {
   const { settings, persist, updateCity, saving, error, setError } = useSettings();
@@ -356,7 +358,7 @@ export default function App() {
   const pulseUrgent = Boolean(pulse && (pulse.alerts.length || (pulse.air && pulse.air.aqi > 100) || pulse.fires.some((f) => f.miles <= 30)));
 
   // Badges for the bottom tab bar and the More sheet.
-  const badges = useMemo<Partial<Record<SolarPlanetId, TabBadge>>>(
+  const badges = useMemo<Partial<Record<HudModuleId, TabBadge>>>(
     () => ({
       today: { alert: urgentCount > 0, count: urgentCount || undefined },
       inbox: { alert: unread > 0, count: unread || undefined },
@@ -400,22 +402,22 @@ export default function App() {
     return items.slice(0, 3);
   }, [leaveBy, todayTimeline, now, pulseUrgent, pulse, settings.timezone]);
 
-  const [activePlanet, setActivePlanet] = useState<SolarPlanetId | null>(null);
+  const [activeModule, setActiveModule] = useState<HudModuleId | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
 
-  /** Open a module (tab, corner readout, More, or Iris's open_planet). */
-  const focusPlanet = useCallback((id: SolarPlanetId) => {
+  /** Open a module (tab, corner readout, More, or Iris open_module). */
+  const focusModule = useCallback((id: HudModuleId) => {
     setMoreOpen(false);
-    setActivePlanet(id);
+    setActiveModule(id);
     const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     window.scrollTo({ top: 0, behavior: still ? "auto" : "smooth" });
   }, []);
   const closeModule = useCallback(() => {
-    setActivePlanet(null);
+    setActiveModule(null);
     window.scrollTo({ top: 0 });
   }, []);
   /** Tapping the open tab again closes it. */
-  const onTab = useCallback((id: SolarPlanetId) => (activePlanet === id && !moreOpen ? closeModule() : focusPlanet(id)), [activePlanet, moreOpen, closeModule, focusPlanet]);
+  const onTab = useCallback((id: HudModuleId) => (activeModule === id && !moreOpen ? closeModule() : focusModule(id)), [activeModule, moreOpen, closeModule, focusModule]);
 
   const coreLines: [string, string] =
     systemStatus === "ok" ? ["IRIS", "ONLINE"] : systemStatus === "degraded" ? ["IRIS", "DEGRADED"] : ["IRIS", "OFFLINE"];
@@ -470,7 +472,7 @@ export default function App() {
                         goals: goalLines,
                         desk: { review: desk.review.length, working: desk.working.length },
                         channels: channelsSummary(channelAgent.channels),
-                        solarPlanets: solarPlanetContextForIris(),
+                        modules: moduleContextForIris(),
                         extras: (() => {
                           const tz = settings.timezone;
                           const schoolNames = [settings.schoolName].filter(Boolean) as string[];
@@ -494,7 +496,7 @@ export default function App() {
                           ].filter(Boolean);
                         })(),
                       }),
-    onOpenPlanet: focusPlanet,
+    onOpenModule: focusModule,
   });
 
   // Iris's ring: the centre of the HUD (tap to talk). Same ring in the full and compact core.
@@ -522,7 +524,7 @@ export default function App() {
     </>
   );
 
-  const renderPlanetModule = (id: SolarPlanetId) => {
+  const renderModule = (id: HudModuleId) => {
     switch (id) {
       case "vitals":
         return (
@@ -542,7 +544,7 @@ export default function App() {
         );
       case "inbox":
         return (
-          <InboxPanel
+          <LazyInboxPanel
             messages={messages}
             unread={unread}
             loading={emailsLoading}
@@ -565,7 +567,7 @@ export default function App() {
               woodhouse={woodhouse}
               familyPurposeAppUrl={familyPurposeAppUrl}
             />
-            <TodayCommandCenter
+            <LazyTodayCommandCenter
               moduleOnly
               settings={settings}
               weather={weather}
@@ -598,8 +600,8 @@ export default function App() {
                 </>
               }
               unreadEmails={unread}
-              onOpenInbox={() => focusPlanet("inbox")}
-              onOpenVitals={() => focusPlanet("vitals")}
+              onOpenInbox={() => focusModule("inbox")}
+              onOpenVitals={() => focusModule("vitals")}
               pulseAlert={pulseUrgent ? pulseSummary(pulse!) : undefined}
               actions={todayActions}
               todayTimeline={todayTimeline}
@@ -628,7 +630,7 @@ export default function App() {
         );
       case "plan":
         return (
-          <PlanPanel
+          <LazyPlanPanel
             key={isVantageMode(mode) ? "plan-year" : "plan-week"}
             initialTab={isVantageMode(mode) ? "year" : "week"}
             plan={plan}
@@ -650,7 +652,7 @@ export default function App() {
         );
       case "research":
         return (
-          <BusinessResearcherPanel
+          <LazyBusinessResearcherPanel
             googleConnected={connected}
             loading={bizResearch.loading}
             error={bizResearch.error}
@@ -661,7 +663,7 @@ export default function App() {
         );
       case "hub":
         return (
-          <HubPanel
+          <LazyHubPanel
             key={`hub-${mode}`}
             hub={hub}
             update={updateHub}
@@ -676,7 +678,7 @@ export default function App() {
         );
       case "meal":
         return (
-          <MealPrepPanel
+          <LazyMealPrepPanel
             settings={settings}
             items={shoppingItems}
             onAdd={addShopping}
@@ -688,7 +690,7 @@ export default function App() {
         return ecsPanels;
       case "channels":
         return (
-          <ChannelsPanel
+          <LazyChannelsPanel
             state={channelAgent.channels}
             pending={channelAgent.pending}
             googleConnected={connected}
@@ -718,22 +720,22 @@ export default function App() {
         onFocusChoice={focus.choose}
       />
 
-      <main className={`mx-auto px-4 py-4 space-y-4 hud-with-tabbar ${activePlanet ? "max-w-[1100px]" : "max-w-[560px]"}`}>
-        {activePlanet ? (
+      <main className={`mx-auto px-4 py-4 space-y-4 hud-with-tabbar ${activeModule ? "max-w-[1100px]" : "max-w-[560px]"}`}>
+        {activeModule ? (
           <>
             <HudCoreCompact
               core={coreRing}
-              readout={gauges.find((g) => g.id === (activePlanet as GaugeId))?.value ?? (SOLAR_PLANETS.find((p) => p.id === activePlanet)?.label ?? "").toUpperCase()}
-              alert={badges[activePlanet]?.alert}
+              readout={gauges.find((g) => g.id === (activeModule as GaugeId))?.value ?? moduleLabel(activeModule).toUpperCase()}
+              alert={badges[activeModule]?.alert}
             />
             <ConversationCaptions convo={convo} googleConnected={connected} />
-            <GlassModule key={activePlanet} id={activePlanet} onClose={closeModule}>
-              {renderPlanetModule(activePlanet)}
+            <GlassModule key={activeModule} id={activeModule} onClose={closeModule}>
+              <Suspense fallback={<ModuleLoading />}>{renderModule(activeModule)}</Suspense>
             </GlassModule>
           </>
         ) : (
           <>
-            <HudCore gauges={gauges} core={coreRing} onOpen={(id) => focusPlanet(id)} />
+            <HudCore gauges={gauges} core={coreRing} onOpen={(id) => focusModule(id)} />
             <ConversationCaptions convo={convo} googleConnected={connected} />
             <UrgentLine items={urgentItems} />
             <CommandBar
@@ -751,7 +753,7 @@ export default function App() {
               onToggle={toggle}
               spark={todaySpark(plan, today)}
               sparkDone={sparkDone(plan, today)}
-              onOpenToday={() => focusPlanet("today")}
+              onOpenToday={() => focusModule("today")}
             />
             <FamilyPurposeDebriefBanner
               mode={mode}
@@ -763,8 +765,8 @@ export default function App() {
         )}
       </main>
 
-      <MoreSheet open={moreOpen} badges={badges} onPick={focusPlanet} onClose={() => setMoreOpen(false)} />
-      <HudTabBar active={activePlanet} moreOpen={moreOpen} badges={badges} onTab={onTab} onMore={() => setMoreOpen((o) => !o)} />
+      <MoreSheet open={moreOpen} badges={badges} onPick={focusModule} onClose={() => setMoreOpen(false)} />
+      <HudTabBar active={activeModule} moreOpen={moreOpen} badges={badges} onTab={onTab} onMore={() => setMoreOpen((o) => !o)} />
 
       <MorningRitualModal
         settings={settings}

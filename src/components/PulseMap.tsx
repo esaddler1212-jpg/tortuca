@@ -59,8 +59,9 @@ export default function PulseMap({ pulse, lat, lon, layers, tracked, onCam }: Pr
     }).addTo(m);
     group.current = L.layerGroup().addTo(m);
     // Camera thumbnails in popups open the big viewer.
-    m.on("popupopen", (e) => {
-      const img = e.popup.getElement()?.querySelector<HTMLImageElement>("img[data-cam]");
+    m.on("popupopen", (e: L.LeafletEvent) => {
+      const el = e.popup.getElement();
+      const img = el?.querySelector("img[data-cam]") as HTMLImageElement | null;
       img?.addEventListener("click", () => camRef.current(img.dataset.cam!));
     });
     map.current = m;
