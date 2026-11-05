@@ -31,14 +31,18 @@ jobs:
             tail -n 40 /tmp/test-os.log >> "$GITHUB_STEP_SUMMARY"
           fi
       - name: Ingest result to Netlify (optional)
-        if: always() && secrets.WEEKLY_AUDIT_INGEST_URL != '' && secrets.WEEKLY_AUDIT_SECRET != ''
+        if: always()
         env:
           INGEST_URL: ${{ secrets.WEEKLY_AUDIT_INGEST_URL }}
           INGEST_SECRET: ${{ secrets.WEEKLY_AUDIT_SECRET }}
           PASSED: ${{ steps.os.outcome == 'success' }}
         run: |
+          if [ -z "$INGEST_URL" ] || [ -z "$INGEST_SECRET" ]; then
+            echo "Ingest secrets not configured; skipping."
+            exit 0
+          fi
           NOTE=$(tail -n 30 /tmp/test-os.log | jq -Rs .)
           curl -sf -X POST "$INGEST_URL" \
             -H "Authorization: Bearer $INGEST_SECRET" \
             -H "Content-Type: application/json" \
-            -d "{\"passed\":$PASSED,\"note\":$NOTE}" || echo "Ingest skipped (network or secret)"
+            -d "{\"passed\":$PASSED,\"note\":$NOTE}" || echo "Ingest failed (network)"
