@@ -27,11 +27,11 @@ function useScanTime(active: boolean) {
   return t;
 }
 
-function MiniCore({ phase }: { phase: ConversationPhase }) {
+function MiniCore({ phase, visible }: { phase: ConversationPhase; visible?: boolean }) {
   const t = useScanTime(phase !== "idle");
   const pulse = phase === "thinking" ? 0.5 + Math.sin(t * 4) * 0.3 : 1;
   return (
-    <svg viewBox="0 0 48 48" className="hidden h-12 w-12 shrink-0 lg:block" aria-hidden>
+    <svg viewBox="0 0 48 48" className={`h-12 w-12 shrink-0 ${visible ? "block" : "hidden lg:block"}`} aria-hidden>
       <circle cx={24} cy={24} r={22} fill="rgb(2 8 14 / 0.9)" stroke="rgb(94 231 255 / 0.4)" strokeWidth={1} />
       <circle cx={24} cy={24} r={10 * pulse} fill="rgb(34 211 238)" opacity={phase === "idle" ? 0.45 : 0.95} />
     </svg>
@@ -91,11 +91,14 @@ export function JarvisCinemaBar({
   googleConnected,
   onActivate,
   onDismiss,
+  layout = "bar",
 }: {
   convo: Conversation;
   googleConnected: boolean;
   onActivate: () => void;
   onDismiss?: () => void;
+  /** bar = bottom dock strip; box = stacked panel beside Do today */
+  layout?: "bar" | "box";
 }) {
   const subtitle = useMemo(() => subtitleFor(convo, googleConnected), [convo, googleConnected]);
   const chip =
@@ -108,8 +111,13 @@ export function JarvisCinemaBar({
         ? "Stop listening"
         : "Talk to Iris";
 
+  const stacked = layout === "box";
+
   return (
-    <div className="iris-cinema-bar relative w-full space-y-2 lg:space-y-0" aria-live="polite">
+    <div
+      className={`iris-cinema-bar relative w-full ${stacked ? "space-y-3" : "space-y-2 lg:space-y-0"}`}
+      aria-live="polite"
+    >
       {onDismiss ? (
         <button
           type="button"
@@ -120,16 +128,16 @@ export function JarvisCinemaBar({
           <PanelBottomClose className="h-4 w-4" aria-hidden />
         </button>
       ) : null}
-      <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-4">
+      <div className={`flex flex-col gap-2 ${stacked ? "" : "lg:flex-row lg:items-center lg:gap-4"}`}>
         <button
           type="button"
           onClick={onActivate}
-          className="shrink-0 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 lg:flex lg:items-center lg:gap-3"
+          className={`shrink-0 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 ${stacked ? "flex items-center gap-3" : "lg:flex lg:items-center lg:gap-3"}`}
           aria-label={activateLabel}
         >
-          <CinemaFace phase={convo.phase} />
-          <MiniCore phase={convo.phase} />
-          <span className="hidden font-mono text-[10px] uppercase tracking-[0.2em] text-cyan-300/90 lg:inline">
+          {!stacked ? <CinemaFace phase={convo.phase} /> : null}
+          <MiniCore phase={convo.phase} visible={stacked} />
+          <span className={`font-mono text-[10px] uppercase tracking-[0.2em] text-cyan-300/90 ${stacked ? "inline" : "hidden lg:inline"}`}>
             Talk to Iris
           </span>
         </button>
@@ -143,16 +151,16 @@ export function JarvisCinemaBar({
               </span>
             ) : null}
           </div>
-          <p className={`line-clamp-2 text-left text-[13px] leading-snug text-cyan-50/95 lg:line-clamp-1 ${convo.phase === "listening" && convo.interim.trim() ? "text-cyan-100" : ""}`}>
+          <p className={`line-clamp-2 text-left text-[13px] leading-snug text-cyan-50/95 ${stacked ? "line-clamp-4" : "lg:line-clamp-1"} ${convo.phase === "listening" && convo.interim.trim() ? "text-cyan-100" : ""}`}>
             {subtitle}
           </p>
         </div>
-        <div className="hidden min-w-[180px] flex-1 lg:block xl:min-w-[260px]">
+        <div className={`${stacked ? "w-full" : "hidden min-w-[180px] flex-1 lg:block xl:min-w-[260px]"}`}>
           <VoiceWaveform phase={convo.phase} interim={convo.interim} />
         </div>
       </div>
       {convo.active && (
-        <div className="flex flex-wrap items-center justify-start gap-2 pl-1 lg:justify-end lg:pl-0">
+        <div className={`flex flex-wrap items-center gap-2 pl-1 ${stacked ? "justify-start" : "justify-start lg:justify-end lg:pl-0"}`}>
           {convo.offerSave ? (
             <>
               <button type="button" className={`${chip} border-amber-400/50 text-amber-200`} onClick={convo.saveTranscript}>

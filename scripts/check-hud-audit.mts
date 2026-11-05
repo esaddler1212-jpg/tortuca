@@ -198,6 +198,35 @@ ok("ask requires session", askTs.includes("getValidSession") || askTs.includes("
 ok("useStocks hits /api/stocks", read("src/hooks/useStocks.ts").includes('"/api/stocks"'));
 ok("Morning brief can use stocks", read("src/lib/stocksBriefing.ts").includes("stocksBriefingLines"));
 ok("Hub passes stocks props", appTs.includes("stocks={stocks}"));
+ok("Today: IrisTalkBox beside Do today", appTs.includes("IrisTalkBox") && read("src/components/TodayCommandCenter.tsx").includes("irisTalk"));
+ok("Today desktop hides bottom Iris dock", read("src/index.css").includes("iris-dock--today-inline-lg"));
+
+// ── Extended pass: Iris voice UX (Today inline + dock) ─────────────────
+const todayTs = read("src/components/TodayCommandCenter.tsx");
+const cinemaBar = read("src/components/hud/JarvisCinemaBar.tsx");
+const irisTalkTs = read("src/components/IrisTalkBox.tsx");
+const irisDockTs = read("src/components/hud/IrisDock.tsx");
+ok("IrisTalkBox component exists", fs.existsSync(path.join(root, "src/components/IrisTalkBox.tsx")));
+ok("IrisTalkBox uses box layout", irisTalkTs.includes('layout="box"'));
+ok("JarvisCinemaBar supports bar and box", /layout\?:\s*"bar"\s*\|\s*"box"/.test(cinemaBar));
+ok("App: todayIrisInline gates inline Iris", appTs.includes("todayIrisInline") && appTs.includes('activeModule === "today"'));
+ok("IrisDock: inlineOnDesktopToday prop", irisDockTs.includes("inlineOnDesktopToday"));
+ok("App wires inlineOnDesktopToday", appTs.includes("inlineOnDesktopToday={todayIrisInline}"));
+ok("App: today inline main padding class", appTs.includes("hud-with-iris-dock--today-inline"));
+ok("Today: irisTalk column desktop-only", todayTs.includes("hidden lg:block") && todayTs.includes("lg:col-span-5"));
+ok("Today module hides embedded right rail", todayTs.includes("!moduleOnly") && todayTs.includes("Right rail"));
+ok("HudHeader: Iris toggle in modules", read("src/components/hud/HudHeader.tsx").includes("irisVoiceDeckOpen"));
+ok("Home captions hidden when Iris dock open", appTs.includes("!irisCinemaVisible ? <ConversationCaptions"));
+ok("Modules use GlassModule shell", appTs.includes("<GlassModule"));
+
+// ── Extended pass: push + scheduled reminders ───────────────────────────
+ok("sw.js registers push handler", read("public/sw.js").includes('addEventListener("push"'));
+ok("main registers service worker", read("src/main.tsx").includes('register("/sw.js"'));
+ok("reminder-check function exists", fs.existsSync(path.join(root, "netlify/functions/reminder-check.ts")));
+ok("reminder-check: wind-down key", read("netlify/functions/reminder-check.ts").includes("windDown"));
+ok("commute-scheduled function exists", fs.existsSync(path.join(root, "netlify/functions/commute-scheduled.ts")));
+ok("user-data API exists", fs.existsSync(path.join(root, "netlify/functions/user-data.ts")));
+ok("ask uses Netlify Blobs user store", askTs.includes("getStore") || askTs.includes("blobs"));
 
 for (const id of ["today", "inbox", "plan", "hub", "meal", "research", "channels"] as const) {
   ok(`lazy prefetch: ${id}`, read("src/lazyModules.tsx").includes(`${id}:`));
