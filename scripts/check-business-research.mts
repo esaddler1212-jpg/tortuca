@@ -2,6 +2,7 @@
 import http from "node:http";
 import Anthropic from "@anthropic-ai/sdk";
 import { runBusinessResearch } from "../netlify/functions/_businessResearch.ts";
+import { inferResearchTemplate } from "../shared/businessResearch.ts";
 
 const seen: any[] = [];
 const server = http.createServer((req, res) => {
@@ -66,3 +67,7 @@ ok("second hop includes assistant partial", seen[1].j.messages.at(-1).role === "
 ok("searched flag set", r.searched === true);
 ok("report has executive summary", /Executive summary/i.test(r.report));
 ok("not refused", !r.refused && r.report.length > 20);
+
+ok("infers competitive from query", inferResearchTemplate("Who are our competitors in merch?") === "competitive");
+ok("infers grant from ASES", inferResearchTemplate("ASES grant timeline") === "grant");
+ok("explicit template wins", inferResearchTemplate("hello", "evidence") === "evidence");

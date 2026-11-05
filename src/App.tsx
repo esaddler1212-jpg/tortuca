@@ -24,7 +24,7 @@ import { useChannels } from "./hooks/useChannels";
 import { channelsSummary } from "../shared/channels";
 import { fetchUserData } from "./lib/userData";
 import { EMPTY_HUB, type HubState } from "../shared/hub";
-import type { ResearchArea } from "../shared/businessResearch";
+import type { ResearchArea, ResearchTemplate } from "../shared/businessResearch";
 import type { PlanTask, YearGoal } from "../shared/planData";
 import { allGoals, allTasks, goalProgress, handoffQueue, isDone, monthTasks, planTasksDoneOn, sparkDone, todaySpark, weekFocus } from "../shared/plan";
 import { VantageBriefingPanel } from "./components/hud/VantageBriefingPanel";
@@ -117,8 +117,8 @@ export default function App() {
   const bizResearch = useBusinessResearch(settings.timezone);
 
   const runBusinessResearch = useCallback(
-    async (query: string, area: ResearchArea, context?: string) => {
-      const result = await bizResearch.research({ query, area, context });
+    async (query: string, area: ResearchArea, context?: string, template?: ResearchTemplate) => {
+      const result = await bizResearch.research({ query, area, context, template });
       if (result) {
         try {
           const remote = (await fetchUserData())?.hub as HubState | undefined;
@@ -728,7 +728,7 @@ export default function App() {
             error={bizResearch.error}
             last={bizResearch.last}
             onConnectGoogle={() => void connect()}
-            onResearch={(q, a) => runBusinessResearch(q, a)}
+            onResearch={(q, a, t) => runBusinessResearch(q, a, undefined, t)}
           />
         );
       case "hub":
