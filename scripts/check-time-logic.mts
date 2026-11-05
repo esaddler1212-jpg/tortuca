@@ -31,6 +31,7 @@ import { buildAskContext } from "../src/lib/askContext.ts";
 import * as Ex from "../shared/exercises.ts";
 import { buildFamilyPurposeWoodhouseNode } from "../netlify/functions/_family-purpose-woodhouse.ts";
 import { mergeBackups } from "../netlify/functions/_fp-backup.ts";
+import * as Voices from "../shared/irisVoices.ts";
 import { readFileSync } from "node:fs";
 
 const TZ = "America/Los_Angeles";
@@ -437,6 +438,17 @@ check(
 
 // Times on screen use the IRIS time zone, not the device's (iMac, travel).
 check("clock: event and leave-by times in IRIS time zone", [clockTime("2026-11-04T19:00:00Z", "America/Los_Angeles"), clockTime(new Date("2026-11-04T15:20:00Z"), "America/Los_Angeles"), clockTime("bad", TZ)], ["11:00 AM", "7:20 AM", ""]);
+
+// ── Iris voice labels (browser speechSynthesis sorting)
+{
+  check("iris voice tier: premium in name", Voices.voiceTier("Ava (Premium) (en-US)"), "premium");
+  check("iris voice tier: enhanced", Voices.voiceTier("Samantha (Enhanced) (en-US)"), "enhanced");
+  check("iris voice tier: standard default", Voices.voiceTier("Karen"), "standard");
+  check("iris voice rank: Samantha before Karen", Voices.recommendationRank("Samantha") < Voices.recommendationRank("Karen"), true);
+  check("iris voice: Google US English recommended", Voices.isRecommendedIrisVoice("Google US English"), true);
+  const mockVoice = { name: "Samantha (Enhanced) (en-US)", lang: "en-US" } as SpeechSynthesisVoice;
+  check("iris voice label includes tier", Voices.irisVoiceOptionLabel(mockVoice, "American").includes("Enhanced"), true);
+}
 
 if (failures) {
   console.error(`\n${failures} check(s) failed`);
