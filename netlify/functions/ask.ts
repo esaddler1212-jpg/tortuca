@@ -4,6 +4,7 @@ import { getStore } from "@netlify/blobs";
 import { getValidSession, initBlobs, sessionHeader } from "./_shared";
 import { dayKey } from "../../shared/timezone";
 import { matchesForget, runIris } from "./_iris";
+import { consultSpecialist } from "./_irisSpecialists";
 import { lookupFlight } from "./_flight";
 import { recordUsage } from "./_irisUsage";
 import type { IrisTrace } from "../../shared/irisUsage";
@@ -58,7 +59,7 @@ export const handler: Handler = async (event) => {
   await usage.set(usageKey, String(used + 1));
 
   // Fail fast (Netlify functions have a time limit); no automatic retries.
-  const client = new Anthropic({ timeout: 24_000, maxRetries: 0 });
+  const client = new Anthropic({ timeout: 52_000, maxRetries: 0 });
   const started = Date.now();
   const tz = body.timeZone || "America/Los_Angeles";
   const blank = { model: "claude-opus-5-5", inTok: 0, outTok: 0, cacheRead: 0, cacheWrite: 0, searches: 0, fetches: 0, tools: [] as string[], hops: 0 };
@@ -69,9 +70,25 @@ export const handler: Handler = async (event) => {
     const key = await resolveDataKey(sessionId);
     const memory = ((await loadUserData(key))?.irisMemory ?? []).map((m) => m.fact);
     const here = coords({ lat: String(body.lat ?? ""), lon: String(body.lon ?? "") });
-    const { reply: text, todos, remember, forget, refused, module, usage } = await runIris(client, turns, body.context ?? "", memory, {
-      trackFlight: async (flight) => (await lookupFlight(flight, tz, here.lat, here.lon)).spoken,
-    });
+    const { reply: text, todos, remember, forget, refused, module, specialist, usage } = await runIris(
+      client,
+      turns,
+      body.context ?? "",
+      memory,
+      {
+        trackFlight: async (flight) => (await lookupFlight(flight, tz, here.lat, here.lon)).spoken,
+        consultSpecialist: async (input) => {
+          const r = await consultSpecialist(client, {
+            ...input,
+            context: body.context ?? "",
+            sessionId,
+            who,
+            timeZone: tz,
+          });
+          return { summary: r.summary, module: r.module, specialist: r.specialist };
+        },
+      },
+    );
     await log(usage, refused ? "refused" : "ok");
     if (refused) return json(200, { reply: "I can't help with that one, boss. Ask me something else?", todos: [] });
     if (remember.length || forget.length) {
@@ -94,7 +111,12 @@ export const handler: Handler = async (event) => {
           : forget.length
             ? "Done. I've forgotten it."
             : "Sorry, I lost my train of thought. Say that again?");
-    return json(200, { reply, todos, module: module && typeof module === "string" ? module : undefined });
+    return json(200, {
+      reply,
+      todos,
+      module: module && typeof module === "string" ? module : undefined,
+      specialist: specialist && typeof specialist === "string" ? specialist : undefined,
+    });
   } catch (error) {
     await log(
       blank,

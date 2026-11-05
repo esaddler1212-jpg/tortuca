@@ -1,5 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { HUD_MODULE_IDS, moduleContextForIris } from "../../shared/hudModules";
+import { teamContextForIris, type IrisSpecialistId, isIrisSpecialistId } from "../../shared/irisTeam";
+import { specialistEnumForTool } from "./_irisSpecialists";
 
 /** Iris's brain: persona, tools, and one conversational turn (with web search). */
 
@@ -52,6 +54,31 @@ export const TRACK_FLIGHT = {
       flight: { type: "string", description: "Flight number as E said it, e.g. 'UA 123', 'Southwest 2201', or a tail number like 'N123AB'." },
     },
     required: ["flight"],
+    additionalProperties: false,
+  },
+};
+
+export const CONSULT_SPECIALIST = {
+  name: "consult_specialist",
+  description:
+    "Delegate to a specialist on Iris's team. They report back with findings; you summarize for E in spoken form. Use for full research briefs (Scout), draft workflow (Scribe), plan (Navigator), Pulse (Sentinel), meals (Quartermaster), Hub (Curator). Prefer web_search yourself for quick current facts.",
+  strict: true,
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      specialist: {
+        type: "string",
+        enum: specialistEnumForTool(),
+        description: "Specialist id: scout, scribe, navigator, sentinel, quartermaster, curator.",
+      },
+      task: { type: "string", description: "What you need them to do." },
+      query: { type: "string", description: "Scout only: research question (defaults to task)." },
+      area: {
+        type: "string",
+        description: "Scout only: ECS area (General, ECS, Tortuga, North Star, Easy Supply, 2EASY, Personal).",
+      },
+    },
+    required: ["specialist", "task"],
     additionalProperties: false,
   },
 };
@@ -154,7 +181,15 @@ export async function runIris(
   turns: IrisTurn[],
   context: string,
   memory: string[] = [],
-  tools: { trackFlight?: (flight: string) => Promise<string> } = {},
+  tools: {
+    trackFlight?: (flight: string) => Promise<string>;
+    consultSpecialist?: (input: {
+      specialist: IrisSpecialistId;
+      task: string;
+      query?: string;
+      area?: string;
+    }) => Promise<{ summary: string; module: string | null; specialist: IrisSpecialistId }>;
+  } = {},
 ): Promise<{
   reply: string;
   todos: IrisTodo[];
@@ -163,6 +198,7 @@ export async function runIris(
   searched: boolean;
   refused: boolean;
   module: string | null;
+  specialist: IrisSpecialistId | null;
   usage: IrisTurnUsage;
 }> {
   const messages: Anthropic.Beta.BetaMessageParam[] = turns.map((t) => ({ role: t.role, content: t.content }));
@@ -172,8 +208,9 @@ export async function runIris(
   const forget: string[] = [];
   let searched = false;
   let module: string | null = null;
+  let specialist: IrisSpecialistId | null = null;
   const usage: IrisTurnUsage = { model: MODEL, inTok: 0, outTok: 0, cacheRead: 0, cacheWrite: 0, searches: 0, fetches: 0, tools: [], hops: 0 };
-  for (let hop = 0; hop < 4; hop++) {
+  for (let hop = 0; hop < 5; hop++) {
     const response = await client.beta.messages.create({
       model: MODEL,
       max_tokens: 2048,
@@ -182,10 +219,18 @@ export async function runIris(
       output_config: { effort: "low" },
       system: [
         { type: "text", text: PERSONA, cache_control: { type: "ephemeral" } },
+        { type: "text", text: teamContextForIris() },
         { type: "text", text: `Right now:\n${context.slice(0, 8000)}` },
         ...(memory.length ? [{ type: "text" as const, text: `What you remember about E:\n${memory.map((m) => `- ${m}`).join("\n")}` }] : []),
       ],
-      tools: [ADD_TODO, OPEN_MODULE, ...(tools.trackFlight ? [TRACK_FLIGHT] : []), ...MEMORY_TOOLS, ...WEB_TOOLS],
+      tools: [
+        ADD_TODO,
+        OPEN_MODULE,
+        ...(tools.trackFlight ? [TRACK_FLIGHT] : []),
+        ...(tools.consultSpecialist ? [CONSULT_SPECIALIST] : []),
+        ...MEMORY_TOOLS,
+        ...WEB_TOOLS,
+      ],
       messages,
     });
     // Numbers only, for the usage log (never the words).
@@ -199,7 +244,9 @@ export async function runIris(
     usage.searches += u?.server_tool_use?.web_search_requests ?? 0;
     usage.fetches += u?.server_tool_use?.web_fetch_requests ?? 0;
     for (const b of response.content) if (b.type === "tool_use") usage.tools.push(b.name);
-    if (response.stop_reason === "refusal") return { reply: "", todos: [], remember: [], forget: [], searched, refused: true, module: null, usage };
+    if (response.stop_reason === "refusal") {
+      return { reply: "", todos: [], remember: [], forget: [], searched, refused: true, module: null, specialist: null, usage };
+    }
     for (const b of response.content) {
       if (b.type === "text") texts.push(b.text);
       else if (b.type === "server_tool_use") searched = true;
@@ -219,20 +266,43 @@ export async function runIris(
         if (HUD_MODULE_IDS.includes(id as (typeof HUD_MODULE_IDS)[number])) module = id;
       }
     }
-    const lookups = response.content.filter((b) => b.type === "tool_use" && b.name === "track_flight");
-    if (response.stop_reason === "tool_use" && lookups.length && tools.trackFlight) {
-      // Iris needs the flight data to answer: run it and hand the results back.
-      // Every tool call in the turn gets a result (the app runs the others).
+    const toolUses = response.content.filter((b) => b.type === "tool_use");
+    const needsClientRun = toolUses.some(
+      (b) =>
+        (b.name === "track_flight" && tools.trackFlight) ||
+        (b.name === "consult_specialist" && tools.consultSpecialist),
+    );
+    if (response.stop_reason === "tool_use" && needsClientRun) {
       messages.push({ role: "assistant", content: response.content as Anthropic.Beta.BetaContentBlockParam[] });
       const results: Anthropic.Beta.BetaToolResultBlockParam[] = [];
-      for (const b of response.content) {
-        if (b.type !== "tool_use") continue;
+      for (const b of toolUses) {
         let content = "Done.";
-        if (b.name === "track_flight") {
+        if (b.name === "track_flight" && tools.trackFlight) {
           try {
             content = await tools.trackFlight(String((b.input as { flight?: unknown }).flight ?? ""));
           } catch {
             content = "The flight tracker isn't answering right now.";
+          }
+        } else if (b.name === "consult_specialist" && tools.consultSpecialist) {
+          const i = b.input as { specialist?: unknown; task?: unknown; query?: unknown; area?: unknown };
+          const id = String(i.specialist ?? "").trim();
+          const task = String(i.task ?? "").trim();
+          if (!isIrisSpecialistId(id) || !task) {
+            content = "Need a valid specialist and task.";
+          } else {
+            try {
+              const r = await tools.consultSpecialist({
+                specialist: id,
+                task,
+                query: typeof i.query === "string" ? i.query : undefined,
+                area: typeof i.area === "string" ? i.area : undefined,
+              });
+              content = r.summary;
+              if (r.module && HUD_MODULE_IDS.includes(r.module as (typeof HUD_MODULE_IDS)[number])) module = r.module;
+              specialist = r.specialist;
+            } catch {
+              content = "That specialist couldn't finish right now.";
+            }
           }
         }
         results.push({ type: "tool_result", tool_use_id: b.id, content });
@@ -244,5 +314,5 @@ export async function runIris(
     // Long search: hand the partial turn back so Claude picks up where it left off.
     messages.push({ role: "assistant", content: response.content as Anthropic.Beta.BetaContentBlockParam[] });
   }
-  return { reply: forVoice(texts.join(" ")), todos, remember, forget, searched, refused: false, module, usage };
+  return { reply: forVoice(texts.join(" ")), todos, remember, forget, searched, refused: false, module, specialist, usage };
 }

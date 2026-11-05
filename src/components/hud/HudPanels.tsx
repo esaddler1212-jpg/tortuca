@@ -4,6 +4,7 @@ import type { WoodhouseOrchestrationSnapshot } from "../../types/woodhouse";
 import type { FitnessStatus } from "../../lib/fitness";
 import { weatherLabel } from "../../lib/weather";
 import { HudFrame } from "./HudFrame";
+import { IrisTeamPanel } from "./IrisTeamPanel";
 
 const fmtTime = (iso: string, timeZone: string) => {
   try {
@@ -144,6 +145,9 @@ export function NetworkPanel({
           Connect Google
         </button>
       ) : null}
+      <div className="mt-4">
+        <IrisTeamPanel />
+      </div>
     </HudFrame>
   );
 }

@@ -4,6 +4,7 @@ import { useSpeechInput } from "./useSpeechInput";
 import { useVoiceOutput, useVoiceSignal } from "./useVoiceOutput";
 import { addDays } from "../../shared/timezone";
 import { isHudModuleId, matchModuleFromSpeech, type HudModuleId } from "../../shared/hudModules";
+import { isIrisSpecialistId, type IrisSpecialistId } from "../../shared/irisTeam";
 
 export type Turn = { role: "user" | "assistant"; content: string; /** Read-out of the brief, not a real exchange. */ brief?: boolean };
 /** What the Iris ring shows. */
@@ -39,7 +40,7 @@ export const GOODBYE =
 /** What Iris says while a slower answer (web search, flight lookup) is on its way. */
 const FILLERS = ["One sec.", "Let me check.", "On it.", "Give me a second, boss.", "Checking now."];
 const FILLER_AFTER_MS = 2500;
-const ASK_TIMEOUT_MS = 35_000;
+const ASK_TIMEOUT_MS = 58_000;
 /** Pick the conversation back up if E taps her again within this window. */
 const RESUME_MS = 10 * 60_000;
 /** Small pause before listening again, so the mic doesn't catch the end of her voice. */
@@ -50,7 +51,7 @@ async function askAlfred(
   context: string,
   timeZone: string,
   extra: { signal?: AbortSignal; location?: { lat: number; lon: number } } = {},
-): Promise<{ reply: string; todos: { title: string; due: string }[]; module?: HudModuleId }> {
+): Promise<{ reply: string; todos: { title: string; due: string }[]; module?: HudModuleId; specialist?: IrisSpecialistId }> {
   await ensureSession();
   const res = await fetch("/api/ask", {
     method: "POST",
@@ -68,11 +69,13 @@ async function askAlfred(
     reply?: string;
     todos?: { title: string; due: string }[];
     module?: string;
+    specialist?: string;
     error?: string;
   };
   if (!res.ok || !data.reply) throw new Error(data.error ?? "Iris couldn't answer. Try again.");
   const module = data.module && isHudModuleId(data.module) ? data.module : undefined;
-  return { reply: data.reply, todos: data.todos ?? [], module };
+  const specialist = data.specialist && isIrisSpecialistId(data.specialist) ? data.specialist : undefined;
+  return { reply: data.reply, todos: data.todos ?? [], module, specialist };
 }
 
 /**
@@ -114,6 +117,7 @@ export function useConversation(opts: {
   const awaitingChoiceRef = useRef(false);
   /** Bumps when a reply arrives (the ring bursts). */
   const [replyTick, setReplyTick] = useState(0);
+  const [lastSpecialist, setLastSpecialist] = useState<IrisSpecialistId | null>(null);
   const voice = useVoiceOutput();
   const signal = useVoiceSignal();
 
@@ -228,15 +232,17 @@ export function useConversation(opts: {
       }, FILLER_AFTER_MS);
       setBusy(true);
       setError(null);
+      setLastSpecialist(null);
       try {
         const { buildContext, timeZone, today, onAddTodo, onOpenModule, location } = optsRef.current;
-        const { reply, todos, module } = await askAlfred(next, buildContext(), timeZone, { signal: ctrl.signal, location });
+        const { reply, todos, module, specialist } = await askAlfred(next, buildContext(), timeZone, { signal: ctrl.signal, location });
         if (requestRef.current !== id) return; // E moved on
         for (const t of todos) onAddTodo(t.title, t.due === "today" ? today : t.due === "tomorrow" ? addDays(today, 1) : undefined);
         const open =
           module ??
           (/\b(open|show|bring( up)?|pull up|go to)\b/i.test(said) ? matchModuleFromSpeech(said) : null);
         if (open) onOpenModule?.(open);
+        setLastSpecialist(specialist ?? null);
         setTurns((t) => [...t, { role: "assistant", content: reply }]);
         setReplyTick((n) => n + 1);
         voice.speak(reply, {
@@ -389,6 +395,7 @@ export function useConversation(opts: {
     handsFree,
     setHandsFree,
     replyTick,
+    lastSpecialist,
     offerSave,
     pendingGreeting,
     saveTranscript: () => finish(true),

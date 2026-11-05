@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Conversation, ConversationPhase } from "../../hooks/useConversation";
+import { specialistLabel } from "../../../shared/irisTeam";
 import { X, Check, PanelBottomClose } from "lucide-react";
 import { VoicePhasePills, VoiceWaveform } from "./VoiceWaveform";
 
@@ -136,6 +137,11 @@ export function JarvisCinemaBar({
           <div className="flex flex-wrap items-center gap-2">
             <p className="font-mono text-[9px] uppercase tracking-[0.28em] text-cyan-400/80">{STATUS[convo.phase]}</p>
             <VoicePhasePills phase={convo.phase} />
+            {convo.lastSpecialist ? (
+              <span className="rounded-full border border-cyan-400/35 px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider text-cyan-200/90">
+                {specialistLabel(convo.lastSpecialist)} → Iris
+              </span>
+            ) : null}
           </div>
           <p className={`line-clamp-2 text-left text-[13px] leading-snug text-cyan-50/95 lg:line-clamp-1 ${convo.phase === "listening" && convo.interim.trim() ? "text-cyan-100" : ""}`}>
             {subtitle}

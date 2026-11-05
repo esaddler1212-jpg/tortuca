@@ -23,7 +23,7 @@ export interface HudModuleDef {
 
 export const HUD_MODULES: HudModuleDef[] = [
   { id: "vitals", label: "Vitals", short: "Vitals", hint: "weather, fitness, Bay Area Pulse map (quakes, fires, flights, ISS, ships)", color: "#67e8f9" },
-  { id: "apps", label: "Woodhouse", short: "Apps", hint: "connected apps and sync status", color: "#a5b4fc" },
+  { id: "apps", label: "Woodhouse", short: "Apps", hint: "connected apps, Iris specialist team roster, sync status", color: "#a5b4fc" },
   { id: "today", label: "Today", short: "Today", hint: "do today, schedule, todos, leave-by", color: "#fde047" },
   { id: "inbox", label: "Inbox", short: "Inbox", hint: "newest Gmail, unread mail", color: "#fda4af" },
   { id: "plan", label: "Plan", short: "Plan", hint: "weekly plan, goals, handoffs", color: "#86efac" },
