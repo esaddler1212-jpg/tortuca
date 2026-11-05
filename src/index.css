@@ -258,6 +258,14 @@ html {
 .hud-with-iris-dock {
   padding-bottom: calc(var(--hud-tabbar-height) + var(--hud-iris-dock-height) + 28px + env(safe-area-inset-bottom));
 }
+@media (min-width: 1024px) {
+  .hud-with-iris-dock--today-inline {
+    padding-bottom: calc(var(--hud-tabbar-height) + 24px + env(safe-area-inset-bottom));
+  }
+  .iris-dock--today-inline-lg {
+    display: none;
+  }
+}
 .hud-more-sheet {
   bottom: calc(var(--hud-tabbar-height) + 10px + env(safe-area-inset-bottom, 0px));
   max-height: calc(100dvh - var(--hud-tabbar-height) - 24px - env(safe-area-inset-bottom, 0px));

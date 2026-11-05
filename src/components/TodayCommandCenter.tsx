@@ -52,6 +52,8 @@ interface Props {
   eveningWrap: EveningWrap;
   eveningMode: boolean;
   displayName?: string;
+  /** When set (Today module + voice open), Iris panel sits beside Do today on desktop. */
+  irisTalk?: ReactNode;
   /** Rendered directly under the greeting (alerts, command bar, console). */
   afterGreeting?: ReactNode;
   /** Rendered after Do today and the timeline (spark, weekly review, install tip). */
@@ -112,6 +114,7 @@ export function TodayCommandCenter({
   displayName,
   afterGreeting,
   afterLists,
+  irisTalk,
   modeLabel,
   onBriefMe,
   briefSpeaking = false,
@@ -343,8 +346,10 @@ export function TodayCommandCenter({
 
       <div className="grid gap-4 lg:grid-cols-12">
         {/* Actions + timeline — main column */}
-        <div className="lg:col-span-7 space-y-4">
-          <section className="panel p-5">
+        <div className={`space-y-4 ${irisTalk ? "lg:col-span-12" : "lg:col-span-7"}`}>
+          {irisTalk ? (
+            <div className="grid gap-4 lg:grid-cols-12 lg:items-start">
+              <section className="panel p-5 lg:col-span-7">
             <h3 className="font-display text-lg text-alfred-gold mb-3 flex items-baseline justify-between gap-2">
               Do today
               {doneCount > 0 && (
@@ -421,7 +426,88 @@ export function TodayCommandCenter({
               </div>
             )}
             <QuickAdd onAdd={onAddTodo} />
-          </section>
+              </section>
+              <div className="hidden lg:block lg:col-span-5 lg:sticky lg:top-2 self-start">{irisTalk}</div>
+            </div>
+          ) : (
+            <section className="panel p-5">
+            <h3 className="font-display text-lg text-alfred-gold mb-3 flex items-baseline justify-between gap-2">
+              Do today
+              {doneCount > 0 && (
+                <span className="font-mono text-xs text-alfred-mist">
+                  {doneCount}/{doneCount + openActions.length} done
+                </span>
+              )}
+            </h3>
+            <ul className="space-y-2 lg:max-h-80 lg:overflow-y-auto">
+              {openActions.length === 0 && (
+                <li className="text-sm text-alfred-mist">
+                  {doneCount ? "All done for today. Nice work." : "All clear. Nothing queued."}
+                </li>
+              )}
+              {openActions.map((a, i) => (
+                <li
+                  key={a.id}
+                  className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 text-sm ${
+                    i === 0
+                      ? "border-alfred-gold/60 bg-alfred-gold/10 shadow-hud"
+                      : a.urgent
+                        ? "border-alfred-gold/40 bg-alfred-gold/5"
+                        : "border-alfred-border/60"
+                  }`}
+                >
+                  <button
+                    type="button"
+                    className="group -m-2.5 flex h-11 w-11 shrink-0 items-center justify-center"
+                    onClick={() => completeAction(a)}
+                    aria-label={`Cross off: ${a.title}`}
+                  >
+                    <span className="h-6 w-6 rounded border border-alfred-border group-hover:border-alfred-gold group-hover:bg-alfred-gold/10 group-active:bg-alfred-gold/25" />
+                  </button>
+                  <div className="flex-1 min-w-0">
+                    {i === 0 && <p className="hud-label !text-[10px] mb-0.5">Up next</p>}
+                    <p>{a.title}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                      <span className="text-xs text-alfred-mist capitalize">{a.sourceLabel}</span>
+                      <PromptButton build={promptFor(a)} />
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            {doneCount > 0 && (
+              <div className="mt-3">
+                <p className="hud-label mb-2">Done today</p>
+                <ul className="space-y-1.5">
+                  {[
+                    ...doneTodosToday.map((t) => ({ id: `todo-${t.id}`, title: t.title, source: "To-do", undo: () => onToggleTodo(t.id) })),
+                    ...doneApp.map((a) => ({ id: a.id, title: a.title, source: a.sourceLabel, undo: () => daily.toggle(a.id) })),
+                    ...planDoneToday.map((t) => ({ id: `plan-${t.id}`, title: t.title, source: `Plan · ${t.area}`, undo: () => onTogglePlanTask?.(t.id) })),
+                  ].map((d) => (
+                    <li key={d.id} className="flex items-start gap-3 rounded-lg border border-alfred-border/30 px-3 py-1.5 text-sm opacity-70">
+                      <button
+                        type="button"
+                        className="-m-2.5 flex h-11 w-11 shrink-0 items-center justify-center"
+                        onClick={d.undo}
+                        aria-label={`Undo: ${d.title}`}
+                        title="Tap to undo"
+                      >
+                        <span className="flex h-6 w-6 items-center justify-center rounded border border-alfred-gold/60 bg-alfred-gold/20 text-alfred-gold">
+                          <Check className="h-4 w-4" />
+                        </span>
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <p className="line-through decoration-alfred-gold/70">{d.title}</p>
+                        <p className="text-xs text-alfred-mist capitalize">{d.source}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <QuickAdd onAdd={onAddTodo} />
+            </section>
+          )}
 
           {!moduleOnly && (
             <FitnessPanel
@@ -461,9 +547,9 @@ export function TodayCommandCenter({
           </section>
         </div>
 
-        {/* Right rail — inbox only in module mode; full rail when embedded elsewhere */}
-        <div className={`lg:col-span-5 space-y-4 ${moduleOnly ? "lg:col-span-12" : ""}`}>
-          {!moduleOnly && (
+        {/* Right rail — hidden in Today module (full-width Do today + inline Iris on desktop) */}
+        {!moduleOnly && (
+        <div className="lg:col-span-5 space-y-4">
           <section className="panel p-5">
             <h3 className="font-display text-lg text-alfred-gold mb-3">Your apps</h3>
             <div className="space-y-2">
@@ -505,9 +591,7 @@ export function TodayCommandCenter({
               ))}
             </div>
           </section>
-          )}
 
-          {!moduleOnly && (
           <section className="panel p-5">
             <h3 className="font-display text-lg text-alfred-gold mb-3">Markets</h3>
             {stocksLoading && !stocks && (
@@ -535,9 +619,7 @@ export function TodayCommandCenter({
               </p>
             )}
           </section>
-          )}
 
-          {!moduleOnly && (
           <section className="panel p-5">
             <h3 className="font-display text-lg text-alfred-gold mb-3 flex items-center gap-2">
               <Mail className="h-4 w-4" /> Inbox
@@ -576,8 +658,8 @@ export function TodayCommandCenter({
               ))}
             </ul>
           </section>
-          )}
         </div>
+        )}
       </div>
 
       {afterLists}

@@ -7,11 +7,14 @@ import { JarvisCinemaBar } from "./JarvisCinemaBar";
  */
 export function IrisDock({
   show,
+  inlineOnDesktopToday,
   convo,
   googleConnected,
   onDismiss,
 }: {
   show: boolean;
+  /** Today module: voice UI sits beside Do today on lg+; keep dock on mobile. */
+  inlineOnDesktopToday?: boolean;
   convo: Conversation;
   googleConnected: boolean;
   onDismiss?: () => void;
@@ -19,7 +22,7 @@ export function IrisDock({
   if (!show) return null;
   return (
     <div
-      className="iris-dock fixed inset-x-0 z-40 px-2 pointer-events-none animate-hud-sheet"
+      className={`iris-dock fixed inset-x-0 z-40 px-2 pointer-events-none animate-hud-sheet${inlineOnDesktopToday ? " iris-dock--today-inline-lg" : ""}`}
       style={{ bottom: "calc(var(--hud-tabbar-height) + env(safe-area-inset-bottom, 0px))" }}
       aria-label="Iris voice"
     >

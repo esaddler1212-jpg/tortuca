@@ -60,6 +60,7 @@ import { CoreRing } from "./components/hud/CoreRing";
 import { HudCore } from "./components/hud/HudCore";
 import { UpNextPanel, UrgentLine } from "./components/hud/HudHome";
 import { IrisDock } from "./components/hud/IrisDock";
+import { IrisTalkBox } from "./components/IrisTalkBox";
 import { GlassModule, HudTabBar, MoreSheet, type TabBadge } from "./components/hud/HudNav";
 import { hudGauges } from "../shared/hudGauges";
 import { HUD_MORE, HUD_TABS, moduleContextForIris, type HudModuleId } from "../shared/hudModules";
@@ -561,6 +562,14 @@ export default function App() {
       convo.pendingGreeting ||
       (activeModule !== null && irisVoiceDeckOpen));
 
+  const todayIrisInline = activeModule === "today" && irisCinemaVisible;
+  const mainScrollPad =
+    !irisCinemaVisible
+      ? "hud-with-tabbar"
+      : todayIrisInline
+        ? "hud-with-iris-dock hud-with-iris-dock--today-inline"
+        : "hud-with-iris-dock";
+
   // Iris's ring: the centre of the HUD (tap to talk). Same ring in the full and compact core.
   const coreRing = (
     <CoreRing
@@ -726,6 +735,15 @@ export default function App() {
               planGoals={planGoalMap}
               onTogglePlanTask={togglePlanTask}
               planDoneToday={planDoneToday}
+              irisTalk={
+                todayIrisInline ? (
+                  <IrisTalkBox
+                    convo={convo}
+                    googleConnected={connected}
+                    onDismiss={() => setIrisVoiceDeckOpen(false)}
+                  />
+                ) : undefined
+              }
             />
           </>
         );
@@ -830,7 +848,7 @@ export default function App() {
       />
 
       <main
-        className={`mx-auto px-4 py-4 space-y-4 ${irisCinemaVisible ? "hud-with-iris-dock" : "hud-with-tabbar"} ${activeModule ? "max-w-[1100px]" : "max-w-[560px]"}`}
+        className={`mx-auto px-4 py-4 space-y-4 ${mainScrollPad} ${activeModule ? "max-w-[1100px]" : "max-w-[560px]"}`}
       >
         {activeModule ? (
           <>
@@ -864,6 +882,7 @@ export default function App() {
 
       <IrisDock
         show={irisCinemaVisible}
+        inlineOnDesktopToday={todayIrisInline}
         convo={convo}
         googleConnected={connected}
         onDismiss={activeModule ? () => setIrisVoiceDeckOpen(false) : undefined}
