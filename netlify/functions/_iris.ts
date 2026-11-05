@@ -2,6 +2,13 @@ import Anthropic from "@anthropic-ai/sdk";
 import { HUD_MODULE_IDS, moduleContextForIris } from "../../shared/hudModules";
 import { teamContextForIris, type IrisSpecialistId, isIrisSpecialistId } from "../../shared/irisTeam";
 import { specialistEnumForTool } from "./_irisSpecialists";
+import {
+  DELEGATE_MAX_REPORT_CHARS,
+  IRIS_MAX_CONTEXT_CHARS,
+  IRIS_MAX_HOPS,
+  IRIS_MAX_TODO_TITLE_CHARS,
+  safeFact,
+} from "../../shared/agentGuardrails";
 
 /** Iris's brain: persona, tools, and one conversational turn (with web search). */
 
@@ -119,20 +126,7 @@ export const MEMORY_TOOLS = [
   FACT_TOOL("forget", "Forget remembered facts about something E asks you to forget.", "about"),
 ];
 
-/** Things Iris must never store, whatever the model decides. */
-const NEVER_STORE = /\b(password|passcode|pin\b|ssn|social security|account number|routing|card number|cvv)\b|\d[\d\s-]{7,}\d/i;
-export function safeFact(fact: string): string | null {
-  const f = fact.trim().replace(/\s+/g, " ").slice(0, 200);
-  return f.length >= 4 && !NEVER_STORE.test(f) ? f : null;
-}
-
-/** Facts matching a "forget …" request (shared words, ignoring filler). */
-export function matchesForget(fact: string, about: string): boolean {
-  const words = about.toLowerCase().split(/[^a-z0-9$]+/).filter((w) => w.length > 2 && !/^(the|that|this|about|thing|stuff|with|and|for)$/.test(w));
-  if (!words.length) return false;
-  const f = fact.toLowerCase();
-  return words.filter((w) => f.includes(w)).length >= Math.ceil(words.length / 2);
-}
+export { matchesForget, safeFact } from "../../shared/agentGuardrails";
 
 /** Claude-hosted web tools: search the web and read pages (no server of ours needed). */
 export const WEB_TOOLS = [
@@ -215,7 +209,7 @@ export async function runIris(
   let delegateReport: string | null = null;
   let delegateDeduped = false;
   const usage: IrisTurnUsage = { model: MODEL, inTok: 0, outTok: 0, cacheRead: 0, cacheWrite: 0, searches: 0, fetches: 0, tools: [], hops: 0 };
-  for (let hop = 0; hop < 5; hop++) {
+  for (let hop = 0; hop < IRIS_MAX_HOPS; hop++) {
     const response = await client.beta.messages.create({
       model: MODEL,
       max_tokens: 2048,
@@ -225,7 +219,7 @@ export async function runIris(
       system: [
         { type: "text", text: PERSONA, cache_control: { type: "ephemeral" } },
         { type: "text", text: teamContextForIris() },
-        { type: "text", text: `Right now:\n${context.slice(0, 8000)}` },
+        { type: "text", text: `Right now:\n${context.slice(0, IRIS_MAX_CONTEXT_CHARS)}` },
         ...(memory.length ? [{ type: "text" as const, text: `What you remember about E:\n${memory.map((m) => `- ${m}`).join("\n")}` }] : []),
       ],
       tools: [
@@ -264,7 +258,7 @@ export async function runIris(
       } else if (b.type === "tool_use" && b.name === "add_todo") {
         const i = b.input as { title?: unknown; due?: unknown };
         if (typeof i.title === "string" && i.title.trim()) {
-          todos.push({ title: i.title.trim().slice(0, 140), due: i.due === "today" || i.due === "tomorrow" ? i.due : "none" });
+          todos.push({ title: i.title.trim().slice(0, IRIS_MAX_TODO_TITLE_CHARS), due: i.due === "today" || i.due === "tomorrow" ? i.due : "none" });
         }
       } else if (b.type === "tool_use" && b.name === "open_module") {
         const id = String((b.input as { module?: unknown }).module ?? "").trim();
@@ -308,7 +302,7 @@ export async function runIris(
                 delegateDeduped = true;
               } else {
                 specialist = r.specialist;
-                delegateReport = r.summary.slice(0, 800);
+                delegateReport = r.summary.slice(0, DELEGATE_MAX_REPORT_CHARS);
               }
             } catch {
               content = "That specialist couldn't finish right now.";

@@ -4,14 +4,18 @@ import { getStore } from "@netlify/blobs";
 import { getValidSession, initBlobs, sessionHeader } from "./_shared";
 import { dayKey } from "../../shared/timezone";
 import { researchMemoTitle, type BusinessResearchRequest, type ResearchTemplate } from "../../shared/businessResearch";
+import {
+  RESEARCH_DAILY_LIMIT,
+  RESEARCH_MAX_CONTEXT_CHARS,
+  RESEARCH_MAX_QUERY_CHARS,
+  RESEARCH_MIN_QUERY_CHARS,
+  sanitizeResearchQuery,
+} from "../../shared/agentGuardrails";
 import { runBusinessResearch } from "./_businessResearch";
 import { loadUserData, resolveDataKey, saveUserData } from "./_userData";
 import { EMPTY_HUB, type HubState, type Memo } from "../../shared/hub";
 
 /** POST /api/business-research — sourced business brief; saved to Hub memos. */
-
-const DAILY_LIMIT = 8;
-const MAX_QUERY = 800;
 
 function json(statusCode: number, body: unknown) {
   return { statusCode, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
@@ -37,10 +41,10 @@ export const handler: Handler = async (event) => {
     return json(400, { error: "Bad request" });
   }
 
-  const queryRaw = typeof body.query === "string" ? body.query.trim().slice(0, MAX_QUERY) : "";
-  const context = typeof body.context === "string" ? body.context.trim().slice(0, 4000) : "";
+  const queryRaw = typeof body.query === "string" ? sanitizeResearchQuery(body.query) : "";
+  const context = typeof body.context === "string" ? body.context.trim().slice(0, RESEARCH_MAX_CONTEXT_CHARS) : "";
   const combined = [queryRaw, context].filter(Boolean).join(" ").trim();
-  if (combined.length < 8) {
+  if (combined.length < RESEARCH_MIN_QUERY_CHARS) {
     return json(400, { error: "Describe what to research (at least a few words)." });
   }
   const query = queryRaw || combined;
@@ -56,7 +60,7 @@ export const handler: Handler = async (event) => {
   const who = (session.email ?? sessionId).toLowerCase();
   const usageKey = `${who}:${dayKey(body.timeZone || "America/Los_Angeles")}`;
   const used = Number((await usage.get(usageKey)) ?? 0);
-  if (used >= DAILY_LIMIT) {
+  if (used >= RESEARCH_DAILY_LIMIT) {
     return json(429, { error: "Business Researcher daily limit reached. Try again tomorrow or use Prompt on a task." });
   }
 

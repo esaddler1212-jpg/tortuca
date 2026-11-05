@@ -32,7 +32,12 @@ export const handler: Handler = async (event) => {
       return { statusCode: 401, body: JSON.stringify({ error: "Session required" }) };
     }
 
-    const incoming = JSON.parse(event.body ?? "{}") as Partial<AlfredUserData>;
+    let incoming: Partial<AlfredUserData>;
+    try {
+      incoming = JSON.parse(event.body ?? "{}") as Partial<AlfredUserData>;
+    } catch {
+      return { statusCode: 400, body: JSON.stringify({ error: "Bad request" }) };
+    }
     const existing = (await loadUserData(key)) ?? { updatedAt: new Date().toISOString() };
     const merged: AlfredUserData = {
       ...existing,

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { StocksSnapshot } from "../types/stocks";
+import { authHeaders } from "../lib/google";
 
 const SYNC_MS = 15 * 60 * 1000;
 
@@ -12,7 +13,7 @@ export function useStocks() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/stocks");
+      const res = await fetch("/api/stocks", { headers: authHeaders() });
       if (!res.ok) throw new Error("Stocks unavailable");
       const data = (await res.json()) as StocksSnapshot;
       setSnapshot(data);

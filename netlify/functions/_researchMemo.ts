@@ -1,9 +1,10 @@
 import { getStore } from "@netlify/blobs";
 import { dayKey } from "../../shared/timezone";
+import { RESEARCH_DAILY_LIMIT } from "../../shared/agentGuardrails";
 import { loadUserData, resolveDataKey, saveUserData } from "./_userData";
 import { EMPTY_HUB, type HubState, type Memo } from "../../shared/hub";
 
-export const RESEARCH_DAILY_LIMIT = 8;
+export { RESEARCH_DAILY_LIMIT };
 
 export async function researchUsageCount(who: string, timeZone: string): Promise<number> {
   const usage = getStore({ name: "alfred-research-usage" });

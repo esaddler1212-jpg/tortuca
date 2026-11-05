@@ -227,6 +227,10 @@ ok("reminder-check: wind-down key", read("netlify/functions/reminder-check.ts").
 ok("commute-scheduled function exists", fs.existsSync(path.join(root, "netlify/functions/commute-scheduled.ts")));
 ok("user-data API exists", fs.existsSync(path.join(root, "netlify/functions/user-data.ts")));
 ok("ask uses Netlify Blobs user store", askTs.includes("getStore") || askTs.includes("blobs"));
+ok("AGENTS.md guardrails doc", fs.existsSync(path.join(root, "AGENTS.md")));
+ok("shared agentGuardrails module", fs.existsSync(path.join(root, "shared/agentGuardrails.ts")));
+ok("Iris team prompt includes guardrails", read("shared/irisTeam.ts").includes("agentGuardrailsPrompt"));
+ok("thin programming policy module", fs.existsSync(path.join(root, "shared/thinProgrammingPolicy.ts")));
 
 for (const id of ["today", "inbox", "plan", "hub", "meal", "research", "channels"] as const) {
   ok(`lazy prefetch: ${id}`, read("src/lazyModules.tsx").includes(`${id}:`));

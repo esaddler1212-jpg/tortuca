@@ -1,4 +1,5 @@
 import type { Handler } from "@netlify/functions";
+import { getValidSession, initBlobs, sessionHeader } from "./_shared";
 import {
   AI_WATCHLIST,
   DRONE_WATCHLIST,
@@ -90,13 +91,24 @@ async function fetchQuote(
   };
 }
 
-export const handler: Handler = async () => {
+export const handler: Handler = async (event) => {
+  initBlobs(event);
   const token = process.env.FINNHUB_API_KEY?.trim();
   if (!token) {
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json", "X-Stocks-Source": "demo" },
       body: JSON.stringify(demoSnapshot()),
+    };
+  }
+
+  const sessionId = sessionHeader(event);
+  const session = sessionId ? await getValidSession(sessionId) : null;
+  if (!sessionId || !session) {
+    return {
+      statusCode: 401,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ error: "Connect Google first for live market data." }),
     };
   }
 
