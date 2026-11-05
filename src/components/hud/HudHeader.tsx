@@ -38,16 +38,44 @@ interface Props {
   operator: string;
   focusChoice: FocusChoice;
   onFocusChoice: (c: FocusChoice) => void;
+  /** When a module is open, the header ring toggles the Iris voice deck. */
+  moduleOpen?: boolean;
+  irisVoiceDeckOpen?: boolean;
+  onIrisVoiceToggle?: () => void;
 }
 
-export function HudHeader({ timeZone, status, alerts, operator, focusChoice, onFocusChoice }: Props) {
+export function HudHeader({
+  timeZone,
+  status,
+  alerts,
+  operator,
+  focusChoice,
+  onFocusChoice,
+  moduleOpen = false,
+  irisVoiceDeckOpen = false,
+  onIrisVoiceToggle,
+}: Props) {
   const time = useClock(timeZone);
   const s = STATUS_TEXT[status];
   return (
     <header className="safe-top sticky top-0 z-10 border-b border-cyan-400/15 bg-black/80 backdrop-blur-xl">
       <div className="mx-auto max-w-[1400px] px-4 py-3 flex items-center gap-4">
         <div className="flex items-center gap-3 min-w-0">
-          <HudRing className="h-9 w-9 shrink-0" />
+          {moduleOpen && onIrisVoiceToggle ? (
+            <button
+              type="button"
+              onClick={onIrisVoiceToggle}
+              className={`shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 ${
+                irisVoiceDeckOpen ? "ring-2 ring-cyan-400/70 shadow-[0_0_16px_rgb(34_211_238/0.35)]" : ""
+              }`}
+              aria-label={irisVoiceDeckOpen ? "Hide Iris voice panel" : "Open Iris voice panel"}
+              aria-expanded={irisVoiceDeckOpen}
+            >
+              <HudRing className="h-9 w-9" />
+            </button>
+          ) : (
+            <HudRing className="h-9 w-9 shrink-0" />
+          )}
           <div className="min-w-0">
             <h1 className="font-display text-lg sm:text-xl font-bold tracking-[0.3em] text-cyan-300 hud-glow-text">IRIS</h1>
             <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-cyan-400/50 truncate">

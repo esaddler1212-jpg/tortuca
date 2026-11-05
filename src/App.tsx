@@ -406,6 +406,8 @@ export default function App() {
 
   const [activeModule, setActiveModule] = useState<HudModuleId | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
+  /** Iris voice deck in modules: hidden until you tap the header ring (or voice goes live). */
+  const [irisVoiceDeckOpen, setIrisVoiceDeckOpen] = useState(false);
 
   /** Open a module (tab, corner readout, More, or Iris open_module). */
   const focusModule = useCallback((id: HudModuleId) => {
@@ -416,6 +418,7 @@ export default function App() {
   }, []);
   const closeModule = useCallback(() => {
     setActiveModule(null);
+    setIrisVoiceDeckOpen(false);
     const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     window.scrollTo({ top: 0, behavior: still ? "auto" : "smooth" });
   }, []);
@@ -528,8 +531,24 @@ export default function App() {
     onOpenModule: focusModule,
   });
 
+  useEffect(() => {
+    if (activeModule === null) setIrisVoiceDeckOpen(false);
+  }, [activeModule]);
+
+  useEffect(() => {
+    if (activeModule && (convo.active || convo.pendingGreeting)) setIrisVoiceDeckOpen(true);
+  }, [activeModule, convo.active, convo.pendingGreeting]);
+
+  const toggleIrisVoiceDeck = useCallback(() => {
+    if (convo.active || convo.pendingGreeting) return;
+    setIrisVoiceDeckOpen((o) => !o);
+  }, [convo.active, convo.pendingGreeting]);
+
   const irisCinemaVisible =
-    !moreOpen && (activeModule !== null || convo.active || convo.pendingGreeting);
+    !moreOpen &&
+    (convo.active ||
+      convo.pendingGreeting ||
+      (activeModule !== null && irisVoiceDeckOpen));
 
   // Iris's ring: the centre of the HUD (tap to talk). Same ring in the full and compact core.
   const coreRing = (
@@ -750,6 +769,9 @@ export default function App() {
         operator={displayName ? displayName.slice(0, 1).toUpperCase() + "." : "E."}
         focusChoice={focus.choice}
         onFocusChoice={focus.choose}
+        moduleOpen={activeModule !== null}
+        irisVoiceDeckOpen={irisCinemaVisible}
+        onIrisVoiceToggle={activeModule ? toggleIrisVoiceDeck : undefined}
       />
 
       <main
@@ -795,14 +817,19 @@ export default function App() {
         )}
       </main>
 
-      <IrisDock show={irisCinemaVisible} convo={convo} googleConnected={connected} />
+      <IrisDock
+        show={irisCinemaVisible}
+        convo={convo}
+        googleConnected={connected}
+        onDismiss={activeModule ? () => setIrisVoiceDeckOpen(false) : undefined}
+      />
 
       <MoreSheet
         open={moreOpen}
         badges={badges}
         onPick={focusModule}
         onClose={() => setMoreOpen(false)}
-        irisDockVisible={activeModule !== null || convo.active || convo.pendingGreeting}
+        irisDockVisible={irisCinemaVisible}
       />
       <HudTabBar active={activeModule} moreOpen={moreOpen} badges={badges} onTab={onTab} onMore={() => setMoreOpen((o) => !o)} />
 

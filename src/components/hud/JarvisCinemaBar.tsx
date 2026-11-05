@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Conversation, ConversationPhase } from "../../hooks/useConversation";
-import { X, Check } from "lucide-react";
+import { X, Check, PanelBottomClose } from "lucide-react";
 import { VoicePhasePills, VoiceWaveform } from "./VoiceWaveform";
 
 const STATUS: Record<ConversationPhase, string> = {
@@ -89,10 +89,12 @@ export function JarvisCinemaBar({
   convo,
   googleConnected,
   onActivate,
+  onDismiss,
 }: {
   convo: Conversation;
   googleConnected: boolean;
   onActivate: () => void;
+  onDismiss?: () => void;
 }) {
   const subtitle = useMemo(() => subtitleFor(convo, googleConnected), [convo, googleConnected]);
   const chip =
@@ -106,7 +108,17 @@ export function JarvisCinemaBar({
         : "Talk to Iris";
 
   return (
-    <div className="iris-cinema-bar w-full space-y-2 lg:space-y-0" aria-live="polite">
+    <div className="iris-cinema-bar relative w-full space-y-2 lg:space-y-0" aria-live="polite">
+      {onDismiss ? (
+        <button
+          type="button"
+          className="absolute right-0 top-0 flex h-9 w-9 items-center justify-center rounded-md text-cyan-400/60 hover:text-cyan-200"
+          onClick={onDismiss}
+          aria-label="Hide voice panel"
+        >
+          <PanelBottomClose className="h-4 w-4" aria-hidden />
+        </button>
+      ) : null}
       <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-4">
         <button
           type="button"
