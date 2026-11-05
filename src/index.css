@@ -239,8 +239,13 @@ html {
 /* Leave room for the bottom tab bar + iPhone home bar. */
 :root {
   --hud-tabbar-height: 52px;
-  /** Iris ring row + captions chrome (sits above tab bar). */
-  --hud-iris-dock-height: 6.5rem;
+  /** Iris ring row + cinema bar (face, subtitle, controls) above tab bar. */
+  --hud-iris-dock-height: 9.25rem;
+}
+@media (min-width: 1024px) {
+  :root {
+    --hud-iris-dock-height: 6.75rem;
+  }
 }
 .hud-with-tabbar { padding-bottom: calc(var(--hud-tabbar-height) + 24px + env(safe-area-inset-bottom)); }
 .hud-with-iris-dock {
