@@ -32,7 +32,6 @@ import { OvernightDeltaBanner } from "./components/OvernightDeltaBanner";
 import { OvercommitmentBanner } from "./components/OvercommitmentBanner";
 import { MorningRitualModal } from "./components/MorningRitualModal";
 import { WindDownBanner } from "./components/WindDownBanner";
-import { CommandBar } from "./components/CommandBar";
 import { WeeklyReview } from "./components/WeeklyReview";
 import { SettingsDrawer } from "./components/SettingsDrawer";
 import { useSettings } from "./hooks/useSettings";
@@ -94,7 +93,7 @@ export default function App() {
   const { todos, pending, done, add, toggle, setTodos } = useTodos();
   const { connected, accountEmail, connect, disconnect, connectionError } = useGoogleIntegration();
   const channelAgent = useChannels(accountEmail);
-  const { allEvents, addLocalEvent } = useSchedule(connected);
+  const { allEvents } = useSchedule(connected);
   const { messages, unread, loading: emailsLoading, error: emailsError, refresh: refreshEmails } = useEmails(connected);
   const { snapshot: rawWoodhouse, loading: woodhouseLoading, error: woodhouseError } = useWoodhouse();
   // Workday vs off duty: Family Purpose tasks hide on weekends, holidays and after 7 PM.
@@ -814,16 +813,6 @@ export default function App() {
             <HudCore gauges={gauges} core={coreRing} onOpen={(id) => focusModule(id)} />
             {!irisCinemaVisible ? <ConversationCaptions convo={convo} googleConnected={connected} /> : null}
             <UrgentLine items={urgentItems} />
-            <CommandBar
-              variant="hud"
-              settings={settings}
-              leaveBy={leaveBy}
-              bedtime={bedtime}
-              onAddTodo={add}
-              onLogWorkout={logWorkout}
-              onAddEvent={addLocalEvent}
-              onAddShopping={addShopping}
-            />
             <UpNextPanel
               todos={pending}
               onToggle={toggle}
