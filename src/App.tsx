@@ -17,6 +17,7 @@ import { weatherLabel } from "./lib/weather";
 import { pulseSummary } from "../shared/pulse";
 import { issContext } from "../shared/skyText";
 import { gymContext, inboxContext, memosContext, moneyContext, shoppingContext, stocksContext } from "../shared/irisContext";
+import { vantageDebriefContext, vantageDebriefForDay, spokenVantageDebrief } from "../shared/vantageDebrief";
 import { useHub } from "./hooks/useHub";
 import { DEFAULT_ROUTINE, gymDayFor, moneyMonth } from "../shared/hub";
 import { useBusinessResearch } from "./hooks/useBusinessResearch";
@@ -323,10 +324,13 @@ export default function App() {
     [displayName, settings.timezone, now, woodhouse, goalLines, weather, allSchedule, plan, today, desk, pulse],
   );
   // "Brief me": Iris reads today's rundown (or the Vantage briefing in that mode).
-  const briefText = () =>
-    isVantageMode(mode)
-      ? vantage.spoken
-      : buildDailyBrief({
+  const briefText = () => {
+    if (isVantageMode(mode)) {
+      const imported = vantageDebriefForDay(hub.vantageDebrief, today);
+      if (imported) return spokenVantageDebrief(imported.text, displayName);
+      return vantage.spoken;
+    }
+    return buildDailyBrief({
           name: displayName,
           tz: settings.timezone,
           now,
@@ -346,6 +350,7 @@ export default function App() {
             return g?.isToday ? g.plan.title : undefined;
           })(),
         });
+  };
   const briefMe = () => voiceOut.speak(briefText(), { force: true });
 
   // Sunday: plan the week (week-ahead weather under the greeting).
@@ -521,6 +526,7 @@ export default function App() {
                           const gym = gymDayFor(hub.routine ?? DEFAULT_ROUTINE, today);
                           return [
                             connected ? inboxContext(messages, tz, { schoolNames }) : "",
+                            vantageDebriefContext(hub.vantageDebrief, today),
                             memosContext(hub.memos, tz, { schoolNames }),
                             moneyContext(
                               moneyMonth(hub.money, month),
@@ -696,7 +702,17 @@ export default function App() {
               // Things that need you sit above the list; everything else goes below it.
               afterGreeting={
                 <>
-                  {isVantageMode(mode) && <VantageBriefingPanel lines={vantage.lines} spoken={vantage.spoken} />}
+                  {isVantageMode(mode) && (
+                    <VantageBriefingPanel
+                      lines={vantage.lines}
+                      spoken={vantage.spoken}
+                      hub={hub}
+                      updateHub={updateHub}
+                      today={today}
+                      timeZone={settings.timezone}
+                      onAddTodo={(title) => add(title)}
+                    />
+                  )}
                   {overcommitment && <OvercommitmentBanner warning={overcommitment} />}
                   {showWindDown && <WindDownBanner bedtime={bedtime} timeZone={settings.timezone} />}
                 </>

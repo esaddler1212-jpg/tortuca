@@ -42,6 +42,7 @@ import { promptForMemo } from "../lib/promptGenerator";
 import { PromptButton } from "./PromptButton";
 import { GymTab } from "./GymTab";
 import { MoneyMarketUpdate } from "./MoneyMarketUpdate";
+import { VantageDebriefImport } from "./VantageDebriefImport";
 import type { StocksSnapshot } from "../types/stocks";
 
 type Tab = "feed" | "watch" | "gym" | "money" | "memos";
@@ -600,7 +601,7 @@ function MoneyTab({ hub, update, today, stocks, stocksLoading, stocksError, onRe
 
 // ── Voice memos ──────────────────────────────────────────────────────────
 
-function MemosTab({ hub, update, onAddTodo }: Props) {
+function MemosTab({ hub, update, onAddTodo, today, timeZone }: Props) {
   const [draft, setDraft] = useState("");
   const speech = useSpeechInput((text) => setDraft((d) => (d ? `${d} ${text}` : text)));
   const [added, setAdded] = useState<string | null>(null);
@@ -621,6 +622,7 @@ function MemosTab({ hub, update, onAddTodo }: Props) {
 
   return (
     <div className="space-y-3">
+      <VantageDebriefImport hub={hub} update={update} today={today} timeZone={timeZone} onAddTodo={onAddTodo} />
       <p className="hud-label flex items-center gap-1.5">
         <NotebookPen className="h-3.5 w-3.5" aria-hidden /> Voice memos
       </p>
