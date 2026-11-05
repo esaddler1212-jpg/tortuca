@@ -14,7 +14,7 @@ its own README, build, and (typically) its own Netlify site.
 
 ### Alfred (repo root)
 
-**Alfred / IRIS** is your personal command center on **alfred2** (and locally): Iris voice + HUD home (four corner gauges, bottom tabs Today · Vitals · Inbox · Plan, **More** for Team · Woodhouse · Research · Hub · Meals · Drafts · ECS), Gmail/calendar, Woodhouse app status, **Bay Area Pulse digital map** (no raster tiles), server-side commute sync, Iris specialist team (Ledger, Courier, Sentinel, Navigator, Wire, Curator, Scout, Quartermaster, Scribe, Archivist — one per module; Iris relays their work), and cross-device data in Netlify Blobs. Home uses the core ring and Iris voice — no separate “awaiting command” text box.
+**Alfred / IRIS** is your personal command center on **alfred2** (and locally): Iris voice + HUD home (four corner gauges, bottom tabs Today · Vitals · Inbox · Plan, **More** for Team · Woodhouse · Research · Hub · Meals · Drafts · ECS), Gmail/calendar, Woodhouse app status, **Bay Area Pulse digital map** (no raster tiles), server-side commute sync, Iris specialist team (Ledger, Courier, Sentinel, Navigator, Wire, Curator, Scout, Quartermaster, Scribe, Archivist, **Woodhouse** on Team for efficiency/duplicates), and cross-device data in Netlify Blobs. Home uses the core ring and Iris voice — no separate “awaiting command” text box.
 
 ```bash
 npm install

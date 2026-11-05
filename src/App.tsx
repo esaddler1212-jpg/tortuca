@@ -63,6 +63,7 @@ import { IrisDock } from "./components/hud/IrisDock";
 import { GlassModule, HudTabBar, MoreSheet, type TabBadge } from "./components/hud/HudNav";
 import { hudGauges } from "../shared/hudGauges";
 import { HUD_MORE, HUD_TABS, moduleContextForIris, type HudModuleId } from "../shared/hudModules";
+import { teamOpsContextForAsk } from "../shared/irisTeamActivity";
 import {
   LazyBusinessResearcherPanel,
   LazyChannelsPanel,
@@ -527,6 +528,7 @@ export default function App() {
                               next: gym ? { title: gym.plan.title, day: gym.plan.weekday, isToday: gym.isToday } : null,
                             }),
                             shoppingContext(shoppingItems),
+                            teamOpsContextForAsk(),
                           ].filter(Boolean);
                         })(),
                       }),

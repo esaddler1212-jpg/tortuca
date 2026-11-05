@@ -26,8 +26,8 @@ for (const m of HUD_MODULES) {
 }
 
 // ── Iris team ──────────────────────────────────────────────────────────
-ok("one specialist per HUD module (except Team)", teamCoverageOk());
-ok("ten Iris specialists", IRIS_TEAM.length === 10 && IRIS_SPECIALIST_IDS.length === 10);
+ok("one specialist per HUD module", teamCoverageOk());
+ok("eleven Iris specialists", IRIS_TEAM.length === 11 && IRIS_SPECIALIST_IDS.length === 11);
 for (const s of IRIS_TEAM) {
   ok(`specialist ${s.id} links valid module`, HUD_MODULE_IDS.includes(s.module));
 }
