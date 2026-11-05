@@ -1,9 +1,16 @@
-/** IRIS HUD / OS integrity — run via npm run test:audit */
+/** IRIS HUD / OS integrity — run via npm run test:audit (extended pass) */
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type Anthropic from "@anthropic-ai/sdk";
-import { HUD_MODULE_IDS, HUD_MODULES, HUD_MORE, HUD_TABS } from "../shared/hudModules.ts";
+import {
+  HUD_MODULE_IDS,
+  HUD_MODULES,
+  HUD_MORE,
+  HUD_TABS,
+  matchModuleFromSpeech,
+  moduleContextForIris,
+} from "../shared/hudModules.ts";
 import {
   IRIS_SPECIALIST_IDS,
   IRIS_TEAM,
@@ -23,14 +30,19 @@ import {
   type IrisDelegateLog,
 } from "../shared/irisTeamActivity.ts";
 import { shopifyContextForIris, shopifyReadiness } from "../shared/shopify.ts";
+import { stocksContext } from "../shared/irisContext.ts";
+import { channelsSummary, normalizeChannels, pendingDrafts } from "../shared/channels.ts";
 import { consultSpecialist, specialistEnumForTool } from "../netlify/functions/_irisSpecialists.ts";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel: string) => fs.readFileSync(path.join(root, rel), "utf8");
 
+let checkCount = 0;
 const ok = (name: string, cond: boolean) => {
+  checkCount++;
   console.log(`${cond ? "✓" : "✗"} ${name}`);
   if (!cond) process.exitCode = 1;
+  return cond;
 };
 
 // ── Registry ───────────────────────────────────────────────────────────
@@ -151,4 +163,45 @@ const blocked = await consultSpecialist(noopClient, {
 });
 ok("consultSpecialist blocks duplicate courier", blocked.deduped === true && blocked.summary.includes("DUPLICATE BLOCKED"));
 
-console.log(process.exitCode ? "\nOS audit failed." : "\nOS audit passed.");
+// ── Extended pass: commerce, markets, channels, APIs ────────────────────
+ok("stocksContext mentions watchlist", stocksContext({
+  watchlist: [{ symbol: "NVDA", changePercent: 1, theme: "ai" }],
+  upcomingIpos: [],
+}).includes("NVDA"));
+ok("stocksContext empty when no data", stocksContext(null) === "");
+ok("ask context includes stocksContext", appTs.includes("stocksContext(stocks)"));
+ok("sync hydrates delegate history", read("src/hooks/useUserDataSync.ts").includes("hydrateDelegateHistoryFromAccount"));
+ok("ask merges account delegate history", askTs.includes("mergeDelegateHistories"));
+ok("ask persists irisDelegateHistory", askTs.includes("irisDelegateHistory"));
+ok("Team panel: recent activity", read("src/components/hud/TeamPanel.tsx").includes("Recent activity"));
+ok("Team panel: Ask Iris", read("src/components/hud/TeamPanel.tsx").includes("Ask Iris"));
+ok("Scribe draft: easy-supply channel", read("netlify/functions/_scribeDraft.ts").includes("easy-supply"));
+ok("Wire specialist: shopify context", /shopify|easy supply/i.test(specialistsTs));
+ok("stocks API handler exists", fs.existsSync(path.join(root, "netlify/functions/stocks.ts")));
+ok("channel-send handler exists", fs.existsSync(path.join(root, "netlify/functions/channel-send.ts")));
+ok("business-research handler exists", fs.existsSync(path.join(root, "netlify/functions/business-research.ts")));
+ok("netlify.toml: ask timeout 26s", read("netlify.toml").includes('[functions."ask"]') && read("netlify.toml").includes("timeout = 26"));
+ok("api redirect to functions", read("netlify.toml").includes('from = "/api/*"'));
+ok("speech routes team module", matchModuleFromSpeech("open the team") === "team");
+ok("speech routes hub for memos", matchModuleFromSpeech("show hub memos") === "hub");
+ok("moduleContextForIris lists all modules", HUD_MODULE_IDS.every((id) => moduleContextForIris().includes(`${id}:`)));
+const ch = normalizeChannels(null, "e@ecs.network");
+ok("channels: easy-supply can send", ch.channels.find((c) => c.id === "easy-supply")?.canSend === true);
+const withDraft = {
+  ...ch,
+  drafts: [{ id: "d1", channelId: "easy-supply" as const, to: "", subject: "x", body: "y", status: "pending" as const, createdAt: new Date().toISOString() }],
+};
+ok("channelsSummary counts pending drafts", channelsSummary(withDraft)?.includes("Easy Supply") === true);
+ok("pendingDrafts filters pending only", pendingDrafts(withDraft).length === 1);
+ok("shopify-store requires session", read("netlify/functions/shopify-store.ts").includes("getValidSession"));
+ok("ask requires session", askTs.includes("getValidSession") || askTs.includes("getValidSession(sessionId)"));
+ok("useStocks hits /api/stocks", read("src/hooks/useStocks.ts").includes('"/api/stocks"'));
+ok("Morning brief can use stocks", read("src/lib/stocksBriefing.ts").includes("stocksBriefingLines"));
+ok("Hub passes stocks props", appTs.includes("stocks={stocks}"));
+
+for (const id of ["today", "inbox", "plan", "hub", "meal", "research", "channels"] as const) {
+  ok(`lazy prefetch: ${id}`, read("src/lazyModules.tsx").includes(`${id}:`));
+}
+
+const passed = !process.exitCode;
+console.log(passed ? `\nOS audit passed (${checkCount} checks).` : `\nOS audit failed (${checkCount} checks run).`);
