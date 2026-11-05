@@ -375,9 +375,9 @@ if (!process.env.TIME_CHECK_CHILD) {
 
 // ── Voice → module routing
 check(
-  "modules: inbox, drafts, vitals (Pulse) and today by voice",
-  ["open my inbox", "show my email", "any unread mail", "draft an email to the sponsor", "show the map", "where are the planes", "earthquakes near me", "open today", "show my schedule"].map(matchModuleFromSpeech),
-  ["inbox", "inbox", "inbox", "channels", "vitals", "vitals", "vitals", "today", "today"],
+  "modules: inbox, drafts, vitals (Pulse), team, and today by voice",
+  ["open my inbox", "show my email", "any unread mail", "draft an email to the sponsor", "show the map", "where are the planes", "earthquakes near me", "open today", "show my schedule", "open the team"].map(matchModuleFromSpeech),
+  ["inbox", "inbox", "inbox", "channels", "vitals", "vitals", "vitals", "today", "today", "team"],
 );
 
 // ── HUD gauges and tabs
@@ -390,7 +390,8 @@ check(
   check("hud: no weather yet", hudGauges({ ...base, temp: undefined, aqi: undefined })[2].value, "--°");
   check("hud: plan month progress", [g.plan.value, Math.round(g.plan.fill * 100)], ["NOV · 2/7", 29]);
   check("hud: empty list reads all clear, urgent shows in caption", [hudGauges({ ...base, todosPending: 0, todosDone: 0 })[0].value, hudGauges({ ...base, urgent: 2 })[0].caption], ["ALL CLEAR", "TODAY · 2 URGENT"]);
-  check("hud: 4 tabs + everything else under More, no module lost", [HUD_TABS.join(","), [...HUD_TABS, ...HUD_MORE].length], ["today,vitals,inbox,plan", 10]);
+  check("hud: 4 tabs + everything else under More, no module lost", [HUD_TABS.join(","), [...HUD_TABS, ...HUD_MORE].length], ["today,vitals,inbox,plan", 11]);
+  check("hud: team module by voice", matchModuleFromSpeech("open the team"), "team");
   check("hud: every module id is unique", new Set(HUD_MODULE_IDS).size, HUD_MODULE_IDS.length);
   check("iris team: six specialists", IRIS_TEAM.length, 6);
   check("iris team: scout opens research module", IRIS_TEAM.find((s) => s.id === "scout")?.module, "research");

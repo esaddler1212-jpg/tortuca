@@ -1,0 +1,122 @@
+import { useEffect, useState } from "react";
+import { Users } from "lucide-react";
+import type { HudModuleId } from "../../../shared/hudModules";
+import { moduleLabel } from "../../../shared/hudModules";
+import {
+  IRIS_CAPTAIN,
+  IRIS_TEAM,
+  specialistById,
+  specialistLabel,
+  type IrisSpecialistId,
+} from "../../../shared/irisTeam";
+import { formatDelegateAgo, readLastDelegate, type IrisDelegateLog } from "../../../shared/irisTeamActivity";
+
+interface Props {
+  timeZone: string;
+  onOpenModule: (id: HudModuleId) => void;
+}
+
+export function TeamPanel({ timeZone, onOpenModule }: Props) {
+  const [last, setLast] = useState<IrisDelegateLog | null>(() => readLastDelegate());
+
+  useEffect(() => {
+    const sync = () => setLast(readLastDelegate());
+    sync();
+    window.addEventListener("storage", sync);
+    const id = window.setInterval(sync, 4000);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.clearInterval(id);
+    };
+  }, []);
+
+  return (
+    <section className="panel-hud p-5 space-y-5">
+      <div>
+        <p className="hud-label flex items-center gap-2">
+          <Users className="h-4 w-4" aria-hidden /> Iris team
+        </p>
+        <p className="text-sm text-alfred-mist mt-1">
+          Specialists report to Iris; Iris reports to you. One voice out — delegate by name in conversation.
+        </p>
+      </div>
+
+      {/* Org chart */}
+      <div className="flex flex-col items-center gap-2 py-2">
+        <div className="rounded-md border border-alfred-gold/40 bg-amber-950/20 px-4 py-2 text-center">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-alfred-gold/70">You</p>
+          <p className="font-display text-sm text-alfred-cream">E</p>
+        </div>
+        <div className="h-6 w-px bg-cyan-400/30" aria-hidden />
+        <div
+          className="rounded-lg border border-cyan-400/35 bg-cyan-950/25 px-5 py-3 text-center"
+          style={{ boxShadow: "0 0 28px rgb(34 211 238 / 0.12)" }}
+        >
+          <p className="font-mono text-[10px] uppercase tracking-widest text-cyan-400/70">{IRIS_CAPTAIN.title}</p>
+          <p className="font-display text-lg text-cyan-100">{IRIS_CAPTAIN.name}</p>
+          <p className="text-[11px] text-cyan-100/60 mt-1">Single voice · delegates via consult_specialist</p>
+        </div>
+        <div className="relative mt-2 w-full max-w-md">
+          <div className="absolute left-1/2 top-0 h-px w-[72%] -translate-x-1/2 bg-cyan-400/25" aria-hidden />
+          <ul className="grid grid-cols-2 gap-3 pt-4 sm:grid-cols-3">
+            {IRIS_TEAM.map((s) => (
+              <li key={s.id} className="relative flex flex-col items-center">
+                <div className="absolute -top-4 left-1/2 h-4 w-px bg-cyan-400/20" aria-hidden />
+                <SpecialistCard specialist={s.id} onOpenModule={onOpenModule} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {last ? (
+        <div className="rounded-md border border-cyan-400/25 bg-black/35 px-3 py-2">
+          <p className="font-mono text-[10px] uppercase tracking-wider text-cyan-400/60">Last delegate</p>
+          <p className="text-sm text-cyan-50/95 mt-1">
+            <span style={{ color: specialistById(last.specialist)?.color }}>{specialistLabel(last.specialist)}</span>
+            {" → Iris · "}
+            <span className="text-cyan-400/70">{formatDelegateAgo(last.at, timeZone)}</span>
+          </p>
+          {last.task ? <p className="text-xs text-alfred-mist mt-1 line-clamp-2">&ldquo;{last.task}&rdquo;</p> : null}
+        </div>
+      ) : (
+        <p className="text-xs text-alfred-mist font-mono">No delegates yet — try &ldquo;Iris, have Scout research…&rdquo;</p>
+      )}
+
+      <div className="space-y-2">
+        <p className="font-mono text-[10px] uppercase tracking-wider text-cyan-400/50">Voice examples</p>
+        <ul className="text-xs text-alfred-mist space-y-1 list-disc pl-4">
+          <li>Open the team</li>
+          <li>Have Scout brief me on Bay Area doc sponsors</li>
+          <li>What does Sentinel see on Pulse?</li>
+          <li>Ask Navigator about this week&apos;s handoffs</li>
+        </ul>
+      </div>
+    </section>
+  );
+}
+
+function SpecialistCard({
+  specialist,
+  onOpenModule,
+}: {
+  specialist: IrisSpecialistId;
+  onOpenModule: (id: HudModuleId) => void;
+}) {
+  const s = specialistById(specialist);
+  if (!s) return null;
+  return (
+    <button
+      type="button"
+      className="hud-tile w-full text-left border-l-2 pl-2 transition hover:border-cyan-300/50"
+      style={{ borderLeftColor: s.color }}
+      onClick={() => onOpenModule(s.module)}
+    >
+      <p className="font-mono text-[10px] uppercase tracking-wide" style={{ color: s.color }}>
+        {s.name}
+      </p>
+      <p className="text-[10px] text-cyan-100/75 leading-snug">{s.title}</p>
+      <p className="text-[9px] text-cyan-400/45 mt-1">→ {moduleLabel(s.module)}</p>
+    </button>
+  );
+}

@@ -5,6 +5,7 @@ import { useVoiceOutput, useVoiceSignal } from "./useVoiceOutput";
 import { addDays } from "../../shared/timezone";
 import { isHudModuleId, matchModuleFromSpeech, type HudModuleId } from "../../shared/hudModules";
 import { isIrisSpecialistId, type IrisSpecialistId } from "../../shared/irisTeam";
+import { writeLastDelegate } from "../../shared/irisTeamActivity";
 
 export type Turn = { role: "user" | "assistant"; content: string; /** Read-out of the brief, not a real exchange. */ brief?: boolean };
 /** What the Iris ring shows. */
@@ -243,6 +244,9 @@ export function useConversation(opts: {
           (/\b(open|show|bring( up)?|pull up|go to)\b/i.test(said) ? matchModuleFromSpeech(said) : null);
         if (open) onOpenModule?.(open);
         setLastSpecialist(specialist ?? null);
+        if (specialist) {
+          writeLastDelegate({ specialist, at: new Date().toISOString(), task: said.trim().slice(0, 160) });
+        }
         setTurns((t) => [...t, { role: "assistant", content: reply }]);
         setReplyTick((n) => n + 1);
         voice.speak(reply, {
