@@ -73,7 +73,7 @@ function subtitleFor(convo: Conversation, googleConnected: boolean): string {
   if (!googleConnected && convo.active) return "Connect Google in Settings for Iris's brain.";
   if (convo.offerSave) return "Save this conversation to Memos?";
   if (convo.phase === "listening" && convo.interim.trim()) return convo.interim.trim();
-  if (convo.phase === "listening") return "Listening…";
+  if (convo.phase === "listening") return "Listening… finish your thought, then pause briefly.";
   if (convo.phase === "thinking") return "One sec — checking for you.";
   if (convo.phase === "speaking") {
     const last = [...convo.turns].reverse().find((t) => t.role === "assistant" && !t.brief);
@@ -137,10 +137,12 @@ export function JarvisCinemaBar({
             <p className="font-mono text-[9px] uppercase tracking-[0.28em] text-cyan-400/80">{STATUS[convo.phase]}</p>
             <VoicePhasePills phase={convo.phase} />
           </div>
-          <p className="line-clamp-2 text-left text-[13px] leading-snug text-cyan-50/95 lg:line-clamp-1">{subtitle}</p>
+          <p className={`line-clamp-2 text-left text-[13px] leading-snug text-cyan-50/95 lg:line-clamp-1 ${convo.phase === "listening" && convo.interim.trim() ? "text-cyan-100" : ""}`}>
+            {subtitle}
+          </p>
         </div>
         <div className="hidden min-w-[180px] flex-1 lg:block xl:min-w-[260px]">
-          <VoiceWaveform phase={convo.phase} />
+          <VoiceWaveform phase={convo.phase} interim={convo.interim} />
         </div>
       </div>
       {convo.active && (

@@ -43,7 +43,7 @@ const ASK_TIMEOUT_MS = 35_000;
 /** Pick the conversation back up if E taps her again within this window. */
 const RESUME_MS = 10 * 60_000;
 /** Small pause before listening again, so the mic doesn't catch the end of her voice. */
-const RELISTEN_DELAY_MS = 250;
+const RELISTEN_DELAY_MS = 420;
 
 async function askAlfred(
   messages: Turn[],

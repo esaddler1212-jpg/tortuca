@@ -22,13 +22,16 @@ export function VoiceWaveform({
   phase,
   className = "",
   bars = 40,
+  interim = "",
 }: {
   phase: ConversationPhase;
   className?: string;
   bars?: number;
+  interim?: string;
 }) {
   const t = useAnim(phase === "listening" || phase === "speaking" || phase === "thinking");
   const active = phase !== "idle";
+  const live = phase === "listening" && interim.trim().length > 0;
   const h = 32;
 
   return (
@@ -40,7 +43,8 @@ export function VoiceWaveform({
     >
       {Array.from({ length: bars }, (_, i) => {
         const amp = active
-          ? Math.abs(Math.sin(t * 7 + i * 0.35)) * (phase === "speaking" ? 0.7 : phase === "thinking" ? 0.45 : 1)
+          ? Math.abs(Math.sin(t * (live ? 9 : 7) + i * 0.35)) *
+            (phase === "speaking" ? 0.7 : live ? 1 : phase === "thinking" ? 0.45 : 1)
           : 0.12;
         const bh = h * (0.1 + amp * 0.9);
         return (
