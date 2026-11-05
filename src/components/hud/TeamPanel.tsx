@@ -9,7 +9,7 @@ import {
   specialistLabel,
   type IrisSpecialistId,
 } from "../../../shared/irisTeam";
-import { formatDelegateAgo, readLastDelegate, type IrisDelegateLog } from "../../../shared/irisTeamActivity";
+import { formatDelegateAgo, readLastDelegate, teamEfficiencySummary, readDelegateHistory, type IrisDelegateLog } from "../../../shared/irisTeamActivity";
 
 interface Props {
   timeZone: string;
@@ -18,9 +18,13 @@ interface Props {
 
 export function TeamPanel({ timeZone, onOpenModule }: Props) {
   const [last, setLast] = useState<IrisDelegateLog | null>(() => readLastDelegate());
+  const [ops, setOps] = useState(() => teamEfficiencySummary(readDelegateHistory()));
 
   useEffect(() => {
-    const sync = () => setLast(readLastDelegate());
+    const sync = () => {
+      setLast(readLastDelegate());
+      setOps(teamEfficiencySummary(readDelegateHistory()));
+    };
     sync();
     window.addEventListener("storage", sync);
     const id = window.setInterval(sync, 4000);
@@ -69,6 +73,13 @@ export function TeamPanel({ timeZone, onOpenModule }: Props) {
         </div>
       </div>
 
+      {ops && !ops.includes("no specialist delegates") ? (
+        <div className="rounded-md border border-indigo-400/25 bg-indigo-950/20 px-3 py-2">
+          <p className="font-mono text-[10px] uppercase tracking-wider text-indigo-300/70">Woodhouse · efficiency</p>
+          <p className="text-xs text-cyan-50/90 mt-1 leading-relaxed">{ops.replace(/^Iris team ops \(Woodhouse\):\s*/, "")}</p>
+        </div>
+      ) : null}
+
       {last ? (
         <div className="rounded-md border border-cyan-400/25 bg-black/35 px-3 py-2">
           <p className="font-mono text-[10px] uppercase tracking-wider text-cyan-400/60">Last delegate</p>
@@ -90,6 +101,7 @@ export function TeamPanel({ timeZone, onOpenModule }: Props) {
           <li>Ask Ledger what&apos;s on Today</li>
           <li>Have Courier summarize unread mail</li>
           <li>What does Sentinel see on Pulse?</li>
+          <li>Ask Woodhouse if we&apos;re duplicating work</li>
           <li>Have Scout brief me on Bay Area doc sponsors</li>
         </ul>
       </div>

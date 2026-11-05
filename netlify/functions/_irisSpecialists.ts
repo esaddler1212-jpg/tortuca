@@ -4,6 +4,7 @@ import {
   IRIS_TEAM,
   specialistById,
 } from "../../shared/irisTeam";
+import { teamEfficiencySummary } from "../../shared/irisTeamActivity";
 import { runBusinessResearch } from "./_businessResearch";
 import {
   appendHubMemo,
@@ -180,6 +181,16 @@ export async function consultSpecialist(
         module: "ecs",
         memoSaved: false,
       };
+    case "woodhouse": {
+      const block = excerptContext(input.context, /\b(Iris team ops|Woodhouse|Delegates|Duplicate risk|Heads-up)\b/i, 800);
+      const parsed = block.includes("Delegates") ? block : teamEfficiencySummary([], task);
+      return {
+        specialist: "woodhouse",
+        summary: `Woodhouse (team ops): ${parsed}. ${task ? `Task checked: ${task.slice(0, 120)}.` : ""} Iris should avoid duplicate consults when Heads-up or Duplicate risk is present.`,
+        module: "team",
+        memoSaved: false,
+      };
+    }
     default:
       return {
         specialist: input.specialist,

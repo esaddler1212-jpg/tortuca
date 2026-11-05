@@ -25,7 +25,7 @@ export interface HudModuleDef {
 export const HUD_MODULES: HudModuleDef[] = [
   { id: "vitals", label: "Vitals", short: "Vitals", hint: "weather, fitness, Bay Area Pulse map (quakes, fires, flights, ISS, ships)", color: "#67e8f9" },
   { id: "apps", label: "Woodhouse", short: "Apps", hint: "connected apps and sync status", color: "#a5b4fc" },
-  { id: "team", label: "Team", short: "Team", hint: "Iris specialists roster (one per module), org chart, last delegate", color: "#38bdf8" },
+  { id: "team", label: "Team", short: "Team", hint: "Woodhouse: specialist roster, delegate efficiency, duplicate-work checks", color: "#38bdf8" },
   { id: "today", label: "Today", short: "Today", hint: "do today, schedule, todos, leave-by", color: "#fde047" },
   { id: "inbox", label: "Inbox", short: "Inbox", hint: "newest Gmail, unread mail", color: "#fda4af" },
   { id: "plan", label: "Plan", short: "Plan", hint: "weekly plan, goals, handoffs", color: "#86efac" },
@@ -57,7 +57,7 @@ export function moduleLabel(id: HudModuleId): string {
 /** Client-side fallback when Iris didn't call open_module. */
 export function matchModuleFromSpeech(text: string): HudModuleId | null {
   const t = text.toLowerCase();
-  if (/\b(team|specialist|ledger|courier|wire|archivist|scout|scribe|navigator|sentinel|quartermaster|curator)\b/.test(t)) return "team";
+  if (/\b(team|specialist|woodhouse|ledger|courier|wire|archivist|scout|scribe|navigator|sentinel|quartermaster|curator)\b/.test(t)) return "team";
   if (/\b(channel|draft|write an? email|compose)\b/.test(t)) return "channels";
   if (/\b(inbox|email|e-mail|mail|gmail|unread)\b/.test(t)) return "inbox";
   if (/\b(research|brief me on|market)\b/.test(t)) return "research";

@@ -12,7 +12,8 @@ export type IrisSpecialistId =
   | "scout"
   | "quartermaster"
   | "scribe"
-  | "archivist";
+  | "archivist"
+  | "woodhouse";
 
 export interface IrisSpecialistDef {
   id: IrisSpecialistId;
@@ -31,7 +32,7 @@ export const IRIS_CAPTAIN = {
   reportsTo: "E",
 } as const;
 
-/** One specialist per operational module — Iris consults them and relays findings to E. */
+/** One specialist per HUD module — Iris consults them and relays findings to E. */
 export const IRIS_TEAM: IrisSpecialistDef[] = [
   {
     id: "ledger",
@@ -68,7 +69,7 @@ export const IRIS_TEAM: IrisSpecialistDef[] = [
   {
     id: "wire",
     name: "Wire",
-    title: "Woodhouse & apps",
+    title: "Apps & sync",
     delegateWhen: "connected apps, sync status, Woodhouse nodes, network health",
     module: "apps",
     color: "#a5b4fc",
@@ -113,18 +114,25 @@ export const IRIS_TEAM: IrisSpecialistDef[] = [
     module: "ecs",
     color: "#c4b5fd",
   },
+  {
+    id: "woodhouse",
+    name: "Woodhouse",
+    title: "Team ops & efficiency",
+    delegateWhen: "specialist workload, duplicate delegates, who already handled this, team roster efficiency",
+    module: "team",
+    color: "#38bdf8",
+  },
 ];
 
 export const IRIS_SPECIALIST_IDS = IRIS_TEAM.map((s) => s.id);
 
-const MODULES_WITH_SPECIALISTS = HUD_MODULE_IDS.filter((id) => id !== "team");
+const MODULES_WITH_SPECIALISTS = HUD_MODULE_IDS;
 
 export function specialistById(id: string): IrisSpecialistDef | undefined {
   return IRIS_TEAM.find((s) => s.id === id);
 }
 
 export function specialistForModule(module: HudModuleId): IrisSpecialistDef | undefined {
-  if (module === "team") return undefined;
   return IRIS_TEAM.find((s) => s.module === module);
 }
 
@@ -148,7 +156,7 @@ export function specialistLabel(id: IrisSpecialistId): string {
   return specialistById(id)?.name ?? id;
 }
 
-/** Every HUD module except Team has exactly one specialist. */
+/** Every HUD module has exactly one specialist. */
 export function teamCoverageOk(): boolean {
   if (IRIS_TEAM.length !== MODULES_WITH_SPECIALISTS.length) return false;
   const modules = new Set(IRIS_TEAM.map((s) => s.module));
