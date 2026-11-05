@@ -61,7 +61,7 @@ export function UpNextPanel({
         <p className="mt-2 py-2 text-sm text-cyan-100/80">Nothing on the list. Tell Iris what's next.</p>
       )}
       {spark && !sparkDone && <p className="mt-1 line-clamp-2 text-xs text-cyan-200/70">{spark.prompt}</p>}
-      <button type="button" onClick={onOpenToday} className="mt-1 flex min-h-[40px] items-center gap-1 font-mono text-[11px] uppercase tracking-[0.18em] text-cyan-300">
+      <button type="button" onClick={onOpenToday} className="mt-1 flex min-h-[44px] items-center gap-1 font-mono text-[11px] uppercase tracking-[0.18em] text-cyan-300">
         Open today {todos.length > 3 ? `(+${todos.length - 3})` : ""} <ChevronRight className="h-3.5 w-3.5" aria-hidden />
       </button>
     </section>

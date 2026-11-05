@@ -21,7 +21,7 @@ export function IrisDock({
   return (
     <div
       className="iris-dock fixed inset-x-0 z-40 px-2 pointer-events-none"
-      style={{ bottom: "calc(52px + env(safe-area-inset-bottom, 0px))" }}
+      style={{ bottom: "calc(var(--hud-tabbar-height) + env(safe-area-inset-bottom, 0px))" }}
       aria-label="Iris voice"
     >
       <div className="pointer-events-auto mx-auto flex max-w-lg items-center gap-2 rounded-xl border border-cyan-400/30 bg-black/92 px-2 py-1.5 shadow-[0_0_24px_rgb(6_182_212/0.12)] backdrop-blur-xl">
