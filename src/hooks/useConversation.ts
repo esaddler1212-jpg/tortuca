@@ -5,7 +5,7 @@ import { useVoiceOutput, useVoiceSignal } from "./useVoiceOutput";
 import { addDays } from "../../shared/timezone";
 import { isHudModuleId, matchModuleFromSpeech, type HudModuleId } from "../../shared/hudModules";
 import { isIrisSpecialistId, type IrisSpecialistId } from "../../shared/irisTeam";
-import { writeLastDelegate } from "../../shared/irisTeamActivity";
+import { readDelegateHistory, writeLastDelegate } from "../../shared/irisTeamActivity";
 
 export type Turn = { role: "user" | "assistant"; content: string; /** Read-out of the brief, not a real exchange. */ brief?: boolean };
 /** What the Iris ring shows. */
@@ -52,7 +52,7 @@ async function askAlfred(
   context: string,
   timeZone: string,
   extra: { signal?: AbortSignal; location?: { lat: number; lon: number } } = {},
-): Promise<{ reply: string; todos: { title: string; due: string }[]; module?: HudModuleId; specialist?: IrisSpecialistId }> {
+): Promise<{ reply: string; todos: { title: string; due: string }[]; module?: HudModuleId; specialist?: IrisSpecialistId; delegateReport?: string; deduped?: boolean }> {
   await ensureSession();
   const res = await fetch("/api/ask", {
     method: "POST",
@@ -62,6 +62,7 @@ async function askAlfred(
       messages: messages.map(({ role, content }) => ({ role, content })),
       context,
       timeZone,
+      delegateHistory: readDelegateHistory(),
       ...(extra.location ? { lat: extra.location.lat, lon: extra.location.lon } : {}),
     }),
     signal: extra.signal,
@@ -71,12 +72,21 @@ async function askAlfred(
     todos?: { title: string; due: string }[];
     module?: string;
     specialist?: string;
+    delegateReport?: string;
+    deduped?: boolean;
     error?: string;
   };
   if (!res.ok || !data.reply) throw new Error(data.error ?? "Iris couldn't answer. Try again.");
   const module = data.module && isHudModuleId(data.module) ? data.module : undefined;
   const specialist = data.specialist && isIrisSpecialistId(data.specialist) ? data.specialist : undefined;
-  return { reply: data.reply, todos: data.todos ?? [], module, specialist };
+  return {
+    reply: data.reply,
+    todos: data.todos ?? [],
+    module,
+    specialist,
+    delegateReport: data.delegateReport,
+    deduped: data.deduped,
+  };
 }
 
 /**
@@ -236,16 +246,23 @@ export function useConversation(opts: {
       setLastSpecialist(null);
       try {
         const { buildContext, timeZone, today, onAddTodo, onOpenModule, location } = optsRef.current;
-        const { reply, todos, module, specialist } = await askAlfred(next, buildContext(), timeZone, { signal: ctrl.signal, location });
+        const { reply, todos, module, specialist, delegateReport, deduped } = await askAlfred(next, buildContext(), timeZone, { signal: ctrl.signal, location });
         if (requestRef.current !== id) return; // E moved on
         for (const t of todos) onAddTodo(t.title, t.due === "today" ? today : t.due === "tomorrow" ? addDays(today, 1) : undefined);
         const open =
           module ??
           (/\b(open|show|bring( up)?|pull up|go to)\b/i.test(said) ? matchModuleFromSpeech(said) : null);
         if (open) onOpenModule?.(open);
-        setLastSpecialist(specialist ?? null);
-        if (specialist) {
-          writeLastDelegate({ specialist, at: new Date().toISOString(), task: said.trim().slice(0, 160) });
+        if (specialist && !deduped) {
+          setLastSpecialist(specialist);
+          writeLastDelegate({
+            specialist,
+            at: new Date().toISOString(),
+            task: said.trim().slice(0, 160),
+            report: delegateReport?.slice(0, 800),
+          });
+        } else {
+          setLastSpecialist(null);
         }
         setTurns((t) => [...t, { role: "assistant", content: reply }]);
         setReplyTick((n) => n + 1);

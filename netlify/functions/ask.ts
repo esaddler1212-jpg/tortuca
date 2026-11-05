@@ -8,7 +8,7 @@ import { consultSpecialist } from "./_irisSpecialists";
 import { lookupFlight } from "./_flight";
 import { recordUsage } from "./_irisUsage";
 import type { IrisTrace } from "../../shared/irisUsage";
-import { coords } from "./_pulse";
+import { parseDelegateHistory } from "../../shared/irisTeamActivity";
 import { loadUserData, resolveDataKey, saveUserData } from "./_userData";
 
 /**
@@ -37,7 +37,7 @@ export const handler: Handler = async (event) => {
   const session = sessionId ? await getValidSession(sessionId) : null;
   if (!sessionId || !session) return json(401, { error: "Connect Google first so only you can talk to Iris." });
 
-  let body: { messages?: Turn[]; context?: string; timeZone?: string; lat?: number; lon?: number };
+  let body: { messages?: Turn[]; context?: string; timeZone?: string; lat?: number; lon?: number; delegateHistory?: unknown };
   try {
     body = JSON.parse(event.body ?? "{}");
   } catch {
@@ -70,7 +70,8 @@ export const handler: Handler = async (event) => {
     const key = await resolveDataKey(sessionId);
     const memory = ((await loadUserData(key))?.irisMemory ?? []).map((m) => m.fact);
     const here = coords({ lat: String(body.lat ?? ""), lon: String(body.lon ?? "") });
-    const { reply: text, todos, remember, forget, refused, module, specialist, usage } = await runIris(
+    const delegateHistory = parseDelegateHistory(body.delegateHistory);
+    const { reply: text, todos, remember, forget, refused, module, specialist, delegateReport, delegateDeduped, usage } = await runIris(
       client,
       turns,
       body.context ?? "",
@@ -84,8 +85,9 @@ export const handler: Handler = async (event) => {
             sessionId,
             who,
             timeZone: tz,
+            delegateHistory,
           });
-          return { summary: r.summary, module: r.module, specialist: r.specialist };
+          return { summary: r.summary, module: r.module, specialist: r.specialist, deduped: r.deduped };
         },
       },
     );
@@ -116,6 +118,8 @@ export const handler: Handler = async (event) => {
       todos,
       module: module && typeof module === "string" ? module : undefined,
       specialist: specialist && typeof specialist === "string" ? specialist : undefined,
+      delegateReport: delegateReport && !delegateDeduped ? delegateReport : undefined,
+      deduped: delegateDeduped || undefined,
     });
   } catch (error) {
     await log(

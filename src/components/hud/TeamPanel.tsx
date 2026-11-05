@@ -75,7 +75,7 @@ export function TeamPanel({ timeZone, onOpenModule }: Props) {
 
       {ops && !ops.includes("no specialist delegates") ? (
         <div className="rounded-md border border-indigo-400/25 bg-indigo-950/20 px-3 py-2">
-          <p className="font-mono text-[10px] uppercase tracking-wider text-indigo-300/70">Woodhouse · efficiency</p>
+          <p className="font-mono text-[10px] uppercase tracking-wider text-indigo-300/70">Woodhouse · duplicate guard</p>
           <p className="text-xs text-cyan-50/90 mt-1 leading-relaxed">{ops.replace(/^Iris team ops \(Woodhouse\):\s*/, "")}</p>
         </div>
       ) : null}

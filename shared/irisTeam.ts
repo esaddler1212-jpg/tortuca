@@ -148,6 +148,8 @@ export function teamContextForIris(): string {
     `Each IRIS module has one specialist who owns that work; you are E's only voice out. ` +
     `When E asks about a module's domain, call consult_specialist for the owner (module map: ${owners}) — don't redo their job yourself. ` +
     `They return findings; you relay who helped in one short phrase, then their summary in spoken form (no markdown). ` +
+    `When Right now says BLOCK consult_specialist or DUPLICATE BLOCKED, do not call consult_specialist for that work — relay the prior report in one short spoken answer only. ` +
+    `If consult_specialist returns DUPLICATE BLOCKED, never re-run that specialist; relay the stored report. ` +
     `Skip delegation for one-line facts already in Right now. Roster: ${roster}.`
   );
 }

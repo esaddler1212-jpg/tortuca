@@ -5,11 +5,22 @@ export interface IrisDelegateLog {
   specialist: IrisSpecialistId;
   at: string;
   task?: string;
+  /** Specialist report Iris already relayed — replay on duplicate block. */
+  report?: string;
 }
 
 const LAST_KEY = "iris-last-delegate";
 const HISTORY_KEY = "iris-delegate-history";
 const HISTORY_MAX = 40;
+
+/** How long before the same specialist may repeat similar work. */
+export function duplicateWindowMs(specialist: IrisSpecialistId): number {
+  if (specialist === "scout") return 24 * 60 * 60_000;
+  if (specialist === "woodhouse") return 30 * 60_000;
+  return 6 * 60 * 60_000;
+}
+
+const CROSS_SPECIALIST_MS = 3 * 60 * 60_000;
 
 export function readLastDelegate(): IrisDelegateLog | null {
   if (typeof localStorage === "undefined") return null;
@@ -76,7 +87,7 @@ const norm = (s: string) =>
     .trim();
 
 /** Similar tasks (duplicate delegate risk). */
-function tasksSimilar(a: string, b: string): boolean {
+export function tasksSimilar(a: string, b: string): boolean {
   const x = norm(a);
   const y = norm(b);
   if (!x || !y) return false;
@@ -88,6 +99,48 @@ function tasksSimilar(a: string, b: string): boolean {
   let overlap = 0;
   for (const w of ax) if (by.has(w)) overlap++;
   return overlap / Math.min(ax.size, by.size) >= 0.6;
+}
+
+export function findDuplicateDelegate(
+  history: IrisDelegateLog[],
+  specialist: IrisSpecialistId,
+  task: string,
+  now = Date.now(),
+): IrisDelegateLog | null {
+  const window = duplicateWindowMs(specialist);
+  for (const e of history) {
+    if (e.specialist !== specialist) continue;
+    if (now - Date.parse(e.at) > window) continue;
+    if (tasksSimilar(task, e.task ?? "")) return e;
+  }
+  return null;
+}
+
+/** Another specialist already handled similar work recently. */
+export function findOverlappingDelegate(
+  history: IrisDelegateLog[],
+  task: string,
+  specialist: IrisSpecialistId,
+  now = Date.now(),
+): IrisDelegateLog | null {
+  for (const e of history) {
+    if (e.specialist === specialist || e.specialist === "woodhouse") continue;
+    if (now - Date.parse(e.at) > CROSS_SPECIALIST_MS) continue;
+    if (tasksSimilar(task, e.task ?? "")) return e;
+  }
+  return null;
+}
+
+export const DUPLICATE_BLOCKED_PREFIX = "DUPLICATE BLOCKED:";
+
+export function duplicateBlockedMessage(prior: IrisDelegateLog, timeZone: string, cross = false): string {
+  const who = specialistById(prior.specialist)?.name ?? prior.specialist;
+  const ago = formatDelegateAgo(prior.at, timeZone);
+  const replay = (prior.report || prior.task || "same work as before").trim().slice(0, 720);
+  const lead = cross
+    ? `${DUPLICATE_BLOCKED_PREFIX} ${who} already reported on similar work ${ago}. Do not call another specialist — relay this only:`
+    : `${DUPLICATE_BLOCKED_PREFIX} ${who} already handled this ${ago}. Do not re-delegate or re-report — relay this only:`;
+  return `${lead} ${replay}`;
 }
 
 /** Plain-text summary for Iris context and Woodhouse consult. */
@@ -121,15 +174,15 @@ export function teamEfficiencySummary(history: IrisDelegateLog[], pendingTask?: 
     }
     if (dupes.length >= 3) break;
   }
-  const dupeLine = dupes.length ? `Duplicate risk: ${[...new Set(dupes)].slice(0, 3).join("; ")}.` : "";
+  const dupeLine = dupes.length ? `Duplicate risk (do not re-delegate): ${[...new Set(dupes)].slice(0, 3).join("; ")}.` : "";
 
   let pendingLine = "";
   if (pendingTask?.trim()) {
     const t = pendingTask.trim();
-    const hit = recent.find((e) => e.task && tasksSimilar(e.task, t));
+    const hit = findDuplicateDelegate(recent, "scout", t) ?? recent.find((e) => e.task && tasksSimilar(e.task, t));
     if (hit) {
       const who = specialistById(hit.specialist)?.name ?? hit.specialist;
-      pendingLine = `Heads-up: similar ask went to ${who} ${formatDelegateAgo(hit.at, "America/Los_Angeles")}.`;
+      pendingLine = `BLOCK consult_specialist — similar work already from ${who} ${formatDelegateAgo(hit.at, "America/Los_Angeles")}. Relay prior report from notes.`;
     }
   }
 
@@ -138,4 +191,25 @@ export function teamEfficiencySummary(history: IrisDelegateLog[], pendingTask?: 
 
 export function teamOpsContextForAsk(): string {
   return teamEfficiencySummary(readDelegateHistory());
+}
+
+/** Parse delegate history sent from the client on /api/ask. */
+export function parseDelegateHistory(raw: unknown): IrisDelegateLog[] {
+  if (!Array.isArray(raw)) return [];
+  const out: IrisDelegateLog[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const o = item as Record<string, unknown>;
+    const specialist = o.specialist;
+    const at = o.at;
+    if (typeof specialist !== "string" || typeof at !== "string") continue;
+    if (!specialistById(specialist)) continue;
+    out.push({
+      specialist: specialist as IrisSpecialistId,
+      at,
+      task: typeof o.task === "string" ? o.task : undefined,
+      report: typeof o.report === "string" ? o.report.slice(0, 800) : undefined,
+    });
+  }
+  return out.slice(0, HISTORY_MAX);
 }
