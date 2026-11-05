@@ -65,11 +65,14 @@ export function MoreSheet({
   badges,
   onPick,
   onClose,
+  irisDockVisible = false,
 }: {
   open: boolean;
   badges: Partial<Record<HudModuleId, TabBadge>>;
   onPick: (id: HudModuleId) => void;
   onClose: () => void;
+  /** When a module tab is open, Iris sits above the tab bar — lift the sheet so the bottom row isn't covered. */
+  irisDockVisible?: boolean;
 }) {
   useEffect(() => {
     if (!open) return;
@@ -79,13 +82,12 @@ export function MoreSheet({
   }, [open, onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-20 bg-black/55" onClick={onClose} role="presentation">
+    <div className="fixed inset-0 z-[45] bg-black/55" onClick={onClose} role="presentation">
       <div
         role="dialog"
         aria-modal
         aria-label="More modules"
-        className="hud-glass animate-hud-sheet absolute inset-x-3 mx-auto max-w-[560px] p-4"
-        style={{ bottom: "calc(60px + env(safe-area-inset-bottom))" }}
+        className={`hud-glass animate-hud-sheet absolute inset-x-3 mx-auto flex max-w-[560px] flex-col overflow-hidden p-4 hud-more-sheet ${irisDockVisible ? "hud-more-sheet--iris" : ""}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-3 flex items-center justify-between">
@@ -94,7 +96,7 @@ export function MoreSheet({
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid min-h-0 flex-1 grid-cols-3 gap-2 overflow-y-auto overscroll-contain pb-1">
           {MORE_IDS.map((id) => {
             const def = HUD_MODULES.find((p) => p.id === id);
             const b = badges[id];

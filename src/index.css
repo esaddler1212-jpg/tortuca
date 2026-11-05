@@ -237,5 +237,20 @@ html {
 .hud-callout { stroke-dasharray: 400; stroke-dashoffset: 400; animation: hud-callout-in 0.9s 0.2s ease-out forwards; }
 @keyframes hud-callout-in { to { stroke-dashoffset: 0; } }
 /* Leave room for the bottom tab bar + iPhone home bar. */
+:root {
+  --hud-tabbar-height: 52px;
+  /** Iris ring row + captions chrome (sits above tab bar). */
+  --hud-iris-dock-height: 5.75rem;
+}
 .hud-with-tabbar { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
 .hud-with-iris-dock { padding-bottom: calc(148px + env(safe-area-inset-bottom)); }
+.hud-more-sheet {
+  bottom: calc(var(--hud-tabbar-height) + 10px + env(safe-area-inset-bottom, 0px));
+  max-height: calc(100dvh - var(--hud-tabbar-height) - 24px - env(safe-area-inset-bottom, 0px));
+}
+.hud-more-sheet--iris {
+  bottom: calc(var(--hud-tabbar-height) + var(--hud-iris-dock-height) + 14px + env(safe-area-inset-bottom, 0px));
+  max-height: calc(
+    100dvh - var(--hud-tabbar-height) - var(--hud-iris-dock-height) - 32px - env(safe-area-inset-bottom, 0px)
+  );
+}
