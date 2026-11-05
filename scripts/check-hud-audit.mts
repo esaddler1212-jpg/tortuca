@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { HUD_MODULE_IDS, HUD_MODULES, HUD_MORE, HUD_TABS } from "../shared/hudModules.ts";
-import { IRIS_SPECIALIST_IDS, IRIS_TEAM } from "../shared/irisTeam.ts";
+import { IRIS_SPECIALIST_IDS, IRIS_TEAM, teamCoverageOk } from "../shared/irisTeam.ts";
 import type { GaugeId } from "../shared/hudGauges.ts";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -26,7 +26,8 @@ for (const m of HUD_MODULES) {
 }
 
 // ── Iris team ──────────────────────────────────────────────────────────
-ok("six Iris specialists", IRIS_TEAM.length === 6 && IRIS_SPECIALIST_IDS.length === 6);
+ok("one specialist per HUD module (except Team)", teamCoverageOk());
+ok("ten Iris specialists", IRIS_TEAM.length === 10 && IRIS_SPECIALIST_IDS.length === 10);
 for (const s of IRIS_TEAM) {
   ok(`specialist ${s.id} links valid module`, HUD_MODULE_IDS.includes(s.module));
 }

@@ -117,6 +117,20 @@ export async function consultSpecialist(
         memoSaved: true,
       };
     }
+    case "ledger":
+      return {
+        specialist: "ledger",
+        summary: `Ledger on Today: ${excerptContext(input.context, /\b(today|todo|task|urgent|leave|schedule|spark|timeline|event)\b/i)}`,
+        module: "today",
+        memoSaved: false,
+      };
+    case "courier":
+      return {
+        specialist: "courier",
+        summary: `Courier on Inbox (senders and subjects only — no body text): ${excerptContext(input.context, /\b(inbox|unread|mail|gmail|sender|subject|email)\b/i)}. School and family threads stay in the app; E can open Inbox for those.`,
+        module: "inbox",
+        memoSaved: false,
+      };
     case "scribe":
       return {
         specialist: "scribe",
@@ -134,8 +148,15 @@ export async function consultSpecialist(
     case "sentinel":
       return {
         specialist: "sentinel",
-        summary: `Sentinel on Pulse and commute: ${excerptContext(input.context, /\b(pulse|weather|commute|leave|quake|fire|air|alert|flight|iss)\b/i)}`,
+        summary: `Sentinel on Pulse and commute: ${excerptContext(input.context, /\b(pulse|weather|commute|leave|quake|fire|air|alert|flight|iss|fitness|workout)\b/i)}`,
         module: "vitals",
+        memoSaved: false,
+      };
+    case "wire":
+      return {
+        specialist: "wire",
+        summary: `Wire on Woodhouse and connected apps: ${excerptContext(input.context, /\b(woodhouse|apps?|network|node|sync|connect|online|offline|family purpose)\b/i)}`,
+        module: "apps",
         memoSaved: false,
       };
     case "quartermaster":
@@ -150,6 +171,13 @@ export async function consultSpecialist(
         specialist: "curator",
         summary: `Curator on Hub: ${excerptContext(input.context, /\b(memo|hub|gym|watch|routine)\b/i)}. Offer to save a memo if E wants this conversation kept.`,
         module: "hub",
+        memoSaved: false,
+      };
+    case "archivist":
+      return {
+        specialist: "archivist",
+        summary: `Archivist on ECS log and roadmap: ${excerptContext(input.context, /\b(roadmap|ecs|timeline|log|tortuga|north star|network ops)\b/i)}`,
+        module: "ecs",
         memoSaved: false,
       };
     default:

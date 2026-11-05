@@ -37,7 +37,7 @@ export function TeamPanel({ timeZone, onOpenModule }: Props) {
           <Users className="h-4 w-4" aria-hidden /> Iris team
         </p>
         <p className="text-sm text-alfred-mist mt-1">
-          Specialists report to Iris; Iris reports to you. One voice out — delegate by name in conversation.
+          One specialist owns each module; they report to Iris, and Iris reports to you in one voice.
         </p>
       </div>
 
@@ -54,11 +54,11 @@ export function TeamPanel({ timeZone, onOpenModule }: Props) {
         >
           <p className="font-mono text-[10px] uppercase tracking-widest text-cyan-400/70">{IRIS_CAPTAIN.title}</p>
           <p className="font-display text-lg text-cyan-100">{IRIS_CAPTAIN.name}</p>
-          <p className="text-[11px] text-cyan-100/60 mt-1">Single voice · delegates via consult_specialist</p>
+          <p className="text-[11px] text-cyan-100/60 mt-1">Relays specialist reports · consult_specialist</p>
         </div>
         <div className="relative mt-2 w-full max-w-md">
           <div className="absolute left-1/2 top-0 h-px w-[72%] -translate-x-1/2 bg-cyan-400/25" aria-hidden />
-          <ul className="grid grid-cols-2 gap-3 pt-4 sm:grid-cols-3">
+          <ul className="grid grid-cols-2 gap-3 pt-4 sm:grid-cols-3 lg:grid-cols-5">
             {IRIS_TEAM.map((s) => (
               <li key={s.id} className="relative flex flex-col items-center">
                 <div className="absolute -top-4 left-1/2 h-4 w-px bg-cyan-400/20" aria-hidden />
@@ -87,9 +87,10 @@ export function TeamPanel({ timeZone, onOpenModule }: Props) {
         <p className="font-mono text-[10px] uppercase tracking-wider text-cyan-400/50">Voice examples</p>
         <ul className="text-xs text-alfred-mist space-y-1 list-disc pl-4">
           <li>Open the team</li>
-          <li>Have Scout brief me on Bay Area doc sponsors</li>
+          <li>Ask Ledger what&apos;s on Today</li>
+          <li>Have Courier summarize unread mail</li>
           <li>What does Sentinel see on Pulse?</li>
-          <li>Ask Navigator about this week&apos;s handoffs</li>
+          <li>Have Scout brief me on Bay Area doc sponsors</li>
         </ul>
       </div>
     </section>

@@ -61,7 +61,7 @@ export const TRACK_FLIGHT = {
 export const CONSULT_SPECIALIST = {
   name: "consult_specialist",
   description:
-    "Delegate to a specialist on Iris's team. They report back with findings; you summarize for E in spoken form. Use for full research briefs (Scout), draft workflow (Scribe), plan (Navigator), Pulse (Sentinel), meals (Quartermaster), Hub (Curator). Prefer web_search yourself for quick current facts.",
+    "Delegate to the specialist who owns that IRIS module. They report findings; you relay to E in spoken form — do not redo their work. Owners: Ledger (today), Courier (inbox), Sentinel (vitals), Navigator (plan), Wire (apps), Curator (hub), Scout (research), Quartermaster (meal), Scribe (channels), Archivist (ecs). Use Scout for full research briefs. Prefer web_search yourself for quick current facts.",
   strict: true,
   input_schema: {
     type: "object" as const,
@@ -69,7 +69,8 @@ export const CONSULT_SPECIALIST = {
       specialist: {
         type: "string",
         enum: specialistEnumForTool(),
-        description: "Specialist id: scout, scribe, navigator, sentinel, quartermaster, curator.",
+        description:
+          "Specialist id: ledger, courier, sentinel, navigator, wire, curator, scout, quartermaster, scribe, archivist.",
       },
       task: { type: "string", description: "What you need them to do." },
       query: { type: "string", description: "Scout only: research question (defaults to task)." },
