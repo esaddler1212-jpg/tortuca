@@ -104,6 +104,7 @@ ok("home has HudCore + UpNext", /HudCore/.test(appTs) && /UpNextPanel/.test(appT
 ok("ask context includes teamOpsContextForAsk", appTs.includes("teamOpsContextForAsk()"));
 ok("ask context includes shopify", appTs.includes("shopifyContextForIris"));
 ok("Apps module: Easy Supply Shopify panel", appTs.includes("EasySupplyStorePanel"));
+ok("Hub Money tab shows market update", read("src/components/HubPanel.tsx").includes("MoneyMarketUpdate"));
 ok("user-data merges irisDelegateHistory", read("netlify/functions/user-data.ts").includes("mergeDelegateHistories"));
 ok("Scribe creates drafts server-side", read("netlify/functions/_irisSpecialists.ts").includes("createScribeDraft"));
 ok("shopify-store function exists", fs.existsSync(path.join(root, "netlify/functions/shopify-store.ts")));

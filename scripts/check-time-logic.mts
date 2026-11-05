@@ -455,6 +455,18 @@ check(
   ], "America/Los_Angeles");
   check("iris sees: memos, skips chat transcripts, withholds school notes", [memos.includes("$BAY episode"), memos.includes("Conversation"), memos.includes("attendance"), memos.includes("1 school-related memo")], [true, false, false, true]);
   check("iris sees: money", IC.moneyContext({ income: 1250, spent: 410.5, net: 839.5, ecsRevenue: 900, topSpend: [["Food", 220], ["Gas", 120]] }, "November", 2000), "Money (November, from the Money tab): in $1,250, out $411, net $840. ECS revenue $900 of $2,000 goal. Top spending: Food $220, Gas $120.");
+  check(
+    "iris sees: markets under money",
+    IC.stocksContext({
+      watchlist: [
+        { symbol: "NVDA", changePercent: 2.1, theme: "ai" },
+        { symbol: "AVAV", changePercent: -1.4, theme: "drones" },
+      ],
+      upcomingIpos: [{ name: "Acme AI", symbol: "ACME", date: "2026-12-01" }],
+      dataSource: "finnhub",
+    }).includes("NVDA up"),
+    true,
+  );
   check("iris sees: gym week", IC.gymContext({ workoutsThisWeek: 1, target: 3, loggedToday: false, next: { title: "Legs", day: "Thu", isToday: false } }), "Gym: 1 of 3 workouts this week. Next session: Legs on Thu.");
   check("iris sees: shopping list (not pantry)", IC.shoppingContext([{ name: "Chicken", inPantry: false }, { name: "Rice", inPantry: true }, { name: "Spinach", inPantry: false }]), "Shopping list (2): Chicken, Spinach.");
 }
