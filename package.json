@@ -5,13 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -p tsconfig.app.json && vite build",
+    "build": "rm -f tsconfig.app.tsbuildinfo && tsc -p tsconfig.app.json && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test:time": "tsx scripts/check-time-logic.mts",
     "scan:secrets": "gitleaks git . --config .gitleaks.toml --redact --no-banner && gitleaks dir . --config .gitleaks.toml --redact --no-banner",
     "test:iris": "tsx scripts/check-iris.mts",
-    "test:research": "tsx scripts/check-business-research.mts"
+    "test:research": "tsx scripts/check-business-research.mts",
+    "test:audit": "tsx scripts/check-hud-audit.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.3.0",

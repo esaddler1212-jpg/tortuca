@@ -208,7 +208,7 @@ function GodsEyeLink() {
 export function PulsePanel({ pulse, error, loading = false, onRetry, city, lat, lon, timeZone, defaultOpen = false }: Props) {
   const [open, setOpen] = useState(defaultOpen);
   const [cam, setCam] = useState<string | null>(null);
-  const [view, setView] = useState<"list" | "map">(loadView);
+  const [view, setView] = useState<"list" | "map">(() => (defaultOpen ? "map" : loadView()));
   const [layers, setLayers] = useState<Record<MapLayer, boolean>>({ planes: true, quakes: true, fires: true, cams: true, ships: true });
   const [tracked, setTracked] = useState<FlightFix | null>(null);
   const pickView = (v: "list" | "map") => {
