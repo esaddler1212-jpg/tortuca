@@ -152,6 +152,17 @@ export function NetworkPanel({
           <span className="block text-alfred-mist mt-0.5">Org chart, specialists, last delegate →</span>
         </button>
       ) : null}
+      <p className="mt-4 text-[10px] leading-relaxed text-cyan-400/45 font-mono">
+        Optional on your machine (not required):{" "}
+        <a href="https://voicebox.sh" target="_blank" rel="noopener noreferrer" className="text-cyan-400/70 hover:underline">
+          Voicebox
+        </a>{" "}
+        for local cloned TTS · server{" "}
+        <a href="https://github.com/esaddler1212-jpg/tortuca/blob/main/docs/SERVER_PLAN.md" target="_blank" rel="noopener noreferrer" className="text-cyan-400/70 hover:underline">
+          n8n
+        </a>{" "}
+        for scheduled Shopify/Gmail workflows.
+      </p>
     </HudFrame>
   );
 }
