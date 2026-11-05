@@ -14,13 +14,13 @@ its own README, build, and (typically) its own Netlify site.
 
 ### Alfred (repo root)
 
-**Alfred / IRIS** is your personal command center on **alfred2** (and locally): Iris voice + HUD home (four corner gauges, bottom tabs Today · Vitals · Inbox · Plan, **More** for Team · Woodhouse · Research · Hub · Meals · Drafts · ECS), Gmail/calendar, Woodhouse app status, **Bay Area Pulse digital map** (no raster tiles), server-side commute sync, Iris specialist team (Ledger, Courier, Sentinel, Navigator, Wire, Curator, Scout, Quartermaster, Scribe, Archivist, **Woodhouse** on Team for efficiency/duplicates), and cross-device data in Netlify Blobs. Home uses the core ring and Iris voice — no separate “awaiting command” text box.
+**Alfred / IRIS** is your personal command center on **alfred2** (and locally): Iris voice + HUD home (four corner gauges, bottom tabs Today · Vitals · Inbox · Plan, **More** for Team · Woodhouse · Research · Hub · Meals · Drafts · ECS), Gmail/calendar, Woodhouse app status, **Bay Area Pulse digital map** (no raster tiles), server-side commute sync, Iris specialist team (one per module) with **duplicate delegate prevention** (Woodhouse on Team), and cross-device data in Netlify Blobs. Home uses the core ring and Iris voice — no separate “awaiting command” text box.
 
 ```bash
 npm install
 npm run dev
 npx netlify dev   # Woodhouse aggregator + Google OAuth
-npm run test:os   # build + time + iris + research + HUD audit
+npm run test:os   # build + time + iris + research + HUD/OS audit (modules, specialists, pulse map, delegate dedupe)
 # or: npm run build && npm run test:time && npm run test:iris && npm run test:research && npm run test:audit
 ```
 
