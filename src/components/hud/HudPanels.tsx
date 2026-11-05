@@ -4,7 +4,6 @@ import type { WoodhouseOrchestrationSnapshot } from "../../types/woodhouse";
 import type { FitnessStatus } from "../../lib/fitness";
 import { weatherLabel } from "../../lib/weather";
 import { HudFrame } from "./HudFrame";
-import { IrisTeamPanel } from "./IrisTeamPanel";
 
 const fmtTime = (iso: string, timeZone: string) => {
   try {
@@ -79,12 +78,14 @@ export function NetworkPanel({
   error = null,
   googleConnected,
   onConnectGoogle,
+  onOpenTeam,
 }: {
   woodhouse: WoodhouseOrchestrationSnapshot | null;
   loading?: boolean;
   error?: string | null;
   googleConnected: boolean;
   onConnectGoogle?: () => void;
+  onOpenTeam?: () => void;
 }) {
   const nodes = woodhouse?.nodes ?? [];
   const online = nodes.filter((n) => n.ok).length;
@@ -145,9 +146,12 @@ export function NetworkPanel({
           Connect Google
         </button>
       ) : null}
-      <div className="mt-4">
-        <IrisTeamPanel />
-      </div>
+      {onOpenTeam ? (
+        <button type="button" className="mt-4 w-full rounded-md border border-sky-400/30 px-3 py-2 text-left text-xs text-sky-100/90 hover:border-sky-300/50" onClick={onOpenTeam}>
+          <span className="font-mono uppercase tracking-wider text-sky-400/80">Iris team</span>
+          <span className="block text-alfred-mist mt-0.5">Org chart, specialists, last delegate →</span>
+        </button>
+      ) : null}
     </HudFrame>
   );
 }

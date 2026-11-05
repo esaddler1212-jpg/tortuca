@@ -83,6 +83,7 @@ import {
   RoadmapPanel,
   VitalsPanel,
 } from "./components/hud/HudPanels";
+import { TeamPanel } from "./components/hud/TeamPanel";
 import { InstallAppBanner } from "./components/InstallAppBanner";
 
 export default function App() {
@@ -626,8 +627,11 @@ export default function App() {
             error={woodhouseError}
             googleConnected={connected}
             onConnectGoogle={() => void connect()}
+            onOpenTeam={() => focusModule("team")}
           />
         );
+      case "team":
+        return <TeamPanel timeZone={settings.timezone} onOpenModule={focusModule} />;
       case "today":
         return (
           <>
