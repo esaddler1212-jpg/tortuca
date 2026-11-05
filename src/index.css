@@ -238,3 +238,4 @@ html {
 @keyframes hud-callout-in { to { stroke-dashoffset: 0; } }
 /* Leave room for the bottom tab bar + iPhone home bar. */
 .hud-with-tabbar { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+.hud-with-iris-dock { padding-bottom: calc(148px + env(safe-area-inset-bottom)); }

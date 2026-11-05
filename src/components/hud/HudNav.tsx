@@ -36,6 +36,9 @@ export function HudTabBar({
         on ? (alert ? "border-amber-300 text-amber-200" : "border-cyan-300 text-cyan-50") : alert ? "border-amber-400/60 text-amber-300" : "border-cyan-900/80 text-cyan-300/70"
       }`}
     >
+      {key === "more" && alert && !on ? (
+        <span className="absolute right-[22%] top-2 h-1.5 w-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_#fbbf24]" aria-hidden />
+      ) : null}
       <span>
         {label}
         {count ? <span className="ml-1">{count > 99 ? "99+" : count}</span> : null}
