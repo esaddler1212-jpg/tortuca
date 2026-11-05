@@ -16,7 +16,7 @@ import { buildAskContext } from "./lib/askContext";
 import { weatherLabel } from "./lib/weather";
 import { pulseSummary } from "../shared/pulse";
 import { issContext } from "../shared/skyText";
-import { gymContext, inboxContext, memosContext, moneyContext, shoppingContext } from "../shared/irisContext";
+import { gymContext, inboxContext, memosContext, moneyContext, shoppingContext, stocksContext } from "../shared/irisContext";
 import { useHub } from "./hooks/useHub";
 import { DEFAULT_ROUTINE, gymDayFor, moneyMonth } from "../shared/hub";
 import { useBusinessResearch } from "./hooks/useBusinessResearch";
@@ -115,7 +115,7 @@ export default function App() {
     const themeColor = { school: "#22d3ee", network: "#4ade80", weekend: "#c084fc", holiday: "#c084fc", vantage: "#c084fc" }[mode];
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", themeColor);
   }, [mode]);
-  const { snapshot: stocks, loading: stocksLoading } = useStocks();
+  const { snapshot: stocks, loading: stocksLoading, error: stocksError, refresh: refreshStocks } = useStocks();
   const commute = useCommute(settings, connected);
   const effectiveMinutes = commute.effectiveMinutes;
   const { logs: fitnessLogs, logWorkout, loadRemote: loadFitness } = useFitness(settings);
@@ -526,6 +526,7 @@ export default function App() {
                               new Date(`${month}-15T12:00:00Z`).toLocaleDateString("en-US", { month: "long", timeZone: "UTC" }),
                               hub.revenueGoal,
                             ),
+                            stocksContext(stocks),
                             gymContext({
                               workoutsThisWeek: Object.values(fitnessStatus.weekCounts).reduce((a, b) => a + b, 0),
                               target: 3,
@@ -775,6 +776,10 @@ export default function App() {
             onAddTodo={(title) => add(title)}
             onLogWorkout={logWorkout}
             workoutLoggedToday={fitnessLogs.some((l) => l.date === today)}
+            stocks={stocks}
+            stocksLoading={stocksLoading}
+            stocksError={stocksError}
+            onRefreshStocks={() => void refreshStocks()}
           />
         );
       case "meal":

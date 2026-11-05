@@ -41,6 +41,8 @@ import { useSpeechInput } from "../hooks/useSpeechInput";
 import { promptForMemo } from "../lib/promptGenerator";
 import { PromptButton } from "./PromptButton";
 import { GymTab } from "./GymTab";
+import { MoneyMarketUpdate } from "./MoneyMarketUpdate";
+import type { StocksSnapshot } from "../types/stocks";
 
 type Tab = "feed" | "watch" | "gym" | "money" | "memos";
 const TAB_LABEL: Record<Tab, string> = { feed: "Feed", watch: "Watch", gym: "Gym", money: "Money", memos: "Memos" };
@@ -58,6 +60,10 @@ interface Props {
   /** Workout already logged today (so finishing the routine doesn't log twice). */
   workoutLoggedToday: boolean;
   initialTab?: Tab;
+  stocks?: StocksSnapshot | null;
+  stocksLoading?: boolean;
+  stocksError?: string | null;
+  onRefreshStocks?: () => void;
 }
 
 const newId = (p: string) => `${p}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
@@ -467,7 +473,7 @@ function UptimeStatus({ r }: { r?: WatchResult }) {
 
 // ── Money ────────────────────────────────────────────────────────────────
 
-function MoneyTab({ hub, update, today }: Props) {
+function MoneyTab({ hub, update, today, stocks, stocksLoading, stocksError, onRefreshStocks }: Props) {
   const month = today.slice(0, 7);
   const sum = useMemo(() => moneyMonth(hub.money, month), [hub.money, month]);
   const [kind, setKind] = useState<"in" | "out">("out");
@@ -518,6 +524,12 @@ function MoneyTab({ hub, update, today }: Props) {
       {sum.topSpend.length > 0 && (
         <p className="text-xs text-alfred-mist">Top spending: {sum.topSpend.map(([c, n]) => `${c} ${money(n)}`).join(" · ")}</p>
       )}
+      <MoneyMarketUpdate
+        snapshot={stocks ?? null}
+        loading={stocksLoading}
+        error={stocksError ?? null}
+        onRefresh={onRefreshStocks}
+      />
       <form
         className="grid gap-2 border-t border-alfred-border/40 pt-3"
         onSubmit={(e) => {
