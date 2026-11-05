@@ -1,7 +1,18 @@
 import type { HudModuleId } from "./hudModules";
+import { HUD_MODULE_IDS } from "./hudModules";
 
-/** Specialists on Iris's team — they report to Iris; Iris reports to E. */
-export type IrisSpecialistId = "scout" | "scribe" | "navigator" | "sentinel" | "quartermaster" | "curator";
+/** Specialists on Iris's team — one owner per HUD module (except Team). They report to Iris; Iris reports to E. */
+export type IrisSpecialistId =
+  | "ledger"
+  | "courier"
+  | "sentinel"
+  | "navigator"
+  | "wire"
+  | "curator"
+  | "scout"
+  | "quartermaster"
+  | "scribe"
+  | "archivist";
 
 export interface IrisSpecialistDef {
   id: IrisSpecialistId;
@@ -20,22 +31,31 @@ export const IRIS_CAPTAIN = {
   reportsTo: "E",
 } as const;
 
+/** One specialist per operational module — Iris consults them and relays findings to E. */
 export const IRIS_TEAM: IrisSpecialistDef[] = [
   {
-    id: "scout",
-    name: "Scout",
-    title: "Business research",
-    delegateWhen: "market, competitors, grants, sourced briefs, deep web research",
-    module: "research",
-    color: "#fdba74",
+    id: "ledger",
+    name: "Ledger",
+    title: "Today & schedule",
+    delegateWhen: "do today, todos, urgent items, leave-by, today's timeline, spark",
+    module: "today",
+    color: "#fde047",
   },
   {
-    id: "scribe",
-    name: "Scribe",
-    title: "Drafts & channels",
-    delegateWhen: "email drafts, brand voice, approve-and-send workflow",
-    module: "channels",
-    color: "#fca5a5",
+    id: "courier",
+    name: "Courier",
+    title: "Inbox triage",
+    delegateWhen: "unread mail, senders, what needs a reply, inbox summary",
+    module: "inbox",
+    color: "#fda4af",
+  },
+  {
+    id: "sentinel",
+    name: "Sentinel",
+    title: "Pulse & commute",
+    delegateWhen: "weather, Bay Area pulse alerts, quakes, fires, flights map, leave-by, fitness",
+    module: "vitals",
+    color: "#67e8f9",
   },
   {
     id: "navigator",
@@ -46,12 +66,28 @@ export const IRIS_TEAM: IrisSpecialistDef[] = [
     color: "#86efac",
   },
   {
-    id: "sentinel",
-    name: "Sentinel",
-    title: "Pulse & commute",
-    delegateWhen: "weather, Bay Area pulse alerts, quakes, fires, flights map, leave-by",
-    module: "vitals",
-    color: "#67e8f9",
+    id: "wire",
+    name: "Wire",
+    title: "Woodhouse & apps",
+    delegateWhen: "connected apps, sync status, Woodhouse nodes, network health",
+    module: "apps",
+    color: "#a5b4fc",
+  },
+  {
+    id: "curator",
+    name: "Curator",
+    title: "Hub & memos",
+    delegateWhen: "memos, gym log, watch lists, routines in Hub",
+    module: "hub",
+    color: "#f0abfc",
+  },
+  {
+    id: "scout",
+    name: "Scout",
+    title: "Business research",
+    delegateWhen: "market, competitors, grants, sourced briefs, deep web research",
+    module: "research",
+    color: "#fdba74",
   },
   {
     id: "quartermaster",
@@ -62,19 +98,34 @@ export const IRIS_TEAM: IrisSpecialistDef[] = [
     color: "#5eead4",
   },
   {
-    id: "curator",
-    name: "Curator",
-    title: "Hub & memos",
-    delegateWhen: "memos, gym log, watch lists, routines in Hub",
-    module: "hub",
-    color: "#f0abfc",
+    id: "scribe",
+    name: "Scribe",
+    title: "Drafts & channels",
+    delegateWhen: "email drafts, brand voice, approve-and-send workflow",
+    module: "channels",
+    color: "#fca5a5",
+  },
+  {
+    id: "archivist",
+    name: "Archivist",
+    title: "ECS log & roadmap",
+    delegateWhen: "roadmap, timeline, ECS ops log, project history",
+    module: "ecs",
+    color: "#c4b5fd",
   },
 ];
 
 export const IRIS_SPECIALIST_IDS = IRIS_TEAM.map((s) => s.id);
 
+const MODULES_WITH_SPECIALISTS = HUD_MODULE_IDS.filter((id) => id !== "team");
+
 export function specialistById(id: string): IrisSpecialistDef | undefined {
   return IRIS_TEAM.find((s) => s.id === id);
+}
+
+export function specialistForModule(module: HudModuleId): IrisSpecialistDef | undefined {
+  if (module === "team") return undefined;
+  return IRIS_TEAM.find((s) => s.module === module);
 }
 
 export function isIrisSpecialistId(id: string): id is IrisSpecialistId {
@@ -83,10 +134,23 @@ export function isIrisSpecialistId(id: string): id is IrisSpecialistId {
 
 /** Compact roster for Iris's system prompt. */
 export function teamContextForIris(): string {
-  const lines = IRIS_TEAM.map((s) => `${s.id} (${s.name}): ${s.delegateWhen}`).join("; ");
-  return `Your team reports to you; you report to E. Delegate with consult_specialist when the job fits a specialist — not for one-line answers already in Right now. Roster: ${lines}. After they report back, tell E who helped in one short phrase, then the answer in spoken form (no markdown).`;
+  const owners = IRIS_TEAM.map((s) => `${s.module}→${s.id} (${s.name})`).join(", ");
+  const roster = IRIS_TEAM.map((s) => `${s.id} (${s.name}, ${s.module}): ${s.delegateWhen}`).join("; ");
+  return (
+    `Each IRIS module has one specialist who owns that work; you are E's only voice out. ` +
+    `When E asks about a module's domain, call consult_specialist for the owner (module map: ${owners}) — don't redo their job yourself. ` +
+    `They return findings; you relay who helped in one short phrase, then their summary in spoken form (no markdown). ` +
+    `Skip delegation for one-line facts already in Right now. Roster: ${roster}.`
+  );
 }
 
 export function specialistLabel(id: IrisSpecialistId): string {
   return specialistById(id)?.name ?? id;
+}
+
+/** Every HUD module except Team has exactly one specialist. */
+export function teamCoverageOk(): boolean {
+  if (IRIS_TEAM.length !== MODULES_WITH_SPECIALISTS.length) return false;
+  const modules = new Set(IRIS_TEAM.map((s) => s.module));
+  return MODULES_WITH_SPECIALISTS.every((id) => modules.has(id));
 }
