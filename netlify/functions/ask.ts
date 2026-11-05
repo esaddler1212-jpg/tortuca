@@ -69,7 +69,7 @@ export const handler: Handler = async (event) => {
     const key = await resolveDataKey(sessionId);
     const memory = ((await loadUserData(key))?.irisMemory ?? []).map((m) => m.fact);
     const here = coords({ lat: String(body.lat ?? ""), lon: String(body.lon ?? "") });
-    const { reply: text, todos, remember, forget, refused, planet, usage } = await runIris(client, turns, body.context ?? "", memory, {
+    const { reply: text, todos, remember, forget, refused, module, usage } = await runIris(client, turns, body.context ?? "", memory, {
       trackFlight: async (flight) => (await lookupFlight(flight, tz, here.lat, here.lon)).spoken,
     });
     await log(usage, refused ? "refused" : "ok");
@@ -94,7 +94,7 @@ export const handler: Handler = async (event) => {
           : forget.length
             ? "Done. I've forgotten it."
             : "Sorry, I lost my train of thought. Say that again?");
-    return json(200, { reply, todos, planet: planet && typeof planet === "string" ? planet : undefined });
+    return json(200, { reply, todos, module: module && typeof module === "string" ? module : undefined });
   } catch (error) {
     await log(
       blank,

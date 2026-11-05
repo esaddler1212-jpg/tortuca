@@ -18,7 +18,7 @@ import * as Plan from "../shared/plan.ts";
 import * as Sparks from "../shared/sparks.ts";
 import * as Hub from "../shared/hub.ts";
 import * as Usage from "../shared/irisUsage.ts";
-import { matchPlanetFromSpeech, HUD_TABS, HUD_MORE } from "../shared/solarPlanets.ts";
+import { matchModuleFromSpeech, HUD_TABS, HUD_MORE } from "../shared/hudModules.ts";
 import { hudGauges } from "../shared/hudGauges.ts";
 import { commuteMinutesFor, inCommuteWindow } from "../shared/commute.ts";
 import * as IC from "../shared/irisContext.ts";
@@ -373,8 +373,8 @@ if (!process.env.TIME_CHECK_CHILD) {
 
 // ── Voice → module routing
 check(
-  "planets: inbox, drafts, vitals (Pulse) and today by voice",
-  ["open my inbox", "show my email", "any unread mail", "draft an email to the sponsor", "show the map", "where are the planes", "earthquakes near me", "open today", "show my schedule"].map(matchPlanetFromSpeech),
+  "modules: inbox, drafts, vitals (Pulse) and today by voice",
+  ["open my inbox", "show my email", "any unread mail", "draft an email to the sponsor", "show the map", "where are the planes", "earthquakes near me", "open today", "show my schedule"].map(matchModuleFromSpeech),
   ["inbox", "inbox", "inbox", "channels", "vitals", "vitals", "vitals", "today", "today"],
 );
 

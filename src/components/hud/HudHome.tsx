@@ -46,11 +46,11 @@ export function UpNextPanel({
               <button
                 type="button"
                 onClick={() => onToggle(t.id)}
-                className="flex min-h-[44px] w-full items-center gap-3 text-left text-[15px] text-cyan-50"
+                className="flex min-h-[44px] w-full items-center gap-3 text-left text-[15px] text-cyan-50 group"
                 aria-label={`Done: ${t.title}`}
               >
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border border-cyan-300/60">
-                  <Check className="h-3.5 w-3.5 opacity-0" aria-hidden />
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border border-cyan-300/60 group-active:border-cyan-200 group-active:bg-cyan-400/15">
+                  <Check className="h-3.5 w-3.5 text-cyan-100 opacity-0 group-active:opacity-100" aria-hidden />
                 </span>
                 <span className="min-w-0 truncate">{t.title}</span>
               </button>

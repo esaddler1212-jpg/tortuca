@@ -7,7 +7,7 @@ const TOOL_LABELS: Record<string, string> = {
   add_todo: "to-dos",
   remember: "remember",
   forget: "forget",
-  open_planet: "open module",
+  open_module: "open module",
   track_flight: "flights",
 };
 

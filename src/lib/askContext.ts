@@ -21,7 +21,7 @@ export function buildAskContext(opts: {
   goals?: string[];
   desk?: { review: number; working: number };
   channels?: string | null;
-  solarPlanets?: string | null;
+  modules?: string | null;
   /** Inbox headlines, memos, money, gym, shopping (see shared/irisContext.ts). */
   extras?: string[];
 }): string {
@@ -60,7 +60,7 @@ export function buildAskContext(opts: {
     fpEvents ? `Plus ${fpEvents} Family Purpose calendar item${fpEvents === 1 ? "" : "s"}.` : "",
     opts.desk && opts.desk.review + opts.desk.working ? `Agent desk: ${opts.desk.review} need E's OK, ${opts.desk.working} with Claude.` : "",
     opts.channels ? opts.channels : "",
-    opts.solarPlanets ? `IRIS modules (open with open_planet): ${opts.solarPlanets}.` : "",
+    opts.modules ? `IRIS modules (open with open_module): ${opts.modules}.` : "",
     ...(opts.extras ?? []),
     opts.pulse ? `Bay Area: ${opts.pulse}.` : "",
     opts.spark ? `Today's creative spark: ${opts.spark.mindset} Prompt: ${opts.spark.prompt}` : "",

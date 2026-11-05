@@ -1,7 +1,5 @@
 /** Build Family Purpose woodhouse/v2 node from a Family Purpose backup export. */
 
-const FOLLOW_UP_WINDOW_HOURS = 48;
-
 export interface FpFollowUp {
   dueAt: string;
   completedAt?: string;
@@ -69,7 +67,7 @@ function dayKeyOfIso(iso: string, timeZone: string): string {
   return dayKey(new Date(iso), timeZone);
 }
 
-function startOfLocalDay(day: string, timeZone: string): string {
+function startOfLocalDay(day: string, _timeZone: string): string {
   return new Date(`${day}T12:00:00`).toISOString();
 }
 

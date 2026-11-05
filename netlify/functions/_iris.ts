@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { SOLAR_PLANET_IDS, solarPlanetContextForIris } from "../../shared/solarPlanets";
+import { HUD_MODULE_IDS, moduleContextForIris } from "../../shared/hudModules";
 
 /** Iris's brain: persona, tools, and one conversational turn (with web search). */
 
@@ -16,7 +16,7 @@ You are speaking out loud through a phone or computer speaker, in a back-and-for
 - Warm, sharp and direct, with a little wit, like a trusted chief of staff who knows the business inside out. Call him "boss" now and then (not every sentence); never "sir".
 - Use the "Right now" notes for anything about his day, schedule, weather, plans or goals. If something isn't in the notes, say you don't have it rather than guessing.
 - When E asks you to remember, add or remind him of something to do, call add_todo (one call per item) and confirm it briefly.
-- When E asks to open, show, pull up, or go to part of IRIS (today's list, plan, email channels, research, hub, meals, apps, vitals, ECS log), call open_planet with the best-matching module and say briefly that you're bringing it up.
+- When E asks to open, show, pull up, or go to part of IRIS (today's list, plan, inbox, drafts, research, hub, meals, apps, vitals, ECS log), call open_module with the best-matching module id and say briefly that you're bringing it up.
 - Never ask for or repeat students' names or personal details from Family Purpose; refer to "a student".
 - For news, scores, prices, store hours, events, people, or anything current you don't already know, use web_search; use web_fetch to read a specific page E names. Then answer in a sentence or two, naming the source out loud ("per KQED"), never reading URLs. Don't search for things in the "Right now" notes.
 - When E tells you something lasting about himself, his work or his preferences (routines, people by role, how he likes things), or says "remember", call remember with one short fact in third person ("E meets the $BAY sponsor every other Thursday"). When he says to forget something, call forget. Use what you remember naturally; don't recite the list. Never remember students' names or details, passwords, or account or card numbers.
@@ -56,21 +56,21 @@ export const TRACK_FLIGHT = {
   },
 };
 
-export const OPEN_PLANET = {
-  name: "open_planet",
+export const OPEN_MODULE = {
+  name: "open_module",
   description:
-    "Bring an IRIS console module to the front of the solar system UI. Use when E asks to open, show, or go to part of the app.",
+    "Bring an IRIS HUD module to the front (tab bar or More sheet). Use when E asks to open, show, or go to part of the app.",
   strict: true,
   input_schema: {
     type: "object" as const,
     properties: {
-      planet: {
+      module: {
         type: "string",
-        enum: SOLAR_PLANET_IDS,
-        description: `Module id. Hints: ${solarPlanetContextForIris()}`,
+        enum: HUD_MODULE_IDS,
+        description: `Module id. Hints: ${moduleContextForIris()}`,
       },
     },
-    required: ["planet"],
+    required: ["module"],
     additionalProperties: false,
   },
 };
@@ -162,7 +162,7 @@ export async function runIris(
   forget: string[];
   searched: boolean;
   refused: boolean;
-  planet: string | null;
+  module: string | null;
   usage: IrisTurnUsage;
 }> {
   const messages: Anthropic.Beta.BetaMessageParam[] = turns.map((t) => ({ role: t.role, content: t.content }));
@@ -171,7 +171,7 @@ export async function runIris(
   const remember: string[] = [];
   const forget: string[] = [];
   let searched = false;
-  let planet: string | null = null;
+  let module: string | null = null;
   const usage: IrisTurnUsage = { model: MODEL, inTok: 0, outTok: 0, cacheRead: 0, cacheWrite: 0, searches: 0, fetches: 0, tools: [], hops: 0 };
   for (let hop = 0; hop < 4; hop++) {
     const response = await client.beta.messages.create({
@@ -185,7 +185,7 @@ export async function runIris(
         { type: "text", text: `Right now:\n${context.slice(0, 8000)}` },
         ...(memory.length ? [{ type: "text" as const, text: `What you remember about E:\n${memory.map((m) => `- ${m}`).join("\n")}` }] : []),
       ],
-      tools: [ADD_TODO, OPEN_PLANET, ...(tools.trackFlight ? [TRACK_FLIGHT] : []), ...MEMORY_TOOLS, ...WEB_TOOLS],
+      tools: [ADD_TODO, OPEN_MODULE, ...(tools.trackFlight ? [TRACK_FLIGHT] : []), ...MEMORY_TOOLS, ...WEB_TOOLS],
       messages,
     });
     // Numbers only, for the usage log (never the words).
@@ -199,7 +199,7 @@ export async function runIris(
     usage.searches += u?.server_tool_use?.web_search_requests ?? 0;
     usage.fetches += u?.server_tool_use?.web_fetch_requests ?? 0;
     for (const b of response.content) if (b.type === "tool_use") usage.tools.push(b.name);
-    if (response.stop_reason === "refusal") return { reply: "", todos: [], remember: [], forget: [], searched, refused: true, planet: null, usage };
+    if (response.stop_reason === "refusal") return { reply: "", todos: [], remember: [], forget: [], searched, refused: true, module: null, usage };
     for (const b of response.content) {
       if (b.type === "text") texts.push(b.text);
       else if (b.type === "server_tool_use") searched = true;
@@ -214,9 +214,9 @@ export async function runIris(
         if (typeof i.title === "string" && i.title.trim()) {
           todos.push({ title: i.title.trim().slice(0, 140), due: i.due === "today" || i.due === "tomorrow" ? i.due : "none" });
         }
-      } else if (b.type === "tool_use" && b.name === "open_planet") {
-        const p = String((b.input as { planet?: unknown }).planet ?? "").trim();
-        if (SOLAR_PLANET_IDS.includes(p as (typeof SOLAR_PLANET_IDS)[number])) planet = p;
+      } else if (b.type === "tool_use" && b.name === "open_module") {
+        const id = String((b.input as { module?: unknown }).module ?? "").trim();
+        if (HUD_MODULE_IDS.includes(id as (typeof HUD_MODULE_IDS)[number])) module = id;
       }
     }
     const lookups = response.content.filter((b) => b.type === "tool_use" && b.name === "track_flight");
@@ -244,5 +244,5 @@ export async function runIris(
     // Long search: hand the partial turn back so Claude picks up where it left off.
     messages.push({ role: "assistant", content: response.content as Anthropic.Beta.BetaContentBlockParam[] });
   }
-  return { reply: forVoice(texts.join(" ")), todos, remember, forget, searched, refused: false, planet, usage };
+  return { reply: forVoice(texts.join(" ")), todos, remember, forget, searched, refused: false, module, usage };
 }

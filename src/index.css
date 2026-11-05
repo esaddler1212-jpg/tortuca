@@ -148,37 +148,6 @@
   .hud-tile {
     @apply rounded border border-cyan-400/15 bg-cyan-950/20 px-3 py-2;
   }
-
-  /* Mobile IRIS hub — concentric HUD rings (planets live in the dock below) */
-  .solar-hub-rings {
-    border-radius: 9999px;
-    border: 1px solid rgb(var(--accent-400) / 0.12);
-    box-shadow:
-      inset 0 0 40px rgb(var(--accent-500) / 0.08),
-      0 0 32px rgb(var(--accent-400) / 0.06);
-  }
-
-  .solar-hub-rings::before,
-  .solar-hub-rings::after {
-    content: "";
-    position: absolute;
-    inset: 12%;
-    border-radius: 9999px;
-    border: 1px dashed rgb(var(--accent-400) / 0.18);
-  }
-
-  .solar-hub-rings::after {
-    inset: 22%;
-    border-style: solid;
-    border-color: rgb(var(--accent-400) / 0.1);
-  }
-
-  .solar-dock {
-    @apply rounded-xl border border-cyan-500/20 bg-black/50 px-1 py-2 backdrop-blur-md;
-    box-shadow:
-      inset 0 1px 0 rgb(var(--accent-400) / 0.12),
-      0 0 24px rgb(var(--accent-400) / 0.06);
-  }
 }
 
 /* Bay Area Pulse map (Leaflet) */
