@@ -94,5 +94,14 @@ export interface AlfredUserData {
   liveCommute?: { minutes: number; text?: string; fetchedAt: string };
   /** Brand channel registry + outbound drafts (see shared/channels.ts). */
   channels?: unknown;
+  /** Iris specialist delegate log (cross-device dedupe); see shared/irisTeamActivity.ts */
+  irisDelegateHistory?: SyncedIrisDelegateLog[];
   updatedAt: string;
+}
+
+export interface SyncedIrisDelegateLog {
+  specialist: string;
+  at: string;
+  task?: string;
+  report?: string;
 }

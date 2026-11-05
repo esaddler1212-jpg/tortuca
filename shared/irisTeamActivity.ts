@@ -1,5 +1,6 @@
 import type { IrisSpecialistId } from "./irisTeam";
 import { IRIS_TEAM, specialistById } from "./irisTeam";
+import type { SyncedIrisDelegateLog } from "./userDataTypes";
 
 export interface IrisDelegateLog {
   specialist: IrisSpecialistId;
@@ -194,6 +195,51 @@ export function teamOpsContextForAsk(): string {
 }
 
 /** Parse delegate history sent from the client on /api/ask. */
+export function toSyncedDelegateLog(e: IrisDelegateLog): SyncedIrisDelegateLog {
+  return { specialist: e.specialist, at: e.at, task: e.task, report: e.report };
+}
+
+/** Merge account + device delegate logs (newest first, dedupe by specialist+at). */
+export function mergeDelegateHistories(
+  a: IrisDelegateLog[] | SyncedIrisDelegateLog[] | undefined,
+  b: IrisDelegateLog[] | SyncedIrisDelegateLog[] | undefined,
+): IrisDelegateLog[] {
+  const parseOne = (e: IrisDelegateLog | SyncedIrisDelegateLog): IrisDelegateLog | null => {
+    if (!e?.specialist || !e?.at) return null;
+    if (!specialistById(e.specialist as IrisSpecialistId)) return null;
+    return {
+      specialist: e.specialist as IrisSpecialistId,
+      at: e.at,
+      task: e.task,
+      report: e.report,
+    };
+  };
+  const byKey = new Map<string, IrisDelegateLog>();
+  for (const e of [...(a ?? []), ...(b ?? [])]) {
+    const p = parseOne(e);
+    if (!p) continue;
+    const k = `${p.specialist}:${p.at}`;
+    const prev = byKey.get(k);
+    if (!prev || ((p.report?.length ?? 0) > (prev.report?.length ?? 0))) byKey.set(k, p);
+  }
+  return [...byKey.values()]
+    .sort((x, y) => Date.parse(y.at) - Date.parse(x.at))
+    .slice(0, HISTORY_MAX);
+}
+
+/** Apply account delegate history to this device (cross-device dedupe). */
+export function hydrateDelegateHistoryFromAccount(remote: SyncedIrisDelegateLog[] | undefined): void {
+  if (typeof localStorage === "undefined" || !remote?.length) return;
+  const merged = mergeDelegateHistories(readDelegateHistory(), remote);
+  if (!merged.length) return;
+  try {
+    localStorage.setItem(LAST_KEY, JSON.stringify(merged[0]));
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(merged));
+  } catch {
+    /* private mode */
+  }
+}
+
 export function parseDelegateHistory(raw: unknown): IrisDelegateLog[] {
   if (!Array.isArray(raw)) return [];
   const out: IrisDelegateLog[] = [];

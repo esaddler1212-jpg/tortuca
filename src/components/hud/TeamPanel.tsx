@@ -14,16 +14,20 @@ import { formatDelegateAgo, readLastDelegate, teamEfficiencySummary, readDelegat
 interface Props {
   timeZone: string;
   onOpenModule: (id: HudModuleId) => void;
+  onAskSpecialist?: (id: IrisSpecialistId) => void;
 }
 
-export function TeamPanel({ timeZone, onOpenModule }: Props) {
+export function TeamPanel({ timeZone, onOpenModule, onAskSpecialist }: Props) {
   const [last, setLast] = useState<IrisDelegateLog | null>(() => readLastDelegate());
+  const [recent, setRecent] = useState<IrisDelegateLog[]>(() => readDelegateHistory().slice(0, 8));
   const [ops, setOps] = useState(() => teamEfficiencySummary(readDelegateHistory()));
 
   useEffect(() => {
     const sync = () => {
+      const hist = readDelegateHistory();
       setLast(readLastDelegate());
-      setOps(teamEfficiencySummary(readDelegateHistory()));
+      setRecent(hist.slice(0, 8));
+      setOps(teamEfficiencySummary(hist));
     };
     sync();
     window.addEventListener("storage", sync);
@@ -66,7 +70,7 @@ export function TeamPanel({ timeZone, onOpenModule }: Props) {
             {IRIS_TEAM.map((s) => (
               <li key={s.id} className="relative flex flex-col items-center">
                 <div className="absolute -top-4 left-1/2 h-4 w-px bg-cyan-400/20" aria-hidden />
-                <SpecialistCard specialist={s.id} onOpenModule={onOpenModule} />
+                <SpecialistCard specialist={s.id} onOpenModule={onOpenModule} onAskSpecialist={onAskSpecialist} />
               </li>
             ))}
           </ul>
@@ -94,6 +98,23 @@ export function TeamPanel({ timeZone, onOpenModule }: Props) {
         <p className="text-xs text-alfred-mist font-mono">No delegates yet — try &ldquo;Iris, have Scout research…&rdquo;</p>
       )}
 
+      {recent.length > 1 ? (
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-wider text-cyan-400/50 mb-2">Recent activity</p>
+          <ul className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+            {recent.map((e) => (
+              <li key={`${e.specialist}-${e.at}`} className="rounded border border-cyan-400/10 bg-black/20 px-2 py-1.5 text-xs">
+                <span className="font-mono" style={{ color: specialistById(e.specialist)?.color }}>
+                  {specialistLabel(e.specialist)}
+                </span>
+                <span className="text-cyan-400/50"> · {formatDelegateAgo(e.at, timeZone)}</span>
+                {e.task ? <p className="text-alfred-mist line-clamp-1 mt-0.5">&ldquo;{e.task}&rdquo;</p> : null}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
       <div className="space-y-2">
         <p className="font-mono text-[10px] uppercase tracking-wider text-cyan-400/50">Voice examples</p>
         <ul className="text-xs text-alfred-mist space-y-1 list-disc pl-4">
@@ -112,24 +133,37 @@ export function TeamPanel({ timeZone, onOpenModule }: Props) {
 function SpecialistCard({
   specialist,
   onOpenModule,
+  onAskSpecialist,
 }: {
   specialist: IrisSpecialistId;
   onOpenModule: (id: HudModuleId) => void;
+  onAskSpecialist?: (id: IrisSpecialistId) => void;
 }) {
   const s = specialistById(specialist);
   if (!s) return null;
   return (
-    <button
-      type="button"
-      className="hud-tile w-full text-left border-l-2 pl-2 transition hover:border-cyan-300/50"
-      style={{ borderLeftColor: s.color }}
-      onClick={() => onOpenModule(s.module)}
-    >
-      <p className="font-mono text-[10px] uppercase tracking-wide" style={{ color: s.color }}>
-        {s.name}
-      </p>
-      <p className="text-[10px] text-cyan-100/75 leading-snug">{s.title}</p>
-      <p className="text-[9px] text-cyan-400/45 mt-1">→ {moduleLabel(s.module)}</p>
-    </button>
+    <div className="w-full">
+      <button
+        type="button"
+        className="hud-tile w-full text-left border-l-2 pl-2 transition hover:border-cyan-300/50"
+        style={{ borderLeftColor: s.color }}
+        onClick={() => onOpenModule(s.module)}
+      >
+        <p className="font-mono text-[10px] uppercase tracking-wide" style={{ color: s.color }}>
+          {s.name}
+        </p>
+        <p className="text-[10px] text-cyan-100/75 leading-snug">{s.title}</p>
+        <p className="text-[9px] text-cyan-400/45 mt-1">→ {moduleLabel(s.module)}</p>
+      </button>
+      {onAskSpecialist ? (
+        <button
+          type="button"
+          className="mt-1 w-full text-[9px] font-mono uppercase tracking-wider text-cyan-400/60 hover:text-cyan-300"
+          onClick={() => onAskSpecialist(specialist)}
+        >
+          Ask Iris
+        </button>
+      ) : null}
+    </div>
   );
 }

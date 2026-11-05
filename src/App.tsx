@@ -64,6 +64,9 @@ import { GlassModule, HudTabBar, MoreSheet, type TabBadge } from "./components/h
 import { hudGauges } from "../shared/hudGauges";
 import { HUD_MORE, HUD_TABS, moduleContextForIris, type HudModuleId } from "../shared/hudModules";
 import { teamOpsContextForAsk } from "../shared/irisTeamActivity";
+import { shopifyContextForIris } from "../shared/shopify";
+import { specialistById } from "../shared/irisTeam";
+import { useShopifyStore } from "./hooks/useShopifyStore";
 import {
   LazyBusinessResearcherPanel,
   LazyChannelsPanel,
@@ -84,6 +87,7 @@ import {
   VitalsPanel,
 } from "./components/hud/HudPanels";
 import { TeamPanel } from "./components/hud/TeamPanel";
+import { EasySupplyStorePanel } from "./components/hud/EasySupplyStorePanel";
 import { InstallAppBanner } from "./components/InstallAppBanner";
 
 export default function App() {
@@ -97,6 +101,7 @@ export default function App() {
   const { allEvents } = useSchedule(connected);
   const { messages, unread, loading: emailsLoading, error: emailsError, refresh: refreshEmails } = useEmails(connected);
   const { snapshot: rawWoodhouse, loading: woodhouseLoading, error: woodhouseError } = useWoodhouse();
+  const { snapshot: shopifyStore, loading: shopifyLoading, error: shopifyError, reload: reloadShopify } = useShopifyStore(connected);
   // Workday vs off duty: Family Purpose tasks hide on weekends, holidays and after 7 PM.
   // Clock picks the mode; the header's Focus menu can override it until the next switch.
   const autoMode = dayMode(settings.timezone, now);
@@ -529,6 +534,7 @@ export default function App() {
                             }),
                             shoppingContext(shoppingItems),
                             teamOpsContextForAsk(),
+                            shopifyContextForIris(shopifyStore),
                           ].filter(Boolean);
                         })(),
                       }),
@@ -622,17 +628,36 @@ export default function App() {
         );
       case "apps":
         return (
-          <NetworkPanel
-            woodhouse={woodhouse}
-            loading={woodhouseLoading}
-            error={woodhouseError}
-            googleConnected={connected}
-            onConnectGoogle={() => void connect()}
-            onOpenTeam={() => focusModule("team")}
-          />
+          <>
+            <NetworkPanel
+              woodhouse={woodhouse}
+              loading={woodhouseLoading}
+              error={woodhouseError}
+              googleConnected={connected}
+              onConnectGoogle={() => void connect()}
+              onOpenTeam={() => focusModule("team")}
+            />
+            <EasySupplyStorePanel
+              snapshot={shopifyStore}
+              loading={shopifyLoading}
+              error={shopifyError}
+              onRetry={() => void reloadShopify()}
+            />
+          </>
         );
       case "team":
-        return <TeamPanel timeZone={settings.timezone} onOpenModule={focusModule} />;
+        return (
+          <TeamPanel
+            timeZone={settings.timezone}
+            onOpenModule={focusModule}
+            onAskSpecialist={(id) => {
+              const s = specialistById(id);
+              if (!s) return;
+              setIrisVoiceDeckOpen(true);
+              convo.send(`Have ${s.name} ${s.delegateWhen.split(".")[0]}.`);
+            }}
+          />
+        );
       case "today":
         return (
           <>

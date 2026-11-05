@@ -12,6 +12,8 @@ import {
   type IrisDelegateLog,
 } from "../../shared/irisTeamActivity";
 import { runBusinessResearch } from "./_businessResearch";
+import { createScribeDraft } from "./_scribeDraft";
+import { resolveDataKey } from "./_userData";
 import {
   appendHubMemo,
   incrementResearchUsage,
@@ -56,6 +58,7 @@ export async function consultSpecialist(
     timeZone: string;
     area?: string;
     delegateHistory?: IrisDelegateLog[];
+    sessionEmail?: string;
   },
 ): Promise<SpecialistConsultResult> {
   const def = specialistById(input.specialist);
@@ -164,13 +167,16 @@ export async function consultSpecialist(
         module: "inbox",
         memoSaved: false,
       };
-    case "scribe":
+    case "scribe": {
+      const key = await resolveDataKey(input.sessionId);
+      const draft = await createScribeDraft(key, input.sessionEmail, task, input.context);
       return {
         specialist: "scribe",
-        summary: `Scribe says: open Drafts for this — ${task}. Pick the brand channel, edit the draft, then approve send. Iris can't send mail herself.`,
+        summary: draft.summary,
         module: "channels",
         memoSaved: false,
       };
+    }
     case "navigator":
       return {
         specialist: "navigator",
@@ -188,7 +194,7 @@ export async function consultSpecialist(
     case "wire":
       return {
         specialist: "wire",
-        summary: `Wire on Woodhouse and connected apps: ${excerptContext(input.context, /\b(woodhouse|apps?|network|node|sync|connect|online|offline|family purpose)\b/i)}`,
+        summary: `Wire on Woodhouse, Shopify, and connected apps: ${excerptContext(input.context, /\b(woodhouse|shopify|easy supply|commerce|store|order|fulfill|apps?|network|node|sync|connect|online|offline|family purpose)\b/i)}`,
         module: "apps",
         memoSaved: false,
       };
