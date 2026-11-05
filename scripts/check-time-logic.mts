@@ -20,7 +20,7 @@ import * as Hub from "../shared/hub.ts";
 import * as Usage from "../shared/irisUsage.ts";
 import { matchModuleFromSpeech, HUD_TABS, HUD_MORE, HUD_MODULE_IDS } from "../shared/hudModules.ts";
 import { IRIS_TEAM, teamCoverageOk } from "../shared/irisTeam.ts";
-import { teamEfficiencySummary, type IrisDelegateLog } from "../shared/irisTeamActivity.ts";
+import { teamEfficiencySummary, findDuplicateDelegate, duplicateBlockedMessage, type IrisDelegateLog } from "../shared/irisTeamActivity.ts";
 import { hudGauges } from "../shared/hudGauges.ts";
 import { commuteMinutesFor, inCommuteWindow } from "../shared/commute.ts";
 import * as IC from "../shared/irisContext.ts";
@@ -398,10 +398,17 @@ check(
   check("iris team: woodhouse owns team module", IRIS_TEAM.find((s) => s.id === "woodhouse")?.module, "team");
   {
     const hist: IrisDelegateLog[] = [
-      { specialist: "scout", at: new Date().toISOString(), task: "brief on Bay Area doc sponsors" },
+      { specialist: "scout", at: new Date().toISOString(), task: "brief on Bay Area doc sponsors", report: "Prior scout brief summary." },
       { specialist: "scout", at: new Date(Date.now() - 3600_000).toISOString(), task: "research Bay Area documentary sponsors" },
     ];
     check("woodhouse: flags similar duplicate delegates", teamEfficiencySummary(hist).includes("Duplicate risk"), true);
+    const blocked = findDuplicateDelegate(hist, "scout", "brief on Bay Area doc sponsors again");
+    check("duplicate: blocks repeat scout within window", Boolean(blocked && blocked.report?.includes("Prior")), true);
+    check(
+      "duplicate: blocked message tells Iris to relay only",
+      duplicateBlockedMessage(hist[0], "America/Los_Angeles").includes("DUPLICATE BLOCKED"),
+      true,
+    );
   }
   check("iris team: scout opens research module", IRIS_TEAM.find((s) => s.id === "scout")?.module, "research");
   check("iris team: ledger owns today", IRIS_TEAM.find((s) => s.id === "ledger")?.module, "today");

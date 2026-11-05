@@ -189,7 +189,7 @@ export async function runIris(
       task: string;
       query?: string;
       area?: string;
-    }) => Promise<{ summary: string; module: string | null; specialist: IrisSpecialistId }>;
+    }) => Promise<{ summary: string; module: string | null; specialist: IrisSpecialistId; deduped?: boolean }>;
   } = {},
 ): Promise<{
   reply: string;
@@ -200,6 +200,8 @@ export async function runIris(
   refused: boolean;
   module: string | null;
   specialist: IrisSpecialistId | null;
+  delegateReport: string | null;
+  delegateDeduped: boolean;
   usage: IrisTurnUsage;
 }> {
   const messages: Anthropic.Beta.BetaMessageParam[] = turns.map((t) => ({ role: t.role, content: t.content }));
@@ -210,6 +212,8 @@ export async function runIris(
   let searched = false;
   let module: string | null = null;
   let specialist: IrisSpecialistId | null = null;
+  let delegateReport: string | null = null;
+  let delegateDeduped = false;
   const usage: IrisTurnUsage = { model: MODEL, inTok: 0, outTok: 0, cacheRead: 0, cacheWrite: 0, searches: 0, fetches: 0, tools: [], hops: 0 };
   for (let hop = 0; hop < 5; hop++) {
     const response = await client.beta.messages.create({
@@ -246,7 +250,7 @@ export async function runIris(
     usage.fetches += u?.server_tool_use?.web_fetch_requests ?? 0;
     for (const b of response.content) if (b.type === "tool_use") usage.tools.push(b.name);
     if (response.stop_reason === "refusal") {
-      return { reply: "", todos: [], remember: [], forget: [], searched, refused: true, module: null, specialist: null, usage };
+      return { reply: "", todos: [], remember: [], forget: [], searched, refused: true, module: null, specialist: null, delegateReport: null, delegateDeduped: false, usage };
     }
     for (const b of response.content) {
       if (b.type === "text") texts.push(b.text);
@@ -300,7 +304,12 @@ export async function runIris(
               });
               content = r.summary;
               if (r.module && HUD_MODULE_IDS.includes(r.module as (typeof HUD_MODULE_IDS)[number])) module = r.module;
-              specialist = r.specialist;
+              if (r.deduped) {
+                delegateDeduped = true;
+              } else {
+                specialist = r.specialist;
+                delegateReport = r.summary.slice(0, 800);
+              }
             } catch {
               content = "That specialist couldn't finish right now.";
             }
@@ -315,5 +324,5 @@ export async function runIris(
     // Long search: hand the partial turn back so Claude picks up where it left off.
     messages.push({ role: "assistant", content: response.content as Anthropic.Beta.BetaContentBlockParam[] });
   }
-  return { reply: forVoice(texts.join(" ")), todos, remember, forget, searched, refused: false, module, specialist, usage };
+  return { reply: forVoice(texts.join(" ")), todos, remember, forget, searched, refused: false, module, specialist, delegateReport, delegateDeduped, usage };
 }

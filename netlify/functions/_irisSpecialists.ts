@@ -4,7 +4,13 @@ import {
   IRIS_TEAM,
   specialistById,
 } from "../../shared/irisTeam";
-import { teamEfficiencySummary } from "../../shared/irisTeamActivity";
+import {
+  duplicateBlockedMessage,
+  findDuplicateDelegate,
+  findOverlappingDelegate,
+  teamEfficiencySummary,
+  type IrisDelegateLog,
+} from "../../shared/irisTeamActivity";
 import { runBusinessResearch } from "./_businessResearch";
 import {
   appendHubMemo,
@@ -18,6 +24,7 @@ export interface SpecialistConsultResult {
   summary: string;
   module: string | null;
   memoSaved: boolean;
+  deduped?: boolean;
 }
 
 function excerptContext(context: string, keywords: RegExp, max = 1200): string {
@@ -48,6 +55,7 @@ export async function consultSpecialist(
     who: string;
     timeZone: string;
     area?: string;
+    delegateHistory?: IrisDelegateLog[];
   },
 ): Promise<SpecialistConsultResult> {
   const def = specialistById(input.specialist);
@@ -63,6 +71,30 @@ export async function consultSpecialist(
   const task = input.task.trim().slice(0, 500);
   if (!task) {
     return { specialist: input.specialist, summary: "Need a clear task for the team.", module: def.module, memoSaved: false };
+  }
+
+  const history = input.delegateHistory ?? [];
+  if (input.specialist !== "woodhouse") {
+    const prior = findDuplicateDelegate(history, input.specialist, task);
+    if (prior) {
+      return {
+        specialist: input.specialist,
+        summary: duplicateBlockedMessage(prior, input.timeZone, false),
+        module: def.module,
+        memoSaved: false,
+        deduped: true,
+      };
+    }
+    const overlap = findOverlappingDelegate(history, task, input.specialist);
+    if (overlap) {
+      return {
+        specialist: overlap.specialist,
+        summary: duplicateBlockedMessage(overlap, input.timeZone, true),
+        module: specialistById(overlap.specialist)?.module ?? def.module,
+        memoSaved: false,
+        deduped: true,
+      };
+    }
   }
 
   switch (input.specialist) {
