@@ -201,6 +201,7 @@ ok("Hub passes stocks props", appTs.includes("stocks={stocks}"));
 ok("AGENTS.md guardrails doc", fs.existsSync(path.join(root, "AGENTS.md")));
 ok("shared agentGuardrails module", fs.existsSync(path.join(root, "shared/agentGuardrails.ts")));
 ok("Iris team prompt includes guardrails", read("shared/irisTeam.ts").includes("agentGuardrailsPrompt"));
+ok("thin programming policy module", fs.existsSync(path.join(root, "shared/thinProgrammingPolicy.ts")));
 
 for (const id of ["today", "inbox", "plan", "hub", "meal", "research", "channels"] as const) {
   ok(`lazy prefetch: ${id}`, read("src/lazyModules.tsx").includes(`${id}:`));

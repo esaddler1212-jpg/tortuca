@@ -38,5 +38,18 @@ This repo runs **Iris** (voice chief of staff), **eleven module specialists** (`
 
 ```bash
 npm run test:guardrails   # limits + safeFact + wiring checks
-npm run test:os           # full gate including guardrails
+npm run test:thin         # thin programming auditor (auth, parsing, client API wiring)
+npm run test:os           # full gate including guardrails + thin auditor
 ```
+
+## Thin programming auditor
+
+`npm run test:thin` is the **static agent** that hunts implementation holes before they ship:
+
+- Private Netlify handlers missing session checks or safe `JSON.parse` on bodies
+- Live `/api/stocks` (Finnhub) callable without a signed-in session
+- Client `/api/*` calls that omit `authHeaders()`
+- Missing scheduled functions, `.env` in gitignore, secrets referenced from client code
+- Dangerous DOM patterns in the app shell
+
+Policy lists live in `shared/thinProgrammingPolicy.ts` — update when you add routes.
