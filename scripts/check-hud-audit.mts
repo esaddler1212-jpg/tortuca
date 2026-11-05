@@ -17,10 +17,12 @@ import {
   duplicateBlockedMessage,
   findDuplicateDelegate,
   findOverlappingDelegate,
+  mergeDelegateHistories,
   parseDelegateHistory,
   tasksSimilar,
   type IrisDelegateLog,
 } from "../shared/irisTeamActivity.ts";
+import { shopifyContextForIris, shopifyReadiness } from "../shared/shopify.ts";
 import { consultSpecialist, specialistEnumForTool } from "../netlify/functions/_irisSpecialists.ts";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -81,6 +83,16 @@ ok(
   "duplicateBlockedMessage prefix",
   duplicateBlockedMessage(hist[0], "America/Los_Angeles").startsWith(DUPLICATE_BLOCKED_PREFIX),
 );
+ok(
+  "mergeDelegateHistories keeps newest report",
+  mergeDelegateHistories(
+    [{ specialist: "scribe", at: "2026-11-01T12:00:00Z", task: "draft", report: "short" }],
+    [{ specialist: "scribe", at: "2026-11-01T12:00:00Z", task: "draft", report: "longer report" }],
+  )[0]?.report === "longer report",
+);
+
+ok("shopify context when unconfigured", shopifyContextForIris({ configured: false, products: [], openOrders: [] }).includes("not connected"));
+ok("shopify readiness lists gaps", shopifyReadiness({ configured: false, products: [], openOrders: [] }).ready === false);
 
 // ── App wiring ─────────────────────────────────────────────────────────
 const appTs = read("src/App.tsx");
@@ -90,6 +102,11 @@ for (const id of HUD_MODULE_IDS) {
 ok("home stack has no CommandBar", !/CommandBar/.test(appTs));
 ok("home has HudCore + UpNext", /HudCore/.test(appTs) && /UpNextPanel/.test(appTs));
 ok("ask context includes teamOpsContextForAsk", appTs.includes("teamOpsContextForAsk()"));
+ok("ask context includes shopify", appTs.includes("shopifyContextForIris"));
+ok("Apps module: Easy Supply Shopify panel", appTs.includes("EasySupplyStorePanel"));
+ok("user-data merges irisDelegateHistory", read("netlify/functions/user-data.ts").includes("mergeDelegateHistories"));
+ok("Scribe creates drafts server-side", read("netlify/functions/_irisSpecialists.ts").includes("createScribeDraft"));
+ok("shopify-store function exists", fs.existsSync(path.join(root, "netlify/functions/shopify-store.ts")));
 
 const convoTs = read("src/hooks/useConversation.ts");
 ok("client sends delegateHistory on ask", convoTs.includes("delegateHistory: readDelegateHistory()"));

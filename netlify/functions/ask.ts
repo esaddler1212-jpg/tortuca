@@ -8,7 +8,9 @@ import { consultSpecialist } from "./_irisSpecialists";
 import { lookupFlight } from "./_flight";
 import { recordUsage } from "./_irisUsage";
 import type { IrisTrace } from "../../shared/irisUsage";
-import { parseDelegateHistory } from "../../shared/irisTeamActivity";
+import type { IrisSpecialistId } from "../../shared/irisTeam";
+import { isIrisSpecialistId } from "../../shared/irisTeam";
+import { parseDelegateHistory, mergeDelegateHistories, toSyncedDelegateLog } from "../../shared/irisTeamActivity";
 import { loadUserData, resolveDataKey, saveUserData } from "./_userData";
 
 /**
@@ -68,9 +70,10 @@ export const handler: Handler = async (event) => {
   try {
     // Iris's memory lives with the account's data (shared by phone and computer).
     const key = await resolveDataKey(sessionId);
-    const memory = ((await loadUserData(key))?.irisMemory ?? []).map((m) => m.fact);
+    const accountData = await loadUserData(key);
+    const memory = (accountData?.irisMemory ?? []).map((m) => m.fact);
     const here = coords({ lat: String(body.lat ?? ""), lon: String(body.lon ?? "") });
-    const delegateHistory = parseDelegateHistory(body.delegateHistory);
+    const delegateHistory = mergeDelegateHistories(accountData?.irisDelegateHistory, parseDelegateHistory(body.delegateHistory));
     const { reply: text, todos, remember, forget, refused, module, specialist, delegateReport, delegateDeduped, usage } = await runIris(
       client,
       turns,
@@ -86,6 +89,7 @@ export const handler: Handler = async (event) => {
             who,
             timeZone: tz,
             delegateHistory,
+            sessionEmail: session.email ?? undefined,
           });
           return { summary: r.summary, module: r.module, specialist: r.specialist, deduped: r.deduped };
         },
@@ -103,6 +107,18 @@ export const handler: Handler = async (event) => {
       }
       facts = facts.slice(-60);
       await saveUserData(key, { ...latest, irisMemory: facts });
+    }
+    if (specialist && !delegateDeduped && isIrisSpecialistId(specialist)) {
+      const latest = (await loadUserData(key)) ?? { updatedAt: new Date().toISOString() };
+      const lastUser = [...turns].reverse().find((t) => t.role === "user")?.content ?? "";
+      const entry = toSyncedDelegateLog({
+        specialist: specialist as IrisSpecialistId,
+        at: new Date().toISOString(),
+        task: lastUser.slice(0, 500),
+        report: delegateReport?.slice(0, 800),
+      });
+      const irisDelegateHistory = mergeDelegateHistories(latest.irisDelegateHistory, [entry]);
+      await saveUserData(key, { ...latest, irisDelegateHistory });
     }
     const reply =
       text ||

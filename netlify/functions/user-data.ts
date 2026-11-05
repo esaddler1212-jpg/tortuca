@@ -2,6 +2,7 @@ import type { Handler } from "@netlify/functions";
 import { getValidSession, initBlobs, sessionHeader } from "./_shared";
 import { loadUserData, mergeSubs, pushTargets, resolveDataKey, saveUserData } from "./_userData";
 import type { AlfredUserData } from "../../shared/userDataTypes";
+import { mergeDelegateHistories } from "../../shared/irisTeamActivity";
 
 export const handler: Handler = async (event) => {
   initBlobs(event);
@@ -38,6 +39,9 @@ export const handler: Handler = async (event) => {
       ...incoming,
       settings: incoming.settings ? { ...existing.settings, ...incoming.settings } : existing.settings,
       todos: incoming.todos ?? existing.todos,
+      irisDelegateHistory: incoming.irisDelegateHistory
+        ? mergeDelegateHistories(existing.irisDelegateHistory, incoming.irisDelegateHistory)
+        : existing.irisDelegateHistory,
       pushSubscription:
         incoming.pushSubscription !== undefined ? incoming.pushSubscription : existing.pushSubscription,
       // Add this device to the list instead of replacing the other devices.

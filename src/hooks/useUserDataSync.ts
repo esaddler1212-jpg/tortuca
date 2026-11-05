@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import type { UserSettings, TodoItem, FitnessLog, ShoppingItem } from "../types";
-import { fetchUserData, syncSettings, syncTodos } from "../lib/userData";
+import { fetchUserData, syncSettings, syncTodos, toSyncedSettings } from "../lib/userData";
 import { saveJson, TODOS_KEY } from "../lib/storage";
 import { onRemoteData, startRemoteSync } from "../lib/remoteSync";
-import { toSyncedSettings } from "../lib/userData";
+import { hydrateDelegateHistoryFromAccount } from "../../shared/irisTeamActivity";
 
 export function useUserDataSync(
   settings: UserSettings,
@@ -39,6 +39,7 @@ export function useUserDataSync(
       }
       if (remote.fitnessLogs) cur.onFitnessLoad?.(remote.fitnessLogs);
       if (remote.shoppingList) cur.onShoppingLoad?.(remote.shoppingList);
+      if (remote.irisDelegateHistory?.length) hydrateDelegateHistoryFromAccount(remote.irisDelegateHistory);
     });
   }, [setTodos]);
 
@@ -64,6 +65,9 @@ export function useUserDataSync(
       }
       if (remote.shoppingList?.length) {
         onShoppingLoad?.(remote.shoppingList);
+      }
+      if (remote.irisDelegateHistory?.length) {
+        hydrateDelegateHistoryFromAccount(remote.irisDelegateHistory);
       }
       setSynced(true);
     })();
