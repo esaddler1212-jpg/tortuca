@@ -198,6 +198,8 @@ ok("ask requires session", askTs.includes("getValidSession") || askTs.includes("
 ok("useStocks hits /api/stocks", read("src/hooks/useStocks.ts").includes('"/api/stocks"'));
 ok("Morning brief can use stocks", read("src/lib/stocksBriefing.ts").includes("stocksBriefingLines"));
 ok("Hub passes stocks props", appTs.includes("stocks={stocks}"));
+ok("Today: IrisTalkBox beside Do today", appTs.includes("IrisTalkBox") && read("src/components/TodayCommandCenter.tsx").includes("irisTalk"));
+ok("Today desktop hides bottom Iris dock", read("src/index.css").includes("iris-dock--today-inline-lg"));
 
 for (const id of ["today", "inbox", "plan", "hub", "meal", "research", "channels"] as const) {
   ok(`lazy prefetch: ${id}`, read("src/lazyModules.tsx").includes(`${id}:`));
