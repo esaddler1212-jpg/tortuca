@@ -528,6 +528,9 @@ export default function App() {
     onOpenModule: focusModule,
   });
 
+  const irisCinemaVisible =
+    !moreOpen && (activeModule !== null || convo.active || convo.pendingGreeting);
+
   // Iris's ring: the centre of the HUD (tap to talk). Same ring in the full and compact core.
   const coreRing = (
     <CoreRing
@@ -750,7 +753,7 @@ export default function App() {
       />
 
       <main
-        className={`mx-auto px-4 py-4 space-y-4 ${activeModule ? "hud-with-iris-dock max-w-[1100px]" : "hud-with-tabbar max-w-[560px]"}`}
+        className={`mx-auto px-4 py-4 space-y-4 ${irisCinemaVisible ? "hud-with-iris-dock" : "hud-with-tabbar"} ${activeModule ? "max-w-[1100px]" : "max-w-[560px]"}`}
       >
         {activeModule ? (
           <>
@@ -763,7 +766,7 @@ export default function App() {
         ) : (
           <>
             <HudCore gauges={gauges} core={coreRing} onOpen={(id) => focusModule(id)} />
-            <ConversationCaptions convo={convo} googleConnected={connected} />
+            {!irisCinemaVisible ? <ConversationCaptions convo={convo} googleConnected={connected} /> : null}
             <UrgentLine items={urgentItems} />
             <CommandBar
               variant="hud"
@@ -792,9 +795,15 @@ export default function App() {
         )}
       </main>
 
-      <IrisDock show={activeModule !== null} core={coreRing} convo={convo} googleConnected={connected} />
+      <IrisDock show={irisCinemaVisible} convo={convo} googleConnected={connected} />
 
-      <MoreSheet open={moreOpen} badges={badges} onPick={focusModule} onClose={() => setMoreOpen(false)} irisDockVisible={activeModule !== null} />
+      <MoreSheet
+        open={moreOpen}
+        badges={badges}
+        onPick={focusModule}
+        onClose={() => setMoreOpen(false)}
+        irisDockVisible={activeModule !== null || convo.active || convo.pendingGreeting}
+      />
       <HudTabBar active={activeModule} moreOpen={moreOpen} badges={badges} onTab={onTab} onMore={() => setMoreOpen((o) => !o)} />
 
       <MorningRitualModal
