@@ -3,7 +3,7 @@ import type { Handler } from "@netlify/functions";
 import { getStore } from "@netlify/blobs";
 import { getValidSession, initBlobs, sessionHeader } from "./_shared";
 import { dayKey } from "../../shared/timezone";
-import { researchMemoTitle, type BusinessResearchRequest } from "../../shared/businessResearch";
+import { researchMemoTitle, type BusinessResearchRequest, type ResearchTemplate } from "../../shared/businessResearch";
 import { runBusinessResearch } from "./_businessResearch";
 import { loadUserData, resolveDataKey, saveUserData } from "./_userData";
 import { EMPTY_HUB, type HubState, type Memo } from "../../shared/hub";
@@ -46,6 +46,11 @@ export const handler: Handler = async (event) => {
   const query = queryRaw || combined;
 
   const area = typeof body.area === "string" && body.area.trim() ? body.area.trim() : "General";
+  const allowedTemplates: ResearchTemplate[] = ["brief", "competitive", "grant", "evidence"];
+  const template =
+    typeof body.template === "string" && allowedTemplates.includes(body.template as ResearchTemplate)
+      ? (body.template as ResearchTemplate)
+      : undefined;
 
   const usage = getStore({ name: "alfred-research-usage" });
   const who = (session.email ?? sessionId).toLowerCase();
@@ -57,7 +62,12 @@ export const handler: Handler = async (event) => {
 
   const client = new Anthropic({ timeout: 22_000, maxRetries: 0 });
   try {
-    const { title, report, searched, refused } = await runBusinessResearch(client, { query, area, context });
+    const { title, report, searched, refused } = await runBusinessResearch(client, {
+      query,
+      area,
+      context,
+      template,
+    });
     if (refused || !report) {
       return json(422, { error: "Could not complete that research request. Try rephrasing.", searched });
     }
