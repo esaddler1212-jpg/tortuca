@@ -20,7 +20,7 @@ its own README, build, and (typically) its own Netlify site.
 npm install
 npm run dev
 npx netlify dev   # Woodhouse aggregator + Google OAuth
-npm run test:os   # build + time + iris + research + HUD/OS audit (modules, specialists, pulse map, delegate dedupe)
+npm run test:os   # build + time + iris + research + HUD/OS audit (~128 checks: modules, team, shopify, markets, dedupe, APIs)
 # or: npm run build && npm run test:time && npm run test:iris && npm run test:research && npm run test:audit
 ```
 
