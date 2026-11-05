@@ -133,7 +133,7 @@ export default function App() {
     },
     [bizResearch, updateHub],
   );
-  const { pulse, error: pulseError } = usePulse(settings.latitude, settings.longitude);
+  const { pulse, error: pulseError, loading: pulseLoading, reload: reloadPulse } = usePulse(settings.latitude, settings.longitude);
   const { items: shoppingItems, add: addShopping, togglePantry, remove: removeShopping, loadRemote: loadShopping } = useShoppingList();
   const { plan, toggleTask: togglePlanTask, addTask: addPlanTask, removeTask: removePlanTask, setGoals: setPlanGoals, setHandoff, setBudget, toggleSpark, shuffleSpark, noteSpark } = usePlan();
 
@@ -447,8 +447,8 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (activeModule === "inbox" && connected) void refreshEmails();
-  }, [activeModule, connected, refreshEmails]);
+    if (activeModule === "vitals") void reloadPulse();
+  }, [activeModule, reloadPulse]);
 
   /** Tapping the open tab again closes it. */
   const onTab = useCallback((id: HudModuleId) => (activeModule === id && !moreOpen ? closeModule() : focusModule(id)), [activeModule, moreOpen, closeModule, focusModule]);
@@ -582,10 +582,18 @@ export default function App() {
       case "vitals":
         return (
           <>
-            <VitalsPanel weather={weather} city={settings.city} fitness={fitnessStatus} />
+            <VitalsPanel
+              weather={weather}
+              weatherLoading={weatherLoading}
+              weatherError={weatherError}
+              city={settings.city}
+              fitness={fitnessStatus}
+            />
             <PulsePanel
               pulse={pulse}
+              loading={pulseLoading}
               error={pulseError}
+              onRetry={() => void reloadPulse()}
               city={settings.city}
               lat={settings.latitude}
               lon={settings.longitude}
@@ -606,11 +614,20 @@ export default function App() {
             timeZone={settings.timezone}
             onRefresh={() => void refreshEmails()}
             onConnectGoogle={() => void connect()}
+            onOpenDrafts={() => focusModule("channels")}
             onAddTodo={(title) => add(title)}
           />
         );
       case "apps":
-        return <NetworkPanel woodhouse={woodhouse} googleConnected={connected} />;
+        return (
+          <NetworkPanel
+            woodhouse={woodhouse}
+            loading={woodhouseLoading}
+            error={woodhouseError}
+            googleConnected={connected}
+            onConnectGoogle={() => void connect()}
+          />
+        );
       case "today":
         return (
           <>
@@ -724,6 +741,7 @@ export default function App() {
             mode={mode}
             timeZone={settings.timezone}
             googleConnected={connected}
+            onConnectGoogle={() => void connect()}
             onAddTodo={(title) => add(title)}
             onLogWorkout={logWorkout}
             workoutLoggedToday={fitnessLogs.some((l) => l.date === today)}

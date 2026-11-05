@@ -20,20 +20,38 @@ const fmtTime = (iso: string, timeZone: string) => {
 
 export function VitalsPanel({
   weather,
+  weatherLoading = false,
+  weatherError = null,
   city,
   fitness,
 }: {
   weather: WeatherSnapshot | null;
+  weatherLoading?: boolean;
+  weatherError?: string | null;
   city: string;
   fitness: FitnessStatus;
 }) {
   const weekTotal = Object.values(fitness.weekCounts).reduce((a, b) => a + b, 0);
+  const weatherLine = weatherLoading
+    ? "…"
+    : weatherError
+      ? "--"
+      : weather
+        ? `${Math.round(weather.temperature)}°`
+        : "--";
+  const weatherSub = weatherLoading
+    ? "Loading weather"
+    : weatherError
+      ? "Try again soon"
+      : weather
+        ? weatherLabel(weather.weatherCode)
+        : "No data";
   return (
     <HudFrame title="Vitals" tag={city}>
       <p className="font-mono text-[11px] uppercase tracking-widest text-cyan-400/50">Outside</p>
       <p className="font-display text-3xl text-cyan-300 hud-glow-text">
-        {weather ? `${Math.round(weather.temperature)}°` : "--"}
-        <span className="ml-2 font-mono text-xs text-cyan-100/70">{weather ? weatherLabel(weather.weatherCode) : "No data"}</span>
+        {weatherLine}
+        <span className="ml-2 font-mono text-xs text-cyan-100/70">{weatherSub}</span>
       </p>
       <div className="grid grid-cols-2 gap-2 mt-3">
         <div className="hud-tile">
@@ -56,15 +74,29 @@ export function VitalsPanel({
 
 export function NetworkPanel({
   woodhouse,
+  loading = false,
+  error = null,
   googleConnected,
+  onConnectGoogle,
 }: {
   woodhouse: WoodhouseOrchestrationSnapshot | null;
+  loading?: boolean;
+  error?: string | null;
   googleConnected: boolean;
+  onConnectGoogle?: () => void;
 }) {
   const nodes = woodhouse?.nodes ?? [];
   const online = nodes.filter((n) => n.ok).length;
   return (
-    <HudFrame title="Network" tag={`Woodhouse ${online}/${nodes.length}`}>
+    <HudFrame title="Woodhouse" tag={loading ? "Syncing…" : `${online}/${nodes.length} online`}>
+      {loading && !nodes.length ? (
+        <p className="py-6 text-center font-mono text-[11px] uppercase tracking-wider text-cyan-400/50 animate-pulse">
+          Syncing apps…
+        </p>
+      ) : null}
+      {error && !nodes.length ? (
+        <p className="text-sm text-amber-200/90 mb-2">{error}</p>
+      ) : null}
       <ul className="space-y-1.5 font-mono text-xs">
         {nodes.map((n) => (
           <li key={n.registryId} className="flex items-center justify-between gap-2">
@@ -107,6 +139,11 @@ export function NetworkPanel({
           )}
         </li>
       </ul>
+      {!googleConnected && onConnectGoogle ? (
+        <button type="button" className="btn-gold mt-3 w-full text-xs sm:w-auto" onClick={onConnectGoogle}>
+          Connect Google
+        </button>
+      ) : null}
     </HudFrame>
   );
 }
@@ -180,7 +217,7 @@ export function LogPanel({
             <span className={l.tone === "alert" ? "text-amber-200/90" : "text-cyan-100/85"}>{l.text}</span>
           </li>
         ))}
-        {!lines.length && <li className="text-cyan-400/50">[--:--] ALL QUIET</li>}
+        {!lines.length && <li className="text-cyan-400/50">Nothing on the log right now.</li>}
       </ul>
     </HudFrame>
   );

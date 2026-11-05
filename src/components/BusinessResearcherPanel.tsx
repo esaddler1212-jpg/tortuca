@@ -45,9 +45,7 @@ export function BusinessResearcherPanel({ googleConnected, loading, error, last,
           </button>
         </div>
       ) : (
-        <p className="text-xs text-cyan-400/55 font-mono">
-          Needs Google sign-in + Anthropic on Netlify. Runs on alfred2.netlify.app (not localhost-only Vite).
-        </p>
+        <p className="text-xs text-cyan-400/55 font-mono">Saved to Hub memos on your account · up to 8 runs per day.</p>
       )}
 
       <div className="flex flex-wrap gap-2">

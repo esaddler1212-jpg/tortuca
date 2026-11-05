@@ -51,25 +51,14 @@ export function ChannelsPanel({
   };
 
   return (
-    <details className="panel-hud p-5 group channels-panel-dropdown">
-      <summary className="cursor-pointer list-none flex items-center justify-between gap-3 text-left [&::-webkit-details-marker]:hidden">
-        <span className="hud-label flex items-center gap-2">
-          <Mail className="h-4 w-4" aria-hidden /> Channel agents
-        </span>
-        {pending.length ? (
-          <span className="rounded-full border border-alfred-gold/50 bg-alfred-gold/10 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider text-alfred-gold">
-            {pending.length} need OK
-          </span>
-        ) : (
-          <span className="text-[10px] font-mono uppercase tracking-wider text-alfred-mist group-open:hidden">Expand</span>
-        )}
-      </summary>
-
-      <div className="mt-4 space-y-5 border-t border-alfred-border/50 pt-4">
+    <section className="panel-hud p-5 space-y-5 channels-panel">
       <div>
+        <p className="hud-label flex items-center gap-2 mb-2">
+          <Mail className="h-4 w-4" aria-hidden /> Outbound by brand
+        </p>
         <p className="text-sm text-alfred-mist">
-          One lane per business. Iris routes outbound mail; you approve before anything sends. Each From address must be
-          set up as Send mail as on your Google account.
+          One lane per business. Iris routes drafts; you approve before anything sends. Each From address must be set up
+          as Send mail as on your Google account.
         </p>
         {!googleConnected ? (
           <button type="button" className="btn-gold mt-3 text-xs" onClick={onConnectGoogle}>
@@ -79,6 +68,57 @@ export function ChannelsPanel({
           <p className="text-xs text-alfred-mist mt-2 font-mono">Primary account: {accountEmail}</p>
         ) : null}
       </div>
+
+      {pending.length > 0 ? (
+        <div className="rounded-md border border-alfred-gold/40 bg-alfred-gold/5 px-3 py-2 space-y-3">
+          <p className="text-xs font-mono uppercase tracking-wider text-alfred-gold">Needs your OK ({pending.length})</p>
+          {sendError ? (
+            <p className="text-sm text-red-400" role="alert">
+              {sendError}
+            </p>
+          ) : null}
+          {pending.map((d) => {
+            const ch = getChannel(state, d.channelId);
+            return (
+              <div key={d.id} className="rounded-md border border-alfred-gold/30 bg-green-950/10 p-3 text-sm space-y-2">
+                <p className="text-alfred-gold text-xs font-mono uppercase">{ch?.displayName ?? d.channelId}</p>
+                <p>
+                  <span className="text-alfred-mist">To:</span> {d.to}
+                </p>
+                <p>
+                  <span className="text-alfred-mist">Subject:</span> {d.subject}
+                </p>
+                <pre className="whitespace-pre-wrap text-xs text-alfred-cream/90 max-h-32 overflow-y-auto">{d.body}</pre>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="btn-gold text-xs inline-flex items-center gap-1"
+                    disabled={!googleConnected || sendingId === d.id}
+                    onClick={() => void approveSend(d.id)}
+                  >
+                    {sendingId === d.id ? (
+                      "Sending…"
+                    ) : (
+                      <>
+                        <Send className="h-3 w-3" aria-hidden /> Send
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-ghost text-xs inline-flex items-center gap-1 border border-alfred-border"
+                    onClick={() => onDiscardDraft(d.id)}
+                  >
+                    <Trash2 className="h-3 w-3" aria-hidden /> Discard
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="text-xs text-alfred-mist">No drafts waiting for approval.</p>
+      )}
 
       <ul className="space-y-2">
         {state.channels.map((ch) => (
@@ -140,58 +180,6 @@ export function ChannelsPanel({
           Add to approval queue
         </button>
       </div>
-
-      {pending.length ? (
-        <div className="border-t border-alfred-border/50 pt-4 space-y-3">
-          <p className="text-xs font-mono uppercase tracking-wider text-alfred-gold">Needs your OK ({pending.length})</p>
-          {sendError ? (
-            <p className="text-sm text-red-400" role="alert">
-              {sendError}
-            </p>
-          ) : null}
-          {pending.map((d) => {
-            const ch = getChannel(state, d.channelId);
-            return (
-              <div key={d.id} className="rounded-md border border-alfred-gold/30 bg-green-950/10 p-3 text-sm space-y-2">
-                <p className="text-alfred-gold text-xs font-mono uppercase">{ch?.displayName ?? d.channelId}</p>
-                <p>
-                  <span className="text-alfred-mist">To:</span> {d.to}
-                </p>
-                <p>
-                  <span className="text-alfred-mist">Subject:</span> {d.subject}
-                </p>
-                <pre className="whitespace-pre-wrap text-xs text-alfred-cream/90 max-h-32 overflow-y-auto">{d.body}</pre>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    className="btn-gold text-xs inline-flex items-center gap-1"
-                    disabled={!googleConnected || sendingId === d.id}
-                    onClick={() => void approveSend(d.id)}
-                  >
-                    {sendingId === d.id ? (
-                      "Sending…"
-                    ) : (
-                      <>
-                        <Send className="h-3 w-3" aria-hidden /> Send
-                      </>
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-ghost text-xs inline-flex items-center gap-1 border border-alfred-border"
-                    onClick={() => onDiscardDraft(d.id)}
-                  >
-                    <Trash2 className="h-3 w-3" aria-hidden /> Discard
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <p className="text-xs text-alfred-mist">No drafts waiting.</p>
-      )}
-      </div>
-    </details>
+    </section>
   );
 }
