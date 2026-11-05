@@ -2,7 +2,7 @@ import type { Config, Handler } from "@netlify/functions";
 import { WEEKLY_AUDIT_CRON } from "../../shared/weeklyAuditor";
 import { runWeeklyAuditJob } from "./_weeklyAuditorRun";
 
-/** Monday ~2 AM Pacific — production smoke + suggestions (full test:os runs in GitHub weekly-audit workflow). */
+/** Monday midnight Pacific (08:00 UTC) — production smoke + suggestions (full test:os runs in GitHub weekly-audit workflow). */
 export const config: Config = {
   schedule: WEEKLY_AUDIT_CRON,
 };

@@ -48,8 +48,8 @@ export type WeeklyAuditUserStats = {
   staleLiveCommute: number;
 };
 
-/** Netlify cron: Monday 10:00 UTC ≈ 2:00 AM US Pacific (standard). */
-export const WEEKLY_AUDIT_CRON = "0 10 * * 1";
+/** Netlify cron: Monday 08:00 UTC = midnight US Pacific (PST, UTC−8). */
+export const WEEKLY_AUDIT_CRON = "0 8 * * 1";
 
 export function buildWeeklyAuditReport(input: {
   at: string;

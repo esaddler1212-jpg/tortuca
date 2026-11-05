@@ -33,6 +33,6 @@ const broken = buildWeeklyAuditReport({
 });
 ok("missing anthropic → failed", broken.status === "failed");
 
-ok("cron is Monday UTC", WEEKLY_AUDIT_CRON.startsWith("0 ") && WEEKLY_AUDIT_CRON.endsWith(" * * 1"));
+ok("cron is Monday 08:00 UTC (midnight Pacific PST)", WEEKLY_AUDIT_CRON === "0 8 * * 1");
 
 console.log(process.exitCode ? `\nWeekly auditor tests failed (${n}).` : `\nWeekly auditor tests passed (${n}).`);

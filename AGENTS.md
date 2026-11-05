@@ -60,8 +60,8 @@ Two layers keep IRIS fully functional:
 
 | Layer | When | What |
 |-------|------|------|
-| **Netlify** `weekly-audit-scheduled` | Monday 10:00 UTC (~2 AM Pacific) | Production smoke (env, Blobs, accounts), efficiency suggestions, optional email to `WEEKLY_AUDIT_EMAIL` |
-| **GitHub** `.github/workflows/weekly-audit.yml` | Monday 11:00 UTC (~3 AM Pacific) | Full `npm run test:os` |
+| **Netlify** `weekly-audit-scheduled` | Monday **08:00 UTC** (midnight **Pacific**, PST) | Production smoke (env, Blobs, accounts), efficiency suggestions, optional email to `WEEKLY_AUDIT_EMAIL` |
+| **GitHub** `.github/workflows/weekly-audit.yml` | Monday **08:45 UTC** (~12:45 AM Pacific) | Full `npm run test:os` |
 
 Optional: set GitHub secrets `WEEKLY_AUDIT_INGEST_URL` (your site `/api/weekly-audit-ingest`) and `WEEKLY_AUDIT_SECRET` (matches Netlify `WEEKLY_AUDIT_SECRET`) so CI results appear in the Team module.
 
