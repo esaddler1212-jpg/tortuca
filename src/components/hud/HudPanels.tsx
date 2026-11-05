@@ -68,7 +68,20 @@ export function NetworkPanel({
       <ul className="space-y-1.5 font-mono text-xs">
         {nodes.map((n) => (
           <li key={n.registryId} className="flex items-center justify-between gap-2">
-            <span className="truncate text-cyan-100/85">{n.displayName}</span>
+            {n.ok && n.baseUrl ? (
+              <a
+                href={n.baseUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="truncate text-cyan-100/85 hover:text-cyan-200 underline-offset-2 hover:underline"
+              >
+                {n.displayName}
+              </a>
+            ) : (
+              <span className="truncate text-cyan-100/85" title={n.error ?? undefined}>
+                {n.displayName}
+              </span>
+            )}
             {n.ok ? (
               <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-cyan-400" aria-label="online" />
             ) : (
@@ -76,7 +89,11 @@ export function NetworkPanel({
             )}
           </li>
         ))}
-        {!nodes.length && <li className="text-cyan-400/50">No apps registered</li>}
+        {!nodes.length && (
+          <li className="text-cyan-400/50">
+            No Woodhouse nodes — set WOODHOUSE_NODES on Netlify or add URLs in Settings.
+          </li>
+        )}
         <li className="flex items-center justify-between gap-2 border-t border-cyan-400/10 pt-1.5">
           <span className="text-cyan-100/85">Google</span>
           {googleConnected ? (

@@ -153,17 +153,6 @@ export default function App() {
     [channelAgent],
   );
 
-  const onResearchTask = useCallback(
-    (task: PlanTask, goal?: YearGoal) => {
-      const query = task.deliverable ? `${task.title} — ${task.deliverable}` : task.title;
-      const context = goal ? `Year goal: ${goal.title}` : undefined;
-      void runBusinessResearch(query, task.area, context).then((r) => {
-        if (r) setHandoff(task.id, "review");
-      });
-    },
-    [runBusinessResearch, setHandoff],
-  );
-
   useUserDataSync(settings, persist, todos, setTodos, loadFitness, loadShopping);
   const push = usePushNotifications(settings.pushNotificationsEnabled);
 
@@ -416,6 +405,19 @@ export default function App() {
     const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     window.scrollTo({ top: 0, behavior: still ? "auto" : "smooth" });
   }, []);
+
+  const onResearchTask = useCallback(
+    (task: PlanTask, goal?: YearGoal) => {
+      focusModule("research");
+      const query = task.deliverable ? `${task.title} — ${task.deliverable}` : task.title;
+      const context = goal ? `Year goal: ${goal.title}` : undefined;
+      void runBusinessResearch(query, task.area, context).then((r) => {
+        if (r) setHandoff(task.id, "review");
+      });
+    },
+    [runBusinessResearch, setHandoff, focusModule],
+  );
+
   const closeModule = useCallback(() => {
     setActiveModule(null);
     setIrisVoiceDeckOpen(false);

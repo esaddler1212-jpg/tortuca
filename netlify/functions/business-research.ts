@@ -37,11 +37,15 @@ export const handler: Handler = async (event) => {
     return json(400, { error: "Bad request" });
   }
 
-  const query = typeof body.query === "string" ? body.query.trim().slice(0, MAX_QUERY) : "";
-  if (query.length < 8) return json(400, { error: "Describe what to research (at least a few words)." });
+  const queryRaw = typeof body.query === "string" ? body.query.trim().slice(0, MAX_QUERY) : "";
+  const context = typeof body.context === "string" ? body.context.trim().slice(0, 4000) : "";
+  const combined = [queryRaw, context].filter(Boolean).join(" ").trim();
+  if (combined.length < 8) {
+    return json(400, { error: "Describe what to research (at least a few words)." });
+  }
+  const query = queryRaw || combined;
 
   const area = typeof body.area === "string" && body.area.trim() ? body.area.trim() : "General";
-  const context = typeof body.context === "string" ? body.context : "";
 
   const usage = getStore({ name: "alfred-research-usage" });
   const who = (session.email ?? sessionId).toLowerCase();
@@ -51,11 +55,11 @@ export const handler: Handler = async (event) => {
     return json(429, { error: "Business Researcher daily limit reached. Try again tomorrow or use Prompt on a task." });
   }
 
-  const client = new Anthropic({ timeout: 55_000, maxRetries: 0 });
+  const client = new Anthropic({ timeout: 22_000, maxRetries: 0 });
   try {
     const { title, report, searched, refused } = await runBusinessResearch(client, { query, area, context });
     if (refused || !report) {
-      return json(200, { error: "Could not complete that research request. Try rephrasing.", searched });
+      return json(422, { error: "Could not complete that research request. Try rephrasing.", searched });
     }
 
     await usage.set(usageKey, String(used + 1));
