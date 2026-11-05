@@ -40,9 +40,12 @@ const ERROR_MESSAGES: Record<string, string> = {
   network: "Speech recognition needs an internet connection.",
 };
 
+/** After the last heard words, wait this long before ending the turn (TEN-style endpointing). */
+export const SPEECH_TURN_END_MS = 850;
+
 /**
  * Speech-to-text via the browser (Apple's recognizer in Safari/iPhone, Google's
- * in Chrome). `onFinal` gets the full sentence once you stop talking.
+ * in Chrome). Accumulates finals and ends the turn after a short silence window.
  */
 export function useSpeechInput(onFinal: (text: string) => void) {
   const [supported] = useState(() => typeof window !== "undefined" && getRecognitionCtor() !== null);
@@ -54,12 +57,28 @@ export function useSpeechInput(onFinal: (text: string) => void) {
   const recRef = useRef<SpeechRecognitionLike | null>(null);
   const onFinalRef = useRef(onFinal);
   onFinalRef.current = onFinal;
+  const committedRef = useRef("");
+  const endTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => () => recRef.current?.abort(), []);
+  const clearEndTimer = useCallback(() => {
+    if (endTimerRef.current) {
+      clearTimeout(endTimerRef.current);
+      endTimerRef.current = null;
+    }
+  }, []);
+
+  useEffect(
+    () => () => {
+      clearEndTimer();
+      recRef.current?.abort();
+    },
+    [clearEndTimer],
+  );
 
   const stop = useCallback(() => {
+    clearEndTimer();
     recRef.current?.stop();
-  }, []);
+  }, [clearEndTimer]);
 
   const start = useCallback(() => {
     const Ctor = getRecognitionCtor();
@@ -69,30 +88,50 @@ export function useSpeechInput(onFinal: (text: string) => void) {
       );
       return;
     }
+    clearEndTimer();
     recRef.current?.abort();
+    committedRef.current = "";
     const rec = new Ctor();
     rec.lang = navigator.language || "en-US";
     rec.interimResults = true;
-    rec.continuous = false;
-    let finalText = "";
+    rec.continuous = true;
+
+    const scheduleTurnEnd = () => {
+      clearEndTimer();
+      endTimerRef.current = setTimeout(() => {
+        endTimerRef.current = null;
+        try {
+          rec.stop();
+        } catch {
+          /* already stopped */
+        }
+      }, SPEECH_TURN_END_MS);
+    };
+
     rec.onresult = (e) => {
       let live = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const r = e.results[i];
-        if (r.isFinal) finalText += r[0].transcript;
-        else live += r[0].transcript;
+        const chunk = r[0].transcript;
+        if (r.isFinal) committedRef.current += chunk;
+        else live += chunk;
       }
-      setInterim((finalText + live).trim());
+      const display = (committedRef.current + live).trim();
+      setInterim(display);
+      if (display) scheduleTurnEnd();
     };
     rec.onerror = (e) => {
       if (e.error === "aborted") return;
+      clearEndTimer();
       setErrorCode(e.error);
       setError(ERROR_MESSAGES[e.error] ?? `Voice input error: ${e.error}`);
     };
     rec.onend = () => {
+      clearEndTimer();
       setListening(false);
       setInterim("");
-      const text = finalText.trim();
+      const text = committedRef.current.trim();
+      committedRef.current = "";
       if (text) onFinalRef.current(text);
     };
     recRef.current = rec;
@@ -105,7 +144,7 @@ export function useSpeechInput(onFinal: (text: string) => void) {
     } catch {
       setError("Couldn't start the microphone. Try again.");
     }
-  }, []);
+  }, [clearEndTimer]);
 
   return { supported, listening, interim, error, errorCode, start, stop };
 }

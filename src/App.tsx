@@ -133,7 +133,7 @@ export default function App() {
     },
     [bizResearch, updateHub],
   );
-  const { pulse, error: pulseError } = usePulse(settings.latitude, settings.longitude);
+  const { pulse, error: pulseError, loading: pulseLoading, reload: reloadPulse } = usePulse(settings.latitude, settings.longitude);
   const { items: shoppingItems, add: addShopping, togglePantry, remove: removeShopping, loadRemote: loadShopping } = useShoppingList();
   const { plan, toggleTask: togglePlanTask, addTask: addPlanTask, removeTask: removePlanTask, setGoals: setPlanGoals, setHandoff, setBudget, toggleSpark, shuffleSpark, noteSpark } = usePlan();
 
@@ -151,17 +151,6 @@ export default function App() {
       channelAgent.addDraftForArea(task.area, "", subject, body);
     },
     [channelAgent],
-  );
-
-  const onResearchTask = useCallback(
-    (task: PlanTask, goal?: YearGoal) => {
-      const query = task.deliverable ? `${task.title} — ${task.deliverable}` : task.title;
-      const context = goal ? `Year goal: ${goal.title}` : undefined;
-      void runBusinessResearch(query, task.area, context).then((r) => {
-        if (r) setHandoff(task.id, "review");
-      });
-    },
-    [runBusinessResearch, setHandoff],
   );
 
   useUserDataSync(settings, persist, todos, setTodos, loadFitness, loadShopping);
@@ -416,6 +405,19 @@ export default function App() {
     const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     window.scrollTo({ top: 0, behavior: still ? "auto" : "smooth" });
   }, []);
+
+  const onResearchTask = useCallback(
+    (task: PlanTask, goal?: YearGoal) => {
+      focusModule("research");
+      const query = task.deliverable ? `${task.title} — ${task.deliverable}` : task.title;
+      const context = goal ? `Year goal: ${goal.title}` : undefined;
+      void runBusinessResearch(query, task.area, context).then((r) => {
+        if (r) setHandoff(task.id, "review");
+      });
+    },
+    [runBusinessResearch, setHandoff, focusModule],
+  );
+
   const closeModule = useCallback(() => {
     setActiveModule(null);
     setIrisVoiceDeckOpen(false);
@@ -445,8 +447,8 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (activeModule === "inbox" && connected) void refreshEmails();
-  }, [activeModule, connected, refreshEmails]);
+    if (activeModule === "vitals") void reloadPulse();
+  }, [activeModule, reloadPulse]);
 
   /** Tapping the open tab again closes it. */
   const onTab = useCallback((id: HudModuleId) => (activeModule === id && !moreOpen ? closeModule() : focusModule(id)), [activeModule, moreOpen, closeModule, focusModule]);
@@ -580,10 +582,18 @@ export default function App() {
       case "vitals":
         return (
           <>
-            <VitalsPanel weather={weather} city={settings.city} fitness={fitnessStatus} />
+            <VitalsPanel
+              weather={weather}
+              weatherLoading={weatherLoading}
+              weatherError={weatherError}
+              city={settings.city}
+              fitness={fitnessStatus}
+            />
             <PulsePanel
               pulse={pulse}
+              loading={pulseLoading}
               error={pulseError}
+              onRetry={() => void reloadPulse()}
               city={settings.city}
               lat={settings.latitude}
               lon={settings.longitude}
@@ -604,11 +614,20 @@ export default function App() {
             timeZone={settings.timezone}
             onRefresh={() => void refreshEmails()}
             onConnectGoogle={() => void connect()}
+            onOpenDrafts={() => focusModule("channels")}
             onAddTodo={(title) => add(title)}
           />
         );
       case "apps":
-        return <NetworkPanel woodhouse={woodhouse} googleConnected={connected} />;
+        return (
+          <NetworkPanel
+            woodhouse={woodhouse}
+            loading={woodhouseLoading}
+            error={woodhouseError}
+            googleConnected={connected}
+            onConnectGoogle={() => void connect()}
+          />
+        );
       case "today":
         return (
           <>
@@ -722,6 +741,7 @@ export default function App() {
             mode={mode}
             timeZone={settings.timezone}
             googleConnected={connected}
+            onConnectGoogle={() => void connect()}
             onAddTodo={(title) => add(title)}
             onLogWorkout={logWorkout}
             workoutLoggedToday={fitnessLogs.some((l) => l.date === today)}

@@ -27,15 +27,15 @@ export async function runBusinessResearch(
   const parts: string[] = [];
   let searched = false;
 
-  for (let hop = 0; hop < 4; hop++) {
+  for (let hop = 0; hop < 6; hop++) {
     const response = await client.beta.messages.create({
       model: MODEL,
-      max_tokens: 4096,
+      max_tokens: 8192,
       betas: ["server-side-fallback-2026-07-01"],
       fallbacks: "default",
       output_config: { effort: "medium" },
       system: [{ type: "text", text: PERSONA }],
-      tools: [...WEB_TOOLS.map((t) => (t.name === "web_search" ? { ...t, max_uses: 5 } : t))],
+      tools: [...WEB_TOOLS],
       messages,
     });
 

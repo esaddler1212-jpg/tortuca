@@ -93,11 +93,13 @@ function TrackFlight({ lat, lon, timeZone, onResult }: { lat: number; lon: numbe
 interface Props {
   pulse: PulseSnapshot | null;
   error: boolean;
+  loading?: boolean;
+  onRetry?: () => void;
   city: string;
   lat: number;
   lon: number;
   timeZone: string;
-  /** Start open (Vantage) or as a one-line strip (workdays). */
+  /** Start open (Vitals module) or as a one-line strip (home). */
   defaultOpen?: boolean;
 }
 
@@ -203,7 +205,7 @@ function GodsEyeLink() {
 }
 
 /** Bay Area Pulse: alerts, air, fires, quakes, commute cams, flights overhead. */
-export function PulsePanel({ pulse, error, city, lat, lon, timeZone, defaultOpen = false }: Props) {
+export function PulsePanel({ pulse, error, loading = false, onRetry, city, lat, lon, timeZone, defaultOpen = false }: Props) {
   const [open, setOpen] = useState(defaultOpen);
   const [cam, setCam] = useState<string | null>(null);
   const [view, setView] = useState<"list" | "map">(loadView);
@@ -229,7 +231,7 @@ export function PulsePanel({ pulse, error, city, lat, lon, timeZone, defaultOpen
             {urgent ? <AlertTriangle className="h-3.5 w-3.5 text-amber-300" aria-hidden /> : <Activity className="h-3.5 w-3.5" aria-hidden />} Bay Area Pulse
           </span>
           <span className={`mt-0.5 block truncate text-xs ${urgent ? "text-amber-200" : "text-alfred-mist"}`}>
-            {pulse ? pulseSummary(pulse) : error ? "Pulse unavailable right now" : "Checking the area…"}
+            {pulse ? pulseSummary(pulse) : error ? "Pulse unavailable — tap Retry below" : loading ? "Checking the area…" : "Checking the area…"}
           </span>
         </span>
         {open ? <ChevronUp className="h-4 w-4 shrink-0 text-alfred-mist" /> : <ChevronDown className="h-4 w-4 shrink-0 text-alfred-mist" />}
@@ -238,6 +240,25 @@ export function PulsePanel({ pulse, error, city, lat, lon, timeZone, defaultOpen
       {open && (
         <div className="mt-4">
           <GodsEyeLink />
+        </div>
+      )}
+
+      {open && !pulse && (
+        <div className="mt-4 rounded-md border border-alfred-border/50 bg-black/30 px-3 py-4 text-center text-sm text-alfred-mist">
+          {loading ? (
+            <p className="animate-pulse font-mono text-[11px] uppercase tracking-wider">Loading pulse…</p>
+          ) : error ? (
+            <div className="space-y-2">
+              <p>Couldn&apos;t load Bay Area Pulse right now.</p>
+              {onRetry ? (
+                <button type="button" className="btn-gold text-xs" onClick={onRetry}>
+                  Retry
+                </button>
+              ) : null}
+            </div>
+          ) : (
+            <p className="animate-pulse font-mono text-[11px] uppercase tracking-wider">Loading pulse…</p>
+          )}
         </div>
       )}
 

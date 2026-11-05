@@ -39,12 +39,14 @@ export function BusinessResearcherPanel({ googleConnected, loading, error, last,
 
       {!googleConnected ? (
         <div className="rounded-md border border-amber-400/40 bg-amber-950/20 px-3 py-2 text-sm text-amber-100/90">
-          Connect Google in Settings so reports sync to your account.
+          Connect Google in Settings — research saves to your Hub memos on your account.
           <button type="button" className="btn-gold ml-2 mt-2 w-full sm:w-auto text-xs" onClick={onConnectGoogle}>
             Connect Google
           </button>
         </div>
-      ) : null}
+      ) : (
+        <p className="text-xs text-cyan-400/55 font-mono">Saved to Hub memos on your account · up to 8 runs per day.</p>
+      )}
 
       <div className="flex flex-wrap gap-2">
         {RESEARCH_PRESETS.map((p) => (

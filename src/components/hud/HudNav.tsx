@@ -116,7 +116,7 @@ export function MoreSheet({
                 }`}
               >
                 <span className="h-1.5 w-6 rounded-full" style={{ background: def?.color }} aria-hidden />
-                <span className="mt-2">{def?.label ?? id}</span>
+                <span className="mt-2 text-center leading-tight">{def?.short ?? def?.label ?? id}</span>
                 {b?.count ? <span className="text-[10px] text-amber-300">{b.count}</span> : null}
               </button>
             );
@@ -180,7 +180,7 @@ export function GlassModule({
         </button>
       </header>
       <div className="mx-auto h-1 w-10 -translate-y-1 rounded-full bg-cyan-300/30" aria-hidden />
-      <div className="space-y-4 px-3 pb-6 pt-1 sm:px-4 sm:pb-8">{children}</div>
+      <div className="space-y-4 px-3 pb-24 pt-1 sm:px-4 sm:pb-28">{children}</div>
     </section>
   );
 }
