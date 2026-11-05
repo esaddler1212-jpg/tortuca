@@ -14,13 +14,14 @@ its own README, build, and (typically) its own Netlify site.
 
 ### Alfred (repo root)
 
-**Alfred / IRIS** is your personal command center on **alfred2** (and locally): Iris voice + HUD home (four corner gauges, bottom tabs Today · Vitals · Inbox · Plan, **More** for the rest), Gmail/calendar, Woodhouse app status, Bay Area Pulse map, server-side commute sync, and cross-device data in Netlify Blobs.
+**Alfred / IRIS** is your personal command center on **alfred2** (and locally): Iris voice + HUD home (four corner gauges, bottom tabs Today · Vitals · Inbox · Plan, **More** for Team · Woodhouse · Research · Hub · Meals · Drafts · ECS), Gmail/calendar, Woodhouse app status, **Bay Area Pulse digital map** (no raster tiles), server-side commute sync, Iris specialist team (Scout, Scribe, Navigator, Sentinel, Quartermaster, Curator), and cross-device data in Netlify Blobs. Home uses the core ring and Iris voice — no separate “awaiting command” text box.
 
 ```bash
 npm install
 npm run dev
 npx netlify dev   # Woodhouse aggregator + Google OAuth
-npm run build && npm run test:iris && npm run test:time
+npm run test:os   # build + time + iris + research + HUD audit
+# or: npm run build && npm run test:time && npm run test:iris && npm run test:research && npm run test:audit
 ```
 
 Deploy from the **repo root** (default `netlify.toml`). See [WOODHOUSE.md](./WOODHOUSE.md)

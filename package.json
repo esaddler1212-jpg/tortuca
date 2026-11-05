@@ -12,7 +12,8 @@
     "scan:secrets": "gitleaks git . --config .gitleaks.toml --redact --no-banner && gitleaks dir . --config .gitleaks.toml --redact --no-banner",
     "test:iris": "tsx scripts/check-iris.mts",
     "test:research": "tsx scripts/check-business-research.mts",
-    "test:audit": "tsx scripts/check-hud-audit.mts"
+    "test:audit": "tsx scripts/check-hud-audit.mts",
+    "test:os": "npm run build && npm run test:time && npm run test:iris && npm run test:research && npm run test:audit"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.3.0",
