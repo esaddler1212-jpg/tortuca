@@ -79,5 +79,8 @@ ok("business-research imports shared limits", researchHandler.includes("RESEARCH
 
 ok("research memo re-exports daily limit", read("netlify/functions/_researchMemo.ts").includes("RESEARCH_DAILY_LIMIT"));
 
+ok("weekly-audit GET requires session", read("netlify/functions/weekly-audit.ts").includes("getValidSession"));
+ok("weekly-audit-scheduled uses shared cron", read("netlify/functions/weekly-audit-scheduled.ts").includes("WEEKLY_AUDIT_CRON"));
+
 const passed = !process.exitCode;
 console.log(passed ? `\nAgent guardrails audit passed (${checkCount} checks).` : `\nAgent guardrails audit failed (${checkCount} checks run).`);

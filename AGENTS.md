@@ -53,3 +53,16 @@ npm run test:os           # full gate including guardrails + thin auditor
 - Dangerous DOM patterns in the app shell
 
 Policy lists live in `shared/thinProgrammingPolicy.ts` — update when you add routes.
+
+## Weekly auditor (Sunday → Monday overnight)
+
+Two layers keep IRIS fully functional:
+
+| Layer | When | What |
+|-------|------|------|
+| **Netlify** `weekly-audit-scheduled` | Monday 10:00 UTC (~2 AM Pacific) | Production smoke (env, Blobs, accounts), efficiency suggestions, optional email to `WEEKLY_AUDIT_EMAIL` |
+| **GitHub** `.github/workflows/weekly-audit.yml` | Monday 11:00 UTC (~3 AM Pacific) | Full `npm run test:os` |
+
+Optional: set GitHub secrets `WEEKLY_AUDIT_INGEST_URL` (your site `/api/weekly-audit-ingest`) and `WEEKLY_AUDIT_SECRET` (matches Netlify `WEEKLY_AUDIT_SECRET`) so CI results appear in the Team module.
+
+Latest report: **Team → Weekly auditor** card, or `GET /api/weekly-audit` when signed in.

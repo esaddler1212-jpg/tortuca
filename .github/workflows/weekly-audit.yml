@@ -1,0 +1,44 @@
+name: Weekly auditor
+
+on:
+  schedule:
+    # Monday 11:00 UTC ≈ 3:00 AM Pacific — full test:os after Netlify production smoke (10:00 UTC)
+    - cron: "0 11 * * 1"
+  workflow_dispatch:
+
+jobs:
+  test-os:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Run full OS gate
+        id: os
+        run: |
+          set -o pipefail
+          npm run test:os 2>&1 | tee /tmp/test-os.log
+      - name: Summarize
+        if: always()
+        run: |
+          if [ "${{ steps.os.outcome }}" = "success" ]; then
+            echo "## Weekly auditor — test:os passed" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "## Weekly auditor — test:os failed" >> "$GITHUB_STEP_SUMMARY"
+            tail -n 40 /tmp/test-os.log >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Ingest result to Netlify (optional)
+        if: always() && secrets.WEEKLY_AUDIT_INGEST_URL != '' && secrets.WEEKLY_AUDIT_SECRET != ''
+        env:
+          INGEST_URL: ${{ secrets.WEEKLY_AUDIT_INGEST_URL }}
+          INGEST_SECRET: ${{ secrets.WEEKLY_AUDIT_SECRET }}
+          PASSED: ${{ steps.os.outcome == 'success' }}
+        run: |
+          NOTE=$(tail -n 30 /tmp/test-os.log | jq -Rs .)
+          curl -sf -X POST "$INGEST_URL" \
+            -H "Authorization: Bearer $INGEST_SECRET" \
+            -H "Content-Type: application/json" \
+            -d "{\"passed\":$PASSED,\"note\":$NOTE}" || echo "Ingest skipped (network or secret)"

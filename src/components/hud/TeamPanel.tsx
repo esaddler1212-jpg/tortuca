@@ -10,6 +10,8 @@ import {
   type IrisSpecialistId,
 } from "../../../shared/irisTeam";
 import { formatDelegateAgo, readLastDelegate, teamEfficiencySummary, readDelegateHistory, type IrisDelegateLog } from "../../../shared/irisTeamActivity";
+import type { WeeklyAuditReport } from "../../../shared/weeklyAuditor";
+import { useWeeklyAudit } from "../../hooks/useWeeklyAudit";
 
 interface Props {
   timeZone: string;
@@ -21,6 +23,7 @@ export function TeamPanel({ timeZone, onOpenModule, onAskSpecialist }: Props) {
   const [last, setLast] = useState<IrisDelegateLog | null>(() => readLastDelegate());
   const [recent, setRecent] = useState<IrisDelegateLog[]>(() => readDelegateHistory().slice(0, 8));
   const [ops, setOps] = useState(() => teamEfficiencySummary(readDelegateHistory()));
+  const { report: weeklyAudit, loading: weeklyLoading } = useWeeklyAudit();
 
   useEffect(() => {
     const sync = () => {
@@ -84,6 +87,8 @@ export function TeamPanel({ timeZone, onOpenModule, onAskSpecialist }: Props) {
         </div>
       ) : null}
 
+      <WeeklyAuditorCard report={weeklyAudit} loading={weeklyLoading} timeZone={timeZone} />
+
       {last ? (
         <div className="rounded-md border border-cyan-400/25 bg-black/35 px-3 py-2">
           <p className="font-mono text-[10px] uppercase tracking-wider text-cyan-400/60">Last delegate</p>
@@ -127,6 +132,52 @@ export function TeamPanel({ timeZone, onOpenModule, onAskSpecialist }: Props) {
         </ul>
       </div>
     </section>
+  );
+}
+
+function WeeklyAuditorCard({
+  report,
+  loading,
+  timeZone,
+}: {
+  report: WeeklyAuditReport | null;
+  loading: boolean;
+  timeZone: string;
+}) {
+  if (loading) {
+    return <p className="text-xs text-alfred-mist font-mono animate-pulse">Loading weekly auditor…</p>;
+  }
+  if (!report?.at) {
+    return (
+      <div className="rounded-md border border-alfred-border/40 bg-black/25 px-3 py-2">
+        <p className="font-mono text-[10px] uppercase tracking-wider text-alfred-gold/70">Weekly auditor</p>
+        <p className="text-xs text-alfred-mist mt-1">Runs overnight Sunday→Monday. First report appears after the scheduled job.</p>
+      </div>
+    );
+  }
+  const statusColor =
+    report.status === "ok" ? "text-emerald-400/90" : report.status === "degraded" ? "text-amber-300/90" : "text-red-300/90";
+  return (
+    <div className="rounded-md border border-alfred-gold/25 bg-amber-950/15 px-3 py-2 space-y-2">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="font-mono text-[10px] uppercase tracking-wider text-alfred-gold/80">Weekly auditor · Woodhouse</p>
+        <span className={`text-[10px] font-mono uppercase ${statusColor}`}>{report.status}</span>
+      </div>
+      <p className="text-xs text-cyan-50/90">{report.summary}</p>
+      <p className="text-[10px] text-alfred-mist font-mono">
+        Last run {formatDelegateAgo(report.at, timeZone)}
+        {report.ci ? ` · CI ${report.ci.passed ? "passed" : "failed"}` : ""}
+      </p>
+      {report.suggestions.length > 0 ? (
+        <ul className="text-xs text-alfred-mist space-y-1.5 list-disc pl-4 max-h-32 overflow-y-auto">
+          {report.suggestions.slice(0, 4).map((s) => (
+            <li key={s.title}>
+              <span className="text-alfred-cream/90">{s.title}</span> — {s.body}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
   );
 }
 

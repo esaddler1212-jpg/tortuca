@@ -17,6 +17,7 @@ export const SESSION_REQUIRED_HANDLERS = [
   "iris-memory",
   "iris-usage",
   "watch-now",
+  "weekly-audit",
 ] as const;
 
 /** Intentionally callable without Google session (public data or OAuth setup). */
@@ -57,6 +58,7 @@ export const SCHEDULED_HANDLERS = [
   "uptime-scheduled",
   "watchers-scheduled",
   "morning-digest",
+  "weekly-audit-scheduled",
 ] as const;
 
 export function handlerSourceRequiresSessionCheck(source: string): boolean {

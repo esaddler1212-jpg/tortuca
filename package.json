@@ -15,7 +15,8 @@
     "test:audit": "tsx scripts/check-hud-audit.mts",
     "test:guardrails": "tsx scripts/check-agent-guardrails.mts",
     "test:thin": "tsx scripts/check-thin-programming.mts",
-    "test:os": "npm run build && npm run test:time && npm run test:iris && npm run test:research && npm run test:audit && npm run test:guardrails && npm run test:thin"
+    "test:weekly": "tsx scripts/check-weekly-auditor.mts",
+    "test:os": "npm run build && npm run test:time && npm run test:iris && npm run test:research && npm run test:audit && npm run test:guardrails && npm run test:thin && npm run test:weekly"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.3.0",
