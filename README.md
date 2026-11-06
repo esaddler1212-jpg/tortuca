@@ -16,6 +16,8 @@ its own README, build, and (typically) its own Netlify site.
 
 **Alfred / IRIS** is your personal command center on **alfred2** (and locally): Iris voice + HUD home (four corner gauges, bottom tabs Today · Vitals · Inbox · Plan, **More** for Team · Woodhouse · Research · Hub · Meals · Drafts · ECS), Gmail/calendar, Woodhouse app status, **Bay Area Pulse digital map** (no raster tiles), server-side commute sync, Iris specialist team (one per module) with **duplicate delegate prevention** (Woodhouse on Team), and cross-device data in Netlify Blobs. Home uses the core ring and Iris voice — no separate “awaiting command” text box.
 
+**iPad:** Add [IRIS to your Home Screen](https://developer.apple.com/documentation/webkit/promoting_apps_with_smart_app_banners) like any PWA; the UI treats **portrait as a wide phone** (comfortable tap targets, wider main column) and **landscape at ~833px+** as tablet/desktop (two-column Today with Iris talk beside “Do today” when the voice deck is open).
+
 ```bash
 npm install
 npm run dev

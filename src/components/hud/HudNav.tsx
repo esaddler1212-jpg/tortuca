@@ -52,7 +52,7 @@ export function HudTabBar({
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       aria-label="Modules"
     >
-      <div className="mx-auto flex max-w-[640px] gap-1 px-2">
+      <div className="mx-auto flex max-w-[640px] md:max-w-[900px] gap-1 px-2">
         {TAB_IDS.map((id) => tab(id, labelOf(id), active === id && !moreOpen, badges[id]?.alert, badges[id]?.count, () => onTab(id)))}
         {tab("more", "More", moreActive, moreAlert, undefined, onMore, { expanded: moreOpen })}
       </div>
@@ -93,7 +93,7 @@ export function MoreSheet({
         role="dialog"
         aria-modal
         aria-label="More modules"
-        className={`hud-glass animate-hud-sheet absolute inset-x-3 mx-auto flex max-w-[560px] flex-col overflow-hidden p-4 hud-more-sheet ${irisDockVisible ? "hud-more-sheet--iris" : ""}`}
+        className={`hud-glass animate-hud-sheet absolute inset-x-3 mx-auto flex max-w-[560px] md:max-w-[640px] flex-col overflow-hidden p-4 hud-more-sheet ${irisDockVisible ? "hud-more-sheet--iris" : ""}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-3 flex items-center justify-between">
