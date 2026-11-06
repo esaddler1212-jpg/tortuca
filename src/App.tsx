@@ -90,6 +90,7 @@ import {
 import { TeamPanel } from "./components/hud/TeamPanel";
 import { EasySupplyStorePanel } from "./components/hud/EasySupplyStorePanel";
 import { InstallAppBanner } from "./components/InstallAppBanner";
+import { DatingOpenersPanel } from "./components/DatingOpenersPanel";
 
 export default function App() {
   const { settings, persist, updateCity, saving, error, setError } = useSettings();
@@ -876,6 +877,7 @@ export default function App() {
               woodhouse={woodhouse}
               familyPurposeAppUrl={familyPurposeAppUrl}
             />
+            <DatingOpenersPanel />
           </>
         )}
       </main>
