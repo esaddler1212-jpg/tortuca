@@ -11,6 +11,7 @@ its own README, build, and (typically) its own Netlify site.
 | **Family Purpose** | [`family-purpose/`](family-purpose/) | Student check-ins, mentoring group sign-in, debriefs, BOYS curriculum API |
 | **BOYS Student** | [`boys-student/`](boys-student/) | Student-facing monthly curriculum app (class code login) |
 | **Alfred × OpenJarvis** | [`alfred-jarvis/`](alfred-jarvis/) | Local AI assistant (OpenJarvis) personalized as Alfred: briefings, ECS ops, research, career |
+| **God's Eye** | [`gods-eye/`](gods-eye/) | Local 3D globe ([upstream](https://github.com/bilawalsidhu/gods-eye-view)): clone on your Mac, link URL from IRIS Pulse |
 
 ### Alfred (repo root)
 
