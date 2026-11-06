@@ -157,7 +157,12 @@ export function NetworkPanel({
         <a href="https://voicebox.sh" target="_blank" rel="noopener noreferrer" className="text-cyan-400/70 hover:underline">
           Voicebox
         </a>{" "}
-        for local cloned TTS · server{" "}
+        for local cloned TTS ·{" "}
+        <a href="https://github.com/morluto/rea" target="_blank" rel="noopener noreferrer" className="text-cyan-400/70 hover:underline">
+          REA
+        </a>{" "}
+        (reverse-engineering MCP — clone via <code className="text-cyan-400/55">npm run rea:bootstrap</code>, then{" "}
+        <code className="text-cyan-400/55">npx rea-agents setup</code> on your Mac) · server{" "}
         <a href="https://github.com/esaddler1212-jpg/tortuca/blob/main/docs/SERVER_PLAN.md" target="_blank" rel="noopener noreferrer" className="text-cyan-400/70 hover:underline">
           n8n
         </a>{" "}
