@@ -6,6 +6,8 @@
  */
 import type { Area } from "./planData";
 import { addDays, weekdayOfDay } from "./timezone";
+import type { VantageDebrief } from "./vantageDebrief";
+export type { VantageDebrief } from "./vantageDebrief";
 
 // ── The Feed ─────────────────────────────────────────────────────────────
 
@@ -385,6 +387,8 @@ export interface HubState {
   money: MoneyEntry[];
   revenueGoal: number;
   memos: Memo[];
+  /** Latest Claude / Vantage Point daily debrief (paste or file). */
+  vantageDebrief?: VantageDebrief | null;
   links: { booking?: string; notes?: string };
   updatedAt: string;
 }
