@@ -848,7 +848,7 @@ export default function App() {
       />
 
       <main
-        className={`mx-auto px-4 py-4 space-y-4 ${mainScrollPad} ${activeModule ? "max-w-[1100px]" : "max-w-[560px]"}`}
+        className={`mx-auto px-4 py-4 space-y-4 ${mainScrollPad} ${activeModule ? "max-w-[1100px]" : "max-w-[560px] md:max-w-[720px]"}`}
       >
         {activeModule ? (
           <>

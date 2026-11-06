@@ -2,7 +2,12 @@
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
+    // `lg` at 833px: iPad portrait (~768–820) stays in stacked/mobile HUD; iPad
+    // landscape and large tablets pick up two-column Today + side Iris talk.
     extend: {
+      screens: {
+        lg: "833px",
+      },
       fontFamily: {
         display: ['"Orbitron"', "system-ui", "sans-serif"],
         sans: ['"Rajdhani"', "system-ui", "sans-serif"],
