@@ -14,7 +14,7 @@ This repo runs **Iris** (voice chief of staff), **eleven module specialists** (`
 | Scout | Min query length + daily research limit before `runBusinessResearch` | `_irisSpecialists.ts` |
 | Refusal | Model `stop_reason === "refusal"` → safe spoken decline | `_iris.ts`, `_businessResearch.ts` |
 | Privacy | No student names in Iris context (Family Purpose); inbox subjects only | ask context builders, persona |
-| Secrets | API keys only in Netlify env; run `npm run scan:secrets` before release | `.gitleaks.toml` |
+| Secrets | API keys only in Netlify env; run `npm run scan:secrets` before release (install [gitleaks](https://github.com/gitleaks/gitleaks) for a real scan; otherwise the script skips with a message) | `.gitleaks.toml`, `scripts/scan-secrets.mts` |
 
 **Single source of truth for numeric limits:** `shared/agentGuardrails.ts`. Do not duplicate caps in handlers without importing from there.
 
