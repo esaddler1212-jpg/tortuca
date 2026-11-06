@@ -26,6 +26,10 @@ This repo runs **Iris** (voice chief of staff), **eleven module specialists** (`
 4. **Log usage** via `_irisUsage` / research usage stores where applicable.
 5. **Extend** `scripts/check-agent-guardrails.mts` and run `npm run test:os`.
 
+## External code reviews (e.g. DeepSeek)
+
+- Hand off **Iris** server and policy context with `docs/DEEPSEEK_IRIS_CODE_REVIEW.md` (paths, constraints, copy-paste review prompt). Do not paste secrets or `.env` values into external chats.
+
 ## Cursor / Cloud agents working on this repo
 
 - Minimize scope; match existing patterns in `netlify/functions/` and `shared/`.
