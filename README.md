@@ -12,6 +12,7 @@ its own README, build, and (typically) its own Netlify site.
 | **BOYS Student** | [`boys-student/`](boys-student/) | Student-facing monthly curriculum app (class code login) |
 | **Alfred × OpenJarvis** | [`alfred-jarvis/`](alfred-jarvis/) | Local AI assistant (OpenJarvis) personalized as Alfred: briefings, ECS ops, research, career |
 | **God's Eye** | [`gods-eye/`](gods-eye/) | Local 3D globe ([upstream](https://github.com/bilawalsidhu/gods-eye-view)): run on Mac; link from IRIS Pulse — [same Wi‑Fi + remote](gods-eye/README.md) |
+| **REA** | [`rea/`](rea/) | Local reverse-engineering MCP ([upstream](https://github.com/morluto/rea)): `npm run rea:bootstrap` then `npx rea-agents setup` on your Mac — [rea/README.md](rea/README.md) |
 
 ### Alfred (repo root)
 

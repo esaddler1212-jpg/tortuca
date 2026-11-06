@@ -13,5 +13,8 @@ USER.local.md
 
 # God's Eye upstream clone (local only; has its own .env and caches)
 gods-eye/gods-eye-view/
+
+# REA upstream clone (local only; MCP + optional native tooling)
+rea/rea/
 __pycache__/
 *.pyc
