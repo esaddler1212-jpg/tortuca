@@ -15,6 +15,7 @@ import {
 import { runIris } from "./_iris";
 import { consultSpecialist } from "./_irisSpecialists";
 import { lookupFlight } from "./_flight";
+import { coords } from "./_pulse";
 import { recordUsage } from "./_irisUsage";
 import type { IrisTrace } from "../../shared/irisUsage";
 import type { IrisSpecialistId } from "../../shared/irisTeam";
@@ -61,7 +62,6 @@ export const handler: Handler = async (event) => {
   const usageKey = `${who}:${dayKey(body.timeZone || "America/Los_Angeles")}`;
   const used = Number((await usage.get(usageKey)) ?? 0);
   if (used >= DAILY_LIMIT) return json(429, { error: "That's my limit for today. Let's pick it up tomorrow." });
-  await usage.set(usageKey, String(used + 1));
 
   // Fail fast (Netlify functions have a time limit); no automatic retries.
   const client = new Anthropic({ timeout: 52_000, maxRetries: 0 });
@@ -99,6 +99,8 @@ export const handler: Handler = async (event) => {
       },
     );
     await log(usage, refused ? "refused" : "ok");
+    // Count only completed model turns (failures return 502/504 without consuming the daily cap).
+    await usage.set(usageKey, String(used + 1));
     if (refused) return json(200, { reply: "I can't help with that one, boss. Ask me something else?", todos: [] });
     if (remember.length || forget.length) {
       const latest = (await loadUserData(key)) ?? { updatedAt: new Date().toISOString() };

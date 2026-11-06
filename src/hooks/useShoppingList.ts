@@ -20,7 +20,7 @@ export function useShoppingList() {
       return;
     }
     const timer = setTimeout(() => {
-      void saveUserDataRemote({ shoppingList: items });
+      void saveUserDataRemote({ shoppingList: items }).catch(() => undefined);
     }, 600);
     return () => clearTimeout(timer);
   }, [items]);

@@ -22,7 +22,7 @@ export function useFitness(settings: UserSettings) {
       return;
     }
     const timer = setTimeout(() => {
-      void saveUserDataRemote({ fitnessLogs: logs });
+      void saveUserDataRemote({ fitnessLogs: logs }).catch(() => undefined);
     }, 600);
     return () => clearTimeout(timer);
   }, [logs]);
