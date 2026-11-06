@@ -10,5 +10,8 @@ tsconfig.tsbuildinfo
 
 # Alfred private profile (never commit)
 USER.local.md
+
+# God's Eye upstream clone (local only; has its own .env and caches)
+gods-eye/gods-eye-view/
 __pycache__/
 *.pyc
