@@ -74,6 +74,27 @@ Build God’s Eye for production per upstream README, host on **Netlify / Cloudf
 
 ---
 
+## Connection check (“agent”)
+
+On the **iMac** (or any machine that can reach the globe), after the server is running:
+
+```bash
+cd gods-eye
+./check-connection.sh
+./check-connection.sh "http://192.168.1.42:4173"
+./check-connection.sh "http://$(tailscale ip -4 2>/dev/null || echo 100.x.y.z):4173"
+```
+
+Or from the repo root:
+
+```bash
+npm run gods-eye:check -- "http://YOUR_IP:4173"
+```
+
+The script tries **HTTP** to your URL, prints **status + round-trip time**, and suggests fixes if it fails or is slow (firewall, wrong host, Tailscale relay, mixed content).
+
+---
+
 ## IRIS URL field (one device, one string)
 
 Each device stores its own URL (`localStorage`). Typical combos:
