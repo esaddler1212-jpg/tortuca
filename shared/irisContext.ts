@@ -84,6 +84,7 @@ export function stocksContext(snapshot: {
   watchlist: { symbol: string; changePercent: number; theme: string }[];
   upcomingIpos: { name: string; symbol: string; date: string }[];
   dataSource?: string;
+  demoFallback?: boolean;
 } | null | undefined): string {
   if (!snapshot?.watchlist?.length) return "";
   const movers = [...snapshot.watchlist]
@@ -92,6 +93,6 @@ export function stocksContext(snapshot: {
     .map((m) => `${m.symbol} ${m.changePercent >= 0 ? "up" : "down"} ${Math.abs(m.changePercent).toFixed(1)}%`);
   const ipo = snapshot.upcomingIpos[0];
   const ipoLine = ipo ? ` IPO watch: ${ipo.name} (${ipo.symbol}) ~${ipo.date}.` : "";
-  const demo = snapshot.dataSource === "demo" ? " (demo quotes)" : "";
+  const demo = snapshot.dataSource === "demo" || snapshot.demoFallback ? " (demo quotes)" : "";
   return `Markets (Money tab watchlist)${demo}: ${movers.join(", ")}.${ipoLine}`;
 }

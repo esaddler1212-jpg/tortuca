@@ -9,8 +9,9 @@ import { backupStore, isBackup, loadMergedBackup } from "./_fp-backup";
  * shows counts and times from it (see _family-purpose-woodhouse.ts).
  */
 function cors(): Record<string, string> {
+  const allowOrigin = process.env.FAMILY_PURPOSE_BACKUP_ALLOWED_ORIGIN?.trim();
   return {
-    "Access-Control-Allow-Origin": "*",
+    ...(allowOrigin ? { "Access-Control-Allow-Origin": allowOrigin } : {}),
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, X-Backup-Key",
   };

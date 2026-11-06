@@ -1,12 +1,16 @@
 import webpush from "web-push";
 import type { PushSubscriptionPayload } from "../../shared/userDataTypes";
 
+let vapidConfigured = false;
+
 function configureVapid(): boolean {
+  if (vapidConfigured) return true;
   const publicKey = process.env.VAPID_PUBLIC_KEY;
   const privateKey = process.env.VAPID_PRIVATE_KEY;
   const subject = process.env.VAPID_SUBJECT ?? "mailto:alfred@example.com";
   if (!publicKey || !privateKey) return false;
   webpush.setVapidDetails(subject, publicKey, privateKey);
+  vapidConfigured = true;
   return true;
 }
 

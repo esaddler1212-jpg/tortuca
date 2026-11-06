@@ -16,6 +16,10 @@ export const handler: Handler = async (event) => {
   const key = await resolveDataKey(sessionId);
 
   if (event.httpMethod === "GET") {
+    const session = await getValidSession(sessionId);
+    if (!session) {
+      return { statusCode: 401, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ error: "Session required" }) };
+    }
     const data = await loadUserData(key);
     // Watcher page copies are large and server-only; results come from /api/watch-now.
     if (data) delete data.watchState;

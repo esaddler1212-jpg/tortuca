@@ -12,6 +12,11 @@ function localDayKey(timeZone: string, now = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone }).format(now);
 }
 
+/** Short stable id for logs (avoid raw session blob keys in scheduled output). */
+function logRef(sessionId: string): string {
+  return `…${sessionId.slice(-6)}`;
+}
+
 export const handler: Handler = async (event) => {
   initBlobs(event);
 
@@ -50,10 +55,10 @@ export const handler: Handler = async (event) => {
         await saveUserData(dataBySession.has(key) ? key : sessionId, { ...userData, lastDigestDate: today });
         sent++;
       } else {
-        errors.push(`${sessionId}: gmail send failed`);
+        errors.push(`${logRef(sessionId)}: gmail send failed`);
       }
     } catch (e) {
-      errors.push(`${sessionId}: ${e instanceof Error ? e.message : "error"}`);
+      errors.push(`${logRef(sessionId)}: ${e instanceof Error ? e.message : "error"}`);
     }
   }
 

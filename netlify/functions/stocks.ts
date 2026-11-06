@@ -169,10 +169,15 @@ export const handler: Handler = async (event) => {
       }),
     };
   } catch {
+    const demo = demoSnapshot();
     return {
-      statusCode: 200,
-      headers: { "Content-Type": "application/json", "X-Stocks-Source": "demo" },
-      body: JSON.stringify(demoSnapshot()),
+      statusCode: 502,
+      headers: { "Content-Type": "application/json", "X-Stocks-Source": "error" },
+      body: JSON.stringify({
+        error: "Live market data unavailable. Try again shortly.",
+        demoFallback: true,
+        ...demo,
+      }),
     };
   }
 };
