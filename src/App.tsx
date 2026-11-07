@@ -898,6 +898,7 @@ export default function App() {
       {showLanternGate ? (
         <LanternUnlockGate
           timezone={settings.timezone}
+          focusMode={mode}
           onUnlocked={() => {
             setLanternOpen(false);
           }}

@@ -7,9 +7,12 @@ import { markLanternUnlockedToday } from "../../lib/hudPrefs";
  */
 export function LanternUnlockGate({
   timezone,
+  focusMode = "school",
   onUnlocked,
 }: {
   timezone: string;
+  /** Matches `html[data-focus]` — tints the 3D lantern to school / network / weekend palettes. */
+  focusMode?: string;
   onUnlocked: () => void;
 }) {
   const [lanternReady, setLanternReady] = useState<boolean | null>(null);
@@ -72,7 +75,7 @@ export function LanternUnlockGate({
     <div className="fixed inset-0 z-[60] bg-black">
       <iframe
         title="Lantern oath — charge to unlock IRIS"
-        src="/lantern/index.html?irisEmbed=1"
+        src={`/lantern/index.html?irisEmbed=1&irisTheme=${encodeURIComponent(focusMode)}`}
         className="h-full w-full border-0"
         allow="autoplay"
       />

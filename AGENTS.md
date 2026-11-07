@@ -36,7 +36,7 @@ This repo runs **Iris** (voice chief of staff), **eleven module specialists** (`
 - Never commit `.env`, tokens, or real student/parent PII in fixtures.
 - Do not weaken `safeFact`, duplicate-delegate checks, or session gates without explicit product approval.
 - Do not embed third-party agent marketplaces (Voicebox, n8n flows, etc.) into the PWA unless requested — optional docs/links only.
-- Before opening a PR: `npm run test:os` (build, time, iris, research, HUD audit, guardrails audit).
+- Before opening a PR: `npm run test:os` (build, time, iris, research, HUD audit, cross-device audit, guardrails audit).
 
 ## Testing
 

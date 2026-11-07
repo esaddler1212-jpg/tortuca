@@ -70,12 +70,34 @@ oath_html = (
 text = re.sub(r'<div id="oath"[^>]*>.*?</div>', oath_html, text, count=1, flags=re.S)
 text = text.replace("The Futurist Oath", "Lantern's Oath", 2)
 text = text.replace("<title>The Futurist Oath</title>", "<title>Lantern's Oath — IRIS</title>")
+text = text.replace('<div id="oathT">The Futurist Oath</div>', '<div id="oathT">Lantern\'s Oath</div>')
+text = text.replace(
+    '<small>to say the Futurist Oath</small>',
+    "<small>to charge the IRIS core</small>",
+)
+text = text.replace(
+    "<b>Charge me</b><small>drag the ring or tap the centre</small>",
+    "<b>Charge the core</b><small>drag ring · speak oath · unlock HUD</small>",
+)
+text = text.replace("<h1>Lantern's Oath</h1>", "<h1>IRIS CORE</h1>")
+text = text.replace('<p id="lmsg">Initialising core</p>', '<p id="lmsg">Arming filament lantern</p>')
+text = text.replace('<button id="lgo" type="button">Tap to begin</button>', '<button id="lgo" type="button">Charge lantern</button>')
 
 iris_hook = """if(new URLSearchParams(location.search).get('irisEmbed')==='1'){window.__IRIS_EMBED_OATH=1;
   const irisLines=["In brightest day,","in darkest night,","I'll embrace my fear,","I'll do what's right.",
     "I choose this ring,","I choose this fight,","In service to this","lantern's light."];
+  const irisHue={school:0,network:118,weekend:-95,holiday:-95,vantage:-95};
+  const th=new URLSearchParams(location.search).get('irisTheme')||'school';
+  const hueShift=irisHue[th]??0;
   if(LANTERNS.futurist){LANTERNS.futurist.lines=irisLines;LANTERNS.futurist.title="Lantern's Oath";
-    LANTERNS.futurist.len=[2.05,1.82,2.5,1.8,2.1,2.0,2.02,3.7];}
+    LANTERNS.futurist.len=[2.05,1.82,2.5,1.8,2.1,2.0,2.02,3.7];LANTERNS.futurist.hue=hueShift;}
+  document.getElementById('oathT').textContent="Lantern's Oath";
+  const rsm=document.querySelector('#rtag small');if(rsm)rsm.textContent='to charge the IRIS core';
+  const tb=document.querySelector('#tag b');if(tb)tb.textContent='Charge the core';
+  const ts=document.querySelector('#tag small');if(ts)ts.textContent='drag ring · speak oath · unlock HUD';
+  const lh=document.querySelector('#l h1');if(lh)lh.textContent='IRIS CORE';
+  const lm=document.getElementById('lmsg');if(lm)lm.textContent='Arming filament lantern';
+  const lg=document.getElementById('lgo');if(lg)lg.textContent='Charge lantern';
 }"""
 
 if "__IRIS_EMBED_OATH" not in text:

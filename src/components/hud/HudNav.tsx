@@ -52,7 +52,7 @@ export function HudTabBar({
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       aria-label="Modules"
     >
-      <div className="mx-auto flex max-w-[640px] md:max-w-[900px] gap-1 px-2">
+      <div className="mx-auto flex max-w-[640px] md:max-w-[900px] lg:max-w-[1100px] gap-1 px-2">
         {TAB_IDS.map((id) => tab(id, labelOf(id), active === id && !moreOpen, badges[id]?.alert, badges[id]?.count, () => onTab(id)))}
         {tab("more", "More", moreActive, moreAlert, undefined, onMore, { expanded: moreOpen })}
       </div>

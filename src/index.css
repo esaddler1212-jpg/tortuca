@@ -5,7 +5,8 @@
 @layer base {
   /* Accent palettes. Blue = school hours (default), green = ECS Network
      afternoons, purple = weekends & school holidays. Set by data-focus on <html>. */
-  :root {
+  :root,
+  :root[data-focus="school"] {
     --accent-50: 236 254 255; --accent-100: 207 250 254; --accent-200: 165 243 252;
     --accent-300: 103 232 249; --accent-400: 34 211 238; --accent-500: 6 182 212;
     --accent-600: 8 145 178; --accent-700: 14 116 144; --accent-800: 21 94 117;
@@ -201,6 +202,9 @@
 html {
   -webkit-tap-highlight-color: transparent;
   -webkit-text-size-adjust: 100%;
+}
+body {
+  overscroll-behavior-y: none;
 }
 /* Respect "Reduce Motion" (Settings → Accessibility → Motion) and save battery. */
 @media (prefers-reduced-motion: reduce) {
