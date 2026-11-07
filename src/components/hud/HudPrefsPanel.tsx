@@ -24,6 +24,15 @@ export function HudPrefsPanel({ prefs, onChange }: { prefs: HudPrefs; onChange: 
       <label className="flex items-center gap-2 text-sm text-alfred-mist">
         <input
           type="checkbox"
+          checked={prefs.karaOrb}
+          disabled={!prefs.combo135}
+          onChange={(e) => onChange({ karaOrb: e.target.checked })}
+        />
+        K.A.R.A. filament orb (Original 01)
+      </label>
+      <label className="flex items-center gap-2 text-sm text-alfred-mist">
+        <input
+          type="checkbox"
           checked={prefs.lanternUnlock}
           onChange={(e) => onChange({ lanternUnlock: e.target.checked })}
         />

@@ -12,6 +12,8 @@ export interface HudPrefs {
   lanternUnlock: boolean;
   /** Red reactor ring accents on phone when combo is on. */
   reactorSkin: boolean;
+  /** K.A.R.A. Original filament orb (canvas). */
+  karaOrb: boolean;
 }
 
 const KEY = "iris-hud-prefs";
@@ -21,6 +23,7 @@ export const DEFAULT_HUD_PREFS: HudPrefs = {
   particleViz: "orbits",
   lanternUnlock: true,
   reactorSkin: true,
+  karaOrb: true,
 };
 
 export function loadHudPrefs(): HudPrefs {

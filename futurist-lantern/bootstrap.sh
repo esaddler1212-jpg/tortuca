@@ -49,4 +49,50 @@ open(path, "w", encoding="utf-8").write(text)
 PY
 fi
 
+# IRIS embed: John's lantern oath + TTS (no mismatched futurist WAV).
+python3 - "$HTML" <<'PY'
+import re, sys
+path = sys.argv[1]
+text = open(path, encoding="utf-8").read()
+
+oath_html = (
+    '<div id="oath" aria-live="polite" aria-label="Lantern oath">'
+    "<span>In brightest day,</span>"
+    "<span>in darkest night,</span>"
+    "<span>I'll embrace my fear,</span>"
+    "<span>I'll do what's right.</span>"
+    "<span>I choose this ring,</span>"
+    "<span>I choose this fight,</span>"
+    "<span>In service to this</span>"
+    '<span class="final"><b>lantern\'s light.</b></span>'
+    "</div>"
+)
+text = re.sub(r'<div id="oath"[^>]*>.*?</div>', oath_html, text, count=1, flags=re.S)
+text = text.replace("The Futurist Oath", "Lantern's Oath", 2)
+text = text.replace("<title>The Futurist Oath</title>", "<title>Lantern's Oath — IRIS</title>")
+
+iris_hook = """if(new URLSearchParams(location.search).get('irisEmbed')==='1'){window.__IRIS_EMBED_OATH=1;
+  const irisLines=["In brightest day,","in darkest night,","I'll embrace my fear,","I'll do what's right.",
+    "I choose this ring,","I choose this fight,","In service to this","lantern's light."];
+  if(LANTERNS.futurist){LANTERNS.futurist.lines=irisLines;LANTERNS.futurist.title="Lantern's Oath";
+    LANTERNS.futurist.len=[2.05,1.82,2.5,1.8,2.1,2.0,2.02,3.7];}
+}"""
+
+if "__IRIS_EMBED_OATH" not in text:
+    text = text.replace(
+        "let LT=(",
+        iris_hook + "\nlet LT=(",
+        1,
+    )
+
+if "window.__IRIS_EMBED_OATH" not in text or "function say(i,text,done,waited){" in text:
+    text = text.replace(
+        "function say(i,text,done,waited){hookAudio();",
+        "function say(i,text,done,waited){if(window.__IRIS_EMBED_OATH){speak2(text,done);return;}hookAudio();",
+        1,
+    )
+
+open(path, "w", encoding="utf-8").write(text)
+PY
+
 echo "Futurist Lantern installed to $DEST ($(du -sh "$DEST" | cut -f1))."

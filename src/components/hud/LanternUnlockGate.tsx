@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { markLanternUnlockedToday } from "../../lib/hudPrefs";
 
 /**
- * Daily unlock: charge the Augma Futurist Lantern (self-hosted under /lantern/).
+ * Daily unlock: charge the lantern (John's oath — see futurist-lantern/IRIS_OATH.md).
  * Iframe posts `{ type: 'iris:lantern-complete' }` when the oath finishes (see futurist-lantern/bootstrap patch).
  */
 export function LanternUnlockGate({
@@ -71,7 +71,7 @@ export function LanternUnlockGate({
   return (
     <div className="fixed inset-0 z-[60] bg-black">
       <iframe
-        title="Futurist Lantern — charge to unlock IRIS"
+        title="Lantern oath — charge to unlock IRIS"
         src="/lantern/index.html?irisEmbed=1"
         className="h-full w-full border-0"
         allow="autoplay"

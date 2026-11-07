@@ -22,6 +22,10 @@ The bootstrap applies a small patch so the parent window receives:
 
 when the oath climax finishes (`?irisEmbed=1` also hides the quality button).
 
+## IRIS oath (John’s lantern text)
+
+See **`IRIS_OATH.md`**. Bootstrap replaces on-screen copy and uses browser TTS for those lines in embed mode (so audio matches the words).
+
 ## Combo 1 + 3 + 5
 
 | Piece | Where |

@@ -280,6 +280,19 @@ html {
 }
 
 /* Option 1 — reactor accents on phone */
+.kara-orb-shell {
+  border-radius: 50%;
+  box-shadow: 0 0 48px rgb(220 40 60 / 0.35), 0 0 120px rgb(255 100 120 / 0.12);
+}
+.kara-orb-chrome {
+  mix-blend-mode: screen;
+}
+.kara-orb-label span {
+  color: #ffe4e8 !important;
+  text-shadow: 0 0 14px rgb(255 120 140 / 0.9), 0 0 28px rgb(220 40 60 / 0.5) !important;
+  opacity: 0.92;
+}
+
 @media (max-width: 832px) {
   [data-hud-skin="reactor"] .hud-gauge {
     color: rgb(248 113 113);
