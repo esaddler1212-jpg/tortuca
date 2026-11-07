@@ -90,9 +90,18 @@ import {
 import { TeamPanel } from "./components/hud/TeamPanel";
 import { EasySupplyStorePanel } from "./components/hud/EasySupplyStorePanel";
 import { InstallAppBanner } from "./components/InstallAppBanner";
+import { useHudPrefs } from "./hooks/useHudPrefs";
+import { isLanternUnlockedToday } from "./lib/hudPrefs";
+import { HudHomeCommandDeck } from "./components/hud/HudHomeCommandDeck";
+import { ParticleCoreBackdrop } from "./components/hud/ParticleCoreBackdrop";
+import { LanternUnlockGate } from "./components/hud/LanternUnlockGate";
 
 export default function App() {
   const { settings, persist, updateCity, saving, error, setError } = useSettings();
+  const { prefs: hudPrefs, update: updateHudPrefs } = useHudPrefs();
+  const [lanternOpen, setLanternOpen] = useState(
+    () => hudPrefs.lanternUnlock && !isLanternUnlockedToday(settings.timezone),
+  );
   // Re-evaluates all time-of-day logic every minute and when the app is reopened.
   const now = useNow();
   const { weather, loading: weatherLoading, error: weatherError } = useWeather(settings);
@@ -385,6 +394,12 @@ export default function App() {
       monthLabel: new Date(`${month}-15T12:00:00Z`).toLocaleDateString("en-US", { month: "short", timeZone: "UTC" }).toUpperCase(),
     });
   }, [today, plan, pending, done, urgentCount, unread, weather, pulse, pulseUrgent, fitnessStatus]);
+
+  const dayDoneToday = done.filter((t) => t.completedAt?.startsWith(today)).length;
+  const dayPct = useMemo(() => {
+    const total = pending.length + dayDoneToday;
+    return total ? dayDoneToday / total : gauges.find((g) => g.id === "today")?.fill ?? 0;
+  }, [pending.length, dayDoneToday, gauges]);
 
   // One amber line under the core: what matters right now.
   const urgentItems = useMemo(() => {
@@ -831,8 +846,40 @@ export default function App() {
     }
   };
 
+  const homeMaxWidth =
+    !activeModule && hudPrefs.combo135 ? "max-w-[1100px]" : activeModule ? "max-w-[1100px]" : "max-w-[560px] md:max-w-[720px]";
+
+  const spark = todaySpark(plan, today);
+  const upNext = (
+    <UpNextPanel
+      todos={pending}
+      onToggle={toggle}
+      spark={spark}
+      sparkDone={sparkDone(plan, today)}
+      onOpenToday={() => focusModule("today")}
+    />
+  );
+
+  const homeCore = (
+    <div className="relative w-full">
+      {hudPrefs.combo135 && hudPrefs.particleViz !== "off" ? (
+        <ParticleCoreBackdrop
+          viz={hudPrefs.particleViz}
+          compact={Boolean(activeModule)}
+          onPick={activeModule ? undefined : (v) => updateHudPrefs({ particleViz: v })}
+        />
+      ) : null}
+      <HudCore gauges={gauges} core={coreRing} onOpen={focusModule} />
+    </div>
+  );
+
+  const showLanternGate = lanternOpen && hudPrefs.lanternUnlock && activeModule === null;
+
   return (
-    <div className="min-h-screen min-h-[100dvh] relative">
+    <div
+      className="min-h-screen min-h-[100dvh] relative"
+      data-hud-skin={hudPrefs.combo135 && hudPrefs.reactorSkin ? "reactor" : undefined}
+    >
       <div className="hud-vignette" aria-hidden />
       <div className="hud-scanline" aria-hidden />
       <HudHeader
@@ -847,9 +894,16 @@ export default function App() {
         onIrisVoiceToggle={activeModule ? toggleIrisVoiceDeck : undefined}
       />
 
-      <main
-        className={`mx-auto px-4 py-4 space-y-4 ${mainScrollPad} ${activeModule ? "max-w-[1100px]" : "max-w-[560px] md:max-w-[720px]"}`}
-      >
+      {showLanternGate ? (
+        <LanternUnlockGate
+          timezone={settings.timezone}
+          onUnlocked={() => {
+            setLanternOpen(false);
+          }}
+        />
+      ) : null}
+
+      <main className={`mx-auto px-4 py-4 space-y-4 ${mainScrollPad} ${homeMaxWidth}`}>
         {activeModule ? (
           <>
             <GlassModule id={activeModule} onClose={closeModule} animateEntry={animateModuleEntry}>
@@ -858,18 +912,41 @@ export default function App() {
               </Suspense>
             </GlassModule>
           </>
+        ) : hudPrefs.combo135 ? (
+          <>
+            <HudHomeCommandDeck
+              settings={settings}
+              leaveBy={leaveBy}
+              unread={unread}
+              urgent={urgentCount}
+              dayPct={dayPct}
+              woodhouse={woodhouse}
+              core={homeCore}
+              upNext={upNext}
+            />
+            <div className="space-y-4 lg:hidden">
+              {homeCore}
+              {!irisCinemaVisible ? <ConversationCaptions convo={convo} googleConnected={connected} /> : null}
+              <UrgentLine items={urgentItems} />
+              {upNext}
+            </div>
+            <div className="hidden lg:block space-y-4">
+              {!irisCinemaVisible ? <ConversationCaptions convo={convo} googleConnected={connected} /> : null}
+              <UrgentLine items={urgentItems} />
+            </div>
+            <FamilyPurposeDebriefBanner
+              mode={mode}
+              timeZone={settings.timezone}
+              woodhouse={woodhouse}
+              familyPurposeAppUrl={familyPurposeAppUrl}
+            />
+          </>
         ) : (
           <>
-            <HudCore gauges={gauges} core={coreRing} onOpen={(id) => focusModule(id)} />
+            {homeCore}
             {!irisCinemaVisible ? <ConversationCaptions convo={convo} googleConnected={connected} /> : null}
             <UrgentLine items={urgentItems} />
-            <UpNextPanel
-              todos={pending}
-              onToggle={toggle}
-              spark={todaySpark(plan, today)}
-              sparkDone={sparkDone(plan, today)}
-              onOpenToday={() => focusModule("today")}
-            />
+            {upNext}
             <FamilyPurposeDebriefBanner
               mode={mode}
               timeZone={settings.timezone}
@@ -942,6 +1019,8 @@ export default function App() {
         onDisconnectGoogle={() => void disconnect()}
         saving={saving}
         error={error}
+        hudPrefs={hudPrefs}
+        onHudPrefs={updateHudPrefs}
       />
     </div>
   );

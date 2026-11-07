@@ -19,6 +19,7 @@
     "gods-eye:check": "bash gods-eye/check-connection.sh",
     "jarvis-os-v2:bootstrap": "bash jarvis-os-v2/bootstrap.sh",
     "jarvis-os-v2:self-test": "bash jarvis-os-v2/verify-self-test.sh",
+    "lantern:bootstrap": "bash futurist-lantern/bootstrap.sh",
     "test:os": "npm run build && npm run test:time && npm run test:iris && npm run test:research && npm run test:audit && npm run test:guardrails && npm run test:thin && npm run test:weekly"
   },
   "dependencies": {

@@ -7,6 +7,8 @@ import { OPEN_SETTINGS_EVENT } from "../lib/settingsEvents";
 import type { UserSettings } from "../types";
 import type { WoodhouseRegistryEntry } from "../types/woodhouse";
 import { WoodhouseNodesEditor } from "./WoodhouseNodesEditor";
+import { HudPrefsPanel } from "./hud/HudPrefsPanel";
+import type { HudPrefs } from "../lib/hudPrefs";
 
 interface PushState {
   subscribed: boolean;
@@ -59,6 +61,8 @@ interface Props {
   onDisconnectGoogle: () => void;
   saving: boolean;
   error: string | null;
+  hudPrefs?: HudPrefs;
+  onHudPrefs?: (patch: Partial<HudPrefs>) => void;
 }
 
 export function SettingsDrawer({
@@ -77,6 +81,8 @@ export function SettingsDrawer({
   onDisconnectGoogle,
   saving,
   error,
+  hudPrefs,
+  onHudPrefs,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [preferredName, setPreferredName] = useState(settings.preferredName);
@@ -417,6 +423,12 @@ export function SettingsDrawer({
                   Save weekly review
                 </button>
               </div>
+              {hudPrefs && onHudPrefs ? (
+                <div className="border-t border-alfred-border pt-6">
+                  <h3 className="text-sm font-medium mb-2 text-alfred-gold">HUD layout</h3>
+                  <HudPrefsPanel prefs={hudPrefs} onChange={onHudPrefs} />
+                </div>
+              ) : null}
               <div className="border-t border-alfred-border pt-6">
                 <h3 className="text-sm font-medium mb-2 text-alfred-gold">Iris&apos;s voice</h3>
                 <VoicePicker />
