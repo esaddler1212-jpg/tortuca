@@ -43,8 +43,8 @@ export function loadHudPrefs(): HudPrefs {
       localStorage.setItem(KEY, JSON.stringify({ ...next, _v: PREFS_VER }));
       return next;
     }
-    const { _v: _ignore, ...prefs } = parsed;
-    return prefs;
+    delete parsed._v;
+    return parsed;
   } catch {
     return { ...DEFAULT_HUD_PREFS };
   }

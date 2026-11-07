@@ -220,7 +220,6 @@ function CheckInForm({
           placeholder="e.g. Maria Lopez"
           autoComplete="off"
           enterKeyHint="done"
-          // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
         />
         {showSuggestions && nameMatches.length > 0 && (
