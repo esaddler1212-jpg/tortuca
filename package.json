@@ -17,6 +17,7 @@
     "test:thin": "tsx scripts/check-thin-programming.mts",
     "test:weekly": "tsx scripts/check-weekly-auditor.mts",
     "gods-eye:check": "bash gods-eye/check-connection.sh",
+    "hallmark:bootstrap": "bash hallmark/bootstrap.sh",
     "test:os": "npm run build && npm run test:time && npm run test:iris && npm run test:research && npm run test:audit && npm run test:guardrails && npm run test:thin && npm run test:weekly"
   },
   "dependencies": {

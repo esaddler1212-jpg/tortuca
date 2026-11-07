@@ -12,6 +12,7 @@ its own README, build, and (typically) its own Netlify site.
 | **BOYS Student** | [`boys-student/`](boys-student/) | Student-facing monthly curriculum app (class code login) |
 | **Alfred × OpenJarvis** | [`alfred-jarvis/`](alfred-jarvis/) | Local AI assistant (OpenJarvis) personalized as Alfred: briefings, ECS ops, research, career |
 | **God's Eye** | [`gods-eye/`](gods-eye/) | Local 3D globe ([upstream](https://github.com/bilawalsidhu/gods-eye-view)): run on Mac; link from IRIS Pulse — [same Wi‑Fi + remote](gods-eye/README.md) |
+| **Hallmark** | [`hallmark/`](hallmark/) | Anti–AI-slop design skill ([upstream](https://github.com/Nutlope/hallmark)): `npx skills add nutlope/hallmark -g --agent cursor` — [hallmark/README.md](hallmark/README.md) |
 
 ### Alfred (repo root)
 
