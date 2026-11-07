@@ -32,7 +32,7 @@ See **`IRIS_OATH.md`**. Bootstrap replaces on-screen copy and uses browser TTS f
 
 | Piece | Where |
 |-------|--------|
-| **1 Reactor** | Phone home: red reactor skin + hold-to-talk core |
+| **1 Reactor** | Phone home: accent reactor skin + hold-to-talk core |
 | **3 Command deck** | iPad (`≥833px`): status \| core \| up next |
 | **5 Particle** | Viz behind the ring; picker on home (Orbits / Cortex / Strata) |
 | **Unlock** | Lantern gate once per day before HUD |

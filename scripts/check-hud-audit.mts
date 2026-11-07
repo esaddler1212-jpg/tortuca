@@ -227,6 +227,12 @@ ok("reminder-check: wind-down key", read("netlify/functions/reminder-check.ts").
 ok("commute-scheduled function exists", fs.existsSync(path.join(root, "netlify/functions/commute-scheduled.ts")));
 ok("user-data API exists", fs.existsSync(path.join(root, "netlify/functions/user-data.ts")));
 ok("ask uses Netlify Blobs user store", askTs.includes("getStore") || askTs.includes("blobs"));
+ok("HUD accent: school focus CSS", read("src/index.css").includes(':root[data-focus="school"]'));
+ok("useHudAccent hook", fs.existsSync(path.join(root, "src/hooks/useHudAccent.ts")));
+ok("CoreRing wires useHudAccent", read("src/components/hud/CoreRing.tsx").includes("useHudAccent"));
+ok("Lantern embed irisTheme", read("src/components/hud/LanternUnlockGate.tsx").includes("irisTheme"));
+ok("lantern bootstrap irisTheme hue", read("futurist-lantern/bootstrap.sh").includes("irisHue"));
+ok("HUD orb lantern audit doc", fs.existsSync(path.join(root, "docs/HUD_ORB_LANTERN_AUDIT.md")));
 ok("AGENTS.md guardrails doc", fs.existsSync(path.join(root, "AGENTS.md")));
 ok("shared agentGuardrails module", fs.existsSync(path.join(root, "shared/agentGuardrails.ts")));
 ok("Iris team prompt includes guardrails", read("shared/irisTeam.ts").includes("agentGuardrailsPrompt"));

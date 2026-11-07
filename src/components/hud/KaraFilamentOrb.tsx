@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { readHudAccent, rgba, type HudAccent } from "../../lib/hudAccent";
+import { accentForFocus, rgba, type HudAccent } from "../../lib/hudAccent";
 
 interface Props {
   energy?: number;
@@ -8,6 +8,9 @@ interface Props {
   thinking?: boolean;
   speaking?: boolean;
   className?: string;
+  /** From `useHudAccent().focus` — refreshes colors when focus mode changes. */
+  focusMode?: string;
+  accent?: HudAccent;
 }
 
 type Vec3 = [number, number, number];
@@ -74,9 +77,14 @@ export function KaraFilamentOrb({
   thinking,
   speaking,
   className = "",
+  focusMode = "school",
+  accent: accentProp,
 }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
   const raf = useRef(0);
+  const accentRef = useRef({ focusMode, accent: accentProp });
+  accentRef.current = { focusMode, accent: accentProp };
+
   const stateRef = useRef<OrbState>({
     energy: 0,
     voiceTick: 0,
@@ -198,8 +206,15 @@ export function KaraFilamentOrb({
       if (!ctx) return;
       const cx = w / 2;
       const cy = h / 2;
-      const base = Math.min(w, h) * 0.46;
-      const accent: HudAccent = readHudAccent();
+      const radius = Math.min(w, h) * 0.46;
+      const { focusMode: focus, accent: fromProps } = accentRef.current;
+      const rawAccent = fromProps ?? {
+        light: [103, 232, 249],
+        mid: [34, 211, 238],
+        core: [6, 182, 212],
+        deep: [8, 145, 178],
+      };
+      const accent: HudAccent = accentForFocus(focus, rawAccent);
 
       const motor = talk ? 2.1 + smoothEnergy * 0.9 : listen ? 0.65 : think ? 1.25 : 0.38;
       const t = reduce ? 0 : now * 0.001;
@@ -211,7 +226,7 @@ export function KaraFilamentOrb({
 
       ctx.clearRect(0, 0, w, h);
 
-      const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, base * 1.22);
+      const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 1.22);
       glow.addColorStop(0, rgba(accent.light, 0.28 + smoothEnergy * 0.4));
       glow.addColorStop(0.12, rgba(accent.mid, 0.55 + smoothEnergy * 0.28));
       glow.addColorStop(0.48, rgba(accent.core, 0.28));
@@ -225,7 +240,7 @@ export function KaraFilamentOrb({
         const v = world(p);
         const depth = v[2];
         const persp = 1 / (1.12 - depth * 0.38);
-        return [cx + v[0] * base * persp, cy + v[1] * base * persp, depth];
+        return [cx + v[0] * radius * persp, cy + v[1] * radius * persp, depth];
       };
 
       for (let ri = 0; ri < 4; ri++) {
@@ -238,8 +253,8 @@ export function KaraFilamentOrb({
           const p0: Vec3 = [Math.cos(a) * 0.94, 0, Math.sin(a) * 0.94];
           const p = rotZ(rotY(rotX(p0, ringTilt), yaw * (0.7 + ri * 0.08)), ringRoll);
           const persp = 1 / (1.12 - p[2] * 0.38);
-          const x = cx + p[0] * base * persp;
-          const y = cy + p[1] * base * persp;
+          const x = cx + p[0] * radius * persp;
+          const y = cy + p[1] * radius * persp;
           if (i === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
         }
@@ -308,7 +323,7 @@ export function KaraFilamentOrb({
         ctx.fill();
       }
 
-      const coreR = base * (0.19 + smoothEnergy * 0.08) * pulse;
+      const coreR = radius * (0.19 + smoothEnergy * 0.08) * pulse;
       const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR);
       core.addColorStop(0, rgba(accent.light, 1));
       core.addColorStop(0.32, rgba(accent.mid, 0.92));

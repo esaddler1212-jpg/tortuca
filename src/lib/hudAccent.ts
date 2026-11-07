@@ -41,3 +41,29 @@ export function readHudAccent(): HudAccent {
 export function rgba(c: [number, number, number], a: number): string {
   return `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${a})`;
 }
+
+/** Slightly boost filament brightness so the orb visibly tracks focus mode. */
+export function accentForFocus(focus: string, accent: HudAccent): HudAccent {
+  const boost = (c: [number, number, number], k: number): [number, number, number] =>
+    c.map((n) => Math.min(255, Math.round(n * k))) as [number, number, number];
+  switch (focus) {
+    case "network":
+      return {
+        light: boost(accent.light, 1.08),
+        mid: boost(accent.mid, 1.12),
+        core: boost(accent.core, 1.1),
+        deep: accent.deep,
+      };
+    case "weekend":
+    case "holiday":
+    case "vantage":
+      return {
+        light: boost(accent.light, 1.1),
+        mid: boost(accent.mid, 1.14),
+        core: boost(accent.core, 1.12),
+        deep: accent.deep,
+      };
+    default:
+      return accent;
+  }
+}

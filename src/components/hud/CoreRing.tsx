@@ -1,3 +1,4 @@
+import { useHudAccent } from "../../hooks/useHudAccent";
 import { useVoiceSignal } from "../../hooks/useVoiceOutput";
 import { KaraFilamentOrb } from "./KaraFilamentOrb";
 
@@ -40,6 +41,7 @@ export function CoreRing({
   const c = "currentColor";
   // Iris's "face": the core glows and ripples with each word while she speaks.
   const voice = useVoiceSignal();
+  const hudAccent = useHudAccent();
   const talking = voice.speaking || phase === "speaking";
   const listening = phase === "listening";
   const thinking = phase === "thinking";
@@ -81,6 +83,8 @@ export function CoreRing({
           listening={listening}
           thinking={thinking}
           speaking={talking}
+          focusMode={hudAccent.focus}
+          accent={{ light: hudAccent.light, mid: hudAccent.mid, core: hudAccent.core, deep: hudAccent.deep }}
         />
       ) : null}
       <svg
