@@ -36,7 +36,7 @@ export function CoreRing({
   waiting = false,
   kara = false,
 }: Props) {
-  const color = kara ? "#ff6b7a" : COLOR[status];
+  const color = COLOR[status];
   const c = "currentColor";
   // Iris's "face": the core glows and ripples with each word while she speaks.
   const voice = useVoiceSignal();
@@ -55,7 +55,10 @@ export function CoreRing({
             ? "TAP TO START"
             : lines[1];
   const spokes = [0, 60, 120, 180, 240, 300];
-  const energy = Math.min(1, (voice.speaking ? 0.5 : 0) + (listening ? 0.35 : thinking ? 0.25 : 0.08));
+  const energy = Math.min(
+    1,
+    (talking ? 0.42 : 0) + (listening ? 0.32 : thinking ? 0.22 : 0.06),
+  );
   return (
     <div
       className={`relative mx-auto aspect-square w-full max-w-[420px] [container-type:inline-size] ${kara ? "kara-orb-shell" : ""} ${onActivate ? "cursor-pointer select-none rounded-full outline-none focus-visible:ring-2 focus-visible:ring-alfred-gold" : ""}`}
@@ -74,6 +77,7 @@ export function CoreRing({
       {kara ? (
         <KaraFilamentOrb
           energy={energy}
+          voiceTick={voice.tick}
           listening={listening}
           thinking={thinking}
           speaking={talking}

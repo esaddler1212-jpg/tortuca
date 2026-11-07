@@ -22,7 +22,7 @@ export const DEFAULT_HUD_PREFS: HudPrefs = {
   combo135: true,
   particleViz: "orbits",
   lanternUnlock: true,
-  reactorSkin: true,
+  reactorSkin: false,
   karaOrb: true,
 };
 

@@ -35,7 +35,7 @@ export function ParticleCoreBackdrop({
               onClick={() => onPick(c)}
               className={`rounded-full border px-2 py-1 font-mono text-[8px] uppercase tracking-widest ${
                 c === viz
-                  ? "border-pink-400/70 text-pink-200"
+                  ? "border-[rgb(var(--accent-400)/0.55)] text-[rgb(var(--accent-200))]"
                   : "border-white/15 text-slate-500 hover:text-slate-300"
               }`}
             >
