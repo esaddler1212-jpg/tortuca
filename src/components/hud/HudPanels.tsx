@@ -157,7 +157,12 @@ export function NetworkPanel({
         <a href="https://voicebox.sh" target="_blank" rel="noopener noreferrer" className="text-cyan-400/70 hover:underline">
           Voicebox
         </a>{" "}
-        for local cloned TTS · server{" "}
+        for local cloned TTS ·{" "}
+        <a href="https://github.com/Nutlope/hallmark" target="_blank" rel="noopener noreferrer" className="text-cyan-400/70 hover:underline">
+          Hallmark
+        </a>{" "}
+        (design skill — clone <code className="text-cyan-400/55">npm run hallmark:bootstrap</code>, install{" "}
+        <code className="text-cyan-400/55">npx skills add nutlope/hallmark -g --agent cursor</code>) · server{" "}
         <a href="https://github.com/esaddler1212-jpg/tortuca/blob/main/docs/SERVER_PLAN.md" target="_blank" rel="noopener noreferrer" className="text-cyan-400/70 hover:underline">
           n8n
         </a>{" "}
