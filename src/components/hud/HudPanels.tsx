@@ -157,7 +157,13 @@ export function NetworkPanel({
         <a href="https://voicebox.sh" target="_blank" rel="noopener noreferrer" className="text-cyan-400/70 hover:underline">
           Voicebox
         </a>{" "}
-        for local cloned TTS · server{" "}
+        for local cloned TTS ·{" "}
+        <a href="https://github.com/MAL19INDUSTRIES/JARVIS-OS-V.2" target="_blank" rel="noopener noreferrer" className="text-cyan-400/70 hover:underline">
+          JARVIS-OS
+        </a>{" "}
+        (Gemini desktop —{" "}
+        <code className="text-cyan-400/55">npm run jarvis-os-v2:bootstrap</code>, cherry-pick in{" "}
+        <code className="text-cyan-400/55">jarvis-os-v2/CHERRY_PICK.md</code>) · server{" "}
         <a href="https://github.com/esaddler1212-jpg/tortuca/blob/main/docs/SERVER_PLAN.md" target="_blank" rel="noopener noreferrer" className="text-cyan-400/70 hover:underline">
           n8n
         </a>{" "}

@@ -12,6 +12,7 @@ its own README, build, and (typically) its own Netlify site.
 | **BOYS Student** | [`boys-student/`](boys-student/) | Student-facing monthly curriculum app (class code login) |
 | **Alfred × OpenJarvis** | [`alfred-jarvis/`](alfred-jarvis/) | Local AI assistant (OpenJarvis) personalized as Alfred: briefings, ECS ops, research, career |
 | **God's Eye** | [`gods-eye/`](gods-eye/) | Local 3D globe ([upstream](https://github.com/bilawalsidhu/gods-eye-view)): run on Mac; link from IRIS Pulse — [same Wi‑Fi + remote](gods-eye/README.md) |
+| **JARVIS-OS-V.2** | [`jarvis-os-v2/`](jarvis-os-v2/) | Local Gemini Jarvis ([upstream](https://github.com/MAL19INDUSTRIES/JARVIS-OS-V.2)): clone + [cherry-pick only](jarvis-os-v2/CHERRY_PICK.md) — not Iris |
 
 ### Alfred (repo root)
 
