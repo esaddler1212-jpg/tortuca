@@ -1,8 +1,9 @@
 import { useEffect, useRef } from "react";
+import { readHudAccent, rgba, type HudAccent } from "../../lib/hudAccent";
 
 interface Props {
-  /** 0–1 extra energy (voice + phase). */
   energy?: number;
+  voiceTick?: number;
   listening?: boolean;
   thinking?: boolean;
   speaking?: boolean;
@@ -10,6 +11,14 @@ interface Props {
 }
 
 type Vec3 = [number, number, number];
+
+type OrbState = {
+  energy: number;
+  voiceTick: number;
+  listening: boolean;
+  thinking: boolean;
+  speaking: boolean;
+};
 
 function rotY([x, y, z]: Vec3, a: number): Vec3 {
   const c = Math.cos(a);
@@ -24,10 +33,31 @@ function rotX(v: Vec3, a: number): Vec3 {
   return [x, y * c - z * s, y * s + z * c];
 }
 
-/** K.A.R.A.-style chaotic red filament orb (Original 01). */
-export function KaraFilamentOrb({ energy = 0, listening, thinking, speaking, className = "" }: Props) {
+/** Chaotic filament orb — colors follow focus-mode accent; pulses on Iris speech. */
+export function KaraFilamentOrb({
+  energy = 0,
+  voiceTick = 0,
+  listening,
+  thinking,
+  speaking,
+  className = "",
+}: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
   const raf = useRef(0);
+  const stateRef = useRef<OrbState>({
+    energy: 0,
+    voiceTick: 0,
+    listening: false,
+    thinking: false,
+    speaking: false,
+  });
+  stateRef.current = {
+    energy,
+    voiceTick,
+    listening: Boolean(listening),
+    thinking: Boolean(thinking),
+    speaking: Boolean(speaking),
+  };
 
   useEffect(() => {
     const canvas = ref.current;
@@ -90,9 +120,20 @@ export function KaraFilamentOrb({ energy = 0, listening, thinking, speaking, cla
     const ro = new ResizeObserver(resize);
     ro.observe(canvas);
 
-    let t0 = performance.now();
+    let lastVoiceTick = -1;
+    let speakBurst = 0;
+    let smoothEnergy = 0;
+
     const draw = (now: number) => {
-      t0 = now;
+      const { energy, voiceTick: tick, listening: listen, thinking: think, speaking: talk } = stateRef.current;
+      if (tick !== lastVoiceTick) {
+        lastVoiceTick = tick;
+        if (tick > 0) speakBurst = 1;
+      }
+      speakBurst *= talk ? 0.86 : 0.92;
+      const targetEnergy = Math.min(1.2, energy + speakBurst * 0.65 + (talk ? 0.28 : 0));
+      smoothEnergy += (targetEnergy - smoothEnergy) * 0.14;
+
       const w = canvas.width;
       const h = canvas.height;
       const ctx = canvas.getContext("2d");
@@ -100,32 +141,32 @@ export function KaraFilamentOrb({ energy = 0, listening, thinking, speaking, cla
       const cx = w / 2;
       const cy = h / 2;
       const base = Math.min(w, h) * 0.46;
+      const accent: HudAccent = readHudAccent();
 
-      const speed = speaking ? 1.4 : listening ? 0.55 : thinking ? 1.1 : 0.22;
+      const speed = talk ? 1.75 + smoothEnergy * 0.6 : listen ? 0.55 : think ? 1.15 : 0.22;
       const t = reduce ? 0 : now * 0.001;
-      const yaw = t * speed * (thinking ? -1 : 1);
+      const yaw = t * speed * (think ? -1 : 1);
       const pitch = 0.35 + Math.sin(t * 0.31) * 0.08;
-      const pulse = 1 + Math.sin(t * (speaking ? 8 : 3)) * 0.06 + energy * 0.22;
+      const pulseHz = talk ? 10 + smoothEnergy * 4 : 3;
+      const pulse = 1 + Math.sin(t * pulseHz) * (talk ? 0.11 : 0.05) + smoothEnergy * 0.18;
 
       ctx.clearRect(0, 0, w, h);
 
-      const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, base * 1.15);
-      glow.addColorStop(0, `rgba(255, 230, 245, ${0.35 + energy * 0.2})`);
-      glow.addColorStop(0.12, `rgba(255, 120, 140, ${0.55 + energy * 0.15})`);
-      glow.addColorStop(0.45, `rgba(220, 40, 60, 0.25)`);
+      const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, base * 1.18);
+      glow.addColorStop(0, rgba(accent.light, 0.22 + smoothEnergy * 0.35));
+      glow.addColorStop(0.15, rgba(accent.mid, 0.45 + smoothEnergy * 0.25));
+      glow.addColorStop(0.5, rgba(accent.core, 0.22));
       glow.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = glow;
       ctx.fillRect(0, 0, w, h);
 
       const project = (p: Vec3): [number, number, number] => {
-        let v = rotY(rotX(p, pitch), yaw);
+        const v = rotY(rotX(p, pitch), yaw);
         const depth = v[2];
         const persp = 1 / (1.15 - depth * 0.35);
         return [cx + v[0] * base * persp, cy + v[1] * base * persp, depth];
       };
 
-      // faint orbital rings
-      ctx.save();
       for (let ri = 0; ri < 3; ri++) {
         const tilt = pitch + ri * 0.55 + t * 0.15 * (ri + 1);
         ctx.beginPath();
@@ -139,11 +180,10 @@ export function KaraFilamentOrb({ energy = 0, listening, thinking, speaking, cla
           if (i === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
         }
-        ctx.strokeStyle = `rgba(255, 90, 110, ${0.12 + ri * 0.06})`;
-        ctx.lineWidth = 1.2 * (w / 400);
+        ctx.strokeStyle = rgba(accent.mid, 0.1 + ri * 0.05 + (talk ? 0.08 : 0));
+        ctx.lineWidth = (1.1 + (talk ? 0.4 : 0)) * (w / 400);
         ctx.stroke();
       }
-      ctx.restore();
 
       const drawLine = (pts: Vec3[], alpha: number) => {
         ctx.beginPath();
@@ -155,8 +195,9 @@ export function KaraFilamentOrb({ energy = 0, listening, thinking, speaking, cla
             first = false;
           } else ctx.lineTo(x, y);
         }
-        ctx.strokeStyle = `rgba(255, ${70 + Math.floor(alpha * 80)}, 95, ${0.08 + alpha * 0.55})`;
-        ctx.lineWidth = (0.6 + alpha * 1.4) * (w / 400);
+        const mix = accent.mid.map((n, i) => Math.round(n * 0.55 + accent.core[i]! * 0.45)) as [number, number, number];
+        ctx.strokeStyle = rgba(mix, 0.07 + alpha * (talk ? 0.68 : 0.48));
+        ctx.lineWidth = (0.55 + alpha * (talk ? 2 : 1.3) + speakBurst * 0.8) * (w / 400);
         ctx.stroke();
       };
 
@@ -174,18 +215,18 @@ export function KaraFilamentOrb({ energy = 0, listening, thinking, speaking, cla
       for (const n of nodes) {
         const [x, y, d] = project(n);
         const a = 0.25 + (d + 1) * 0.35;
-        ctx.fillStyle = `rgba(255, ${200 + Math.floor(a * 40)}, 220, ${0.15 + a * 0.35})`;
+        ctx.fillStyle = rgba(accent.light, 0.12 + a * (talk ? 0.45 : 0.3));
         ctx.beginPath();
-        ctx.arc(x, y, (1.2 + a * 0.8) * (w / 400), 0, Math.PI * 2);
+        ctx.arc(x, y, (1.2 + a * 0.8 + speakBurst * 1.2) * (w / 400), 0, Math.PI * 2);
         ctx.fill();
       }
 
-      const coreR = base * 0.22 * pulse;
+      const coreR = base * (0.2 + smoothEnergy * 0.06) * pulse;
       const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR);
-      core.addColorStop(0, "#ffffff");
-      core.addColorStop(0.35, "#ffd1e0");
-      core.addColorStop(0.7, "#ff4466");
-      core.addColorStop(1, "rgba(180, 20, 40, 0)");
+      core.addColorStop(0, rgba(accent.light, 0.95));
+      core.addColorStop(0.35, rgba(accent.mid, 0.85));
+      core.addColorStop(0.72, rgba(accent.core, 0.55));
+      core.addColorStop(1, rgba(accent.deep, 0));
       ctx.fillStyle = core;
       ctx.beginPath();
       ctx.arc(cx, cy, coreR, 0, Math.PI * 2);
@@ -194,20 +235,14 @@ export function KaraFilamentOrb({ energy = 0, listening, thinking, speaking, cla
       if (!reduce) raf.current = requestAnimationFrame(draw);
     };
 
-    if (reduce) draw(t0);
+    if (reduce) draw(performance.now());
     else raf.current = requestAnimationFrame(draw);
 
     return () => {
       cancelAnimationFrame(raf.current);
       ro.disconnect();
     };
-  }, [energy, listening, thinking, speaking]);
+  }, []);
 
-  return (
-    <canvas
-      ref={ref}
-      className={`absolute inset-0 h-full w-full ${className}`}
-      aria-hidden
-    />
-  );
+  return <canvas ref={ref} className={`absolute inset-0 h-full w-full ${className}`} aria-hidden />;
 }

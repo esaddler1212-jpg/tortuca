@@ -19,7 +19,7 @@ export function HudPrefsPanel({ prefs, onChange }: { prefs: HudPrefs; onChange: 
           disabled={!prefs.combo135}
           onChange={(e) => onChange({ reactorSkin: e.target.checked })}
         />
-        Reactor accents on phone
+        Stronger accent glow on phone gauges
       </label>
       <label className="flex items-center gap-2 text-sm text-alfred-mist">
         <input
