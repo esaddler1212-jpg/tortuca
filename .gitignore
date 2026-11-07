@@ -13,5 +13,8 @@ USER.local.md
 
 # God's Eye upstream clone (local only; has its own .env and caches)
 gods-eye/gods-eye-view/
+
+# JARVIS-OS-V.2 upstream clone (local Gemini desktop; large venv)
+jarvis-os-v2/JARVIS-OS-V.2/
 __pycache__/
 *.pyc
