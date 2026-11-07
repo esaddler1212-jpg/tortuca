@@ -26,11 +26,25 @@ export const DEFAULT_HUD_PREFS: HudPrefs = {
   karaOrb: true,
 };
 
+const PREFS_VER = 2;
+
 export function loadHudPrefs(): HudPrefs {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return { ...DEFAULT_HUD_PREFS };
-    return { ...DEFAULT_HUD_PREFS, ...JSON.parse(raw) } as HudPrefs;
+    const parsed = { ...DEFAULT_HUD_PREFS, ...JSON.parse(raw) } as HudPrefs & { _v?: number };
+    if (parsed._v !== PREFS_VER) {
+      const next: HudPrefs = {
+        ...parsed,
+        combo135: parsed.combo135 ?? true,
+        karaOrb: true,
+        particleViz: parsed.particleViz ?? DEFAULT_HUD_PREFS.particleViz,
+      };
+      localStorage.setItem(KEY, JSON.stringify({ ...next, _v: PREFS_VER }));
+      return next;
+    }
+    const { _v: _ignore, ...prefs } = parsed;
+    return prefs;
   } catch {
     return { ...DEFAULT_HUD_PREFS };
   }
@@ -38,7 +52,7 @@ export function loadHudPrefs(): HudPrefs {
 
 export function saveHudPrefs(patch: Partial<HudPrefs>): HudPrefs {
   const next = { ...loadHudPrefs(), ...patch };
-  localStorage.setItem(KEY, JSON.stringify(next));
+  localStorage.setItem(KEY, JSON.stringify({ ...next, _v: PREFS_VER }));
   return next;
 }
 
