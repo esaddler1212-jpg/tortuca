@@ -12,6 +12,8 @@ npm run lantern:bootstrap
 
 Then reload the PWA. First open each day (when enabled in **Settings → HUD**) shows the lantern full-screen until you finish the oath or tap **Skip**.
 
+**Netlify production** runs `lantern:bootstrap` before every build (`netlify.toml`), so you do not need a local bootstrap for the live site.
+
 ## IRIS embed patch
 
 The bootstrap applies a small patch so the parent window receives:
