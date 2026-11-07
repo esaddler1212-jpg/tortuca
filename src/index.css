@@ -203,6 +203,9 @@ html {
   -webkit-tap-highlight-color: transparent;
   -webkit-text-size-adjust: 100%;
 }
+body {
+  overscroll-behavior-y: none;
+}
 /* Respect "Reduce Motion" (Settings → Accessibility → Motion) and save battery. */
 @media (prefers-reduced-motion: reduce) {
   *,

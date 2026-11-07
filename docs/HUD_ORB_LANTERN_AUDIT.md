@@ -66,6 +66,10 @@ Storage: `src/lib/hudPrefs.ts` (localStorage, `_v` migrations).
 - [ ] Clear lantern day → gate loads; oath lines match IRIS text; hue matches focus
 - [ ] `npm run test:os` (includes HUD audit checks)
 
+## Cross-device
+
+See [`CROSS_DEVICE_AUDIT.md`](./CROSS_DEVICE_AUDIT.md) for Chromebook / iPhone / iPad layout bands and QA.
+
 ## Related PRs (historical)
 
 #82 combo HUD + gate, #83 Netlify bootstrap, #84 accent orb, #85 omnidirectional motion, theme/lantern audit branch.
