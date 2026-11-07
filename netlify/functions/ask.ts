@@ -12,7 +12,7 @@ import {
   matchesForget,
   normalizeAskTurns,
 } from "../../shared/agentGuardrails";
-import { runIris } from "./_iris";
+import { MODEL, runIris } from "./_iris";
 import { consultSpecialist } from "./_irisSpecialists";
 import { lookupFlight } from "./_flight";
 import { coords } from "./_pulse";
@@ -67,7 +67,7 @@ export const handler: Handler = async (event) => {
   const client = new Anthropic({ timeout: 52_000, maxRetries: 0 });
   const started = Date.now();
   const tz = body.timeZone || "America/Los_Angeles";
-  const blank = { model: "claude-opus-5-5", inTok: 0, outTok: 0, cacheRead: 0, cacheWrite: 0, searches: 0, fetches: 0, tools: [] as string[], hops: 0 };
+  const blank = { model: MODEL, inTok: 0, outTok: 0, cacheRead: 0, cacheWrite: 0, searches: 0, fetches: 0, tools: [] as string[], hops: 0 };
   const log = (usage: typeof blank, outcome: IrisTrace["outcome"]) =>
     recordUsage(who, { at: new Date().toISOString(), ms: Date.now() - started, ...usage, outcome }, tz);
   try {
