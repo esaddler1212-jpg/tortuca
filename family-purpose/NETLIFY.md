@@ -96,14 +96,14 @@ Family Purpose is one Netlify site; **IRIS** and **BOYS** use separate sites in 
 | App | Netlify base directory | What to configure |
 | --- | --- | --- |
 | **IRIS / Alfred** | repo root (`/`) | `FAMILY_PURPOSE_BACKUP_KEY` — **same secret** as this site. Optional: `WOODHOUSE_FAMILY_PURPOSE_URL` = this site’s URL. In IRIS **Settings → Woodhouse**, register Family Purpose or paste this site URL. |
-| **BOYS student app** | `boys-student/` | Env `VITE_BOYS_API_URL` = **this Family Purpose site URL** (where `/api/boys/*` functions run). |
+| **Battleworld portal** | `boys-student/` | Game-only bundle (`npm run build:all`). No Family Purpose env. BOYS APIs on this site still power Group tab if you use curriculum. |
 | **Family Purpose (this site)** | `family-purpose/` | `FAMILY_PURPOSE_BACKUP_KEY`. In app **Settings**: backup upload URL + key; **BOYS class code** (`PURPOSE-A` / `B` / `C`). |
 
 After deploy:
 
 1. Open Family Purpose on the Chromebook once on Wi‑Fi and **install** the PWA.
 2. Paste backup URL + key on phone and laptop so check-ins merge in the cloud.
-3. Deploy BOYS student app and confirm Group → **Curriculum responses** loads.
+3. (Optional) If you still use BOYS curriculum, confirm Group → **Curriculum responses** loads — not required for Battleworld portal.
 4. Open IRIS during school hours — you should see Family Purpose **counts only** (no student names) on the Woodhouse dashboard once a backup has synced.
 
 ## Local preview (development)

@@ -12,7 +12,9 @@ npm install
 npm run dev
 ```
 
-Console tile: [Tortuca Console](../games-hub/README.md) → **Battleworld**.
+**Public deploy (no Alfred):** [Battleworld portal](../boys-student/README.md) — `boys-student/` Netlify site bundles the game.
+
+Console tile (both games): [Tortuca Console](../games-hub/README.md) → **Battleworld**.
 
 ## Story ladder (one planet)
 
