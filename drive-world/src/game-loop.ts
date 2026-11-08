@@ -65,6 +65,15 @@ import {
   type SavedProgress
 } from './game-progress';
 import { bindDriveKeys, pollDriveInput } from './game-input';
+import { isGamepadConnected, pollGamepadMenuActions } from './gamepad-hub';
+import {
+  hapticDragGo,
+  hapticHeatChase,
+  hapticMenu,
+  hapticNitro,
+  hapticParkingStar
+} from './gamepad-haptics';
+import { isSimulationPaused } from './console-graphics';
 import {
   playLandmarkChime,
   playRaceTreeBeep,
@@ -208,6 +217,8 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   let yawSampleReady = false;
   let nitroCharge = 1;
   let nitroBoosting = false;
+  let wasNitroBoosting = false;
+  let wasHeatHunted = false;
   const photoKeys = { fwd: false, back: false, left: false, right: false, up: false, down: false };
   const CALDECOTT = { x: 392, z: 265 };
   let autopilotActive = false;
@@ -516,13 +527,17 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     publishHud({ cameraMode });
   };
 
-  const toggleCamera = () => {
+  const cycleCamera = (dir: 1 | -1) => {
     const idx = CAMERA_CYCLE.indexOf(cameraMode);
-    cameraMode = CAMERA_CYCLE[(idx + 1) % CAMERA_CYCLE.length] ?? 'chase';
+    const next = (idx + dir + CAMERA_CYCLE.length) % CAMERA_CYCLE.length;
+    cameraMode = CAMERA_CYCLE[next] ?? 'chase';
     vistaLookTarget = null;
     progress = setCameraMode(progress, cameraMode);
     publishHud({ cameraMode });
+    hapticMenu();
   };
+
+  const toggleCamera = () => cycleCamera(1);
 
   registerSkipWaymo(() => {
     if (!ridingWaymo) return;
@@ -706,6 +721,24 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
 
   app.on('update', (dt: number) => {
     if (!camera) return;
+
+    for (const { action, tab } of pollGamepadMenuActions()) {
+      if (action === 'camera-next') cycleCamera(1);
+      else if (action === 'camera-prev') cycleCamera(-1);
+      else if (action === 'photo') togglePhoto();
+      else if (action === 'autopilot') toggleAutopilot();
+      else if (action === 'confirm' && ridingWaymo) endWaymoRide();
+      else if (action === 'hud-tab' && tab) {
+        window.dispatchEvent(new CustomEvent('drive-world:hud-tab', { detail: tab }));
+        hapticMenu();
+      }
+    }
+
+    if (isSimulationPaused() && progress.phase === 'home' && !ridingWaymo && !photoMode) {
+      publishHud({ gamepadConnected: isGamepadConnected() });
+      return;
+    }
+
     waterT += dt;
 
     const bayMat = (bay?.render?.meshInstances?.[0]?.material ?? null) as StandardMaterial | null;
@@ -934,15 +967,19 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         vs?.fire?.('vehicle:nitro', mul);
         if (nitroBoosting) nitroCharge = Math.max(0, nitroCharge - dt * 0.44);
         else nitroCharge = Math.min(1, nitroCharge + dt * (mph > 28 ? 0.2 : 0.11));
+        if (nitroBoosting && !wasNitroBoosting) hapticNitro();
+        wasNitroBoosting = nitroBoosting;
         pulseVehicleUnderglow(ent, nitroBoosting);
         applyCameraFovBoost(camera, nitroBoosting, dt);
       } else if (drive.nitro && nitroCharge > 0.04) {
         nitroBoosting = true;
+        if (!wasNitroBoosting) hapticNitro();
         nitroCharge = Math.max(0, nitroCharge - dt * 0.35);
       } else {
         nitroBoosting = false;
         nitroCharge = Math.min(1, nitroCharge + dt * 0.14);
       }
+      wasNitroBoosting = nitroBoosting;
     }
 
     progress = heatDecay(progress, mph, dt);
@@ -1066,6 +1103,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
             progress = outcome.progress;
             progress = appendJournal(progress, { kind: 'parking', id: parkingSpot.id, label: parkingSpot.name });
             ui.showToast('Parked', `${parkingSpot.name} · ${stars}★`);
+            hapticParkingStar(stars);
             for (const vid of outcome.newlyUnlockedVehicles) {
               ui.showToast('Parking reward', getVehicleSpec(vid).name);
             }
@@ -1108,6 +1146,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         playRaceTreeBeep(true);
         resetGhostRun('drag', dragOut.hit.strip.id);
         ui.showToast('GO!', `${dragOut.hit.strip.name} — nail the finish beam`);
+        hapticDragGo();
       }
       if (dragOut.hit?.kind === 'drag-finish') {
         const prevEt = progress.cpmDragBestET;
@@ -1225,6 +1264,8 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     const taElapsed =
       cpmRuntime.timeLapStartMs != null && taId ? frameMs - cpmRuntime.timeLapStartMs : null;
     const heatHunted = (progress.heatLevel ?? 0) >= 4.1;
+    if (heatHunted && !wasHeatHunted) hapticHeatChase();
+    wasHeatHunted = heatHunted;
 
     let ghostRivalLabel: string | null = null;
     if (cpmRuntime.dragStripId && cpmRuntime.dragLaunchT != null) {
@@ -1295,6 +1336,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         ? `gate ${Math.min(cpmRuntime.timeGateIndex, taDef.gates.length)}/${taDef.gates.length}`
         : null,
       heatHunted,
+      gamepadConnected: isGamepadConnected(),
       ghostRivalLabel,
       pinnedChapterLabel: chapterPin?.label ?? null,
       pinnedChapterHint: chapterPin?.hint ?? null,

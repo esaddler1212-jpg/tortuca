@@ -31,6 +31,9 @@ import { buildDrivingWorld } from './build-world';
 import { startGameSession } from './game-loop';
 import { installMobileShell } from './install-mobile-shell';
 import { isIOS, recommendedPixelRatio } from './mobile-platform';
+import { applyFrameCap, applyResolutionScale } from './console-graphics';
+import { loadSettings, type GameSettings } from './game-settings';
+import { setMasterVolume, setSfxVolume } from './game-audio';
 import { tryMergeCloudOnBoot } from './game-cloud-save';
 import { preloadBootVehicleModels } from './vehicle-gltf';
 import { mountReactHud } from './hud/mount';
@@ -56,7 +59,11 @@ const device = await createGraphicsDevice(canvas, {
   antialias: false,
   powerPreference: isIOS() ? 'low-power' : 'high-performance'
 });
-device.maxPixelRatio = recommendedPixelRatio();
+const basePixelRatio = recommendedPixelRatio();
+const bootSettings = loadSettings();
+applyResolutionScale(device, bootSettings, basePixelRatio);
+setMasterVolume(bootSettings.masterVolume);
+setSfxVolume(bootSettings.sfxVolume ?? 0.9);
 
 const options = new AppOptions();
 options.graphicsDevice = device;
@@ -95,6 +102,15 @@ await new Promise<void>((resolve) => {
 });
 
 app.start();
+applyFrameCap(app, bootSettings);
+window.addEventListener('drive-world:settings', (ev) => {
+  const s = (ev as CustomEvent<GameSettings>).detail;
+  applyResolutionScale(device, s, basePixelRatio);
+  applyFrameCap(app, s);
+  setMasterVolume(s.masterVolume);
+  setSfxVolume(s.sfxVolume ?? 0.9);
+  app.resizeCanvas();
+});
 
 app.scene.ambientLight = NIGHT_AMBIENT.clone();
 app.scene.exposure = 0.55;

@@ -5,10 +5,19 @@ let engineOsc: OscillatorNode | null = null;
 let engineGain: GainNode | null = null;
 let unlocked = false;
 let masterVolume = 0.85;
+let sfxVolume = 0.9;
+
+function audVol(sting = 1): number {
+  return masterVolume * sfxVolume * sting;
+}
 
 export function setMasterVolume(v: number): void {
   masterVolume = Math.max(0, Math.min(1, v));
   void import('./game-music').then((m) => m.onMasterVolumeChanged(masterVolume));
+}
+
+export function setSfxVolume(v: number): void {
+  sfxVolume = Math.max(0, Math.min(1, v));
 }
 
 function ensureContext(): AudioContext | null {
@@ -47,7 +56,7 @@ export function unlockAudio(): void {
 export function updateEngineAudio(mph: number, driving: boolean, exhaustGain = 1): void {
   if (!unlocked || !ctx || !engineGain || !engineOsc) return;
   const gain = Math.max(0.85, Math.min(1.6, exhaustGain));
-  const targetVol = (driving && mph > 2 ? Math.min(0.1, (0.015 + mph * 0.0012) * gain) : 0) * masterVolume;
+  const targetVol = (driving && mph > 2 ? Math.min(0.1, (0.015 + mph * 0.0012) * gain) : 0) * audVol();
   engineGain.gain.setTargetAtTime(targetVol, ctx.currentTime, 0.08);
   const hz = 40 + mph * (1.25 + gain * 0.12);
   engineOsc.frequency.setTargetAtTime(hz, ctx.currentTime, 0.05);
@@ -61,7 +70,7 @@ export function playRaceTreeBeep(go = false): void {
   const g = c.createGain();
   o.type = 'square';
   o.frequency.value = go ? 880 : 440;
-  g.gain.value = (go ? 0.11 : 0.07) * masterVolume;
+  g.gain.value = go ? 0.11 * audVol() : 0.07 * audVol();
   g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + (go ? 0.32 : 0.12));
   o.connect(g);
   g.connect(c.destination);
@@ -77,7 +86,7 @@ export function playLandmarkChime(): void {
   const g = c.createGain();
   o.type = 'triangle';
   o.frequency.value = 520;
-  g.gain.value = 0.12;
+  g.gain.value = 0.12 * audVol();
   g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.35);
   o.connect(g);
   g.connect(c.destination);
@@ -104,7 +113,7 @@ export function playHeatSiren(): void {
   o.type = 'sine';
   o.frequency.setValueAtTime(280, c.currentTime);
   o.frequency.exponentialRampToValueAtTime(220, c.currentTime + 0.35);
-  g.gain.value = 0.04 * masterVolume;
+  g.gain.value = 0.04 * audVol();
   g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.5);
   o.connect(g);
   g.connect(c.destination);
@@ -121,7 +130,7 @@ export function playVistaChime(): void {
   o.type = 'sine';
   o.frequency.setValueAtTime(660, c.currentTime);
   o.frequency.exponentialRampToValueAtTime(880, c.currentTime + 0.25);
-  g.gain.value = 0.1 * masterVolume;
+  g.gain.value = 0.1 * audVol();
   g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.55);
   o.connect(g);
   g.connect(c.destination);
@@ -137,7 +146,7 @@ export function playWaymoArrival(): void {
   o.type = 'sine';
   o.frequency.setValueAtTime(440, c.currentTime);
   o.frequency.exponentialRampToValueAtTime(660, c.currentTime + 0.2);
-  g.gain.value = 0.1;
+  g.gain.value = 0.1 * audVol();
   g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.45);
   o.connect(g);
   g.connect(c.destination);

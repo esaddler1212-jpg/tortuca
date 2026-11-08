@@ -65,6 +65,7 @@ export type HudSnapshot = {
   pinnedChapterHint?: string | null;
   landmarkSprintLabel?: string | null;
   garageInteriorCam?: boolean;
+  gamepadConnected?: boolean;
 };
 
 export type TouchDrive = {

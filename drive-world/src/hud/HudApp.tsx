@@ -25,7 +25,9 @@ import { isLandTargetAllowed, searchLandTargets } from '../city-land-search';
 import { loadSettings, saveSettings, type GameSettings } from '../game-settings';
 import { FAST_TRAVEL } from '../world-extras';
 import { buildMissionBoard } from '../game-missions';
-import { bayRegionsGated } from '../mission-chapters';
+import { bayRegionsGated, syncVallejoMissionSteps, VALLEJO_CHAPTER_STEPS } from '../mission-chapters';
+import { GAMEPAD_GLYPHS } from '../gamepad-hub';
+import { setSimulationPaused } from '../console-graphics';
 import { nextTaxiContract } from '../cpm-taxi';
 import { requestStartTaxi } from '../game-bridge';
 import { heatLabel } from '../game-heat';
@@ -55,6 +57,21 @@ function PinnedObjective({ snap }: { snap: HudSnapshot }) {
 
 function HudDrawerTabs({ snap }: { snap: HudSnapshot }) {
   const [tab, setTab] = useState<'map' | 'missions' | 'garage' | 'settings'>('missions');
+
+  useEffect(() => {
+    const onTab = (ev: Event) => {
+      const id = (ev as CustomEvent<'map' | 'missions' | 'garage' | 'settings'>).detail;
+      setTab(id);
+    };
+    window.addEventListener('drive-world:hud-tab', onTab);
+    return () => window.removeEventListener('drive-world:hud-tab', onTab);
+  }, []);
+
+  useEffect(() => {
+    setSimulationPaused(tab !== 'missions' && snap.phase === 'home' && !snap.ridingWaymo && !snap.photoMode);
+    return () => setSimulationPaused(false);
+  }, [tab, snap.phase, snap.ridingWaymo, snap.photoMode]);
+
   if (snap.photoMode || snap.ridingWaymo) return null;
   return (
     <div className="hud-drawer-stack">
@@ -92,6 +109,7 @@ function HudDrawerTabs({ snap }: { snap: HudSnapshot }) {
         {tab === 'garage' && (
           <>
             {snap.garageInteriorCam ? <div className="sprint-armed">Garage interior cam</div> : null}
+            <RecordsPanel snap={snap} />
             <SafehousePanel snap={snap} />
           </>
         )}
@@ -203,6 +221,43 @@ function LandmarkPanel({ snap }: { snap: HudSnapshot }) {
         })}
       </ul>
     </details>
+  );
+}
+
+function RecordsPanel({ snap }: { snap: HudSnapshot }) {
+  const p = snap.progress;
+  if (!p) return null;
+  const synced = syncVallejoMissionSteps(p);
+  const mastery = VALLEJO_CHAPTER_STEPS.filter((s) => synced.missionStepsCompleted.includes(s.id)).length;
+  const parkStars = Object.values(p.parkingStars).reduce((a, b) => a + b, 0);
+  const traps = Object.keys(p.speedTrapBests).length;
+  return (
+    <details className="records-panel" open={!isTouchPrimary()}>
+      <summary>Records · trophies</summary>
+      <ul className="records-list">
+        <li>Landmarks {p.visitedLandmarkIds.length}</li>
+        <li>Garage unlocks {p.unlockedVehicleIds.length}</li>
+        <li>Regions {p.unlockedRegionIds.length} / 6</li>
+        <li>Parking ★ {parkStars}</li>
+        <li>Speed traps logged {traps}</li>
+        <li>Heat peak {p.heatPeakEver?.toFixed(1) ?? '0'} / 5</li>
+        <li>Meet badges {p.meetBadges?.length ?? 0}</li>
+        <li>Vallejo mastery {mastery} / {VALLEJO_CHAPTER_STEPS.length}</li>
+        <li>Scenic routes {p.scenicCompleted.length}</li>
+      </ul>
+    </details>
+  );
+}
+
+function GamepadGlyphs({ connected }: { connected: boolean }) {
+  if (!connected) return null;
+  return (
+    <div className="gamepad-glyphs" aria-label="Controller hints">
+      <span>{GAMEPAD_GLYPHS.drive}</span>
+      <span>Cam {GAMEPAD_GLYPHS.camera}</span>
+      <span>{GAMEPAD_GLYPHS.photo}</span>
+      <span>{GAMEPAD_GLYPHS.map}</span>
+    </div>
   );
 }
 
@@ -384,13 +439,23 @@ function SettingsPanel() {
         />
       </label>
       <label className="slider-row">
-        Volume
+        Master volume
         <input
           type="range"
           min={0}
           max={100}
           value={Math.round(s.masterVolume * 100)}
           onChange={(e) => apply({ ...s, masterVolume: Number(e.target.value) / 100 })}
+        />
+      </label>
+      <label className="slider-row">
+        SFX / engine
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={Math.round((s.sfxVolume ?? 0.9) * 100)}
+          onChange={(e) => apply({ ...s, sfxVolume: Number(e.target.value) / 100 })}
         />
       </label>
       <label className="slider-row">
@@ -403,8 +468,40 @@ function SettingsPanel() {
         >
           <option value="chromebook">Chromebook (light)</option>
           <option value="balanced">Balanced</option>
+          <option value="console">Console / TV</option>
           <option value="lush">Lush nights</option>
         </select>
+      </label>
+      <label className="slider-row">
+        Frame cap
+        <select
+          value={String(s.frameCapFps ?? 0)}
+          onChange={(e) =>
+            apply({ ...s, frameCapFps: Number(e.target.value) as GameSettings['frameCapFps'] })
+          }
+        >
+          <option value="0">Uncapped</option>
+          <option value="30">30 fps (Performance)</option>
+          <option value="60">60 fps</option>
+        </select>
+      </label>
+      <label className="slider-row">
+        Resolution scale
+        <input
+          type="range"
+          min={50}
+          max={100}
+          value={Math.round((s.resolutionScale ?? 1) * 100)}
+          onChange={(e) => apply({ ...s, resolutionScale: Number(e.target.value) / 100 })}
+        />
+      </label>
+      <label className="checkbox-row">
+        <input
+          type="checkbox"
+          checked={!!s.tvHudMode}
+          onChange={(e) => apply({ ...s, tvHudMode: e.target.checked })}
+        />
+        TV / couch HUD (larger text)
       </label>
       <label className="slider-row">
         Fog
@@ -508,14 +605,20 @@ export function HudApp() {
 
   const showTouch =
     typeof window !== 'undefined' && isTouchPrimary() && !snap.photoMode && snap.phase === 'home' && !snap.ridingWaymo;
+  const pad = !!snap.gamepadConnected;
+  const camLabel = pad ? `Cam ${GAMEPAD_GLYPHS.camera}` : `Camera: ${cameraModeLabel(snap.cameraMode)} (C)`;
+  const photoLabel = pad ? `Photo ${GAMEPAD_GLYPHS.photo}` : `Photo ${snap.photoMode ? 'ON' : ''} (P)`;
 
   return (
-    <div className={`react-hud ${snap.photoMode ? 'photo-active' : ''}`}>
+    <div
+      className={`react-hud ${snap.photoMode ? 'photo-active' : ''} ${snap.settings.tvHudMode ? 'react-hud--tv' : ''}`}
+    >
       {snap.ridingWaymo && (
         <button type="button" className="skip-waymo" onClick={() => requestSkipWaymo()}>
-          Skip prologue ride
+          {pad ? `Skip ride (${GAMEPAD_GLYPHS.skip})` : 'Skip prologue ride'}
         </button>
       )}
+      <GamepadGlyphs connected={pad} />
       {(snap.streetName || snap.storefrontStripLabel) && !snap.photoMode && !snap.ridingWaymo && (
         <div className="street-blade" aria-live="polite">
           {snap.storefrontStripLabel ?? snap.streetName}
@@ -523,10 +626,10 @@ export function HudApp() {
       )}
       <div className="hud-toolbar">
         <button type="button" className="cam-toggle" onClick={() => requestToggleCamera()}>
-          Camera: {cameraModeLabel(snap.cameraMode)} (C)
+          {camLabel}
         </button>
         <button type="button" className="cam-toggle" onClick={() => requestTogglePhoto()}>
-          Photo {snap.photoMode ? 'ON' : ''} (P)
+          {photoLabel}
         </button>
         <span className="hud-mph">{Math.round(snap.mph)} mph</span>
         {snap.progress?.activeVehicleId === 'bonus-night-coil' && snap.phase === 'home' && !snap.ridingWaymo && (
