@@ -31,6 +31,7 @@ const required = [
   'src/doom-story-arc.ts',
   'src/territory-invasion.ts',
   'src/territory-tick.ts',
+  'src/battleworld.ts',
   'src/hero-rivals.ts',
   'src/world-fate.ts',
   'src/world-persist.ts',

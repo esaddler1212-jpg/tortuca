@@ -1,5 +1,7 @@
 # Flight Nemulator — character customization
 
+**Battleworld** is the fan name for the shared planet: Marvel / DC / DBZ homages coexist, fight paired rivals, and fight over districts (see Story mechanics).
+
 ## Suit + ability tier (Iron Man, War Machine, Batman)
 
 Each **suit** is one loadout row: paint/color on the mesh, a **role** tag, and a unique **ability pair** with combat tuning.

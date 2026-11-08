@@ -43,7 +43,7 @@ export function doomStoryHudLine(heroId: string, role: string): string | null {
   }
   const gen = doomHeroTimelineGeneration();
   if (gen != null && role === 'hero') {
-    return `Hero ending — branched to timeline Earth · gen ${gen}`;
+    return `Hero ending — branched to Battleworld timeline · gen ${gen}`;
   }
   if (role === 'hero') {
     return 'Hero path: win the wave-10 pair duel to branch a new timeline';

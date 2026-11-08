@@ -3,11 +3,13 @@ const JOKE_URL = 'https://v2.jokeapi.dev/joke/Programming?blacklistFlags=nsfw,re
 const OPEN5E_SPELL = 'https://api.open5e.com/spells/?limit=1';
 
 const LOCAL_TIPS = [
+  'Battleworld — Marvel, DC, and DBZ codenames on one planet ring',
   'Boost into the skyline — Shift',
-  'Hero: purple raiders siege buildings — stop them. Villain: blue heroes chase your havoc',
-  'Nine cities share one Earth — orbit past 400 km/h to freeze time, then E to shatter',
+  'Hero: stop villain takeovers, then your pair boss at wave 10. Villain: raid districts · H henchmen · G raze',
+  'Nine districts share one Battleworld — orbit past 400 km/h to freeze time, then E to shatter',
   'Roll a town at World Gacha → export GLB → public/models/worldgacha/ (see docs)',
-  'Photo mode: P — save PNG from HUD'
+  'Photo mode: P — save PNG from HUD',
+  'Villain advisors on the map trade pair-hero locations — fly near and press H'
 ];
 
 let cachedTip = LOCAL_TIPS[0]!;

@@ -1,8 +1,9 @@
 import { Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
+import { battleworldDistrictLabel } from './battleworld';
 import { DISTRICTS, WORLD_HALF_M } from './districts';
 import { attachUnitBox } from './primitive-mesh';
 
-/** One playable Earth disk — each district is a city cell on the ring. */
+/** One playable Battleworld disk — nine homage city cells on a ring (Marvel / DC / DBZ). */
 export const EARTH_RING_RADIUS_M = 7200;
 export const EARTH_ORBIT_MIN_ALT_M = 280;
 export const EARTH_ORBIT_SPEED_KMH = 400;
@@ -33,7 +34,7 @@ export function earthLabel(pos: Vec3): string {
       best = d;
     }
   }
-  return `Earth · ${best.label}`;
+  return battleworldDistrictLabel(best.label);
 }
 
 export function horizontalRadius(pos: Vec3): number {

@@ -2,6 +2,10 @@
 
 Browser **hero flight sandbox** (PlayCanvas + Vite). Homage codenames only — fan tribute, not affiliated with Marvel, DC, Shueisha, etc.
 
+## Battleworld (your crossover planet)
+
+One ring planet (**Battleworld**) holds nine homage districts. Playable legends from **Marvel**, **DC**, and **DBZ** share the same sky: territory raids, pair-rival finales, God-Emperor / timeline Doom endings, and villain advisors all happen on this patchwork world — not separate canon Earths. Universe tags live in `roster-mutations.ts`; the HUD labels districts `Battleworld · …`.
+
 ## Run
 
 ```bash

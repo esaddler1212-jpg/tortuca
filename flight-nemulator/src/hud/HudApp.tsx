@@ -85,6 +85,7 @@ export type GameHudSnapshot = {
   pairBossBlocked?: boolean;
   takeoverDistricts?: number;
   villainScoutHint?: string | null;
+  battleworldTagline?: string | null;
 };
 
 function formatUsd(n: number): string {
@@ -112,6 +113,9 @@ export function HudApp() {
       <div className="hud-top">
         <div className="hud-panel">
           <div className="hud-hero">{snap.heroName}</div>
+          {snap.battleworldTagline && (
+            <div className="hud-tag hud-hint">{snap.battleworldTagline}</div>
+          )}
           <div className="hud-tag">{snap.codename}</div>
           {snap.aerialMobility && <div className="hud-tag">{snap.aerialMobility}</div>}
           {snap.loadoutLabel && <div className="hud-tag">{snap.loadoutLabel}</div>}
@@ -267,7 +271,7 @@ function WorldFatePanel({ snap }: { snap: GameHudSnapshot }) {
   if (snap.heroWorldSaved && snap.playerRole === 'hero') {
     return (
       <p className="hud-hint hud-chrono">
-        World saved — monument raised in {snap.district?.replace(/^Earth · /, '') ?? 'hometown'}
+        World saved — monument raised in {snap.district?.replace(/^Battleworld · /, '') ?? 'hometown'}
       </p>
     );
   }

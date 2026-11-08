@@ -110,6 +110,7 @@ import {
   DOOM_GOD_EMPEROR_FORM,
   isDoomGodEmperor
 } from './doom-story-arc';
+import { battleworldRoleBlurb } from './battleworld';
 import {
   addDistrictDestruction,
   canHeroFacePairBoss,
@@ -735,6 +736,7 @@ function tickFrame(s: GameSession, dt: number): void {
     takeoverDistricts: territoryTakeoverCount(s.territory),
     villainScoutHint:
       s.playerRole === 'villain' ? pairHeroHintForPlayerVillain(s.heroSpec.id) : null,
+    battleworldTagline: battleworldRoleBlurb(s.playerRole),
     alignmentNote: canPickAlignment(s.heroSpec.id)
       ? 'Doom: toggle Hero or Villain below'
       : s.heroSpec.id === VENOM_PLAYABLE_ID
