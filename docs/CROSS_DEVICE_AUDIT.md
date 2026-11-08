@@ -53,6 +53,7 @@ npm run test:os        # full release gate (includes test:devices)
 
 - [`HUD_ORB_LANTERN_AUDIT.md`](./HUD_ORB_LANTERN_AUDIT.md) — orb accent + daily lantern
 - `README.md` — iPad PWA install blurb
+- [`xtool/CHERRY_PICK.md`](../xtool/CHERRY_PICK.md) — optional **native** iOS shell / `xtool devices` QA (`bash xtool/ios-qa.sh` on Mac); PWA remains the primary Iris surface
 
 ## Sanity checklist (pre-merge)
 
