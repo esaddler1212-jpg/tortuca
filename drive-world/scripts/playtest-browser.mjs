@@ -101,10 +101,27 @@ await sleep(1500);
 const before = await state();
 await page.keyboard.down('KeyW');
 await sleep(4000);
+const camChase = await page.evaluate(() => {
+  const app = window.__cityNights.app;
+  const car = app.root.find((n) => n.script && n.script.vehicle)[0];
+  const cam = app.root.findByName('camera');
+  if (!car || !cam) return { ok: false, detail: 'no car/cam' };
+  const cp = car.getPosition();
+  const camP = cam.getPosition();
+  const dist = Math.hypot(camP.x - cp.x, camP.z - cp.z);
+  const camFwd = cam.forward;
+  const vel = car.rigidbody?.linearVelocity;
+  const vx = vel?.x ?? 0;
+  const vz = vel?.z ?? 0;
+  const vLen = Math.hypot(vx, vz);
+  const dot = vLen > 0.5 ? (camFwd.x * vx + camFwd.z * vz) / vLen : 1;
+  return { ok: dist >= 2.5 && dot > 0.5, dist: dist.toFixed(1), dot: dot.toFixed(2) };
+});
 const after = await state();
 await page.keyboard.up('KeyW');
 const moved = Math.hypot(after.playerX - before.playerX, after.playerZ - before.playerZ);
 check('W drives the car', after.mph >= 3 && moved > 0.5, `${moved.toFixed(1)} m, ${after.mph} mph`);
+check('chase cam behind car (dist + view dir)', camChase.ok, `dist=${camChase.dist} dot=${camChase.dot}`);
 if (shot) await page.screenshot({ path: `${shot}/playtest-drive.png` });
 
 await page.evaluate(() => window.dispatchEvent(new CustomEvent('drive-world:hud-tab', { detail: 'map' })));

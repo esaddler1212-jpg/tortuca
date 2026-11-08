@@ -22,8 +22,23 @@ function terrainBlocksCamLine(
   return false;
 }
 
+function isCamOccluder(entName: string, vehicleEnt: Entity | null, hitEntity: Entity | null): boolean {
+  if (!entName) return false;
+  if (entName.startsWith('ground') || entName.includes('freeway') || entName.startsWith('tokyo-ground')) {
+    return false;
+  }
+  if (!vehicleEnt || !hitEntity) return true;
+  let n: Entity | null = hitEntity;
+  while (n) {
+    if (n === vehicleEnt) return false;
+    n = n.parent as Entity | null;
+  }
+  return true;
+}
+
 function physicsBlocksCamLine(
   app: AppBase | null,
+  vehicleEnt: Entity | null,
   eyeX: number,
   eyeY: number,
   eyeZ: number,
@@ -37,7 +52,7 @@ function physicsBlocksCamLine(
   const hit = app.systems.rigidbody.raycastFirst(from, to);
   if (!hit) return false;
   const entName = hit.entity.name ?? '';
-  if (entName.startsWith('ground') || entName.includes('freeway')) return false;
+  if (!isCamOccluder(entName, vehicleEnt, hit.entity)) return false;
   return true;
 }
 
@@ -168,6 +183,7 @@ export function applyDriveCamera(
 ): void {
   const prof = cameraProfile(mode);
   const pos = ent.getPosition();
+  /** PlayCanvas `forward` is −local Z; Bullet vehicle thrust is +local Z (opposite). */
   const forward = ent.forward;
   const right = ent.right;
 
@@ -185,13 +201,13 @@ export function applyDriveCamera(
 
   if (prof.drone) {
     const goal = new Vec3(
-      pos.x - forward.x * prof.drone.back,
+      pos.x + forward.x * prof.drone.back,
       pos.y + prof.drone.height,
-      pos.z - forward.z * prof.drone.back
+      pos.z + forward.z * prof.drone.back
     );
     smoothPos.lerp(smoothPos, goal, Math.min(1, dt * 4.5));
     camera.setPosition(smoothPos);
-    const look = new Vec3(pos.x + forward.x * 6, pos.y + 0.6, pos.z + forward.z * 6);
+    const look = new Vec3(pos.x - forward.x * 6, pos.y + 0.6, pos.z - forward.z * 6);
     camera.lookAt(look);
     return;
   }
@@ -208,20 +224,20 @@ export function applyDriveCamera(
   if (camBack > 0.5 && (mode === 'chase' || mode === 'low' || mode === 'cinematic')) {
     const eyeY = pos.y + 1.15;
     for (let pass = 0; pass < 4; pass++) {
-      const tx = pos.x - forward.x * camBack + right.x * off.x;
+      const tx = pos.x + forward.x * camBack + right.x * off.x;
       const ty = pos.y + off.y;
-      const tz = pos.z - forward.z * camBack + right.z * off.x;
+      const tz = pos.z + forward.z * camBack + right.z * off.x;
       const terrainHit = terrainBlocksCamLine(pos.x, eyeY, pos.z, tx, ty, tz);
-      const physicsHit = physicsBlocksCamLine(app, pos.x, eyeY, pos.z, tx, ty, tz);
+      const physicsHit = physicsBlocksCamLine(app, ent, pos.x, eyeY, pos.z, tx, ty, tz);
       if (!terrainHit && !physicsHit) break;
       camBack *= 0.62;
     }
     camBack = Math.max(2.8, camBack);
   }
   const target = new Vec3(
-    pos.x - forward.x * camBack + right.x * off.x,
+    pos.x + forward.x * camBack + right.x * off.x,
     pos.y + off.y,
-    pos.z - forward.z * camBack + right.z * off.x
+    pos.z + forward.z * camBack + right.z * off.x
   );
   if (prof.lerp >= 0.99) {
     camera.setPosition(target);
@@ -232,9 +248,9 @@ export function applyDriveCamera(
 
   const lookDist = mode === 'cockpit' ? prof.lookAhead : prof.lookAhead;
   const look = new Vec3(
-    pos.x + forward.x * lookDist,
+    pos.x - forward.x * lookDist,
     pos.y + prof.lookHeight,
-    pos.z + forward.z * lookDist
+    pos.z - forward.z * lookDist
   );
   camera.lookAt(look);
 }
