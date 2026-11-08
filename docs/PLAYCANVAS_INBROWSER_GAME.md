@@ -97,6 +97,10 @@ Top stars (active, game-adjacent):
 
 *(Exact star counts change; JSON is refreshed via `fetch-playcanvas-org-repos.sh`.)*
 
+## Open-world driving (active prototype)
+
+See [`OPEN_WORLD_DRIVING.md`](./OPEN_WORLD_DRIVING.md) and run [`drive-world/`](../drive-world/) (`npm run dev`) — raycast car on a 400 m map, chase cam, mph HUD.
+
 ## Tortuca / IRIS
 
 This repo does **not** embed a PlayCanvas canvas in the signed-in PWA unless product asks ([AGENTS.md](../AGENTS.md)). A game can live as:
