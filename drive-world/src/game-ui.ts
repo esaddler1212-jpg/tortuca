@@ -141,6 +141,10 @@ export function wireGameUi(): GameUi {
       const underglow = el<HTMLInputElement>('slider-underglow');
       const tint = el<HTMLInputElement>('slider-tint');
       const rims = el<HTMLInputElement>('slider-rims');
+      const camber = el<HTMLInputElement>('slider-camber');
+      const spoiler = el<HTMLInputElement>('slider-spoiler');
+      const livery = el<HTMLInputElement>('slider-livery');
+      const exhaust = el<HTMLSelectElement>('exhaust-note');
       const handling = el<HTMLSelectElement>('handling-preset');
 
       const emit = () => {
@@ -154,6 +158,10 @@ export function wireGameUi(): GameUi {
           underglow: Number(underglow.value) / 100,
           tint: Number(tint.value) / 100,
           rims: Number(rims.value) / 100,
+          camber: Number(camber.value) / 100,
+          spoiler: Number(spoiler.value) / 100,
+          liveryStripe: Number(livery.value) / 100,
+          exhaustNote: (exhaust.value as VehicleCustomization['exhaustNote']) || 'stock',
           handling: (handling.value as VehicleCustomization['handling']) || 'grip'
         });
       };
@@ -187,6 +195,10 @@ export function wireGameUi(): GameUi {
       underglow.value = String(Math.round((custom.underglow ?? 0.35) * 100));
       tint.value = String(Math.round((custom.tint ?? 0.4) * 100));
       rims.value = String(Math.round((custom.rims ?? 0.45) * 100));
+      camber.value = String(Math.round((custom.camber ?? 0.25) * 100));
+      spoiler.value = String(Math.round((custom.spoiler ?? 0.35) * 100));
+      livery.value = String(Math.round((custom.liveryStripe ?? 0.2) * 100));
+      exhaust.value = custom.exhaustNote ?? 'stock';
       handling.value = custom.handling ?? 'grip';
       glow.oninput = emit;
       power.oninput = emit;
@@ -196,6 +208,10 @@ export function wireGameUi(): GameUi {
       underglow.oninput = emit;
       tint.oninput = emit;
       rims.oninput = emit;
+      camber.oninput = emit;
+      spoiler.oninput = emit;
+      livery.oninput = emit;
+      exhaust.onchange = emit;
       handling.onchange = emit;
       el<HTMLButtonElement>('apply-custom').onclick = onApply;
     },

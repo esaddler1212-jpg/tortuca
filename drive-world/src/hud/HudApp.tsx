@@ -208,6 +208,14 @@ function SettingsPanel() {
         />
         Ambient traffic
       </label>
+      <label className="checkbox-row">
+        <input
+          type="checkbox"
+          checked={s.fuelSimEnabled}
+          onChange={(e) => apply({ ...s, fuelSimEnabled: e.target.checked })}
+        />
+        Fuel sim (free pumps)
+      </label>
     </details>
   );
 }
@@ -287,6 +295,15 @@ export function HudApp() {
         <p className="flight-hint">Space/⤒ climb · Ctrl/⤓ sink · WASD · Shift boost</p>
       )}
       <HeatMeter snap={snap} />
+      {snap.settings.fuelSimEnabled && snap.phase === 'home' && !snap.photoMode && (
+        <div className="fuel-meter" aria-label="Fuel">
+          Fuel {snap.fuelPercent ?? 100}%
+          {snap.nearGas ? ' · filling…' : ''}
+        </div>
+      )}
+      {snap.parkingSpotName && !snap.photoMode && (
+        <div className="parking-hint">{snap.parkingSpotName}</div>
+      )}
       <SafehousePanel snap={snap} />
       <MusicPanel />
       <JournalPanel snap={snap} />

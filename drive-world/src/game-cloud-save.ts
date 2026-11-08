@@ -49,13 +49,19 @@ export async function pushCloudProgress(progress: SavedProgress): Promise<boolea
 export async function tryMergeCloudOnBoot(): Promise<void> {
   const local = loadProgress();
   const remote = await pullCloudProgress();
-  if (!remote || (remote.version !== 5 && remote.version !== 6)) return;
+  if (!remote || (remote.version !== 5 && remote.version !== 6 && remote.version !== 7)) return;
   const localScore =
     local.visitedLandmarkIds.length * 10 + local.unlockedVehicleIds.length * 5 + local.collectedIds.length;
   const remoteScore =
     remote.visitedLandmarkIds.length * 10 + remote.unlockedVehicleIds.length * 5 + remote.collectedIds.length;
   if (remoteScore > localScore) {
-    saveProgress({ ...remote, version: 6, tacoTrucksFound: remote.tacoTrucksFound ?? [] });
+    saveProgress({
+      ...remote,
+      version: 7,
+      tacoTrucksFound: remote.tacoTrucksFound ?? [],
+      fuelLevel: remote.fuelLevel ?? 1,
+      parkingStars: remote.parkingStars ?? {}
+    });
   } else if (localScore > remoteScore) {
     await pushCloudProgress(local);
   }
@@ -68,8 +74,14 @@ export function exportProgressJson(): string {
 export function importProgressJson(raw: string): boolean {
   try {
     const parsed = JSON.parse(raw) as SavedProgress;
-    if (parsed.version !== 5 && parsed.version !== 6) return false;
-    saveProgress({ ...parsed, version: 6, tacoTrucksFound: parsed.tacoTrucksFound ?? [] });
+    if (parsed.version !== 5 && parsed.version !== 6 && parsed.version !== 7) return false;
+    saveProgress({
+      ...parsed,
+      version: 7,
+      tacoTrucksFound: parsed.tacoTrucksFound ?? [],
+      fuelLevel: parsed.fuelLevel ?? 1,
+      parkingStars: parsed.parkingStars ?? {}
+    });
     return true;
   } catch {
     return false;

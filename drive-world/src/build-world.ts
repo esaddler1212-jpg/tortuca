@@ -6,6 +6,7 @@ import { buildAllDistricts, buildFreewayLamps } from './build-districts';
 import { buildAllFreeways } from './build-freeway';
 import { buildFreewayRamps } from './build-freeway-ramps';
 import { buildBayAreaLandmarks } from './build-landmarks';
+import { buildParkingSpots, buildGasStations } from './build-parking-gas';
 import { buildTacoTrucks } from './build-taco-trucks';
 import { buildMissionSites } from './build-mission-sites';
 import {
@@ -45,6 +46,8 @@ export function buildDrivingWorld(app: AppBase): void {
   buildAllDistricts(app);
   buildBayAreaLandmarks(app);
   buildTacoTrucks(app);
+  buildParkingSpots(app);
+  buildGasStations(app);
   buildMissionSites(app);
   buildFreewayLamps(app, 120, 140);
 }

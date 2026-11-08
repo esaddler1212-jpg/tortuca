@@ -1,6 +1,7 @@
 import type { VehicleSpec } from './vehicle-catalog';
 
 export type HandlingPreset = 'grip' | 'drift' | 'comfort';
+export type ExhaustNote = 'stock' | 'sport' | 'loud';
 
 export type VehicleCustomization = {
   paintPreset: string;
@@ -16,6 +17,13 @@ export type VehicleCustomization = {
   tint: number;
   /** 0–1 rim accent */
   rims: number;
+  /** 0–1 negative camber look + slight turn-in */
+  camber: number;
+  /** 0–1 rear wing size */
+  spoiler: number;
+  /** 0–1 secondary body stripe */
+  liveryStripe: number;
+  exhaustNote: ExhaustNote;
   handling: HandlingPreset;
 };
 
@@ -34,7 +42,9 @@ export const PAINT_PRESETS: PaintPreset[] = [
   { id: 'cherry-red', label: 'Cherry Red', diffuse: [0.18, 0.05, 0.05], emissive: [0.9, 0.18, 0.12] },
   { id: 'stealth', label: 'Stealth', diffuse: [0.04, 0.04, 0.05], emissive: [0.12, 0.14, 0.18] },
   { id: 'warriors-blue', label: 'Warriors Blue', diffuse: [0.06, 0.12, 0.28], emissive: [0.15, 0.45, 0.95] },
-  { id: 'giants-orange', label: 'Giants Orange', diffuse: [0.22, 0.1, 0.04], emissive: [0.95, 0.4, 0.12] }
+  { id: 'giants-orange', label: 'Giants Orange', diffuse: [0.22, 0.1, 0.04], emissive: [0.95, 0.4, 0.12] },
+  { id: 'parking-yellow', label: 'Lot Stripe Yellow', diffuse: [0.2, 0.16, 0.04], emissive: [0.95, 0.85, 0.15] },
+  { id: 'fuel-green', label: 'Pump Green', diffuse: [0.05, 0.12, 0.06], emissive: [0.25, 0.92, 0.45] }
 ];
 
 export const DEFAULT_CUSTOMIZATION: VehicleCustomization = {
@@ -47,8 +57,16 @@ export const DEFAULT_CUSTOMIZATION: VehicleCustomization = {
   underglow: 0.35,
   tint: 0.4,
   rims: 0.45,
+  camber: 0.25,
+  spoiler: 0.35,
+  liveryStripe: 0.2,
+  exhaustNote: 'stock',
   handling: 'grip'
 };
+
+export function mergeCustomization(saved?: Partial<VehicleCustomization>): VehicleCustomization {
+  return { ...DEFAULT_CUSTOMIZATION, ...saved };
+}
 
 export function defaultCustomizationFor(spec: VehicleSpec): VehicleCustomization {
   if (spec.id === 'bonus-gotham-knight') {
@@ -102,6 +120,10 @@ export function appliedTuning(spec: VehicleSpec, custom: VehicleCustomization): 
   underglowIntensity: number;
   tintOpacity: number;
   rimGlow: number;
+  camberDeg: number;
+  spoilerScale: number;
+  stripeIntensity: number;
+  exhaustGain: number;
 } {
   const preset = resolvePaintPreset(custom.paintPreset);
   const powerMul = 0.85 + custom.power * 0.4;
@@ -120,6 +142,9 @@ export function appliedTuning(spec: VehicleSpec, custom: VehicleCustomization): 
   const glow = 0.15 + custom.glow * 0.65;
   const wheelScale = 0.88 + custom.wheel * 0.28;
   const rideDrop = custom.rideHeight * 0.22;
+  const camberDeg = -4 - custom.camber * 10;
+  if (custom.camber > 0.45) friction *= 1.03;
+  const exhaustGain = custom.exhaustNote === 'loud' ? 1.45 : custom.exhaustNote === 'sport' ? 1.15 : 1;
   return {
     maxEngineForce: power,
     frictionSlip: friction,
@@ -131,7 +156,11 @@ export function appliedTuning(spec: VehicleSpec, custom: VehicleCustomization): 
     rideDrop,
     underglowIntensity: custom.underglow,
     tintOpacity: 0.35 + custom.tint * 0.45,
-    rimGlow: 0.2 + custom.rims * 0.8
+    rimGlow: 0.2 + custom.rims * 0.8,
+    camberDeg,
+    spoilerScale: 0.4 + custom.spoiler * 1.1,
+    stripeIntensity: custom.liveryStripe,
+    exhaustGain
   };
 }
 

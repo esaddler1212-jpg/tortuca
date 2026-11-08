@@ -2,6 +2,11 @@ import { Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
 
 import { hillOffsetM } from './bay-terrain';
 import { nearestTacoTruck } from './city-checkpoints';
+import { nearestGasStation } from './gas-stations';
+import { fuelMultiplier, fuelPercent, refillFuel, tickFuel } from './fuel-system';
+import { nearestParkingSpot, scoreParking } from './landmark-parking';
+import { recordParkingStars } from './parking-rewards';
+import { appliedTuning } from './vehicle-customization';
 import {
   computeTouchControls,
   isTouchDriveActive,
@@ -31,6 +36,7 @@ import {
   setVehicleCustomization,
   tryUnlockCompletedRegions,
   findTacoTruck,
+  saveProgress,
   tryUnlockNightCoil,
   tryUnlockSkywayHover,
   saveLastPose,
@@ -124,6 +130,10 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   let lastPos = new Vec3();
   let statsT = 0;
   let cloudSaveT = 0;
+  let parkingHoldT = 0;
+  let fuelRefillT = 0;
+  let playerBaseEngineForce = 5200;
+  let exhaustGain = 1;
   const photoKeys = { fwd: false, back: false, left: false, right: false, up: false, down: false };
   const CALDECOTT = { x: 392, z: 265 };
   let autopilotActive = false;
@@ -243,6 +253,9 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     const custom = getVehicleCustomization(progress, vehicleId);
     draftCustom = { ...custom };
     player = createPlayerVehicle(app, vehicleId, p, yaw ?? oldRot?.y ?? progress.lastPose?.yaw ?? 15, custom);
+    const tune = appliedTuning(getVehicleSpec(vehicleId), custom);
+    playerBaseEngineForce = tune.maxEngineForce;
+    exhaustGain = tune.exhaustGain;
     progress = setActiveVehicle(progress, vehicleId);
     lastPos.copy(p);
     ui.setVehicleName(getVehicleSpec(vehicleId).name);
@@ -255,6 +268,9 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     const pos = vehicle()?.getPosition().clone();
     const yaw = vehicle()?.getEulerAngles().y ?? 15;
     progress = setVehicleCustomization(progress, progress.activeVehicleId, draftCustom);
+    const tune = appliedTuning(getVehicleSpec(progress.activeVehicleId), draftCustom);
+    playerBaseEngineForce = tune.maxEngineForce;
+    exhaustGain = tune.exhaustGain;
     swapVehicle(progress.activeVehicleId, pos, yaw);
     ui.showToast('Applied', 'Paint and tuning updated for this car.');
   };
@@ -263,6 +279,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     if (!nearGarage || !progress.activeVehicleId) return;
     void ensureVehicleModelsLoaded(app, progress.unlockedVehicleIds);
     draftCustom = { ...getVehicleCustomization(progress, progress.activeVehicleId) };
+    exhaustGain = appliedTuning(getVehicleSpec(progress.activeVehicleId), draftCustom).exhaustGain;
     const house = serviceSafehouse ?? resolveHomeSafehouse(progress);
     const svc = homeServicePoint(house);
     ui.setGarageVisible(true, progress, onGarageSelect, svc.mode, house.name);
@@ -614,7 +631,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     if (onAutopilot) {
       mph = stepAutopilotCruise(autopilot, ent, dt);
       speedEl.textContent = `${mph.toFixed(0)} mph · Autopilot`;
-      updateEngineAudio(mph, true);
+      updateEngineAudio(mph, true, exhaustGain);
       player?.lights.setBrake(false);
     } else if (aerial) {
       const fs = ent.script?.flightVehicle as
@@ -692,11 +709,18 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       speedEl.textContent = aerial
         ? `${mph.toFixed(0)} mph · ${getVehicleSpec(progress.activeVehicleId!).locomotion === 'helicopter' ? 'Heli' : 'Hover'}`
         : `${mph.toFixed(0)} mph`;
-      updateEngineAudio(mph, true);
+      updateEngineAudio(mph, true, exhaustGain);
     }
 
     progress = heatDecay(progress, mph, dt);
     progress = heatFromSpeedTrap(progress, mph, pos.x, pos.z);
+    progress = tickFuel(progress, settings, mph, progress.activeVehicleId, dt);
+    if (!aerial && progress.activeVehicleId) {
+      const veh = ent.script?.vehicle as { maxEngineForce?: number } | undefined;
+      if (veh && typeof veh.maxEngineForce === 'number') {
+        veh.maxEngineForce = playerBaseEngineForce * fuelMultiplier(progress, settings, progress.activeVehicleId);
+      }
+    }
     tickHeatSiren(progress.heatLevel ?? 0, dt);
     cloudSaveT += dt;
     if (cloudSaveT > 50 && progress.phase === 'home') {
@@ -731,6 +755,48 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       progress.phase === 'home' ? nearUnlockedSafehouse(progress, pos.x, pos.z) : null;
     const serviceHouse = serviceSafehouse ?? (nearSh?.atService ? nearSh.house : null);
 
+    let parkingSpot: ReturnType<typeof nearestParkingSpot> = null;
+    let nearGas = false;
+    if (progress.phase === 'home' && !aerial) {
+      parkingSpot = nearestParkingSpot(pos.x, pos.z);
+      const gasNear = nearestGasStation(pos.x, pos.z);
+      nearGas = Boolean(gasNear);
+      if (gasNear && mph < 5 && settings.fuelSimEnabled) {
+        fuelRefillT += dt;
+        if (fuelRefillT > 0.6) {
+          const refill = refillFuel(progress);
+          if (refill.fresh) {
+            progress = refill.progress;
+            saveProgress(progress);
+            progress = appendJournal(progress, { kind: 'fuel', id: gasNear.id, label: gasNear.name });
+            ui.showToast('Tank full', `${gasNear.name} — free fill`);
+            if (nearGarage) refreshGarageUi();
+          }
+          fuelRefillT = 0;
+        }
+      } else fuelRefillT = 0;
+
+      if (parkingSpot && mph < 5) {
+        const stars = scoreParking(mph, pos.x, pos.z, yaw, parkingSpot);
+        const best = progress.parkingStars[parkingSpot.id] ?? 0;
+        if (stars > best) {
+          parkingHoldT += dt;
+          if (parkingHoldT > 0.85) {
+            const outcome = recordParkingStars(progress, parkingSpot.id, stars);
+            progress = outcome.progress;
+            progress = appendJournal(progress, { kind: 'parking', id: parkingSpot.id, label: parkingSpot.name });
+            ui.showToast('Parked', `${parkingSpot.name} · ${stars}★`);
+            for (const vid of outcome.newlyUnlockedVehicles) {
+              ui.showToast('Parking reward', getVehicleSpec(vid).name);
+            }
+            if (nearGarage) refreshGarageUi();
+            ui.setProgressSummary(progress);
+            parkingHoldT = 0;
+          }
+        } else parkingHoldT = 0;
+      } else parkingHoldT = 0;
+    }
+
     publishHud({
       playerX: pos.x,
       playerZ: pos.z,
@@ -759,7 +825,13 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       homeServiceMode: serviceHouse
         ? homeServicePoint(serviceHouse).mode
         : homeServicePoint(resolveHomeSafehouse(progress)).mode,
-      streetName: nearestStreetLabel(pos.x, pos.z)
+      streetName: nearestStreetLabel(pos.x, pos.z),
+      fuelPercent: settings.fuelSimEnabled ? fuelPercent(progress) : 100,
+      nearGas,
+      parkingSpotName:
+        parkingSpot && mph < 8
+          ? `${parkingSpot.name}${(progress.parkingStars[parkingSpot.id] ?? 0) > 0 ? ` · ${progress.parkingStars[parkingSpot.id]}★` : ''}`
+          : undefined
     });
 
     statsT += dt;

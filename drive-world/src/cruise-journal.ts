@@ -45,7 +45,11 @@ export function journalLines(progress: SavedProgress): string[] {
           ? 'Scenic'
           : e.kind === 'taco'
             ? 'Taco truck'
-            : 'Landmark';
+            : e.kind === 'parking'
+              ? 'Parking'
+              : e.kind === 'fuel'
+                ? 'Fuel stop'
+                : 'Landmark';
     lines.push(`${kind}: ${e.label}`);
   }
   return lines;

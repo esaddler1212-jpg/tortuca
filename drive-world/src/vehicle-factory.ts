@@ -7,7 +7,7 @@ import {
 } from 'playcanvas';
 
 import { getVehicleSpec } from './vehicle-catalog';
-import { appliedTuning, DEFAULT_CUSTOMIZATION, type VehicleCustomization } from './vehicle-customization';
+import { appliedTuning, mergeCustomization, type VehicleCustomization } from './vehicle-customization';
 import { attachVehicleLights, type VehicleLights } from './vehicle-lights';
 import { attachVehicleGltf, hasGltfForVehicle } from './vehicle-gltf';
 
@@ -172,7 +172,7 @@ export function createPlayerVehicle(
   customization?: VehicleCustomization
 ): PlayerVehicle {
   const spec = getVehicleSpec(vehicleId);
-  const custom = { ...DEFAULT_CUSTOMIZATION, ...customization };
+  const custom = mergeCustomization(customization);
   const tuning = appliedTuning(spec, custom);
   const paint = chassisMaterial(tuning);
 
@@ -211,6 +211,7 @@ export function createPlayerVehicle(
     });
     const wy = def.pos.y - tuning.rideDrop;
     wheel.setLocalPosition(def.pos.x * scaleWheel, wy, def.pos.z * (spec.chassis.z / 1.9));
+    wheel.setLocalEulerAngles(0, 0, def.front ? tuning.camberDeg : tuning.camberDeg * 0.85);
     return wheel;
   });
 
@@ -276,6 +277,29 @@ export function createPlayerVehicle(
       castShadows: false
     });
     vehicle.addChild(glow);
+  }
+
+  if (tuning.spoilerScale > 0.42) {
+    const spoiler = new Entity('tune-spoiler');
+    spoiler.setLocalScale(cx * tuning.spoilerScale, 0.05 + tuning.spoilerScale * 0.04, 0.28 + tuning.spoilerScale * 0.2);
+    spoiler.setLocalPosition(0, cy * 2.05 - tuning.rideDrop, -cz * 0.78);
+    spoiler.addComponent('render', { type: 'box', material: paint });
+    vehicle.addChild(spoiler);
+  }
+  if (tuning.stripeIntensity > 0.08) {
+    const stripeMat = paint.clone() as StandardMaterial;
+    stripeMat.emissive = new Color(
+      Math.min(1, tuning.emissive[0] + 0.35),
+      Math.min(1, tuning.emissive[1] + 0.35),
+      Math.min(1, tuning.emissive[2] + 0.35)
+    );
+    stripeMat.emissiveIntensity = tuning.emissiveIntensity * (0.5 + tuning.stripeIntensity);
+    stripeMat.update();
+    const stripe = new Entity('livery-stripe');
+    stripe.setLocalScale(cx * 1.02, 0.035, 0.05);
+    stripe.setLocalPosition(0, cy * 1.6 - tuning.rideDrop, cz * 0.05);
+    stripe.addComponent('render', { type: 'box', material: stripeMat });
+    vehicle.addChild(stripe);
   }
 
   if (!useGltfBody) {

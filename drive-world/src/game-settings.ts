@@ -5,6 +5,8 @@ import { isTouchPrimary } from './mobile-platform';
 export type GameSettings = {
   masterVolume: number;
   fogQuality: 'low' | 'med' | 'high';
+  /** Gentle tank drain + free pumps; off = always full power */
+  fuelSimEnabled: boolean;
   showTraffic: boolean;
   photoSensitivity: number;
   musicVolume: number;
@@ -19,6 +21,7 @@ const KEY = 'drive-world-settings-v1';
 const defaults: GameSettings = {
   masterVolume: 0.85,
   fogQuality: 'med',
+  fuelSimEnabled: true,
   showTraffic: true,
   photoSensitivity: 1,
   musicVolume: 0.55,

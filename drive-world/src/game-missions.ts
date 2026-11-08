@@ -2,6 +2,7 @@ import {
   AUTOPILOT_VEHICLE_ID,
   BONUS_AERIAL_IDS,
   BONUS_LEGEND_IDS,
+  BONUS_PARKING_IDS,
   REGION_VEHICLE_IDS,
   getVehicleSpec
 } from './vehicle-catalog';
@@ -9,6 +10,7 @@ import { districtHasLandmarkVisit, districtTacoFound } from './city-checkpoints'
 import { DISTRICT_LABELS, LANDMARKS } from './landmark-registry';
 import { nextUnvisitedLandmark } from './landmark-navigation';
 import type { SavedProgress } from './game-progress';
+import { LANDMARK_PARKING, parkingSpotsCleared, parkingSpotCount } from './landmark-parking';
 import { SCENIC_ROUTES, SPEED_TRAPS } from './world-extras';
 import type { DistrictId } from './world-config';
 
@@ -54,6 +56,26 @@ export function buildMissionBoard(
         : `Find the taco truck + any landmark → ${reward}`
     });
   });
+
+  const parked = parkingSpotsCleared(progress.parkingStars);
+  lines.push({
+    id: 'parking-summary',
+    label: `Landmark parking ${parked}/${parkingSpotCount()}`,
+    done: parked >= parkingSpotCount(),
+    hint: 'Green bays at landmarks — slow, straight, hold steady'
+  });
+  const nextPark = LANDMARK_PARKING.find((p) => !(progress.parkingStars[p.id] ?? 0));
+  if (nextPark) {
+    lines.push({
+      id: 'parking-next',
+      label: `Next bay: ${nextPark.name}`,
+      done: false,
+      hint: 'Under ~5 mph in the lit rectangle'
+    });
+  }
+  if (!progress.unlockedVehicleIds.includes(BONUS_PARKING_IDS[0]) && parked < 4) {
+    lines.push({ id: 'park-van', label: 'Unlock Bay Shuttle Van', done: false, hint: '4 parking badges' });
+  }
 
   for (const route of SCENIC_ROUTES) {
     const done = progress.scenicCompleted.includes(route.id);

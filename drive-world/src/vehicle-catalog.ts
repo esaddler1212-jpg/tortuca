@@ -63,6 +63,9 @@ export const BONUS_AERIAL_IDS = ['bonus-skyway-hover', 'bonus-coast-heli'] as co
 /** Pop-culture homages (not affiliated). */
 export const BONUS_LEGEND_IDS = ['bonus-gotham-knight', 'bonus-scarlet-five'] as const;
 
+/** Kenney CC0 extras — unlock via landmark parking stars. */
+export const BONUS_PARKING_IDS = ['bonus-bay-van', 'bonus-night-delivery', 'bonus-marina-hatch'] as const;
+
 /** EV sedan with full-map night cruise autopilot (not affiliated). */
 export const AUTOPILOT_VEHICLE_ID = 'bonus-night-coil' as const;
 
@@ -205,6 +208,34 @@ export const VEHICLE_CATALOG: Record<string, VehicleSpec> = {
     },
     { diffuse: [0.9, 0.9, 0.92], emissive: [0.95, 0.12, 0.08], emissiveIntensity: 0.38 },
     { legendBonus: true }
+  ),
+
+  'bonus-bay-van': spec(
+    'bonus-bay-van',
+    'Bay Shuttle Van',
+    'Bonus — 4 landmark parking badges',
+    'Bay Area',
+    { mass: 1180, maxEngineForce: 5200, maxSteering: 0.32, chassis: { x: 1.05, y: 0.55, z: 2.35 } },
+    { diffuse: [0.1, 0.12, 0.14], emissive: [0.35, 0.75, 0.95], emissiveIntensity: 0.28 },
+    {}
+  ),
+  'bonus-night-delivery': spec(
+    'bonus-night-delivery',
+    'Night Courier',
+    'Bonus — 8 landmark parking badges',
+    'East Bay',
+    { mass: 1100, maxEngineForce: 5800, chassis: { x: 0.98, y: 0.42, z: 2.1 } },
+    { diffuse: [0.08, 0.09, 0.1], emissive: [0.85, 0.55, 0.2], emissiveIntensity: 0.32 },
+    {}
+  ),
+  'bonus-marina-hatch': spec(
+    'bonus-marina-hatch',
+    'Marina Hot Hatch',
+    'Bonus — 12 landmark parking badges',
+    'Marin',
+    { mass: 960, maxEngineForce: 7000, maxSteering: 0.4, chassis: { x: 0.88, y: 0.3, z: 1.72 } },
+    { diffuse: [0.06, 0.1, 0.12], emissive: [0.2, 0.8, 0.75], emissiveIntensity: 0.42 },
+    {}
   ),
 
   'bonus-night-coil': spec(

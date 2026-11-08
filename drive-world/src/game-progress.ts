@@ -14,6 +14,7 @@ import type { DistrictId } from './world-config';
 import {
   DEFAULT_CUSTOMIZATION,
   defaultCustomizationFor,
+  mergeCustomization,
   type VehicleCustomization
 } from './vehicle-customization';
 
@@ -53,7 +54,7 @@ export type VehicleStats = { miles: number; topMph: number };
 
 export type JournalEntry = {
   t: number;
-  kind: 'landmark' | 'vista' | 'scenic' | 'taco';
+  kind: 'landmark' | 'vista' | 'scenic' | 'taco' | 'parking' | 'fuel';
   id: string;
   label: string;
 };
@@ -68,7 +69,7 @@ export type CustomSafehouse = {
 };
 
 export type SavedProgress = {
-  version: 6;
+  version: 7;
   phase: GamePhase;
   activeVehicleId: string | null;
   unlockedVehicleIds: string[];
@@ -92,13 +93,17 @@ export type SavedProgress = {
   homeSafehouseId: string;
   unlockedSafehouseIds: string[];
   customSafehouses: CustomSafehouse[];
+  /** 0–1 tank for optional fuel sim */
+  fuelLevel: number;
+  /** Best star count per landmark parking spot id */
+  parkingStars: Record<string, number>;
 };
 
 const STORAGE_KEY = 'drive-world-progress-v5';
 
 function defaultProgress(): SavedProgress {
   return {
-    version: 6,
+    version: 7,
     phase: 'waymo_ride',
     activeVehicleId: null,
     unlockedVehicleIds: [],
@@ -120,15 +125,17 @@ function defaultProgress(): SavedProgress {
     journal: [],
     homeSafehouseId: defaultHomeSafehouseId(),
     unlockedSafehouseIds: [defaultHomeSafehouseId()],
-    customSafehouses: []
+    customSafehouses: [],
+    fuelLevel: 1,
+    parkingStars: {}
   };
 }
 
-function withV6Defaults(p: Partial<SavedProgress> & { version: number }): SavedProgress {
+function withV7Defaults(p: Partial<SavedProgress> & { version: number }): SavedProgress {
   return {
     ...defaultProgress(),
     ...p,
-    version: 6,
+    version: 7,
     tacoTrucksFound: p.tacoTrucksFound ?? [],
     collectedIds: p.collectedIds ?? [],
     unlockedPaintIds:
@@ -143,22 +150,25 @@ function withV6Defaults(p: Partial<SavedProgress> & { version: number }): SavedP
     homeSafehouseId: p.homeSafehouseId ?? defaultHomeSafehouseId(),
     unlockedSafehouseIds: p.unlockedSafehouseIds ?? [defaultHomeSafehouseId()],
     customSafehouses: p.customSafehouses ?? [],
+    fuelLevel: typeof p.fuelLevel === 'number' ? Math.max(0, Math.min(1, p.fuelLevel)) : 1,
+    parkingStars: p.parkingStars ?? {},
     cameraMode: normalizeCameraMode(p.cameraMode)
   };
 }
 
 function migrateRaw(parsed: Record<string, unknown>): SavedProgress | null {
-  if (parsed.version === 6) return withV6Defaults(parsed as SavedProgress);
-  if (parsed.version === 5) return withV6Defaults(parsed as SavedProgress & { version: 5 });
-  if (parsed.version === 4) return withV6Defaults(parsed as SavedProgress & { version: 4 });
+  if (parsed.version === 7) return withV7Defaults(parsed as SavedProgress);
+  if (parsed.version === 6) return withV7Defaults(parsed as SavedProgress & { version: 6 });
+  if (parsed.version === 5) return withV7Defaults(parsed as SavedProgress & { version: 5 });
+  if (parsed.version === 4) return withV7Defaults(parsed as SavedProgress & { version: 4 });
   if (parsed.version === 3) {
     const p = parsed as SavedProgress & { version: 3 };
-    return withV6Defaults({ ...p, lastPose: null, cameraMode: 'chase' });
+    return withV7Defaults({ ...p, lastPose: null, cameraMode: 'chase' });
   }
   if (parsed.version === 2) {
     const p = parsed as SavedProgress & { version: 2; customizations?: Record<string, VehicleCustomization> };
     const { version: _v, ...rest } = p;
-    return withV6Defaults({
+    return withV7Defaults({
       ...rest,
       customizations: p.customizations ?? {},
       lastPose: null,
@@ -306,7 +316,7 @@ export function setCameraMode(progress: SavedProgress, cameraMode: CameraMode): 
 
 export function getVehicleCustomization(progress: SavedProgress, vehicleId: string): VehicleCustomization {
   const saved = progress.customizations[vehicleId];
-  const base = saved ? { ...DEFAULT_CUSTOMIZATION, ...saved } : undefined;
+  const base = saved ? mergeCustomization(saved) : undefined;
   if (base) return base;
   const spec = VEHICLE_CATALOG[vehicleId];
   return spec ? defaultCustomizationFor(spec) : { ...DEFAULT_CUSTOMIZATION };

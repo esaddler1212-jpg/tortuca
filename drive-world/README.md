@@ -27,7 +27,7 @@ Flight without a keyboard: use **⤒ / ⤓** on the touch pad. Photo mode and HU
 
 ### Home & custom safehouses
 
-Default home is the **Vallejo estate** with a **Fast & Furious–style garage**. Regional unlocks add **penthouses** (SF, Oakland, Walnut Creek, Marin, Napa, San José) and **condos** on the Peninsula and other districts. **Penthouses** use a **valet pull-up** (canopy on the map); **estates & condos** use a lit **garage door**. Park below **12 mph** to **claim a condo** anywhere else (up to five customs). Fleet/tuning opens only when you stop at the valet or door.
+Default home is the **Vallejo estate** with a **Fast & Furious–style garage**. Regional unlocks add **penthouses** and **condos**. Pull up to any unlocked **valet/garage** for the full fleet. **Green parking bays** at 14 landmarks — slow in, line up heading, earn up to 3★ (unlocks extra Kenney rides at 4 / 8 / 12 badges). **Fuel sim** (optional in Settings) drains gently while driving; **blue-green pump canopies** refill free. Garage tuning adds **camber, spoiler, livery stripe, exhaust note** on top of paints and handling.
 
 ## Deploy
 

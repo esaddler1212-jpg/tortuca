@@ -34,6 +34,9 @@ export type HudSnapshot = {
   serviceSafehouseName?: string;
   homeServiceMode?: 'valet' | 'garage';
   streetName?: string | null;
+  fuelPercent?: number;
+  nearGas?: boolean;
+  parkingSpotName?: string;
 };
 
 export type TouchDrive = {
