@@ -30,7 +30,15 @@ Anonymous `cn-tel-*` id; periodic beacons with **session length**, quality prese
 
 ## Music (more tracks)
 
-Procedural radio ships in-game; add loops you own under `public/music/`. Optional local generator: [**ACE-Step 1.5**](../tools/ace-step/) (`npm run ace-step:bootstrap`) — export OGG, update `playlist.json`. See [upstream toolchain index](./UPSTREAM_GAME_TOOLCHAIN.md).
+Procedural radio ships in-game; **playlist** has four OGG beds (toggle **Settings → Music → Use my playlist**). Regenerate or swap for ACE-Step on your GPU:
+
+```bash
+npm run ace-step:bootstrap
+# in tools/ace-step/upstream: uv sync && uv run acestep-api
+npm run ace-step:city-nights
+```
+
+No GPU handy: `npm run ace-step:city-nights -- --fallback-only` (ffmpeg ambient placeholders).
 
 ## Next engineering priorities
 
