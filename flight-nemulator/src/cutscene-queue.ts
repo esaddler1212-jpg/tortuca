@@ -29,6 +29,10 @@ export function acknowledgeDialogue(): void {
   current = queue.shift() ?? null;
 }
 
+export function isDialogueActive(): boolean {
+  return current !== null;
+}
+
 export function cutsceneHudFields(): {
   cutsceneActive: boolean;
   cutsceneSpeaker: string | null;

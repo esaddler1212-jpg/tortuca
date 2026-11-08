@@ -11,27 +11,21 @@ export const PAIR_BOSS_WAVE = 10;
 /** Boss HP multiplier on top of villain clone tuning. */
 const PAIR_BOSS_HP_SCALE = 14;
 
-/** Scripted wave-10 finales — all other heroes use first `rivalHeroIds` match. */
+/**
+ * Wave-10 finale overrides — only when product wants a different boss than the 1:1 nemesis map.
+ * All other heroes use `primaryVillainIdForHero`.
+ */
 export const PAIR_VILLAIN_PINNED: Record<string, string> = {
-  'solar-apex': 'titan-snap-echo',
   'tin-aviator': 'doctor-doom',
-  'red-codriver': 'brute-abom',
-  'shade-knight': 'laughing-harlequin',
-  'latverian-sovereign': 'doctor-doom',
-  'ki-wanderer': 'emperor-frieze',
-  'phoenix-ember': 'cinder-phoenix',
-  'frost-monarch': 'nimrod-sentinel'
+  'latverian-sovereign': 'doctor-doom'
 };
 
 export function pairVillainForHero(heroId: string): VillainCloneSpec {
-  const pinned = PAIR_VILLAIN_PINNED[heroId];
-  if (pinned) {
-    const v = getVillainClone(pinned);
-    if (v) return v;
-  }
   const scripted = primaryVillainIdForHero(heroId);
-  if (scripted) {
-    const v = getVillainClone(scripted);
+  const pinned = PAIR_VILLAIN_PINNED[heroId];
+  const bossId = pinned ?? scripted;
+  if (bossId) {
+    const v = getVillainClone(bossId);
     if (v) return v;
   }
   const canonical = VILLAIN_CLONES.find((v) => v.primaryRivalHeroId === heroId);

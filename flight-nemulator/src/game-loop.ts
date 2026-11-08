@@ -154,6 +154,7 @@ import {
 import {
   canQueueGenericDefeatLine,
   cutsceneHudFields,
+  isDialogueActive,
   markGenericDefeatLine,
   queueDialogue
 } from './cutscene-queue';
@@ -409,7 +410,17 @@ function combatForm(s: GameSession): HeroForm {
 }
 
 function tickFrame(s: GameSession, dt: number): void {
-  const input = pollFlightInput();
+  let input = pollFlightInput();
+  if (isDialogueActive()) {
+    input = {
+      ...input,
+      throttle: Math.min(input.throttle, 0.42),
+      boost: false,
+      primary: false,
+      throw: false,
+      super: false
+    };
+  }
   if (input.photo) togglePhotoMode();
 
   s.hero.form = s.heroForm;

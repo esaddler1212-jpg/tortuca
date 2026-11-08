@@ -19,9 +19,11 @@ Wave **10** spawns one scripted rival (hero role only).
 
 | Mode | Heroes | Boss pick |
 |------|--------|-----------|
-| **Pinned finale** | Tin Aviator, Red Codriver, Shade Knight, Solar Apex, Latverian Sovereign | Fixed villain in `PAIR_VILLAIN_PINNED` (`hero-pair-boss.ts`) |
-| **Rival fallback** | Everyone else (hero alignment) | First villain in `villain-roster.ts` whose `rivalHeroIds` includes the hero |
+| **1:1 nemesis** | Most heroes | `primaryVillainIdForHero` from `roster-expansion.ts` (parity-checked) |
+| **Pinned finale** | Tin Aviator, Latverian Sovereign | `PAIR_VILLAIN_PINNED` overrides nemesis (Dr. Doom homage) |
 | **Exempt** | Cell Mimic, Spirit Buu, Venom Echo (villain-only) | No wave-10 pair duel — villain runway / absorption arcs |
+
+Dialogue cutscenes queue on intro, pair runway, defeats (autosave), and safe houses; **Continue** on HUD. Defeat autosave: `battleworld-autosave.ts`.
 
 CI: `tsx scripts/check-pair-boss.mts` asserts every non-exempt hero has at least one rival villain and that `pairVillainForHero` returns a matching boss.
 
