@@ -101,6 +101,10 @@ Top stars (active, game-adjacent):
 
 See [`OPEN_WORLD_DRIVING.md`](./OPEN_WORLD_DRIVING.md) and run [`drive-world/`](../drive-world/) (`npm run dev`) — raycast car on a ~4 km map, chase cam, mph HUD, no speed cap.
 
+## Hero flight sandbox (active prototype)
+
+See [`FLIGHT_NEMULATOR.md`](./FLIGHT_NEMULATOR.md) and run [`flight-nemulator/`](../flight-nemulator/) (`npm run dev`) — third-person homage heroes, district home bases, destructible city, defense waves.
+
 ## Tortuca / IRIS
 
 This repo does **not** embed a PlayCanvas canvas in the signed-in PWA unless product asks ([AGENTS.md](../AGENTS.md)). A game can live as:

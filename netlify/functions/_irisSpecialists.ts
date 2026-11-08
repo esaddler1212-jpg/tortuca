@@ -2,6 +2,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import {
   type IrisSpecialistId,
   IRIS_TEAM,
+  isDelegatableSpecialist,
   specialistById,
 } from "../../shared/irisTeam";
 import {
@@ -34,10 +35,21 @@ export interface SpecialistConsultResult {
   deduped?: boolean;
 }
 
+/** The module registry line names every domain's keywords, so it would match every specialist. */
+const REGISTRY_LINE = /^IRIS modules \(open with open_module\):/;
+
+/** Context lines in a specialist's domain, or null when none are on file. */
+export function specialistExcerpt(context: string, keywords: RegExp, max = 1200): string | null {
+  const block = context
+    .split("\n")
+    .filter((l) => l.trim() && !REGISTRY_LINE.test(l) && keywords.test(l))
+    .join("\n")
+    .trim();
+  return block ? block.slice(0, max) : null;
+}
+
 function excerptContext(context: string, keywords: RegExp, max = 1200): string {
-  const lines = context.split("\n").filter((l) => keywords.test(l));
-  const block = (lines.length ? lines : context.split("\n").slice(0, 12)).join("\n").trim();
-  return block.slice(0, max) || "Nothing specific in the current notes for this.";
+  return specialistExcerpt(context, keywords, max) ?? "nothing on file right now for this; E can open the module to check directly";
 }
 
 function voiceSummaryFromReport(report: string, max = 900): string {
@@ -72,6 +84,15 @@ export async function consultSpecialist(
       specialist: input.specialist,
       summary: "Unknown specialist id.",
       module: null,
+      memoSaved: false,
+    };
+  }
+
+  if (!isDelegatableSpecialist(input.specialist)) {
+    return {
+      specialist: input.specialist,
+      summary: `Iris answers ${def.name}'s domain from Right now — no consult needed.`,
+      module: def.module,
       memoSaved: false,
     };
   }
@@ -225,11 +246,10 @@ export async function consultSpecialist(
         memoSaved: false,
       };
     case "woodhouse": {
-      const block = excerptContext(input.context, /\b(Iris team ops|Woodhouse|Delegates|Duplicate risk|Heads-up)\b/i, 800);
-      const parsed = block.includes("Delegates") ? block : teamEfficiencySummary([], task);
+      const ops = teamEfficiencySummary(history, task);
       return {
         specialist: "woodhouse",
-        summary: `Woodhouse (team ops): ${parsed}. ${task ? `Task checked: ${task.slice(0, 120)}.` : ""} Iris should avoid duplicate consults when Heads-up or Duplicate risk is present.`,
+        summary: `Woodhouse (team ops): ${ops} ${task ? `Task checked: ${task.slice(0, 120)}.` : ""} Iris should avoid duplicate consults when Heads-up or Duplicate risk is present.`,
         module: "team",
         memoSaved: false,
       };
@@ -245,5 +265,5 @@ export async function consultSpecialist(
 }
 
 export function specialistEnumForTool(): string[] {
-  return IRIS_TEAM.map((s) => s.id);
+  return [...IRIS_TEAM.filter((s) => isDelegatableSpecialist(s.id)).map((s) => s.id)];
 }

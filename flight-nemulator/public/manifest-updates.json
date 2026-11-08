@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "characters": [
+    { "id": "star-sentinel", "codename": "Star Sentinel" },
+    { "id": "circuit-ghost", "codename": "Circuit Ghost" }
+  ],
+  "skins": [
+    { "id": "tin-aviator-mk50", "heroId": "tin-aviator", "label": "Nanite gold" },
+    { "id": "ki-wanderer-ascended", "heroId": "ki-wanderer", "label": "Ascended aura" }
+  ]
+}
