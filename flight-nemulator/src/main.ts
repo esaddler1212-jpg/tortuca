@@ -75,4 +75,4 @@ app.root.addChild(sun);
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
 
-await startGame(app, canvas);
+await startGame(app);

@@ -5,9 +5,6 @@ import type { QualityTier } from './quality-tier';
 const POLYHAVEN_SKY_JPG =
   'https://dl.polyhaven.org/file/ph-assets/HDRIs/jpg/1k/kloofendal_48d_partly_cloudy_puresky_1k.jpg';
 
-const AMBIENT_LOW = 0.42;
-const AMBIENT_HIGH = 0.65;
-
 export async function applySkyEnvironment(app: AppBase, tier: QualityTier): Promise<void> {
   app.scene.exposure = tier === 'low' ? 0.95 : 1.08;
   app.scene.ambientLight =

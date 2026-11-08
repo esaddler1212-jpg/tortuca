@@ -80,7 +80,7 @@ function paintHero(entity: Entity, color: [number, number, number]): void {
   mat.update();
 }
 
-export async function startGame(app: AppBase, canvas: HTMLCanvasElement): Promise<void> {
+export async function startGame(app: AppBase): Promise<void> {
   bindFlightKeys();
   bootAudioFromGesture();
   void fetchManifestIfOnline();
@@ -139,7 +139,7 @@ export async function startGame(app: AppBase, canvas: HTMLCanvasElement): Promis
 
   app.on('update', (dt: number) => {
     if (!session) return;
-    tickFrame(session, dt, canvas);
+    tickFrame(session, dt);
   });
 
   app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
@@ -151,7 +151,7 @@ function powerKind(hero: HeroSpec): PowerKind {
   return hero.powers[0] ?? 'beam';
 }
 
-function tickFrame(s: GameSession, dt: number, canvas: HTMLCanvasElement): void {
+function tickFrame(s: GameSession, dt: number): void {
   const input = pollFlightInput();
   if (input.photo) togglePhotoMode();
 
