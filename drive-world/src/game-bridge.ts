@@ -20,6 +20,7 @@ export type HudSnapshot = {
   nearGarage: boolean;
   settings: GameSettings;
   flightMode?: boolean;
+  autopilotActive?: boolean;
 };
 
 export type TouchDrive = {
@@ -63,6 +64,7 @@ let skipWaymoHandler: (() => void) | null = null;
 let toggleCameraHandler: (() => void) | null = null;
 let togglePhotoHandler: (() => void) | null = null;
 let fastTravelHandler: ((d: DistrictId) => void) | null = null;
+let toggleAutopilotHandler: (() => void) | null = null;
 
 let touchDrive: TouchDrive = { up: false, down: false, left: false, right: false, climb: false, descend: false };
 
@@ -95,6 +97,14 @@ export function registerTogglePhoto(fn: () => void): void {
 
 export function registerFastTravel(fn: (d: DistrictId) => void): void {
   fastTravelHandler = fn;
+}
+
+export function registerToggleAutopilot(fn: () => void): void {
+  toggleAutopilotHandler = fn;
+}
+
+export function requestToggleAutopilot(): void {
+  toggleAutopilotHandler?.();
 }
 
 export function requestSkipWaymo(): void {

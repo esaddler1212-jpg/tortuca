@@ -55,7 +55,8 @@ const VISUAL_BY_ID: Record<string, GltfVisualOptions> = {
   'bonus-skyway-hover': { scale: 2.28, yawOffsetDeg: 90, yOffset: -0.12 },
   'bonus-coast-heli': { scale: 0.34, yawOffsetDeg: -90, yOffset: -1.05 },
   'bonus-gotham-knight': { scale: 2.08, yawOffsetDeg: 90, yOffset: -0.3 },
-  'bonus-scarlet-five': { scale: 2.05, yawOffsetDeg: 90, yOffset: -0.26 }
+  'bonus-scarlet-five': { scale: 2.05, yawOffsetDeg: 90, yOffset: -0.26 },
+  'bonus-night-coil': { scale: 2.1, yawOffsetDeg: 90, yOffset: -0.28 }
 };
 
 function visualOptsFor(vehicleId: string): GltfVisualOptions {

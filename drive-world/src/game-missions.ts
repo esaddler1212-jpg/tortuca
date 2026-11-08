@@ -1,4 +1,10 @@
-import { BONUS_AERIAL_IDS, BONUS_LEGEND_IDS, REGION_VEHICLE_IDS, getVehicleSpec } from './vehicle-catalog';
+import {
+  AUTOPILOT_VEHICLE_ID,
+  BONUS_AERIAL_IDS,
+  BONUS_LEGEND_IDS,
+  REGION_VEHICLE_IDS,
+  getVehicleSpec
+} from './vehicle-catalog';
 import {
   DISTRICT_LABELS,
   LANDMARKS,
@@ -66,6 +72,14 @@ export function buildMissionBoard(
   }
   if (!progress.unlockedVehicleIds.includes(BONUS_LEGEND_IDS[0]) && !progress.collectedIds.includes('cave-key')) {
     lines.push({ id: 'gotham', label: 'Unlock Gotham Knight', done: false, hint: 'Cave key (Coit / Telegraph)' });
+  }
+  if (!progress.unlockedVehicleIds.includes(AUTOPILOT_VEHICLE_ID) && !progress.collectedIds.includes('tech-chip')) {
+    lines.push({
+      id: 'night-coil',
+      label: 'Unlock Night Coil (autopilot)',
+      done: false,
+      hint: 'Silicon wafer on the Peninsula'
+    });
   }
 
   const trapsHit = SPEED_TRAPS.filter((t) => (progress.speedTrapBests[t.id] ?? 0) >= 70).length;

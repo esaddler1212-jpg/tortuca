@@ -16,6 +16,7 @@ export const VEHICLE_GLB: Record<string, string> = {
   'bonus-coast-heli': `${CC0}/helicopter.glb`,
   'bonus-gotham-knight': `${KENNEY}/sedan-sports.glb`,
   'bonus-scarlet-five': `${KENNEY}/race.glb`,
+  'bonus-night-coil': `${KENNEY}/sedan-sports.glb`,
   default: `${KENNEY}/sedan.glb`
 };
 

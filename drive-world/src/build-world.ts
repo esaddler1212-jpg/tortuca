@@ -8,6 +8,7 @@ import { buildBayAreaLandmarks } from './build-landmarks';
 import { buildMissionSites } from './build-mission-sites';
 import {
   buildCollectibles,
+  buildCruiseVistas,
   buildExtraFreeways,
   buildLombardStreet,
   spawnAmbientTraffic
@@ -38,6 +39,7 @@ export function buildDrivingWorld(app: AppBase): void {
   buildFreewayRamps(app);
   buildLombardStreet(app);
   buildCollectibles(app);
+  buildCruiseVistas(app);
   spawnAmbientTraffic(app);
   buildAllDistricts(app);
   buildBayAreaLandmarks(app);

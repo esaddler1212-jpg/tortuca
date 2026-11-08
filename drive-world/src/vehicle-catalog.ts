@@ -63,6 +63,9 @@ export const BONUS_AERIAL_IDS = ['bonus-skyway-hover', 'bonus-coast-heli'] as co
 /** Pop-culture homages (not affiliated). */
 export const BONUS_LEGEND_IDS = ['bonus-gotham-knight', 'bonus-scarlet-five'] as const;
 
+/** EV sedan with full-map night cruise autopilot (not affiliated). */
+export const AUTOPILOT_VEHICLE_ID = 'bonus-night-coil' as const;
+
 export const REGION_VEHICLE_IDS: Record<DistrictId, string> = {
   sf: 'region-sf-night',
   marin: 'region-marin-coast',
@@ -202,6 +205,21 @@ export const VEHICLE_CATALOG: Record<string, VehicleSpec> = {
     },
     { diffuse: [0.9, 0.9, 0.92], emissive: [0.95, 0.12, 0.08], emissiveIntensity: 0.38 },
     { legendBonus: true }
+  ),
+
+  'bonus-night-coil': spec(
+    'bonus-night-coil',
+    'Night Coil',
+    'Autopilot — Silicon wafer near Sand Hill',
+    'Peninsula',
+    {
+      mass: 1180,
+      maxEngineForce: 6400,
+      maxSteering: 0.38,
+      chassis: { x: 0.95, y: 0.34, z: 2.05 }
+    },
+    { diffuse: [0.9, 0.91, 0.93], emissive: [0.85, 0.88, 0.92], emissiveIntensity: 0.22 },
+    {}
   )
 };
 
@@ -214,4 +232,8 @@ export function getVehicleSpec(id: string): VehicleSpec {
 export function isAerialVehicle(id: string): boolean {
   const loc = VEHICLE_CATALOG[id]?.locomotion;
   return loc === 'hover' || loc === 'helicopter';
+}
+
+export function supportsAutopilot(vehicleId: string | null | undefined): boolean {
+  return vehicleId === AUTOPILOT_VEHICLE_ID;
 }

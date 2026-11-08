@@ -7,6 +7,7 @@ import {
   publishHud,
   registerFastTravel,
   registerSkipWaymo,
+  registerToggleAutopilot,
   registerToggleCamera,
   registerTogglePhoto
 } from './game-bridge';
@@ -20,6 +21,7 @@ import {
   getVehicleCustomization,
   setVehicleCustomization,
   tryUnlockCompletedRegions,
+  tryUnlockNightCoil,
   tryUnlockSkywayHover,
   saveLastPose,
   setCameraMode,
@@ -40,7 +42,17 @@ import { updateAmbientTraffic } from './build-world-extras';
 import { missionTextForPhase, wireGameUi } from './game-ui';
 import { DISTRICT_LABELS, LANDMARKS, VALLEJO_SAFEHOUSE } from './landmark-registry';
 import { nextUnvisitedLandmark } from './landmark-navigation';
-import { getVehicleSpec, isAerialVehicle } from './vehicle-catalog';
+import {
+  createAutopilotCruise,
+  stepAutopilotCruise,
+  type AutopilotCruise
+} from './autopilot-cruise';
+import {
+  AUTOPILOT_VEHICLE_ID,
+  getVehicleSpec,
+  isAerialVehicle,
+  supportsAutopilot
+} from './vehicle-catalog';
 import type { VehicleCustomization } from './vehicle-customization';
 import { pushCloudProgress } from './game-cloud-save';
 import { heatDecay, heatFromSpeedTrap } from './game-heat';
@@ -77,12 +89,63 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   let cloudSaveT = 0;
   const photoKeys = { fwd: false, back: false, left: false, right: false, up: false, down: false };
   const CALDECOTT = { x: 392, z: 265 };
+  let autopilotActive = false;
+  let autopilot: AutopilotCruise = createAutopilotCruise(34);
+  let rbTypeBeforeAutopilot: string | null = null;
+  let cameraBeforeAutopilot: CameraMode | null = null;
+
+  const stopAutopilot = (restoreCamera = true) => {
+    if (!autopilotActive) return;
+    autopilotActive = false;
+    const ent = vehicle();
+    const rb = ent?.rigidbody;
+    if (rb && rbTypeBeforeAutopilot) rb.type = rbTypeBeforeAutopilot;
+    rbTypeBeforeAutopilot = null;
+    if (restoreCamera && cameraBeforeAutopilot) {
+      cameraMode = cameraBeforeAutopilot;
+      progress = setCameraMode(progress, cameraMode);
+    }
+    cameraBeforeAutopilot = null;
+    publishHud({ autopilotActive: false, cameraMode });
+  };
+
+  const toggleAutopilot = () => {
+    if (progress.phase !== 'home' || photoMode || ridingWaymo) return;
+  const id = progress.activeVehicleId;
+  if (!supportsAutopilot(id) || (id && isAerialVehicle(id))) return;
+    const ent = vehicle();
+    if (!ent) return;
+    if (!autopilotActive) {
+      autopilot = createAutopilotCruise(34);
+      autopilotActive = true;
+      cameraBeforeAutopilot = cameraMode;
+      cameraMode = 'cockpit';
+      progress = setCameraMode(progress, cameraMode);
+      const rb = ent.rigidbody;
+      if (rb) {
+        rbTypeBeforeAutopilot = rb.type;
+        rb.type = 'kinematic';
+      }
+      ui.showToast('Night Cruise', 'Autopilot bay loop — press T for manual');
+      publishHud({ autopilotActive: true, cameraMode });
+    } else {
+      stopAutopilot(true);
+      ui.showToast('Manual drive', 'Wheel is yours');
+    }
+  };
 
   bindDriveKeys();
   window.addEventListener('drive-world:unlock-audio', () => unlockAudio(), { once: false });
   window.addEventListener('keydown', (e) => {
+    if (autopilotActive && (e.key === 'c' || e.key === 'C' || e.key === 'w' || e.key === 'a' || e.key === 's' || e.key === 'd')) {
+      stopAutopilot(true);
+      ui.showToast('Manual drive', 'Autopilot disengaged');
+    }
     if (e.key === 'c' || e.key === 'C') toggleCamera();
     if (e.key === 'p' || e.key === 'P') togglePhoto();
+    if (e.key === 't' || e.key === 'T') {
+      if (!e.repeat) toggleAutopilot();
+    }
     if (photoMode) {
       if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') photoKeys.fwd = true;
       if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') photoKeys.back = true;
@@ -115,6 +178,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   };
 
   async function swapVehicle(vehicleId: string, pos?: Vec3, yaw?: number) {
+    stopAutopilot(false);
     const old = vehicle()?.getPosition();
     const oldRot = vehicle()?.getEulerAngles();
     destroyPlayerVehicle(player?.entity ?? null);
@@ -236,6 +300,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   };
 
   registerTogglePhoto(togglePhoto);
+  registerToggleAutopilot(toggleAutopilot);
 
   registerFastTravel((district: DistrictId) => {
     if (!progress.unlockedRegionIds.includes(district) || !vehicle() || progress.phase !== 'home') return;
@@ -249,6 +314,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   });
 
   const resumeFromSave = () => {
+    progress = tryUnlockNightCoil(progress);
     cameraMode = progress.cameraMode ?? 'chase';
     if (progress.phase === 'waymo_ride') {
       startWaymoRide();
@@ -357,9 +423,17 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       app.scene.exposure = 0.55;
     }
 
-    const drive = pollDriveInput();
     const aerial = progress.activeVehicleId ? isAerialVehicle(progress.activeVehicleId) : false;
-    if (aerial) {
+    const onAutopilot = autopilotActive && supportsAutopilot(progress.activeVehicleId) && !aerial;
+
+    let mph = 0;
+    const drive = pollDriveInput();
+    if (onAutopilot) {
+      mph = stepAutopilotCruise(autopilot, ent, dt);
+      speedEl.textContent = `${mph.toFixed(0)} mph · Autopilot`;
+      updateEngineAudio(mph, true);
+      player?.lights.setBrake(false);
+    } else if (aerial) {
       const fs = ent.script?.flightVehicle as
         | { fire?: (e: string, ...args: number[]) => void }
         | undefined;
@@ -431,14 +505,16 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       droneCamPos.copy(target);
     }
 
-    const vehScript = ent.script?.vehicle as { speed?: number; brakingVisual?: boolean } | undefined;
-    const flightScript = ent.script?.flightVehicle as { speed?: number } | undefined;
-  const speedKmh = aerial ? Math.abs(flightScript?.speed ?? 0) : Math.abs(vehScript?.speed ?? 0);
-  const mph = speedKmh * 0.621371;
-    speedEl.textContent = aerial
-      ? `${mph.toFixed(0)} mph · ${getVehicleSpec(progress.activeVehicleId!).locomotion === 'helicopter' ? 'Heli' : 'Hover'}`
-      : `${mph.toFixed(0)} mph`;
-    updateEngineAudio(mph, true);
+    if (!onAutopilot) {
+      const vehScript = ent.script?.vehicle as { speed?: number; brakingVisual?: boolean } | undefined;
+      const flightScript = ent.script?.flightVehicle as { speed?: number } | undefined;
+      const speedKmh = aerial ? Math.abs(flightScript?.speed ?? 0) : Math.abs(vehScript?.speed ?? 0);
+      mph = speedKmh * 0.621371;
+      speedEl.textContent = aerial
+        ? `${mph.toFixed(0)} mph · ${getVehicleSpec(progress.activeVehicleId!).locomotion === 'helicopter' ? 'Heli' : 'Hover'}`
+        : `${mph.toFixed(0)} mph`;
+      updateEngineAudio(mph, true);
+    }
 
     progress = heatDecay(progress, mph, dt);
     progress = heatFromSpeedTrap(progress, mph, pos.x, pos.z);
@@ -466,7 +542,8 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       photoMode: false,
       nearGarage,
       settings,
-      flightMode: aerial
+      flightMode: aerial,
+      autopilotActive: onAutopilot
     });
 
     statsT += dt;
@@ -520,6 +597,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         const hadHeli = progress.unlockedVehicleIds.includes('bonus-coast-heli');
         const hadGotham = progress.unlockedVehicleIds.includes('bonus-gotham-knight');
         const hadScarlet = progress.unlockedVehicleIds.includes('bonus-scarlet-five');
+        const hadCoil = progress.unlockedVehicleIds.includes(AUTOPILOT_VEHICLE_ID);
         progress = collectItem(progress, c.id, c.unlockPaintId);
         ui.showToast('Collectible', c.name);
         if (!hadHeli && progress.unlockedVehicleIds.includes('bonus-coast-heli')) {
@@ -530,6 +608,9 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         }
         if (!hadScarlet && progress.unlockedVehicleIds.includes('bonus-scarlet-five')) {
           ui.showToast('Legend unlocked', getVehicleSpec('bonus-scarlet-five').name);
+        }
+        if (!hadCoil && progress.unlockedVehicleIds.includes(AUTOPILOT_VEHICLE_ID)) {
+          ui.showToast('Autopilot unlocked', `${getVehicleSpec(AUTOPILOT_VEHICLE_ID).name} — press T at the wheel`);
         }
         if (nearGarage) refreshGarageUi();
       }

@@ -58,6 +58,29 @@ function attachLegendAccents(
     scoop.addComponent('render', { type: 'box', material: finMat });
     vehicle.addChild(scoop);
   }
+  if (vehicleId === 'bonus-night-coil') {
+    const glass = new StandardMaterial();
+    glass.diffuse = new Color(0.05, 0.05, 0.06);
+    glass.emissive = new Color(0.75, 0.78, 0.82);
+    glass.emissiveIntensity = 0.35;
+    glass.opacity = 0.85;
+    glass.blendType = 2;
+    glass.update();
+    const roof = new Entity('coil-glass');
+    roof.setLocalScale(cx * 0.82, 0.06, cz * 0.52);
+    roof.setLocalPosition(0, 0.58 - rideDrop, cz * 0.05);
+    roof.addComponent('render', { type: 'box', material: glass });
+    vehicle.addChild(roof);
+    const bar = new Entity('coil-lightbar');
+    const barMat = paint.clone() as StandardMaterial;
+    barMat.emissive = new Color(0.95, 0.96, 0.98);
+    barMat.emissiveIntensity = 0.55;
+    barMat.update();
+    bar.setLocalScale(0.12, 0.04, 0.55);
+    bar.setLocalPosition(0, 0.72 - rideDrop, cz * 0.35);
+    bar.addComponent('render', { type: 'box', material: barMat });
+    vehicle.addChild(bar);
+  }
   if (vehicleId === 'bonus-scarlet-five') {
     const red = new StandardMaterial();
     red.diffuse = new Color(0.82, 0.07, 0.05);

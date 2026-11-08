@@ -8,7 +8,7 @@ let masterVolume = 0.85;
 
 export function setMasterVolume(v: number): void {
   masterVolume = Math.max(0, Math.min(1, v));
-  if (engineGain) engineGain.gain.setTargetAtTime(engineGain.gain.value * masterVolume, ctx?.currentTime ?? 0, 0.05);
+  void import('./game-music').then((m) => m.onMasterVolumeChanged(masterVolume));
 }
 
 function ensureContext(): AudioContext | null {

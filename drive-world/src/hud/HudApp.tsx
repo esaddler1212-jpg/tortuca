@@ -5,6 +5,7 @@ import {
   requestFastTravel,
   requestSkipWaymo,
   requestToggleCamera,
+  requestToggleAutopilot,
   requestTogglePhoto,
   setTouchDrive,
   subscribeHud,
@@ -247,6 +248,15 @@ export function HudApp() {
           Photo {snap.photoMode ? 'ON' : ''} (P)
         </button>
         <span className="hud-mph">{Math.round(snap.mph)} mph</span>
+        {snap.progress?.activeVehicleId === 'bonus-night-coil' && snap.phase === 'home' && !snap.ridingWaymo && (
+          <button
+            type="button"
+            className={`cam-toggle autopilot-btn ${snap.autopilotActive ? 'on' : ''}`}
+            onClick={() => requestToggleAutopilot()}
+          >
+            {snap.autopilotActive ? 'Autopilot ON (T)' : 'Autopilot (T)'}
+          </button>
+        )}
       </div>
       {!snap.photoMode && <Minimap snap={snap} />}
       <NavHint snap={snap} />

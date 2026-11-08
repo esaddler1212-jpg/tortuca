@@ -1,6 +1,7 @@
 import { Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
 
 import { hillOffsetM } from './bay-terrain';
+import { CRUISE_VISTAS } from './cruise-vistas';
 import { COLLECTIBLES } from './world-extras';
 import { FREEWAY_I80, FREEWAY_280 } from './world-config';
 import { buildFreewayPath, freewayMaterials } from './build-freeway';
@@ -96,4 +97,33 @@ export function updateAmbientTraffic(dt: number, enabled: boolean): void {
 export function buildExtraFreeways(app: AppBase): void {
   const mats = freewayMaterials();
   buildFreewayPath(app, FREEWAY_280, mats, 'i280');
+}
+
+export function buildCruiseVistas(app: AppBase): void {
+  const rail = new StandardMaterial();
+  rail.diffuse = new Color(0.25, 0.55, 0.85);
+  rail.emissive = new Color(0.15, 0.35, 0.65);
+  rail.emissiveIntensity = 0.35;
+  rail.update();
+
+  const sign = new StandardMaterial();
+  sign.diffuse = new Color(0.12, 0.12, 0.14);
+  sign.emissive = new Color(0.9, 0.55, 0.25);
+  sign.emissiveIntensity = 0.55;
+  sign.update();
+
+  for (const v of CRUISE_VISTAS) {
+    const y = hillOffsetM(v.x, v.z) + 0.6;
+    const pad = new Entity(`vista-pad-${v.id}`);
+    pad.setLocalScale(14, 0.35, 10);
+    pad.setPosition(v.x, y, v.z);
+    pad.addComponent('render', { type: 'box', material: rail });
+    app.root.addChild(pad);
+
+    const post = new Entity(`vista-sign-${v.id}`);
+    post.setLocalScale(0.4, 3.2, 0.4);
+    post.setPosition(v.x + 5, y + 1.8, v.z);
+    post.addComponent('render', { type: 'box', material: sign });
+    app.root.addChild(post);
+  }
 }

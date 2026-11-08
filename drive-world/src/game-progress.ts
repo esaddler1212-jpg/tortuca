@@ -1,4 +1,5 @@
 import {
+  AUTOPILOT_VEHICLE_ID,
   BONUS_AERIAL_IDS,
   BONUS_LEGEND_IDS,
   GARAGE_STARTER_IDS,
@@ -18,7 +19,33 @@ export type GamePhase = 'waymo_ride' | 'pick_car' | 'home';
 
 export type SavedPose = { x: number; y: number; z: number; yaw: number };
 
-export type CameraMode = 'chase' | 'cockpit' | 'drone';
+export type CameraMode =
+  | 'chase'
+  | 'hood'
+  | 'low'
+  | 'cinematic'
+  | 'cockpit'
+  | 'wide'
+  | 'drone'
+  | 'orbit'
+  | 'vista';
+
+const VALID_CAMERAS = new Set<CameraMode>([
+  'chase',
+  'hood',
+  'low',
+  'cinematic',
+  'cockpit',
+  'wide',
+  'drone',
+  'orbit',
+  'vista'
+]);
+
+export function normalizeCameraMode(mode: string | undefined): CameraMode {
+  if (mode && VALID_CAMERAS.has(mode as CameraMode)) return mode as CameraMode;
+  return 'chase';
+}
 
 export type VehicleStats = { miles: number; topMph: number };
 
@@ -41,6 +68,7 @@ export type SavedProgress = {
   vehicleStats: Record<string, VehicleStats>;
   /** Speed-trap heat 0–5 */
   heatLevel: number;
+  visitedVistaIds: string[];
 };
 
 const STORAGE_KEY = 'drive-world-progress-v5';
@@ -63,7 +91,8 @@ function defaultProgress(): SavedProgress {
     scenicCompleted: [],
     scenicProgress: {},
     vehicleStats: {},
-    heatLevel: 0
+    heatLevel: 0,
+    visitedVistaIds: []
   };
 }
 
@@ -79,7 +108,9 @@ function withV5Defaults(p: Partial<SavedProgress> & { version: number }): SavedP
     scenicCompleted: p.scenicCompleted ?? [],
     scenicProgress: p.scenicProgress ?? {},
     vehicleStats: p.vehicleStats ?? {},
-    heatLevel: typeof p.heatLevel === 'number' ? p.heatLevel : 0
+    heatLevel: typeof p.heatLevel === 'number' ? p.heatLevel : 0,
+    visitedVistaIds: p.visitedVistaIds ?? [],
+    cameraMode: normalizeCameraMode(p.cameraMode)
   };
 }
 
@@ -173,6 +204,16 @@ export function visitLandmark(progress: SavedProgress, landmarkId: string): Save
   return next;
 }
 
+export function visitCruiseVista(progress: SavedProgress, vistaId: string): SavedProgress {
+  if (progress.visitedVistaIds.includes(vistaId)) return progress;
+  const next: SavedProgress = {
+    ...progress,
+    visitedVistaIds: [...progress.visitedVistaIds, vistaId]
+  };
+  saveProgress(next);
+  return next;
+}
+
 export function tryUnlockCompletedRegions(progress: SavedProgress): {
   progress: SavedProgress;
   newlyUnlocked: { district: DistrictId; vehicleId: string }[];
@@ -236,8 +277,15 @@ export function collectItem(progress: SavedProgress, id: string, paintId: string
   };
   next = tryUnlockCoastHeli(next);
   next = tryUnlockLegendVehicles(next);
+  next = tryUnlockNightCoil(next);
   saveProgress(next);
   return next;
+}
+
+export function tryUnlockNightCoil(progress: SavedProgress): SavedProgress {
+  if (progress.unlockedVehicleIds.includes(AUTOPILOT_VEHICLE_ID)) return progress;
+  if (!progress.collectedIds.includes('tech-chip')) return progress;
+  return unlockVehicle(progress, AUTOPILOT_VEHICLE_ID);
 }
 
 export function tryUnlockLegendVehicles(progress: SavedProgress): SavedProgress {

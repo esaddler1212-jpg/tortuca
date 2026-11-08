@@ -177,6 +177,11 @@
   bottom: 2.5rem;
 }
 
+.autopilot-btn.on {
+  border-color: rgba(120, 200, 255, 0.75);
+  color: #a8e4ff;
+}
+
 .flight-hint {
   width: 100%;
   text-align: center;

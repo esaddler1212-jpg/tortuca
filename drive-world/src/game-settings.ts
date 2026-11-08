@@ -1,8 +1,13 @@
+import type { MusicStationId } from './game-music';
+
 export type GameSettings = {
   masterVolume: number;
   fogQuality: 'low' | 'med' | 'high';
   showTraffic: boolean;
   photoSensitivity: number;
+  musicVolume: number;
+  musicStation: MusicStationId;
+  musicEnabled: boolean;
 };
 
 const KEY = 'drive-world-settings-v1';
@@ -11,7 +16,10 @@ const defaults: GameSettings = {
   masterVolume: 0.85,
   fogQuality: 'med',
   showTraffic: true,
-  photoSensitivity: 1
+  photoSensitivity: 1,
+  musicVolume: 0.55,
+  musicStation: 'ambient',
+  musicEnabled: true
 };
 
 export function loadSettings(): GameSettings {
