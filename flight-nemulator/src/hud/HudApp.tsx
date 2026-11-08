@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react';
 import { getHudSnapshot, setTouchFlight } from '../game-bridge';
 import { HERO_ROSTER } from '../hero-roster';
+import {
+  customizationBlurb,
+  isFullLoadoutHero,
+  listHeroLoadouts,
+  loadoutStatsLabel
+} from '../hero-customization';
 import { confirmVillainWorldRemake, continueDyingRoam, selectHero, selectPlayerRole } from '../game-loop';
+import { storedFormId } from '../hero-forms';
 import { ANNIHILATE_HAVOC_USD } from '../villain-annihilate';
 import { getPlayerRole, type PlayerRole } from '../player-role';
 import { loadCustomHeroes, saveCustomHero, type CustomHeroDraft } from '../custom-hero';
@@ -50,6 +57,7 @@ export type GameHudSnapshot = {
   worldFatePhase?: string;
   heroWorldSaved?: boolean;
   aerialMobility?: string;
+  loadoutLabel?: string;
 };
 
 function formatUsd(n: number): string {
@@ -79,6 +87,7 @@ export function HudApp() {
           <div className="hud-hero">{snap.heroName}</div>
           <div className="hud-tag">{snap.codename}</div>
           {snap.aerialMobility && <div className="hud-tag">{snap.aerialMobility}</div>}
+          {snap.loadoutLabel && <div className="hud-tag">{snap.loadoutLabel}</div>}
           {snap.nearestFoe && (
             <div className="hud-tag">
               vs {snap.nearestFoe}
@@ -135,7 +144,7 @@ export function HudApp() {
         {snap.playerRole === 'hero' && snap.villainRivals && snap.villainRivals.length > 0 && (
           <p className="hud-tag">Rivals: {snap.villainRivals.join(', ')}</p>
         )}
-        <SuitPicker heroId={heroId} />
+        <LoadoutPicker heroId={heroId} />
         <CreateHeroPanel
           onCreated={(id) => {
             setHeroId(id);
@@ -266,24 +275,97 @@ function QualitySettings({ quality, photoMode }: { quality: string; photoMode: b
   );
 }
 
-function SuitPicker({ heroId }: { heroId: string }) {
+function LoadoutPicker({ heroId }: { heroId: string }) {
   const hero = HERO_ROSTER.find((h) => h.id === heroId);
-  if (!hero?.suitVariants?.length && hero?.forms.length === 1) return null;
-  const options = hero?.suitVariants
-    ? hero.suitVariants.map((s) => ({ id: s.id, label: s.label }))
-  : (hero?.forms.map((f) => ({ id: f.id, label: f.label })) ?? []);
+  if (!hero) return null;
+  const loadouts = listHeroLoadouts(hero);
+  if (loadouts.length <= 1) return null;
+
+  const [formId, setFormId] = useState(() => storedFormId(hero));
+
+  useEffect(() => {
+    const h = HERO_ROSTER.find((x) => x.id === heroId);
+    if (h) setFormId(storedFormId(h));
+  }, [heroId]);
+
+  const active = loadouts.find((l) => l.id === formId) ?? loadouts[0];
+  const full = isFullLoadoutHero(heroId);
+  const blurb = customizationBlurb(heroId);
+
+  const byGroup = (g: string) => loadouts.filter((l) => l.group === g);
+
   return (
-    <select
-      style={{ marginTop: 6, width: '100%' }}
-      defaultValue={hero?.defaultFormId}
-      onChange={(e) => selectHero(heroId, e.target.value)}
-    >
-      {options.map((o) => (
-        <option key={o.id} value={o.id}>
-          {o.label}
-        </option>
-      ))}
-    </select>
+    <div className={`loadout-picker${full ? ' loadout-picker-full' : ''}`}>
+      <strong>{full ? 'Suits & colors' : 'Loadout'}</strong>
+      {blurb && <p className="hud-tag">{blurb}</p>}
+      <select
+        className="loadout-select"
+        value={formId}
+        onChange={(e) => {
+          const v = e.target.value;
+          setFormId(v);
+          selectHero(heroId, v);
+        }}
+      >
+        {full ? (
+          <>
+            {byGroup('suit').length > 0 && (
+              <optgroup label="Armor suits">
+                {byGroup('suit').map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.label}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+            {byGroup('armor').length > 0 && (
+              <optgroup label="Armor suits">
+                {byGroup('armor').map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.label}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+            {byGroup('cape').length > 0 && (
+              <optgroup label="Capes & eras">
+                {byGroup('cape').map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.label}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+            {byGroup('mode').length > 0 && (
+              <optgroup label="Flight modes">
+                {byGroup('mode').map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.label}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+          </>
+        ) : (
+          loadouts.map((o) => (
+            <option key={o.id} value={o.id}>
+              {o.label}
+            </option>
+          ))
+        )}
+      </select>
+      {active && (
+        <div className="loadout-preview">
+          <span
+            className="loadout-swatch"
+            style={{
+              background: `rgb(${Math.round(active.color[0] * 255)}, ${Math.round(active.color[1] * 255)}, ${Math.round(active.color[2] * 255)})`
+            }}
+          />
+          <span className="hud-tag">{loadoutStatsLabel(active)}</span>
+        </div>
+      )}
+    </div>
   );
 }
 

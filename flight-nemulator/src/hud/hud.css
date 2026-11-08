@@ -17,6 +17,38 @@
   margin-top: 8px;
 }
 
+.loadout-picker {
+  pointer-events: auto;
+  margin-top: 8px;
+}
+
+.loadout-picker-full {
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(12, 16, 28, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.loadout-select {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.loadout-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.loadout-swatch {
+  width: 22px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  flex-shrink: 0;
+}
+
 .hud-roam {
   pointer-events: auto;
   padding: 10px 14px;

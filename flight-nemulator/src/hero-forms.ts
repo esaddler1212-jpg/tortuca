@@ -1,8 +1,10 @@
 import type { AerialMobility } from './aerial-mobility';
 import type { HeroForm, HeroSpec } from './hero-roster';
 
+const BAT_JETPACK_LOADOUTS = new Set(['tactical', 'beyond-jet', 'hellbat', 'arkham-lift']);
+
 export function effectiveHeroAerial(spec: HeroSpec, form: HeroForm): AerialMobility {
-  if (spec.id === 'shade-knight' && form.id === 'tactical') return 'jetpack';
+  if (spec.id === 'shade-knight' && BAT_JETPACK_LOADOUTS.has(form.id)) return 'jetpack';
   return spec.aerial;
 }
 
@@ -12,13 +14,25 @@ export function resolveHeroForm(spec: HeroSpec, formId: string): HeroForm {
 
   const suit = spec.suitVariants?.find((s) => s.id === formId);
   if (suit) {
-    const base = spec.forms[0];
-    const heavy = suit.id === 'hulkbuster';
+    const base = spec.forms[0] ?? {
+      id: suit.id,
+      label: suit.label,
+      speedMul: 1,
+      powerMul: 1,
+      color: suit.color
+    };
+    const heavy = suit.id === 'hulkbuster' || suit.id === 'wm-siege';
+    const speed =
+      suit.speedMul ??
+      (heavy ? 0.82 : suit.id === 'mk50' || suit.id === 'mk85' ? 1.18 : suit.id === 'stealth' ? 1.15 : 1);
+    const power =
+      suit.powerMul ??
+      (heavy || suit.id === 'wm-siege' ? 1.45 : suit.id === 'stealth' ? 0.85 : 1);
     return {
       id: suit.id,
       label: suit.label,
-      speedMul: base.speedMul * (heavy ? 0.82 : suit.id === 'mk50' ? 1.18 : 1),
-      powerMul: base.powerMul * (heavy ? 1.45 : 1),
+      speedMul: base.speedMul * speed,
+      powerMul: base.powerMul * power,
       color: suit.color
     };
   }

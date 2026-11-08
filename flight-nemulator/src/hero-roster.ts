@@ -23,6 +23,14 @@ export interface HeroForm {
   color: [number, number, number];
 }
 
+export interface SuitVariant {
+  id: string;
+  label: string;
+  color: [number, number, number];
+  speedMul?: number;
+  powerMul?: number;
+}
+
 export interface HeroSpec {
   id: string;
   codename: string;
@@ -45,7 +53,7 @@ export interface HeroSpec {
   smashRadius: number;
   forms: HeroForm[];
   defaultFormId: FormToggleId;
-  suitVariants?: { id: string; label: string; color: [number, number, number] }[];
+  suitVariants?: SuitVariant[];
   /** Canon flight basis — jetpack / glide / web for grounded homages */
   aerial: AerialMobility;
 }
@@ -147,17 +155,24 @@ export const HERO_ROSTER: HeroSpec[] = [
     energy: { staminaMax: 100, regenPerSec: 25, superCooldownSec: 16, primaryCooldownSec: 0.22 },
     smashRadius: 3.2,
     suitVariants: [
-      { id: 'mk1', label: 'Mk I scrap', color: [0.45, 0.35, 0.28] },
-      { id: 'mk3', label: 'Mk III red-gold', color: [0.75, 0.15, 0.12] },
-      { id: 'mk7', label: 'Mk VII party', color: [0.82, 0.2, 0.08] },
-      { id: 'mk42', label: 'Mk XLII modular', color: [0.55, 0.55, 0.6] },
-      { id: 'mk50', label: 'Mk L nanite', color: [0.85, 0.75, 0.2] },
-      { id: 'hulkbuster', label: 'Heavy interceptor', color: [0.6, 0.12, 0.12] }
+      { id: 'mk1', label: 'Mk I — cave scrap', color: [0.45, 0.35, 0.28], speedMul: 0.88, powerMul: 0.92 },
+      { id: 'mk2', label: 'Mk II — silver test', color: [0.72, 0.74, 0.78], speedMul: 0.95, powerMul: 1 },
+      { id: 'mk3', label: 'Mk III — red & gold', color: [0.75, 0.15, 0.12] },
+      { id: 'mk4', label: 'Mk IV — hotrod', color: [0.82, 0.22, 0.15], speedMul: 1.02, powerMul: 1.05 },
+      { id: 'mk6', label: 'Mk VI — wedge', color: [0.78, 0.18, 0.1] },
+      { id: 'mk7', label: 'Mk VII — party', color: [0.82, 0.2, 0.08] },
+      { id: 'mk17', label: 'Mk XVII — stealth blue', color: [0.22, 0.32, 0.55], speedMul: 1.08, powerMul: 0.95 },
+      { id: 'mk39', label: 'Mk XXXIX — star spangled', color: [0.68, 0.14, 0.12], speedMul: 1.05, powerMul: 1.08 },
+      { id: 'mk42', label: 'Mk XLII — modular', color: [0.55, 0.55, 0.6], speedMul: 1.1, powerMul: 0.98 },
+      { id: 'mk46', label: 'Mk XLVI — civil war', color: [0.72, 0.16, 0.1] },
+      { id: 'mk50', label: 'Mk L — nanite', color: [0.85, 0.75, 0.2], speedMul: 1.18, powerMul: 1.05 },
+      { id: 'mk85', label: 'Mk LXXXV — endgame', color: [0.88, 0.72, 0.25], speedMul: 1.15, powerMul: 1.12 },
+      { id: 'hulkbuster', label: 'Hulkbuster — siege', color: [0.6, 0.12, 0.12] },
+      { id: 'stealth', label: 'Stealth — midnight', color: [0.15, 0.18, 0.22], speedMul: 1.15, powerMul: 0.85 },
+      { id: 'bleeding', label: 'Bleeding edge', color: [0.92, 0.32, 0.12], speedMul: 1.12, powerMul: 1.15 },
+      { id: 'rescue', label: 'Rescue — gold', color: [0.92, 0.78, 0.22], speedMul: 1.05, powerMul: 1.05 }
     ],
-    forms: [
-      { id: 'mk3', label: 'Mk III', speedMul: 1, powerMul: 1, color: [0.75, 0.15, 0.12] },
-      { id: 'stealth', label: 'Stealth', speedMul: 1.15, powerMul: 0.85, color: [0.15, 0.18, 0.22] }
-    ],
+    forms: [{ id: 'mk3', label: 'Mk III baseline', speedMul: 1, powerMul: 1, color: [0.75, 0.15, 0.12] }],
     defaultFormId: 'mk3',
     aerial: 'tech'
   },
@@ -307,8 +322,22 @@ export const HERO_ROSTER: HeroSpec[] = [
     flight: { cruiseKmh: 320, boostKmh: 1750, agility: 0.75, mass: 155 },
     energy: { staminaMax: 115, regenPerSec: 22, superCooldownSec: 19, primaryCooldownSec: 0.25 },
     smashRadius: 3.4,
-    forms: [{ id: 'tank', label: 'Tank frame', speedMul: 1, powerMul: 1.15, color: [0.55, 0.12, 0.12] }],
-    defaultFormId: 'tank',
+    suitVariants: [
+      { id: 'wm-mk1', label: 'Proto monger grey', color: [0.42, 0.4, 0.38], speedMul: 0.9, powerMul: 1.2 },
+      { id: 'wm-classic', label: 'Classic gunmetal', color: [0.55, 0.12, 0.12] },
+      { id: 'wm-patriot', label: 'Iron Patriot — star', color: [0.72, 0.14, 0.18], speedMul: 1, powerMul: 1.1 },
+      { id: 'wm-brigadier', label: 'Brigadier crimson', color: [0.65, 0.12, 0.1], speedMul: 0.95, powerMul: 1.15 },
+      { id: 'wm-civil', label: 'Civil war salvo', color: [0.48, 0.5, 0.52], speedMul: 0.92, powerMul: 1.25 },
+      { id: 'wm-gunship', label: 'Gunship pods', color: [0.38, 0.12, 0.12], speedMul: 0.88, powerMul: 1.35 },
+      { id: 'wm-siege', label: 'Siege hammer', color: [0.28, 0.28, 0.32] },
+      { id: 'wm-stealth', label: 'Stealth sortie', color: [0.18, 0.2, 0.24], speedMul: 1.05, powerMul: 1.05 },
+      { id: 'wm-astro', label: 'Orbital bracer', color: [0.52, 0.42, 0.35], speedMul: 1.02, powerMul: 1.12 },
+      { id: 'wm-sam', label: 'Shoulder SAM pack', color: [0.62, 0.14, 0.12], speedMul: 0.9, powerMul: 1.3 },
+      { id: 'wm-plasma', label: 'Plasma repeater', color: [0.35, 0.15, 0.55], speedMul: 0.93, powerMul: 1.28 },
+      { id: 'wm-desert', label: 'Desert tan camo', color: [0.58, 0.48, 0.35], speedMul: 0.96, powerMul: 1.18 }
+    ],
+    forms: [{ id: 'tank', label: 'Tank baseline', speedMul: 1, powerMul: 1.15, color: [0.55, 0.12, 0.12] }],
+    defaultFormId: 'wm-classic',
     aerial: 'tech'
   },
   {
@@ -339,8 +368,20 @@ export const HERO_ROSTER: HeroSpec[] = [
     energy: { staminaMax: 100, regenPerSec: 26, superCooldownSec: 16, primaryCooldownSec: 0.18 },
     smashRadius: 2.2,
     forms: [
-      { id: 'night', label: 'Night patrol', speedMul: 1, powerMul: 1, color: [0.1, 0.12, 0.16] },
-      { id: 'tactical', label: 'Tactical jetpack', speedMul: 1.08, powerMul: 1.1, color: [0.2, 0.22, 0.28] }
+      { id: 'night', label: 'Night patrol — charcoal', speedMul: 1, powerMul: 1, color: [0.1, 0.12, 0.16] },
+      { id: 'tactical', label: 'Tactical jetpack', speedMul: 1.08, powerMul: 1.1, color: [0.2, 0.22, 0.28] },
+      { id: 'year-one', label: 'Year One — brown cape', speedMul: 0.98, powerMul: 1.05, color: [0.32, 0.22, 0.15] },
+      { id: 'animated', label: 'Animated — blue-gray', speedMul: 1.02, powerMul: 1, color: [0.12, 0.18, 0.35] },
+      { id: 'arkham', label: 'Arkham — matte black', speedMul: 1, powerMul: 1.02, color: [0.08, 0.1, 0.14] },
+      { id: 'knightfall', label: 'Knightfall — gold trim', speedMul: 0.97, powerMul: 1.12, color: [0.72, 0.58, 0.18] },
+      { id: 'beyond', label: 'Beyond — neon emblem', speedMul: 1.1, powerMul: 1.08, color: [0.85, 0.12, 0.12] },
+      { id: 'beyond-jet', label: 'Beyond — rocket jet', speedMul: 1.14, powerMul: 1.1, color: [0.78, 0.1, 0.1] },
+      { id: 'steel', label: 'Armored — steel gray', speedMul: 0.95, powerMul: 1.15, color: [0.35, 0.38, 0.42] },
+      { id: 'detective', label: 'Detective — earth tones', speedMul: 1, powerMul: 0.98, color: [0.42, 0.35, 0.28] },
+      { id: 'hellbat', label: 'Hellbat inspired', speedMul: 1.05, powerMul: 1.25, color: [0.62, 0.1, 0.08] },
+      { id: 'camo', label: 'Urban camo', speedMul: 1.03, powerMul: 1, color: [0.22, 0.28, 0.22] },
+      { id: 'arkham-lift', label: 'Glider ascent rig', speedMul: 1.06, powerMul: 1.02, color: [0.15, 0.16, 0.2] },
+      { id: 'dawn', label: 'Dawn — purple cape', speedMul: 1.04, powerMul: 1.05, color: [0.28, 0.12, 0.42] }
     ],
     defaultFormId: 'night',
     aerial: 'glide'

@@ -21,6 +21,7 @@ const required = [
   'src/villain-roster.ts',
   'src/aerial-mobility.ts',
   'src/roster-mutations.ts',
+  'src/hero-customization.ts',
   'src/hero-rivals.ts',
   'src/world-fate.ts',
   'src/world-persist.ts',
@@ -35,6 +36,12 @@ for (const f of required) {
     process.exit(1);
   }
 }
+
+const loadouts = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-hero-loadouts.mts')], {
+  cwd: root,
+  stdio: 'inherit'
+});
+if (loadouts.status !== 0) process.exit(loadouts.status ?? 1);
 
 const audit = spawnSync('npx', ['tsx', path.join(root, 'scripts/audit-aerial-roster.mts')], {
   cwd: root,

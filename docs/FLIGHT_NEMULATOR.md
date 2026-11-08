@@ -31,6 +31,7 @@ Production build: `npm run build` → `dist/` (static deploy like `drive-world`)
 | Economy | **Destruction cost** score + **wanted** heat when wrecking too much |
 | Roster | Full launch roster + Iron suits / form toggles; **custom hero** in local storage |
 | Aerial | Every hero/villain has `aerial` mobility; grounded homages get **jetpack** or **glide** visuals — see [`FLIGHT_NEMULATOR_AERIAL_ROSTER.md`](./FLIGHT_NEMULATOR_AERIAL_ROSTER.md) |
+| Customization | Iron Man, War Machine, Batman — deepest suit libraries; see [`FLIGHT_NEMULATOR_CUSTOMIZATION.md`](./FLIGHT_NEMULATOR_CUSTOMIZATION.md) |
 | Online | Optional `manifest-updates.json` fetch for new skins/characters (offline-first) |
 | Research agent | Client hook `character-research.ts` — wire to Tortuca `/api/...` when product adds server |
 

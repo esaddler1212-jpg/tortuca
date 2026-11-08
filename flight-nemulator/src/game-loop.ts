@@ -48,6 +48,7 @@ import {
   type PowerKind
 } from './hero-roster';
 import { aerialHudLabel, syncFlightAssistVisuals } from './aerial-mobility';
+import { loadoutStatsLabel } from './hero-customization';
 import { effectiveHeroAerial, resolveHeroForm, storedFormId } from './hero-forms';
 import { spawnAtHome } from './districts';
 import { HeroFlightController } from './hero-flight';
@@ -444,7 +445,8 @@ function tickFrame(s: GameSession, dt: number): void {
     dyingRoamSeconds: dyingRoamSecondsLeft(s.worldFate, nowMs),
     worldFatePhase: s.worldFate.phase,
     heroWorldSaved: s.worldFate.heroSaved,
-    aerialMobility: aerialHudLabel(effectiveHeroAerial(s.heroSpec, s.heroForm))
+    aerialMobility: aerialHudLabel(effectiveHeroAerial(s.heroSpec, s.heroForm)),
+    loadoutLabel: `${s.heroForm.label} · ${loadoutStatsLabel(s.heroForm)}`
   });
 }
 
