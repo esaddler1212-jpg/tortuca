@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getHudSnapshot, setTouchFlight } from '../game-bridge';
 import { HERO_ROSTER } from '../hero-roster';
-import { selectHero, selectPlayerRole } from '../game-loop';
+import { confirmVillainWorldRemake, continueDyingRoam, selectHero, selectPlayerRole } from '../game-loop';
 import { ANNIHILATE_HAVOC_USD } from '../villain-annihilate';
 import { getPlayerRole, type PlayerRole } from '../player-role';
 import { loadCustomHeroes, saveCustomHero, type CustomHeroDraft } from '../custom-hero';
@@ -45,6 +45,10 @@ export type GameHudSnapshot = {
   solarCharge?: number;
   nearestFoe?: string | null;
   villainRivals?: string[];
+  fatePrompt?: boolean;
+  dyingRoamSeconds?: number;
+  worldFatePhase?: string;
+  heroWorldSaved?: boolean;
 };
 
 function formatUsd(n: number): string {
@@ -104,6 +108,7 @@ export function HudApp() {
 
       <QualitySettings quality={snap.quality} photoMode={!!snap.photoMode} />
       <RolePicker role={snap.playerRole ?? getPlayerRole()} />
+      <WorldFatePanel snap={snap} />
 
       <div className="hero-picker hud-panel">
         <strong>Hero &amp; home base</strong>
@@ -173,6 +178,39 @@ export function HudApp() {
       <TouchPad />
     </div>
   );
+}
+
+function WorldFatePanel({ snap }: { snap: GameHudSnapshot }) {
+  if (snap.heroWorldSaved && snap.playerRole === 'hero') {
+    return (
+      <p className="hud-hint hud-chrono">
+        World saved — monument raised in {snap.district?.replace(/^Earth · /, '') ?? 'hometown'}
+      </p>
+    );
+  }
+  if (snap.worldFatePhase === 'dying_roam' && snap.playerRole === 'villain') {
+    const mins = Math.floor((snap.dyingRoamSeconds ?? 0) / 60);
+    const secs = (snap.dyingRoamSeconds ?? 0) % 60;
+    return (
+      <div className="hud-panel fate-panel">
+        <strong>Dying Earth</strong>
+        <p className="hud-tag">
+          Roam {mins}:{secs.toString().padStart(2, '0')} then the planet resets — or remake it in your image.
+        </p>
+        {snap.fatePrompt && (
+          <div className="fate-actions">
+            <button type="button" className="hud-annihilate" onClick={() => confirmVillainWorldRemake()}>
+              Remake in my image
+            </button>
+            <button type="button" className="hud-roam" onClick={() => continueDyingRoam()}>
+              Keep roaming
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+  return null;
 }
 
 function RolePicker({ role }: { role: PlayerRole }) {

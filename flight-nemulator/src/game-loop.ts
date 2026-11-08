@@ -11,11 +11,26 @@ import { buildMetropolis, getDestructibles, spawnSimpleCars } from './build-city
 import { buildPlanetShell, earthLabel, initEarthDistrictRing } from './earth-planet';
 import { getChronoState, tickEarthOrbit } from './earth-orbit';
 import {
+  applyPersistedWorldDecor,
   freshWantedAfterShatter,
+  resetFateAfterAutoRoam,
   shatterAndRebuildEarth,
   villainAnnihilatePlanet,
+  villainRemakeEarthInYourImage,
   worldGeneration
 } from './world-reset';
+import { installMonuments } from './build-monuments';
+import { loadHeroMonument, loadVillainTheme, saveHeroMonument } from './world-persist';
+import { applyVillainThemeTint } from './world-theme';
+import {
+  beginVillainDyingRoam,
+  canDeclareHeroSave,
+  createWorldFate,
+  dyingRoamExpired,
+  dyingRoamSecondsLeft,
+  shouldOfferVillainDyingPlanet,
+  type WorldFateState
+} from './world-fate';
 import { annihilateUnlocked, annihilateProgress } from './villain-annihilate';
 import {
   isSolarFullyCharged,
@@ -88,6 +103,7 @@ export type GameSession = {
   camera: Entity;
   stats: SessionStats;
   foesStopped: number;
+  worldFate: WorldFateState;
 };
 
 let session: GameSession | null = null;
@@ -126,11 +142,15 @@ export async function startGame(app: AppBase): Promise<void> {
   applyWeatherMood(app, weatherMood);
 
   initEarthDistrictRing();
+  const savedTheme = loadVillainTheme();
+  const savedMonument = loadHeroMonument();
+  if (savedTheme) applyVillainThemeTint(savedTheme.color, 0.72);
   buildMetropolis(app, root, { tier });
   buildPlanetShell(app, root);
   void placeKenneyLandmarks(app, root, tier === 'low' ? 8 : tier === 'high' ? 28 : 16);
   void placeWorldGachaTowns(app, root, tier === 'low' ? 0 : tier === 'high' ? 3 : 1);
   spawnSimpleCars(app, root, tier === 'low' ? 32 : tier === 'high' ? 160 : 90);
+  applyPersistedWorldDecor(app, root, savedTheme, savedMonument);
 
   const flight = new HeroFlightController(heroSpec, heroForm, spawn);
   const [r, g, b] = heroForm.color;
@@ -166,7 +186,8 @@ export async function startGame(app: AppBase): Promise<void> {
     waveCooldown: 6,
     camera,
     stats: loadSessionStats(),
-    foesStopped: 0
+    foesStopped: 0,
+    worldFate: createWorldFate()
   };
 
   app.on('update', (dt: number) => {
@@ -289,10 +310,55 @@ function tickFrame(s: GameSession, dt: number): void {
     s.stats = saveSessionStats({ supersUsed: s.stats.supersUsed + 1 });
   }
 
+  const nowMs = Date.now();
+  syncIntegrityFromBuildings(s.city, tags);
+  if (shouldOfferVillainDyingPlanet(s.playerRole, s.city, s.worldFate)) {
+    beginVillainDyingRoam(s.worldFate, nowMs);
+  }
+  if (dyingRoamExpired(s.worldFate, nowMs)) {
+    shatterAndRebuildEarth(s.app, s.root, s.tier, s.factionNpcs, true);
+    s.city = createCityIntegrity();
+    s.wanted = freshWantedAfterShatter();
+    s.wave = 0;
+    s.waveCooldown = 12;
+    resetFateAfterAutoRoam(s.worldFate);
+    const home = spawnAtHome(s.heroSpec.districtId);
+    s.hero.entity.setPosition(home);
+    s.hero.velocity.set(0, 0, 0);
+    addScreenShake(1.2);
+    playSuper();
+  }
+  if (
+    canDeclareHeroSave(
+      s.playerRole,
+      s.city,
+      s.wave,
+      s.factionNpcs.length,
+      s.foesStopped,
+      s.worldFate
+    )
+  ) {
+    saveHeroMonument({
+      heroId: s.heroSpec.id,
+      codename: s.heroSpec.codename,
+      districtId: s.heroSpec.districtId,
+      color: s.heroForm.color
+    });
+    installMonuments(s.app, s.root, {
+      codename: s.heroSpec.codename,
+      color: s.heroForm.color,
+      scope: s.heroSpec.districtId
+    });
+    s.worldFate.heroSaved = true;
+    s.worldFate.phase = 'hero_saved';
+    playWaveAlert();
+  }
+
   const maxNpcs =
     s.playerRole === 'hero' ? 6 + Math.floor(s.wave / 2) : 8 + s.wanted.stars * 3;
   s.waveCooldown -= chrono.chronoFrozen ? simDt : dt;
-  if (!chrono.chronoFrozen && s.waveCooldown <= 0 && s.factionNpcs.length < maxNpcs) {
+  const roamQuiet = s.worldFate.phase === 'dying_roam';
+  if (!roamQuiet && !chrono.chronoFrozen && s.waveCooldown <= 0 && s.factionNpcs.length < maxNpcs) {
     s.wave += 1;
     const cd = s.playerRole === 'hero' ? 14 : Math.max(4, 12 - s.wave * 0.4 - s.wanted.stars);
     s.waveCooldown = cd;
@@ -316,8 +382,6 @@ function tickFrame(s: GameSession, dt: number): void {
     s.foesStopped += kills;
     s.stats = saveSessionStats({ dronesDestroyed: s.stats.dronesDestroyed + kills });
   }
-  syncIntegrityFromBuildings(s.city, tags);
-
   tickDebris(dt, s.root);
   tickTrails(dt, s.root);
 
@@ -368,8 +432,39 @@ function tickFrame(s: GameSession, dt: number): void {
     solarCharge: s.heroSpec.id === 'solar-apex' ? solarCharge : 0,
     nearestFoe: nearestFoeCodename(s.factionNpcs, s.playerRole, pos),
     villainRivals:
-      s.playerRole === 'hero' ? villainRivalsForHero(s.heroSpec.id).slice(0, 4) : undefined
+      s.playerRole === 'hero' ? villainRivalsForHero(s.heroSpec.id).slice(0, 4) : undefined,
+    fatePrompt: s.worldFate.fatePrompt,
+    dyingRoamSeconds: dyingRoamSecondsLeft(s.worldFate, nowMs),
+    worldFatePhase: s.worldFate.phase,
+    heroWorldSaved: s.worldFate.heroSaved
   });
+}
+
+export function confirmVillainWorldRemake(): void {
+  if (!session || session.playerRole !== 'villain' || session.worldFate.phase !== 'dying_roam') return;
+  villainRemakeEarthInYourImage(
+    session.app,
+    session.root,
+    session.tier,
+    session.factionNpcs,
+    session.heroSpec,
+    session.heroForm
+  );
+  session.city = createCityIntegrity();
+  session.wanted = freshWantedAfterShatter();
+  session.wave = 0;
+  session.waveCooldown = 10;
+  resetFateAfterAutoRoam(session.worldFate);
+  const home = spawnAtHome(session.heroSpec.districtId);
+  session.hero.entity.setPosition(home);
+  session.hero.velocity.set(0, 0, 0);
+  addScreenShake(1.8);
+  playSuper();
+}
+
+export function continueDyingRoam(): void {
+  if (!session) return;
+  session.worldFate.fatePrompt = false;
 }
 
 export function selectPlayerRole(role: PlayerRole): void {

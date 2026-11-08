@@ -20,6 +20,10 @@ const required = [
   'src/solar-space-charge.ts',
   'src/villain-roster.ts',
   'src/hero-rivals.ts',
+  'src/world-fate.ts',
+  'src/world-persist.ts',
+  'src/world-theme.ts',
+  'src/build-monuments.ts',
   'public/manifest-updates.json'
 ];
 

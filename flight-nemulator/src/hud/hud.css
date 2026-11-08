@@ -5,6 +5,28 @@
   font-size: 14px;
 }
 
+.fate-panel {
+  pointer-events: auto;
+  margin: 8px 12px;
+}
+
+.fate-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.hud-roam {
+  pointer-events: auto;
+  padding: 10px 14px;
+  background: rgba(20, 28, 48, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #e8ecf8;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
 .hud-annihilate {
   pointer-events: auto;
   margin: 8px 12px;
