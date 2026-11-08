@@ -8,10 +8,11 @@ interface Props {
 
 export function OvercommitmentBanner({ warning }: Props) {
   const [dismissed, setDismissed] = useState(false);
+  const reasonsKey = warning.reasons.join("|");
 
   useEffect(() => {
     setDismissed(false);
-  }, [warning.message, warning.reasons.join("|")]);
+  }, [warning.message, reasonsKey]);
 
   if (dismissed) return null;
 

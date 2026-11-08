@@ -14,10 +14,12 @@ export function useStocks() {
     setError(null);
     try {
       const res = await fetch("/api/stocks", { headers: authHeaders() });
-      const data = (await res.json()) as StocksSnapshot;
-      if (!res.ok && !data.demoFallback) throw new Error("Stocks unavailable");
+      const data = (await res.json().catch(() => null)) as StocksSnapshot | null;
+      if (!data || (!res.ok && !data.demoFallback)) throw new Error("Stocks unavailable");
       setSnapshot(data);
       if (!res.ok && data.demoFallback) setError(data.error ?? "Live data failed; showing demo quotes.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Stocks unavailable");
     } finally {
       setLoading(false);
     }

@@ -59,5 +59,19 @@ ok("home combo max-w 1100", appTs.includes('max-w-[1100px]'));
 // ── Reduce motion (accessibility + low-power devices) ─────────────────
 ok("prefers-reduced-motion global", indexCss.includes("prefers-reduced-motion: reduce"));
 
+// ── Installed PWAs pick up new deploys ─────────────────────────────────
+const mainTs = read("src/main.tsx");
+const netlifyToml = read("netlify.toml");
+ok("app update watch module", fs.existsSync(path.join(root, "src/lib/appUpdate.ts")));
+ok("main starts update watch in prod", mainTs.includes("import.meta.env.PROD") && mainTs.includes("startAppUpdateWatch()"));
+ok("update watch re-checks on foreground", read("src/lib/appUpdate.ts").includes("visibilitychange"));
+ok("hashed assets cached immutable", netlifyToml.includes('for = "/assets/*"') && netlifyToml.includes("immutable"));
+ok("sw.js never long-cached", /for = "\/sw\.js"[\s\S]*?no-cache/.test(netlifyToml));
+
+// ── Client fetches survive non-JSON error bodies (function timeouts) ───
+ok("useStocks tolerates bad JSON", read("src/hooks/useStocks.ts").includes(".json().catch("));
+ok("useStocks catches refresh errors", /catch \(e\)/.test(read("src/hooks/useStocks.ts")));
+ok("channel send tolerates bad JSON", read("src/hooks/useChannels.ts").includes(".json().catch("));
+
 const passed = !process.exitCode;
 console.log(passed ? `\nCross-device audit passed (${checkCount} checks).` : `\nCross-device audit failed (${checkCount} checks run).`);

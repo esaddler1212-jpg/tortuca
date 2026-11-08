@@ -7,7 +7,6 @@ import { researchMemoTitle, type BusinessResearchRequest, type ResearchTemplate 
 import {
   RESEARCH_DAILY_LIMIT,
   RESEARCH_MAX_CONTEXT_CHARS,
-  RESEARCH_MAX_QUERY_CHARS,
   RESEARCH_MIN_QUERY_CHARS,
   sanitizeResearchQuery,
 } from "../../shared/agentGuardrails";
