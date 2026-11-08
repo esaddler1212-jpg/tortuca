@@ -216,6 +216,14 @@ function SettingsPanel() {
         />
         Fuel sim (free pumps)
       </label>
+      <label className="checkbox-row">
+        <input
+          type="checkbox"
+          checked={s.showSideshow}
+          onChange={(e) => apply({ ...s, showSideshow: e.target.checked })}
+        />
+        Sideshow meetups
+      </label>
     </details>
   );
 }
@@ -303,6 +311,9 @@ export function HudApp() {
       )}
       {snap.parkingSpotName && !snap.photoMode && (
         <div className="parking-hint">{snap.parkingSpotName}</div>
+      )}
+      {snap.activeSideshowName && !snap.photoMode && (
+        <div className="parking-hint">Sideshow tonight: {snap.activeSideshowName}</div>
       )}
       <SafehousePanel snap={snap} />
       <MusicPanel />

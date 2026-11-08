@@ -2,6 +2,9 @@
 const KENNEY = './models/kenney';
 const CC0 = './models/cc0';
 
+/** Block-mesh bodies only (no Kenney GLB). */
+export const BLOCK_BODY_VEHICLE_IDS = new Set<string>(['legend-beast-cart']);
+
 export const VEHICLE_GLB: Record<string, string> = {
   'garage-cruiser': `${KENNEY}/sedan.glb`,
   'garage-sport': `${KENNEY}/hatchback-sports.glb`,
@@ -20,9 +23,14 @@ export const VEHICLE_GLB: Record<string, string> = {
   'bonus-bay-van': `${KENNEY}/van.glb`,
   'bonus-night-delivery': `${KENNEY}/delivery.glb`,
   'bonus-marina-hatch': `${KENNEY}/hatchback-sports.glb`,
+  'legend-time-warp': `${KENNEY}/race-future.glb`,
+  'legend-hyphy-shortbus': `${KENNEY}/van.glb`,
+  'legend-cookie-bus': `${KENNEY}/van.glb`,
+  'legend-say-hey-cadillac': `${KENNEY}/sedan.glb`,
   default: `${KENNEY}/sedan.glb`
 };
 
-export function glbPathForVehicle(vehicleId: string): string {
+export function glbPathForVehicle(vehicleId: string): string | null {
+  if (BLOCK_BODY_VEHICLE_IDS.has(vehicleId)) return null;
   return VEHICLE_GLB[vehicleId] ?? VEHICLE_GLB.default;
 }

@@ -37,6 +37,7 @@ export type HudSnapshot = {
   fuelPercent?: number;
   nearGas?: boolean;
   parkingSpotName?: string;
+  activeSideshowName?: string;
 };
 
 export type TouchDrive = {

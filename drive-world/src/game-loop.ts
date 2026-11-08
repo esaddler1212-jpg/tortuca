@@ -6,6 +6,7 @@ import { nearestGasStation } from './gas-stations';
 import { fuelMultiplier, fuelPercent, refillFuel, tickFuel } from './fuel-system';
 import { nearestParkingSpot, scoreParking } from './landmark-parking';
 import { recordParkingStars } from './parking-rewards';
+import { shouldNotifySideshow, updateSideshowMeets } from './sideshow-meets';
 import { appliedTuning } from './vehicle-customization';
 import {
   computeTouchControls,
@@ -91,6 +92,7 @@ import {
 } from './autopilot-cruise';
 import {
   AUTOPILOT_VEHICLE_ID,
+  BONUS_CULTURE_IDS,
   getVehicleSpec,
   isAerialVehicle,
   supportsAutopilot
@@ -134,6 +136,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   let fuelRefillT = 0;
   let playerBaseEngineForce = 5200;
   let exhaustGain = 1;
+  let worldTime = 0;
   const photoKeys = { fwd: false, back: false, left: false, right: false, up: false, down: false };
   const CALDECOTT = { x: 392, z: 265 };
   let autopilotActive = false;
@@ -602,7 +605,9 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     const ent = vehicle();
     if (!ent) return;
 
+    worldTime += dt;
     updateAmbientTraffic(dt, settings.showTraffic);
+    const sideshowSite = updateSideshowMeets(dt, worldTime, settings.showSideshow);
 
     const posTrack = ent.getPosition();
     const district = districtAt(posTrack.x, posTrack.z);
@@ -678,6 +683,9 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   }
 
     const pos = ent.getPosition();
+    if (sideshowSite && shouldNotifySideshow(pos.x, pos.z, sideshowSite)) {
+      ui.showToast('Sideshow meet', `${sideshowSite.name} — respect the lot`);
+    }
     const vistaNear = nearestCruiseVista(pos.x, pos.z);
     let activeCam = cameraMode;
     if (
@@ -831,7 +839,8 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       parkingSpotName:
         parkingSpot && mph < 8
           ? `${parkingSpot.name}${(progress.parkingStars[parkingSpot.id] ?? 0) > 0 ? ` · ${progress.parkingStars[parkingSpot.id]}★` : ''}`
-          : undefined
+          : undefined,
+      activeSideshowName: sideshowSite?.name
     });
 
     statsT += dt;
@@ -907,6 +916,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         const hadGotham = progress.unlockedVehicleIds.includes('bonus-gotham-knight');
         const hadScarlet = progress.unlockedVehicleIds.includes('bonus-scarlet-five');
         const hadCoil = progress.unlockedVehicleIds.includes(AUTOPILOT_VEHICLE_ID);
+        const hadCulture = new Set(BONUS_CULTURE_IDS.filter((id) => progress.unlockedVehicleIds.includes(id)));
         progress = collectItem(progress, c.id, c.unlockPaintId);
         ui.showToast('Collectible', c.name);
         if (!hadHeli && progress.unlockedVehicleIds.includes('bonus-coast-heli')) {
@@ -920,6 +930,11 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         }
         if (!hadCoil && progress.unlockedVehicleIds.includes(AUTOPILOT_VEHICLE_ID)) {
           ui.showToast('Autopilot unlocked', `${getVehicleSpec(AUTOPILOT_VEHICLE_ID).name} — press T at the wheel`);
+        }
+        for (const id of BONUS_CULTURE_IDS) {
+          if (!hadCulture.has(id) && progress.unlockedVehicleIds.includes(id)) {
+            ui.showToast('Bay homage unlocked', getVehicleSpec(id).name);
+          }
         }
         if (nearGarage) refreshGarageUi();
       }

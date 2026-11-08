@@ -7,6 +7,7 @@ import {
   REGION_VEHICLE_IDS
 } from './vehicle-catalog';
 import { defaultHomeSafehouseId, ensureSafehouseUnlocks } from './safehouse-registry';
+import { tryUnlockCultureVehicles } from './bay-culture-unlocks';
 import { SCENIC_ROUTES } from './world-extras';
 import { isDistrictCheckpointSatisfied } from './city-checkpoints';
 import { regionUnlockVehicleId, LANDMARKS } from './landmark-registry';
@@ -334,6 +335,7 @@ export function collectItem(progress: SavedProgress, id: string, paintId: string
   };
   next = tryUnlockCoastHeli(next);
   next = tryUnlockLegendVehicles(next);
+  next = tryUnlockCultureVehicles(next);
   next = tryUnlockNightCoil(next);
   saveProgress(next);
   return next;

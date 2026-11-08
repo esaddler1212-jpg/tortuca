@@ -8,6 +8,7 @@ export type GameSettings = {
   /** Gentle tank drain + free pumps; off = always full power */
   fuelSimEnabled: boolean;
   showTraffic: boolean;
+  showSideshow: boolean;
   photoSensitivity: number;
   musicVolume: number;
   musicStation: MusicStationId;
@@ -23,6 +24,7 @@ const defaults: GameSettings = {
   fogQuality: 'med',
   fuelSimEnabled: true,
   showTraffic: true,
+  showSideshow: true,
   photoSensitivity: 1,
   musicVolume: 0.55,
   musicStation: 'ambient',

@@ -15,6 +15,7 @@ import {
   buildLombardStreet,
   spawnAmbientTraffic
 } from './build-world-extras';
+import { buildSideshowMeets } from './sideshow-meets';
 import { NIGHT_FOG } from './night-palette';
 import { WORLD_HALF_M } from './world-config';
 
@@ -43,6 +44,7 @@ export function buildDrivingWorld(app: AppBase): void {
   buildCollectibles(app);
   buildCruiseVistas(app);
   spawnAmbientTraffic(app);
+  buildSideshowMeets(app);
   buildAllDistricts(app);
   buildBayAreaLandmarks(app);
   buildTacoTrucks(app);

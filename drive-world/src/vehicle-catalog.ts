@@ -18,6 +18,8 @@ export type VehicleSpec = {
   garageStarter?: boolean;
   aerialBonus?: boolean;
   legendBonus?: boolean;
+  /** Bay culture homages — fan tribute, not affiliated */
+  cultureBonus?: boolean;
 };
 
 function spec(
@@ -37,7 +39,7 @@ function spec(
     >
   >,
   paint: VehicleSpec['paint'],
-  extras?: Partial<Pick<VehicleSpec, 'region' | 'garageStarter' | 'aerialBonus' | 'legendBonus'>>
+  extras?: Partial<Pick<VehicleSpec, 'region' | 'garageStarter' | 'aerialBonus' | 'legendBonus' | 'cultureBonus'>>
 ): VehicleSpec {
   return {
     id,
@@ -65,6 +67,15 @@ export const BONUS_LEGEND_IDS = ['bonus-gotham-knight', 'bonus-scarlet-five'] as
 
 /** Kenney CC0 extras — unlock via landmark parking stars. */
 export const BONUS_PARKING_IDS = ['bonus-bay-van', 'bonus-night-delivery', 'bonus-marina-hatch'] as const;
+
+/** Bay homage fleet — collectible tokens (not affiliated). */
+export const BONUS_CULTURE_IDS = [
+  'legend-time-warp',
+  'legend-hyphy-shortbus',
+  'legend-cookie-bus',
+  'legend-say-hey-cadillac',
+  'legend-beast-cart'
+] as const;
 
 /** EV sedan with full-map night cruise autopilot (not affiliated). */
 export const AUTOPILOT_VEHICLE_ID = 'bonus-night-coil' as const;
@@ -236,6 +247,57 @@ export const VEHICLE_CATALOG: Record<string, VehicleSpec> = {
     { mass: 960, maxEngineForce: 7000, maxSteering: 0.4, chassis: { x: 0.88, y: 0.3, z: 1.72 } },
     { diffuse: [0.06, 0.1, 0.12], emissive: [0.2, 0.8, 0.75], emissiveIntensity: 0.42 },
     {}
+  ),
+
+  'legend-time-warp': spec(
+    'legend-time-warp',
+    'Time Warp Coupe',
+    'Homage — flux token at Palace · flies on Space',
+    'San Francisco',
+    { locomotion: 'hover', mass: 980, chassis: { x: 0.9, y: 0.3, z: 1.85 } },
+    { diffuse: [0.55, 0.56, 0.58], emissive: [0.75, 0.78, 0.82], emissiveIntensity: 0.4 },
+    { cultureBonus: true, aerialBonus: true }
+  ),
+  'legend-hyphy-shortbus': spec(
+    'legend-hyphy-shortbus',
+    'Hyphy Short Bus',
+    'Homage — whistle at Fox Theater',
+    'Oakland',
+    { mass: 1450, maxEngineForce: 5400, maxSteering: 0.3, chassis: { x: 1.08, y: 0.62, z: 2.45 } },
+    { diffuse: [0.22, 0.18, 0.04], emissive: [0.98, 0.88, 0.12], emissiveIntensity: 0.55 },
+    { cultureBonus: true }
+  ),
+  'legend-cookie-bus': spec(
+    'legend-cookie-bus',
+    'Cookie Tour Bus',
+    'Homage — tin at Concord plaza',
+    'East Bay',
+    { mass: 1380, maxEngineForce: 5000, maxSteering: 0.31, chassis: { x: 1.12, y: 0.58, z: 2.5 } },
+    { diffuse: [0.05, 0.12, 0.06], emissive: [0.35, 0.9, 0.42], emissiveIntensity: 0.48 },
+    { cultureBonus: true }
+  ),
+  'legend-say-hey-cadillac': spec(
+    'legend-say-hey-cadillac',
+    'Say Hey Lowrider',
+    'Homage — glove at Oracle Park',
+    'San Francisco',
+    {
+      mass: 1480,
+      maxEngineForce: 6200,
+      maxSteering: 0.36,
+      chassis: { x: 1.15, y: 0.38, z: 2.5 }
+    },
+    { diffuse: [0.28, 0.08, 0.14], emissive: [0.95, 0.35, 0.65], emissiveIntensity: 0.5 },
+    { cultureBonus: true }
+  ),
+  'legend-beast-cart': spec(
+    'legend-beast-cart',
+    'Beast Mode Cart',
+    'Homage — bell at Oakland Arena',
+    'East Bay',
+    { mass: 420, maxEngineForce: 2800, maxSteering: 0.45, chassis: { x: 0.55, y: 0.22, z: 0.95 } },
+    { diffuse: [0.1, 0.1, 0.12], emissive: [0.55, 0.6, 0.65], emissiveIntensity: 0.3 },
+    { cultureBonus: true }
   ),
 
   'bonus-night-coil': spec(

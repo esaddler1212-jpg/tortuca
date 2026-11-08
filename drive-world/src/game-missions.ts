@@ -77,6 +77,18 @@ export function buildMissionBoard(
     lines.push({ id: 'park-van', label: 'Unlock Bay Shuttle Van', done: false, hint: '4 parking badges' });
   }
 
+  const cultureHints: { id: string; label: string; collectible: string }[] = [
+    { id: 'c-flux', label: 'Time Warp Coupe (flies)', collectible: 'flux-trail' },
+    { id: 'c-hyphy', label: 'Hyphy Short Bus', collectible: 'hyphy-whistle' },
+    { id: 'c-cookie', label: 'Cookie Tour Bus', collectible: 'cookie-case' },
+    { id: 'c-willie', label: 'Say Hey Lowrider', collectible: 'willie-glove' },
+    { id: 'c-beast', label: 'Beast Mode Cart', collectible: 'beast-bell' }
+  ];
+  for (const h of cultureHints) {
+    if (progress.collectedIds.includes(h.collectible)) continue;
+    lines.push({ id: h.id, label: `Homage: ${h.label}`, done: false, hint: 'Grab the glowing token' });
+  }
+
   for (const route of SCENIC_ROUTES) {
     const done = progress.scenicCompleted.includes(route.id);
     const idx = progress.scenicProgress[route.id] ?? 0;

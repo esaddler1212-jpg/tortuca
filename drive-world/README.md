@@ -29,6 +29,8 @@ Flight without a keyboard: use **⤒ / ⤓** on the touch pad. Photo mode and HU
 
 Default home is the **Vallejo estate** with a **Fast & Furious–style garage**. Regional unlocks add **penthouses** and **condos**. Pull up to any unlocked **valet/garage** for the full fleet. **Green parking bays** at 14 landmarks — slow in, line up heading, earn up to 3★ (unlocks extra Kenney rides at 4 / 8 / 12 badges). **Fuel sim** (optional in Settings) drains gently while driving; **blue-green pump canopies** refill free. Garage tuning adds **camber, spoiler, livery stripe, exhaust note** on top of paints and handling.
 
+**Bay homage fleet** (fan tribute, not affiliated): collect glowing tokens to unlock Time Warp Coupe (**hover flight**), Hyphy Short Bus, Cookie Tour Bus, Say Hey Lowrider, and Beast Mode Cart. **Sideshow meetups** rotate every ~2.5 minutes across eight lots (lineup + donut cars) — toggle in Settings.
+
 ## Deploy
 
 See [`docs/CITY_NIGHTS_DEPLOY.md`](../docs/CITY_NIGHTS_DEPLOY.md).
