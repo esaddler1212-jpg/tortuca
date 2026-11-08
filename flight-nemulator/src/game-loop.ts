@@ -4,6 +4,7 @@ import {
   Entity,
   FILLMODE_FILL_WINDOW,
   RESOLUTION_AUTO,
+  StandardMaterial,
   Vec3
 } from 'playcanvas';
 import { buildMetropolis, getDestructibles, nearestDistrictLabel, spawnSimpleCars } from './build-city';
@@ -12,8 +13,10 @@ import {
   DEFAULT_HERO_ID,
   getHero,
   type HeroForm,
-  type HeroSpec
+  type HeroSpec,
+  type PowerKind
 } from './hero-roster';
+import { resolveHeroForm, storedFormId } from './hero-forms';
 import { spawnAtHome } from './districts';
 import { HeroFlightController } from './hero-flight';
 import { bindFlightKeys, pollFlightInput } from './game-input';
@@ -27,11 +30,15 @@ import {
   superCrater,
   throwProp,
   tickDrones,
+  waveDroneCount,
   type EnemyDrone
 } from './combat';
 import { isPhotoMode, togglePhotoMode } from './photo-mode';
 import { fetchManifestIfOnline } from './updates';
 import { loadCustomHeroes, customHeroToSpec } from './custom-hero';
+import { addScreenShake, consumeShake, spawnBoostTrail, spawnCraterMarker, tickTrails } from './vfx';
+import { bootAudioFromGesture, playBlast, playSmash, playSuper, playWaveAlert, playWhoosh } from './game-audio';
+import { loadSessionStats, saveSessionStats, type SessionStats } from './session-persist';
 
 export type GameSession = {
   app: AppBase;
@@ -46,6 +53,8 @@ export type GameSession = {
   wave: number;
   waveCooldown: number;
   camera: Entity;
+  stats: SessionStats;
+  dronesDestroyed: number;
 };
 
 let session: GameSession | null = null;
@@ -57,25 +66,30 @@ function pickHero(): HeroSpec {
   return getHero(stored) ?? getHero(DEFAULT_HERO_ID)!;
 }
 
-function resolveForm(spec: HeroSpec): HeroForm {
-  const fid = localStorage.getItem(`flight-nemulator-form-${spec.id}`) ?? spec.defaultFormId;
-  return spec.forms.find((f) => f.id === fid) ?? spec.forms[0];
+function paintHero(entity: Entity, color: [number, number, number]): void {
+  const mi = entity.render?.meshInstances?.[0];
+  const mat = mi?.material as StandardMaterial | undefined;
+  if (!mat) return;
+  mat.diffuse = new Color(color[0], color[1], color[2]);
+  mat.emissive = new Color(color[0] * 0.35, color[1] * 0.35, color[2] * 0.35);
+  mat.update();
 }
 
 export async function startGame(app: AppBase, canvas: HTMLCanvasElement): Promise<void> {
   bindFlightKeys();
+  bootAudioFromGesture();
   void fetchManifestIfOnline();
 
   const tier = detectQualityTier();
   const heroSpec = pickHero();
-  const heroForm = resolveForm(heroSpec);
+  const heroForm = resolveHeroForm(heroSpec, storedFormId(heroSpec));
   const spawn = spawnAtHome(heroSpec.districtId);
 
   const root = new Entity('world-root');
   app.root.addChild(root);
 
-  buildMetropolis(app, root);
-  spawnSimpleCars(app, root, tier === 'low' ? 40 : 120);
+  buildMetropolis(app, root, { tier });
+  spawnSimpleCars(app, root, tier === 'low' ? 32 : tier === 'high' ? 160 : 90);
 
   const flight = new HeroFlightController(heroSpec, heroForm, spawn);
   const [r, g, b] = heroForm.color;
@@ -105,8 +119,10 @@ export async function startGame(app: AppBase, canvas: HTMLCanvasElement): Promis
     wanted: createWanted(),
     drones: [],
     wave: 0,
-    waveCooldown: 8,
-    camera
+    waveCooldown: 6,
+    camera,
+    stats: loadSessionStats(),
+    dronesDestroyed: 0
   };
 
   app.on('update', (dt: number) => {
@@ -119,23 +135,37 @@ export async function startGame(app: AppBase, canvas: HTMLCanvasElement): Promis
   app.start();
 }
 
+function powerKind(hero: HeroSpec): PowerKind {
+  return hero.powers[0] ?? 'beam';
+}
+
 function tickFrame(s: GameSession, dt: number, canvas: HTMLCanvasElement): void {
   const input = pollFlightInput();
   if (input.photo) togglePhotoMode();
 
+  s.hero.form = s.heroForm;
   s.hero.update(dt, input);
   const pos = s.hero.entity.getPosition();
   const tags = getDestructibles();
 
-  const smash = checkHeroSmash(s.app, s.root, pos, s.hero.speedKmh(), s.heroSpec.smashRadius, tags, s.tier);
+  const smashRadius = s.heroSpec.smashRadius * s.heroForm.powerMul;
+  const smash = checkHeroSmash(s.app, s.root, pos, s.hero.speedKmh(), smashRadius, tags, s.tier);
   if (smash.costUsd > 0) {
     s.destructionUsd += smash.costUsd;
     addDestructionHeat(s.wanted, smash.costUsd, dt);
+    addScreenShake(0.25);
+    playSmash();
+  }
+
+  if (input.boost && s.hero.speedKmh() > 200) {
+    playWhoosh();
+    spawnBoostTrail(s.app, s.root, pos.clone(), s.heroForm.color);
   }
 
   if (input.primary && s.hero.canPrimary()) {
     s.hero.triggerPrimary();
-    firePrimary(s.heroSpec, pos, s.hero.aimPoint(), s.drones);
+    const hits = firePrimary(s.heroSpec, pos, s.hero.aimPoint(), s.drones, s.heroForm.powerMul);
+    if (hits > 0) playBlast(powerKind(s.heroSpec) as 'beam' | 'repulsor' | 'thunder' | 'ki' | 'default');
   }
   if (input.throw) {
     throwProp(tags, pos, s.drones);
@@ -143,16 +173,23 @@ function tickFrame(s: GameSession, dt: number, canvas: HTMLCanvasElement): void 
   if (input.super && s.hero.canSuper()) {
     s.hero.triggerSuper();
     const aim = s.hero.aimPoint(120);
-    const blast = superCrater(s.app, s.root, aim, tags, s.tier, 45);
+    const blastRadius = 45 * s.heroForm.powerMul;
+    const blast = superCrater(s.app, s.root, aim, tags, s.tier, blastRadius);
     s.destructionUsd += blast.costUsd;
     addDestructionHeat(s.wanted, blast.costUsd, dt);
+    spawnCraterMarker(s.app, s.root, aim, blastRadius);
+    addScreenShake(0.9);
+    playSuper();
+    s.stats = saveSessionStats({ supersUsed: s.stats.supersUsed + 1 });
   }
 
+  const maxDrones = 8 + s.wanted.stars * 3;
   s.waveCooldown -= dt;
-  if (s.waveCooldown <= 0 && s.drones.length < 6) {
+  if (s.waveCooldown <= 0 && s.drones.length < maxDrones) {
     s.wave += 1;
-    s.waveCooldown = Math.max(6, 14 - s.wave * 0.5);
-    const batch = spawnWaveDrones(s.app, s.root, pos, 3 + Math.min(8, s.wave));
+    s.waveCooldown = Math.max(4, 12 - s.wave * 0.4 - s.wanted.stars);
+    const count = waveDroneCount(s.wave, s.wanted.stars);
+    const batch = spawnWaveDrones(s.app, s.root, pos, count);
     batch.forEach((d) => {
       d.entity.addComponent('render', {
         meshInstances: [attachUnitBox(s.app, 0.85, 0.2, 0.15)]
@@ -160,15 +197,29 @@ function tickFrame(s: GameSession, dt: number, canvas: HTMLCanvasElement): void 
       d.entity.setLocalScale(3.5, 1.2, 3.5);
     });
     s.drones.push(...batch);
+    playWaveAlert();
   }
-  tickDrones(s.drones, pos, dt, s.root);
+  const kills = tickDrones(s.drones, pos, dt, s.root);
+  if (kills > 0) {
+    s.dronesDestroyed += kills;
+    s.stats = saveSessionStats({ dronesDestroyed: s.stats.dronesDestroyed + kills });
+  }
 
   tickDebris(dt, s.root);
+  tickTrails(dt, s.root);
 
   const f = s.hero.forward();
-  const camPos = new Vec3(pos.x - f.x * 14, pos.y + 5, pos.z - f.z * 14);
+  const shake = consumeShake();
+  const camPos = new Vec3(
+    pos.x - f.x * 14 + shake.x,
+    pos.y + 5 + shake.y,
+    pos.z - f.z * 14 + shake.z
+  );
   s.camera.setPosition(camPos);
   s.camera.lookAt(pos);
+
+  const lifetimeDestruction = s.stats.destructionUsd + s.destructionUsd;
+  saveSessionStats({ destructionUsd: lifetimeDestruction, wavesCleared: s.wave });
 
   setHudSnapshot({
     heroName: s.heroSpec.codename,
@@ -183,12 +234,26 @@ function tickFrame(s: GameSession, dt: number, canvas: HTMLCanvasElement): void 
     superReady: s.hero.canSuper(),
     quality: s.tier,
     flightMode: !isPhotoMode(),
-    photoMode: isPhotoMode()
+    photoMode: isPhotoMode(),
+    heroX: pos.x,
+    heroZ: pos.z,
+    dronesLeft: s.drones.length,
+    lifetimeDestructionUsd: lifetimeDestruction,
+    dronesDestroyed: s.dronesDestroyed
   });
 }
 
 export function selectHero(heroId: string, formId?: string): void {
+  const prev = localStorage.getItem('flight-nemulator-hero-id');
   localStorage.setItem('flight-nemulator-hero-id', heroId);
   if (formId) localStorage.setItem(`flight-nemulator-form-${heroId}`, formId);
+
+  if (session && prev === heroId && formId) {
+    const spec = pickHero();
+    session.heroForm = resolveHeroForm(spec, formId);
+    session.hero.form = session.heroForm;
+    paintHero(session.hero.entity, session.heroForm.color);
+    return;
+  }
   window.location.reload();
 }

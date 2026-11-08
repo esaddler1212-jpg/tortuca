@@ -26,9 +26,19 @@ Production build: `npm run build` → `dist/` (static deploy like `drive-world`)
 | Online | Optional `manifest-updates.json` fetch for new skins/characters (offline-first) |
 | Research agent | Client hook `character-research.ts` — wire to Tortuca `/api/...` when product adds server |
 
+## Today’s stretch goals (in progress on branch)
+
+- Indestructible district home spires + Bat-cave mouth landmark
+- Quality-tier city density + manual quality override in HUD
+- Boost trails, super crater ring, camera shake
+- Wanted-scaled defense waves + power-specific primaries
+- Minimap, session lifetime stats, photo save
+- Expanded roster (Shade Knight, Amazon Vanguard, Bolt Archer, Ant Scale)
+- `POST /api/flight-nemulator-research` homage draft suggestions (main repo function)
+
 ## v2 (not in v1)
 
-Multiplayer, mission chapters, checkpoint races.
+Multiplayer, mission chapters, checkpoint races, GLB hero models.
 
 ## Tortuca / IRIS
 

@@ -10,6 +10,10 @@ export type EnemyDrone = {
   speed: number;
 };
 
+export function waveDroneCount(wave: number, wantedStars: number): number {
+  return 3 + Math.min(12, wave) + wantedStars * 2;
+}
+
 export function spawnWaveDrones(app: AppBase, root: Entity, origin: Vec3, count: number): EnemyDrone[] {
   const out: EnemyDrone[] = [];
   for (let i = 0; i < count; i++) {
@@ -18,7 +22,11 @@ export function spawnWaveDrones(app: AppBase, root: Entity, origin: Vec3, count:
     ent.setLocalPosition(origin.x + Math.cos(angle) * 80, origin.y + 40 + i * 3, origin.z + Math.sin(angle) * 80);
     ent.setLocalScale(3.5, 1.2, 3.5);
     root.addChild(ent);
-    out.push({ entity: ent, hp: 3, speed: 28 + Math.random() * 12 });
+    out.push({
+      entity: ent,
+      hp: 3 + Math.floor(count / 4),
+      speed: 28 + Math.random() * 12 + count * 0.35
+    });
   }
   return out;
 }
@@ -41,20 +49,46 @@ export function tickDrones(drones: EnemyDrone[], heroPos: Vec3, dt: number, root
   return kills;
 }
 
+function primaryDamage(hero: HeroSpec, powerMul: number): number {
+  const p = hero.powers[0];
+  const base =
+    p === 'repulsor'
+      ? 2.2
+      : p === 'thunder'
+        ? 2.5
+        : p === 'ki'
+          ? 2.8
+          : p === 'ring'
+            ? 2
+            : p === 'web'
+              ? 1.2
+              : p === 'telekinesis'
+                ? 1.8
+                : 1.6;
+  return base * powerMul;
+}
+
+function primaryReach(hero: HeroSpec): number {
+  return hero.powers.includes('web') ? 85 : hero.powers.includes('ki') ? 150 : 120;
+}
+
 export function firePrimary(
   hero: HeroSpec,
   heroPos: Vec3,
   aim: Vec3,
-  drones: EnemyDrone[]
+  drones: EnemyDrone[],
+  powerMul: number
 ): number {
   let hits = 0;
-  const range = 120;
+  const range = primaryReach(hero);
+  const dmg = primaryDamage(hero, powerMul);
+  const cone = hero.powers.includes('thunder') ? 42 : 25;
   for (const d of drones) {
     const p = d.entity.getPosition();
-  const dist = new Vec3(p.x - aim.x, p.y - aim.y, p.z - aim.z).length();
+    const dist = new Vec3(p.x - aim.x, p.y - aim.y, p.z - aim.z).length();
     const toDrone = new Vec3(p.x - heroPos.x, p.y - heroPos.y, p.z - heroPos.z).length();
-    if (toDrone < range && dist < 25) {
-      d.hp -= hero.powers.includes('repulsor') ? 2 : 1;
+    if (toDrone < range && dist < cone) {
+      d.hp -= dmg;
       hits++;
     }
   }
@@ -69,7 +103,7 @@ export function throwProp(
   let nearest: DestructibleTag | null = null;
   let nd = Infinity;
   for (const tag of tags) {
-    if (!tag.intact) continue;
+    if (!tag.intact || tag.immune) continue;
     const p = tag.entity.getPosition();
     const d = new Vec3(p.x - heroPos.x, p.y - heroPos.y, p.z - heroPos.z).length();
     if (d < 40 && d < nd) {

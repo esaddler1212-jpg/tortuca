@@ -4,6 +4,10 @@ import { HERO_ROSTER } from '../hero-roster';
 import { selectHero } from '../game-loop';
 import { loadCustomHeroes, saveCustomHero, type CustomHeroDraft } from '../custom-hero';
 import { researchNewHeroIdeas } from '../character-research';
+import { Minimap } from './Minimap';
+import { setQualityOverride } from '../game-settings';
+import { downloadPhoto } from '../photo-mode';
+import type { QualityTier } from '../quality-tier';
 import './hud.css';
 
 export type GameHudSnapshot = {
@@ -20,6 +24,11 @@ export type GameHudSnapshot = {
   quality: string;
   flightMode: boolean;
   photoMode?: boolean;
+  heroX?: number;
+  heroZ?: number;
+  dronesLeft?: number;
+  lifetimeDestructionUsd?: number;
+  dronesDestroyed?: number;
 };
 
 function formatUsd(n: number): string {
@@ -58,8 +67,14 @@ export function HudApp() {
           <div>
             Energy {snap.stamina}/{snap.staminaMax}
           </div>
+          <div className="hud-tag">Drones {snap.dronesLeft ?? 0}</div>
+          <div className="hud-tag">Lifetime {formatUsd(snap.lifetimeDestructionUsd ?? 0)}</div>
         </div>
       </div>
+
+      <Minimap heroX={snap.heroX ?? 0} heroZ={snap.heroZ ?? 0} />
+
+      <QualitySettings quality={snap.quality} photoMode={!!snap.photoMode} />
 
       <div className="hero-picker hud-panel">
         <strong>Hero &amp; home base</strong>
@@ -95,6 +110,40 @@ export function HudApp() {
       </p>
 
       <TouchPad />
+    </div>
+  );
+}
+
+function QualitySettings({ quality, photoMode }: { quality: string; photoMode: boolean }) {
+  return (
+    <div className="settings-bar hud-panel">
+      <label>
+        Quality{' '}
+        <select
+          defaultValue={localStorage.getItem('flight-nemulator-quality') ?? 'auto'}
+          onChange={(e) => {
+            const v = e.target.value;
+            setQualityOverride(v === 'auto' ? 'auto' : (v as QualityTier));
+            window.location.reload();
+          }}
+        >
+          <option value="auto">Auto ({quality})</option>
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+        </select>
+      </label>
+      {photoMode && (
+        <button
+          type="button"
+          onClick={() => {
+            const canvas = document.getElementById('application-canvas') as HTMLCanvasElement | null;
+            if (canvas) void downloadPhoto(canvas, 'hero');
+          }}
+        >
+          Save photo
+        </button>
+      )}
     </div>
   );
 }

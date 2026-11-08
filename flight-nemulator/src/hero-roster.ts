@@ -224,6 +224,67 @@ export const HERO_ROSTER: HeroSpec[] = [
       { id: 'human', label: 'Detective guise', speedMul: 0.95, powerMul: 0.9, color: [0.25, 0.3, 0.35] }
     ],
     defaultFormId: 'green'
+  },
+  {
+    id: 'shade-knight',
+    codename: 'Shade Knight',
+    tagline: 'Gliding cape intercepts',
+    districtId: 'gotham-nights',
+    homeLabel: 'Clock Tower Loft',
+    powers: ['web'],
+    flight: { cruiseKmh: 260, boostKmh: 1200, agility: 1.3, mass: 85 },
+    energy: { staminaMax: 100, regenPerSec: 26, superCooldownSec: 16, primaryCooldownSec: 0.18 },
+    smashRadius: 2.2,
+    forms: [
+      { id: 'night', label: 'Night patrol', speedMul: 1, powerMul: 1, color: [0.1, 0.12, 0.16] },
+      { id: 'tactical', label: 'Tactical', speedMul: 1.08, powerMul: 1.1, color: [0.2, 0.22, 0.28] }
+    ],
+    defaultFormId: 'night'
+  },
+  {
+    id: 'amazon-vanguard',
+    codename: 'Amazon Vanguard',
+    tagline: 'Lasso shock slam',
+    districtId: 'watchtower-annex',
+    homeLabel: 'Diplomatic Wing',
+    powers: ['telekinesis'],
+    flight: { cruiseKmh: 340, boostKmh: 1650, agility: 1.05, mass: 92 },
+    energy: { staminaMax: 130, regenPerSec: 20, superCooldownSec: 20, primaryCooldownSec: 0.3 },
+    smashRadius: 3.5,
+    forms: [
+      { id: 'regalia', label: 'Regalia', speedMul: 1, powerMul: 1.1, color: [0.75, 0.12, 0.15] },
+      { id: 'stealth', label: 'Stealth', speedMul: 1.12, powerMul: 0.95, color: [0.15, 0.15, 0.2] }
+    ],
+    defaultFormId: 'regalia'
+  },
+  {
+    id: 'bolt-archer',
+    codename: 'Bolt Archer',
+    tagline: 'Trick volley bursts',
+    districtId: 'stark-nexus',
+    homeLabel: 'Rooftop Range',
+    powers: ['beam'],
+    flight: { cruiseKmh: 220, boostKmh: 980, agility: 1.25, mass: 70 },
+    energy: { staminaMax: 90, regenPerSec: 30, superCooldownSec: 14, primaryCooldownSec: 0.12 },
+    smashRadius: 2.0,
+    forms: [{ id: 'purple', label: 'Tech suit', speedMul: 1, powerMul: 1, color: [0.55, 0.15, 0.75] }],
+    defaultFormId: 'purple'
+  },
+  {
+    id: 'ant-scale',
+    codename: 'Ant Scale',
+    tagline: 'Pym vector hop',
+    districtId: 'stark-nexus',
+    homeLabel: 'Lab Sublevel',
+    powers: ['synth'],
+    flight: { cruiseKmh: 300, boostKmh: 1500, agility: 1.4, mass: 65 },
+    energy: { staminaMax: 105, regenPerSec: 24, superCooldownSec: 15, primaryCooldownSec: 0.2 },
+    smashRadius: 1.8,
+    forms: [
+      { id: 'small', label: 'Sub-scale', speedMul: 1.2, powerMul: 0.75, color: [0.65, 0.2, 0.15] },
+      { id: 'giant', label: 'Giant', speedMul: 0.85, powerMul: 1.35, color: [0.55, 0.12, 0.12] }
+    ],
+    defaultFormId: 'small'
   }
 ];
 

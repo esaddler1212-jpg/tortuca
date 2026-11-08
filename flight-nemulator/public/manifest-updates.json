@@ -1,8 +1,10 @@
 {
-  "version": 1,
+  "version": 2,
   "characters": [
     { "id": "star-sentinel", "codename": "Star Sentinel" },
-    { "id": "circuit-ghost", "codename": "Circuit Ghost" }
+    { "id": "circuit-ghost", "codename": "Circuit Ghost" },
+    { "id": "shade-knight", "codename": "Shade Knight" },
+    { "id": "amazon-vanguard", "codename": "Amazon Vanguard" }
   ],
   "skins": [
     { "id": "tin-aviator-mk50", "heroId": "tin-aviator", "label": "Nanite gold" },
