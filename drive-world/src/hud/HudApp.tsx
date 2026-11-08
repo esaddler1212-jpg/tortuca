@@ -34,6 +34,7 @@ import { loadProgress, saveProgress } from '../game-progress';
 import { isTouchPrimary } from '../mobile-platform';
 import { cameraModeLabel } from '../camera-profiles';
 import { JournalPanel } from './JournalPanel';
+import { SafehousePanel } from './SafehousePanel';
 import { MusicPanel } from './MusicPanel';
 
 function NavHint({ snap }: { snap: HudSnapshot }) {
@@ -281,6 +282,7 @@ export function HudApp() {
         <p className="flight-hint">Space/⤒ climb · Ctrl/⤓ sink · WASD · Shift boost</p>
       )}
       <HeatMeter snap={snap} />
+      <SafehousePanel snap={snap} />
       <MusicPanel />
       <JournalPanel snap={snap} />
       <MissionBoard snap={snap} />

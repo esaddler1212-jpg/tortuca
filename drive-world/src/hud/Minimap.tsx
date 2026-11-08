@@ -1,6 +1,7 @@
 import type { HudSnapshot } from '../game-bridge';
 import { CRUISE_VISTAS } from '../cruise-vistas';
-import { LANDMARKS, VALLEJO_SAFEHOUSE } from '../landmark-registry';
+import { LANDMARKS } from '../landmark-registry';
+import { resolveHomeSafehouse } from '../safehouse-registry';
 import { WORLD_HALF_M } from '../world-config';
 
 const SIZE = 168;
@@ -14,6 +15,7 @@ function mapY(wz: number): number {
 }
 
 export function Minimap({ snap }: { snap: HudSnapshot }) {
+  const home = snap.progress ? resolveHomeSafehouse(snap.progress) : null;
   const visited = new Set(snap.progress?.visitedLandmarkIds ?? []);
   const vistas = new Set(snap.progress?.visitedVistaIds ?? []);
   const next = snap.nextLandmark;
@@ -42,13 +44,15 @@ export function Minimap({ snap }: { snap: HudSnapshot }) {
             className={visited.has(lm.id) ? 'minimap-dot done' : 'minimap-dot'}
           />
         ))}
-        <rect
-          x={mapX(VALLEJO_SAFEHOUSE.x) - 4}
-          y={mapY(VALLEJO_SAFEHOUSE.z) - 4}
-          width={8}
-          height={8}
-          className="minimap-safehouse"
-        />
+        {home ? (
+          <rect
+            x={mapX(home.x) - 4}
+            y={mapY(home.z) - 4}
+            width={8}
+            height={8}
+            className="minimap-safehouse"
+          />
+        ) : null}
         {next && (
           <line
             x1={mapX(snap.playerX)}

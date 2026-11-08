@@ -13,6 +13,8 @@ import {
   registerToggleAutopilot,
   registerToggleCamera,
   registerTogglePhoto,
+  registerClaimSafehouse,
+  registerSetHomeSafehouse,
   registerVistaCam,
   registerWaymoReplay
 } from './game-bridge';
@@ -59,7 +61,15 @@ import { COLLECTIBLES, FAST_TRAVEL, SCENIC_ROUTES, SPEED_TRAPS } from './world-e
 import { createPhotoCamera } from './photo-mode';
 import { updateAmbientTraffic } from './build-world-extras';
 import { missionTextForPhase, wireGameUi } from './game-ui';
-import { DISTRICT_LABELS, LANDMARKS, VALLEJO_SAFEHOUSE } from './landmark-registry';
+import { DISTRICT_LABELS, LANDMARKS } from './landmark-registry';
+import {
+  claimCustomSafehouse,
+  ensureSafehouseUnlocks,
+  homeSpawn,
+  nearUnlockedSafehouse,
+  resolveHomeSafehouse,
+  setHomeSafehouse
+} from './safehouse-registry';
 import { nextUnvisitedLandmark } from './landmark-navigation';
 import {
   createAutopilotCruisePreset,
@@ -197,12 +207,10 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     if (e.key === 'e' || e.key === 'E') photoKeys.up = false;
   });
 
-  const safehouseSpawn = () =>
-    new Vec3(
-      VALLEJO_SAFEHOUSE.x,
-      hillOffsetM(VALLEJO_SAFEHOUSE.x, VALLEJO_SAFEHOUSE.z) + 0.8,
-      VALLEJO_SAFEHOUSE.z + 18
-    );
+  const safehouseSpawn = () => {
+    const s = homeSpawn(progress);
+    return new Vec3(s.x, s.y, s.z);
+  };
 
   const spawnFromProgress = (): Vec3 => {
     const pose = progress.lastPose;
@@ -411,6 +419,29 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
 
   registerWaymoReplay(startWaymoSightseeing);
 
+  registerSetHomeSafehouse((id) => {
+    progress = setHomeSafehouse(progress, id);
+    ui.setProgressSummary(progress);
+    ui.showToast('Home safehouse', resolveHomeSafehouse(progress).name);
+    publishHud({ progress });
+  });
+
+  registerClaimSafehouse((name) => {
+    const ent = vehicle();
+    if (!ent || progress.phase !== 'home') return;
+    const mph = getHudSnapshot().mph;
+    if (mph > 12) {
+      ui.showToast('Park first', 'Slow below 12 mph to claim a custom safehouse.');
+      return;
+    }
+    const p = ent.getPosition();
+    progress = claimCustomSafehouse(progress, name, p.x, p.z);
+    progress = ensureSafehouseUnlocks(progress);
+    ui.setProgressSummary(progress);
+    ui.showToast('Custom safehouse', resolveHomeSafehouse(progress).name);
+    publishHud({ progress });
+  });
+
   registerFastTravel((district: DistrictId) => {
     if (!progress.unlockedRegionIds.includes(district) || !vehicle() || progress.phase !== 'home') return;
     const spot = FAST_TRAVEL.find((f) => f.district === district);
@@ -424,6 +455,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
 
   const resumeFromSave = () => {
     progress = tryUnlockNightCoil(progress);
+    progress = ensureSafehouseUnlocks(progress);
     cameraMode = progress.cameraMode ?? 'chase';
     if (progress.phase === 'waymo_ride') {
       startWaymoRide();
@@ -668,6 +700,17 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     const nextLm =
       progress.phase === 'home' ? nextUnvisitedLandmark(progress.visitedLandmarkIds, pos.x, pos.z) : null;
 
+    if (progress.phase === 'home') {
+      progress = ensureSafehouseUnlocks(progress);
+      const near = nearUnlockedSafehouse(progress, pos.x, pos.z);
+      const inGarage = near?.atHome === true;
+      if (inGarage !== nearGarage) {
+        nearGarage = inGarage;
+        if (inGarage) refreshGarageUi();
+        else ui.setGarageVisible(false, progress, onGarageSelect);
+      }
+    }
+
     publishHud({
       playerX: pos.x,
       playerZ: pos.z,
@@ -689,7 +732,9 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       atVista: Boolean(vistaNear && mph < 14),
       vistaName: vistaNear?.vista.name ?? null,
       vistaPulse: waterT,
-      district: district ?? undefined
+      district: district ?? undefined,
+      atSafehouse: Boolean(nearUnlockedSafehouse(progress, pos.x, pos.z)),
+      homeSafehouseName: resolveHomeSafehouse(progress).name
     });
 
     statsT += dt;
@@ -707,15 +752,6 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     }
 
     if (progress.phase === 'home') {
-      const gdx = pos.x - VALLEJO_SAFEHOUSE.x;
-      const gdz = pos.z - VALLEJO_SAFEHOUSE.z;
-      const inGarage = Math.hypot(gdx, gdz) < VALLEJO_SAFEHOUSE.radius + 12;
-      if (inGarage !== nearGarage) {
-        nearGarage = inGarage;
-        if (inGarage) refreshGarageUi();
-        else ui.setGarageVisible(false, progress, onGarageSelect);
-      }
-
       for (const lm of LANDMARKS) {
         if (progress.visitedLandmarkIds.includes(lm.id)) continue;
         const d = Math.hypot(pos.x - lm.x, pos.z - lm.z);
@@ -732,6 +768,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
           const car = getVehicleSpec(u.vehicleId);
           ui.showToast(`${DISTRICT_LABELS[u.district]} complete`, `Unlocked ${car.name}`);
         }
+        progress = ensureSafehouseUnlocks(progress);
         ui.setProgressSummary(progress);
         if (nearGarage) refreshGarageUi();
       }

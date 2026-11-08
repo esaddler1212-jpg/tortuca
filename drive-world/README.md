@@ -25,6 +25,10 @@ Chrome / Chromebook: desktop Chrome with WebGL.
 
 Flight without a keyboard: use **⤒ / ⤓** on the touch pad. Photo mode and HUD buttons use normal taps.
 
+### Home & custom safehouses
+
+After the intro Waymo ride, **Vallejo harbor** is your default home. In the HUD **Home** panel you can switch to other preset safehouses as you complete regions, or park below **12 mph** and **claim** a custom spot (up to five). Garage, respawn, and the minimap home marker follow your chosen home.
+
 ## Deploy
 
 See [`docs/CITY_NIGHTS_DEPLOY.md`](../docs/CITY_NIGHTS_DEPLOY.md).

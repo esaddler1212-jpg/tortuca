@@ -1,6 +1,7 @@
 import { Color, Entity, StandardMaterial, type AppBase } from 'playcanvas';
 
-import { LANDMARKS, SFO_AIRPORT_LOT, VALLEJO_SAFEHOUSE } from './landmark-registry';
+import { LANDMARKS, SFO_AIRPORT_LOT } from './landmark-registry';
+import { PRESET_SAFEHOUSES } from './safehouse-registry';
 import { BAY_BRIDGE_ORANGE } from './night-palette';
 import { hillOffsetM } from './bay-terrain';
 
@@ -32,23 +33,30 @@ export function buildMissionSites(app: AppBase): void {
   app.root.addChild(lot);
 
   const safeMat = beaconMat(BAY_BRIDGE_ORANGE, 0.55);
-  const safe = new Entity('vallejo-safehouse');
-  const sy = hillOffsetM(VALLEJO_SAFEHOUSE.x, VALLEJO_SAFEHOUSE.z);
-  safe.setLocalScale(36, 14, 28);
-  safe.setPosition(VALLEJO_SAFEHOUSE.x, sy + 7, VALLEJO_SAFEHOUSE.z);
-  safe.addComponent('render', { type: 'box', material: safeMat });
-  app.root.addChild(safe);
-
-  const safeLight = new Entity('safehouse-light');
-  safeLight.setPosition(VALLEJO_SAFEHOUSE.x, sy + 18, VALLEJO_SAFEHOUSE.z);
-  safeLight.addComponent('light', {
-    type: 'point',
-    color: new Color(1, 0.55, 0.25),
-    intensity: 2.2,
-    range: 85,
-    castShadows: false
-  });
-  app.root.addChild(safeLight);
+  const altMat = beaconMat(new Color(0.55, 0.75, 0.95), 0.35);
+  for (const sh of PRESET_SAFEHOUSES) {
+    const sy = hillOffsetM(sh.x, sh.z);
+    const safe = new Entity(`safehouse-${sh.id}`);
+    safe.setLocalScale(28, 10, 22);
+    safe.setPosition(sh.x, sy + 5, sh.z);
+    safe.addComponent('render', {
+      type: 'box',
+      material: sh.id === 'vallejo-safehouse' ? safeMat : altMat
+    });
+    app.root.addChild(safe);
+    if (sh.id === 'vallejo-safehouse') {
+      const safeLight = new Entity('safehouse-light');
+      safeLight.setPosition(sh.x, sy + 16, sh.z);
+      safeLight.addComponent('light', {
+        type: 'point',
+        color: new Color(1, 0.55, 0.25),
+        intensity: 2.2,
+        range: 85,
+        castShadows: false
+      });
+      app.root.addChild(safeLight);
+    }
+  }
 
   const pulseMat = beaconMat(new Color(0.35, 0.85, 1), 0.75);
   for (const lm of LANDMARKS) {

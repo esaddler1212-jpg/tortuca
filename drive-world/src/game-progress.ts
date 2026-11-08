@@ -6,6 +6,7 @@ import {
   VEHICLE_CATALOG,
   REGION_VEHICLE_IDS
 } from './vehicle-catalog';
+import { defaultHomeSafehouseId, ensureSafehouseUnlocks } from './safehouse-registry';
 import { SCENIC_ROUTES } from './world-extras';
 import { isDistrictComplete, regionUnlockVehicleId, LANDMARKS } from './landmark-registry';
 import type { DistrictId } from './world-config';
@@ -56,6 +57,15 @@ export type JournalEntry = {
   label: string;
 };
 
+export type CustomSafehouse = {
+  id: string;
+  name: string;
+  x: number;
+  z: number;
+  district: DistrictId;
+  createdAt: number;
+};
+
 export type SavedProgress = {
   version: 5;
   phase: GamePhase;
@@ -77,6 +87,9 @@ export type SavedProgress = {
   heatLevel: number;
   visitedVistaIds: string[];
   journal: JournalEntry[];
+  homeSafehouseId: string;
+  unlockedSafehouseIds: string[];
+  customSafehouses: CustomSafehouse[];
 };
 
 const STORAGE_KEY = 'drive-world-progress-v5';
@@ -101,7 +114,10 @@ function defaultProgress(): SavedProgress {
     vehicleStats: {},
     heatLevel: 0,
     visitedVistaIds: [],
-    journal: []
+    journal: [],
+    homeSafehouseId: defaultHomeSafehouseId(),
+    unlockedSafehouseIds: [defaultHomeSafehouseId()],
+    customSafehouses: []
   };
 }
 
@@ -120,6 +136,9 @@ function withV5Defaults(p: Partial<SavedProgress> & { version: number }): SavedP
     heatLevel: typeof p.heatLevel === 'number' ? p.heatLevel : 0,
     visitedVistaIds: p.visitedVistaIds ?? [],
     journal: p.journal ?? [],
+    homeSafehouseId: p.homeSafehouseId ?? defaultHomeSafehouseId(),
+    unlockedSafehouseIds: p.unlockedSafehouseIds ?? [defaultHomeSafehouseId()],
+    customSafehouses: p.customSafehouses ?? [],
     cameraMode: normalizeCameraMode(p.cameraMode)
   };
 }
@@ -171,10 +190,13 @@ export function finishWaymoRide(progress: SavedProgress): SavedProgress {
   const next: SavedProgress = {
     ...progress,
     phase: 'pick_car',
-    safehouseReached: true
+    safehouseReached: true,
+    unlockedSafehouseIds: progress.unlockedSafehouseIds.includes(defaultHomeSafehouseId())
+      ? progress.unlockedSafehouseIds
+      : [...progress.unlockedSafehouseIds, defaultHomeSafehouseId()]
   };
   saveProgress(next);
-  return next;
+  return ensureSafehouseUnlocks(next);
 }
 
 export function chooseGarageCar(progress: SavedProgress, vehicleId: string): SavedProgress {

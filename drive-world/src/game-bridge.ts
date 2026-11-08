@@ -29,6 +29,8 @@ export type HudSnapshot = {
   vistaPulse?: number;
   nearGarageReplay?: boolean;
   district?: DistrictId;
+  atSafehouse?: boolean;
+  homeSafehouseName?: string;
 };
 
 export type TouchDrive = {
@@ -71,6 +73,8 @@ let cycleAutopilotPresetHandler: (() => void) | null = null;
 let savePhotoCardHandler: (() => void) | null = null;
 let waymoReplayHandler: (() => void) | null = null;
 let vistaCamHandler: (() => void) | null = null;
+let setHomeSafehouseHandler: ((id: string) => void) | null = null;
+let claimSafehouseHandler: ((name: string) => void) | null = null;
 
 let touchDrive: TouchDrive = {
   up: false,
@@ -151,6 +155,22 @@ export function registerVistaCam(fn: () => void): void {
 
 export function requestVistaCam(): void {
   vistaCamHandler?.();
+}
+
+export function registerSetHomeSafehouse(fn: (id: string) => void): void {
+  setHomeSafehouseHandler = fn;
+}
+
+export function requestSetHomeSafehouse(id: string): void {
+  setHomeSafehouseHandler?.(id);
+}
+
+export function registerClaimSafehouse(fn: (name: string) => void): void {
+  claimSafehouseHandler = fn;
+}
+
+export function requestClaimSafehouse(name: string): void {
+  claimSafehouseHandler?.(name);
 }
 
 export function requestSkipWaymo(): void {
