@@ -7,6 +7,7 @@ import { Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas'
 import { SFO_AIRPORT_LOT } from './landmark-registry';
 import type { SavedProgress } from './game-progress';
 import { VEHICLE_CATALOG } from './vehicle-catalog';
+import { TOKYO_FF_PARKED_CARS, isTokyoBonusVehicle } from './tokyo-ff-cars';
 import type { DistrictId } from './world-config';
 
 export const TOKYO_CENTER = { x: 9000, z: 0 } as const;
@@ -27,7 +28,7 @@ export const TOKYO_LANDMARKS: TokyoLandmark[] = [
   { id: 'tk-ginza', name: 'Ginza clock', ...L(400, 80), visitRadius: 50, blurb: 'Wako corner, chrome storefronts' },
   { id: 'tk-akihabara', name: 'Akihabara neon', ...L(80, 560), visitRadius: 55, blurb: 'Electric Town sign wall' },
   { id: 'tk-c1', name: 'Shuto C1 loop', ...L(480, -160), visitRadius: 45, blurb: 'Orange-rail inner loop' },
-  { id: 'tk-daikoku', name: 'Daikoku PA', ...L(-560, -240), visitRadius: 60, blurb: 'Midnight car meet parking area' },
+  { id: 'tk-daikoku', name: 'Daikoku PA', ...L(-560, -240), visitRadius: 60, blurb: 'Fast family meet — parking-lot legends' },
   { id: 'tk-odaiba', name: 'Odaiba waterfront', ...L(720, -720), visitRadius: 70, blurb: 'Ferris wheel + Rainbow Bridge lights' }
 ];
 
@@ -57,7 +58,7 @@ export function tokyoUnlockStatus(progress: SavedProgress): {
   regionsTotal: number;
 } {
   const owned = new Set(progress.unlockedVehicleIds);
-  const ids = Object.keys(VEHICLE_CATALOG).filter((id) => id !== TOKYO_REWARD_VEHICLE_ID);
+  const ids = Object.keys(VEHICLE_CATALOG).filter((id) => !isTokyoBonusVehicle(id));
   const cars = ids.filter((id) => owned.has(id)).length;
   const regions = ALL_REGIONS.filter((r) => progress.unlockedRegionIds.includes(r)).length;
   return {
@@ -329,8 +330,12 @@ export function buildTokyo(app: AppBase): void {
     const a = (s / 18) * Math.PI * 2;
     add(`tokyo-daikoku-ramp-${s}`, -560 + Math.cos(a) * 34, 3 + s * 1.2, -240 - 70 + Math.sin(a) * 34, 16, 1, 10, c1, false, (-a * 180) / Math.PI);
   }
+  add('tokyo-daikoku-ff-sign', -560, 9, -255, 28, 5, 0.8, mat([0.06, 0.04, 0.08], [1, 0.45, 0.12], 0.95));
+  add('tokyo-daikoku-ff-sign-2', -560, 6.2, -255, 22, 2.5, 0.5, mat([0.08, 0.1, 0.14], [0.2, 0.85, 0.95], 0.85));
   for (let s = 0; s < 10; s++) {
-    add(`tokyo-daikoku-car-${s}`, -600 + s * 9, 0.7, -210, 2, 1.2, 4.4, neonMats[s % neonMats.length]!, true);
+    const c = TOKYO_FF_PARKED_CARS[s % TOKYO_FF_PARKED_CARS.length]!;
+    const body = mat([c[0] * 0.35, c[1] * 0.35, c[2] * 0.35], c, 0.72);
+    add(`tokyo-daikoku-car-${s}`, -600 + s * 9, 0.7, -210, 2, 1.2, 4.4, body, true);
   }
 
   // Odaiba — water, Ferris wheel ring, Rainbow Bridge lights

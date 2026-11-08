@@ -13,7 +13,7 @@ import { preview } from 'vite';
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const catalogSrc = readFileSync(path.join(root, 'src/vehicle-catalog.ts'), 'utf8');
 const vehicleIds = [...catalogSrc.matchAll(/^ {2}'([a-z0-9-]+)': spec\(/gm)].map((m) => m[1]);
-const bayIds = vehicleIds.filter((id) => id !== 'tokyo-shuto-runner');
+const bayIds = vehicleIds.filter((id) => !id.startsWith('tokyo-'));
 
 let server = null;
 let url = process.env.PLAYTEST_URL;
@@ -163,6 +163,12 @@ const marks = [
 for (const [id, x, z] of marks) {
   await teleport(x, z);
   await page.waitForFunction((id) => window.__cityNights.hud().progress?.tokyoLandmarkIds?.includes(id), { timeout: 30_000 }, id).catch(() => {});
+  if (id === 'tk-shibuya') {
+    await page.waitForFunction(() => (window.__cityNights.hud().progress?.unlockedVehicleIds ?? []).includes('tokyo-drift-monarch'), {
+      timeout: 30_000
+    });
+    check('Shibuya unlocks Drift Monarch', true);
+  }
   if (id === 'tk-shibuya' && shot) {
     await sleep(1500);
     await page.screenshot({ path: `${shot}/tokyo-04-shibuya.png` });

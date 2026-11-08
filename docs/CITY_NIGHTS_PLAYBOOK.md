@@ -42,7 +42,7 @@ No GPU handy: `npm run ace-step:city-nights -- --fallback-only` (ffmpeg ambient 
 
 ## Tokyo bonus map
 
-Unlock when you own **every Bay catalog car** (except the Tokyo reward) and **all six regions**. Drive to **SFO** (pink gate pad on the minimap), stop under ~12 mph, then **F**, HUD **Take flight**, or gamepad **D-pad ↑**. Land at **Haneda**, log **8 Tokyo landmarks**, earn **Shuto Night Runner**, fly home the same way. Headless check: `cd drive-world && npm run test:tokyo`.
+Unlock the flight when you own **every Bay catalog car** (IDs starting with `tokyo-` don’t count) and **all six regions**. Board at **SFO** (pink gate), land at **Haneda**, then log **8 landmarks** in the **Fast & Furious–style Tokyo garage** — **one fan-tribute car per landmark** (Drift Monarch at Shibuya, Family Runner Van at Daikoku, **Shuto Night Runner** capstone at Odaiba). Headless: `cd drive-world && npm run test:tokyo`.
 
 ## Peer comparison
 

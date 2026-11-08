@@ -102,6 +102,18 @@ export const BONUS_ACTIVITY_VEHICLE_IDS = [
   'bonus-trap-outlaw'
 ] as const;
 
+/** Tokyo Drift / Fast family homages — one per Tokyo landmark (not affiliated). */
+export const TOKYO_FF_VEHICLE_IDS = [
+  'tokyo-drift-monarch',
+  'tokyo-teal-phantom',
+  'tokyo-kabuki-z',
+  'tokyo-gold-linx',
+  'tokyo-neon-evo',
+  'tokyo-c1-boost',
+  'tokyo-family-van',
+  'tokyo-shuto-runner'
+] as const;
+
 export const REGION_VEHICLE_IDS: Record<DistrictId, string> = {
   sf: 'region-sf-night',
   marin: 'region-marin-coast',
@@ -483,14 +495,77 @@ export const VEHICLE_CATALOG: Record<string, VehicleSpec> = {
     { diffuse: [0.08, 0.1, 0.14], emissive: [0.25, 0.55, 0.95], emissiveIntensity: 0.45 },
     {}
   ),
+  'tokyo-drift-monarch': spec(
+    'tokyo-drift-monarch',
+    'Drift Monarch',
+    'Tokyo Drift tribute — scramble orange widebody',
+    'Tokyo',
+    { mass: 980, maxEngineForce: 7600, maxSteering: 0.44, chassis: { x: 0.88, y: 0.28, z: 1.78 } },
+    { diffuse: [0.12, 0.06, 0.02], emissive: [0.98, 0.42, 0.08], emissiveIntensity: 0.58 },
+    { cultureBonus: true }
+  ),
+  'tokyo-teal-phantom': spec(
+    'tokyo-teal-phantom',
+    'Teal Phantom',
+    'Tokyo night tribute — silver over teal',
+    'Tokyo',
+    { mass: 1080, maxEngineForce: 7200, maxSteering: 0.41, chassis: { x: 0.94, y: 0.32, z: 1.88 } },
+    { diffuse: [0.22, 0.24, 0.26], emissive: [0.35, 0.82, 0.78], emissiveIntensity: 0.48 },
+    { cultureBonus: true }
+  ),
+  'tokyo-kabuki-z': spec(
+    'tokyo-kabuki-z',
+    'Kabuki Wide-Z',
+    'Shinjuku tribute — black wide-stance coupe',
+    'Tokyo',
+    { mass: 1020, maxEngineForce: 8000, maxSteering: 0.42, chassis: { x: 0.9, y: 0.3, z: 1.82 } },
+    { diffuse: [0.04, 0.04, 0.06], emissive: [0.55, 0.15, 0.85], emissiveIntensity: 0.42 },
+    { cultureBonus: true }
+  ),
+  'tokyo-gold-linx': spec(
+    'tokyo-gold-linx',
+    'Gold Linx',
+    'Ginza tribute — champagne street king',
+    'Tokyo',
+    { mass: 1120, maxEngineForce: 6800, maxSteering: 0.38, chassis: { x: 0.96, y: 0.34, z: 1.92 } },
+    { diffuse: [0.28, 0.22, 0.08], emissive: [0.98, 0.82, 0.25], emissiveIntensity: 0.52 },
+    { cultureBonus: true }
+  ),
+  'tokyo-neon-evo': spec(
+    'tokyo-neon-evo',
+    'Neon Evo Line',
+    'Electric Town tribute — green over cyan',
+    'Tokyo',
+    { mass: 940, maxEngineForce: 8200, maxSteering: 0.43, chassis: { x: 0.86, y: 0.28, z: 1.72 } },
+    { diffuse: [0.06, 0.12, 0.08], emissive: [0.15, 0.92, 0.42], emissiveIntensity: 0.55 },
+    { cultureBonus: true }
+  ),
+  'tokyo-c1-boost': spec(
+    'tokyo-c1-boost',
+    'C1 Boost',
+    'Shuto loop tribute — white highway bullet',
+    'Tokyo',
+    { mass: 900, maxEngineForce: 8600, maxSteering: 0.4, chassis: { x: 0.84, y: 0.26, z: 1.68 } },
+    { diffuse: [0.85, 0.86, 0.88], emissive: [0.95, 0.35, 0.12], emissiveIntensity: 0.45 },
+    { cultureBonus: true }
+  ),
+  'tokyo-family-van': spec(
+    'tokyo-family-van',
+    'Family Runner Van',
+    'Daikoku PA tribute — chrome van meet build',
+    'Tokyo',
+    { mass: 1420, maxEngineForce: 6200, maxSteering: 0.32, chassis: { x: 1.12, y: 0.52, z: 2.35 } },
+    { diffuse: [0.2, 0.22, 0.24], emissive: [0.75, 0.82, 0.9], emissiveIntensity: 0.38 },
+    { cultureBonus: true }
+  ),
   'tokyo-shuto-runner': spec(
     'tokyo-shuto-runner',
     'Shuto Night Runner',
-    'Tokyo bonus — log every Tokyo landmark',
+    'Fast family capstone — Odaiba landmark',
     'Tokyo',
-    { mass: 1120, maxEngineForce: 8400, maxSteering: 0.4, chassis: { x: 0.92, y: 0.3, z: 1.85 } },
-    { diffuse: [0.9, 0.9, 0.92], emissive: [1, 0.2, 0.55], emissiveIntensity: 0.5 },
-    { legendBonus: true }
+    { mass: 1100, maxEngineForce: 8800, maxSteering: 0.41, chassis: { x: 0.9, y: 0.28, z: 1.82 } },
+    { diffuse: [0.08, 0.06, 0.1], emissive: [0.98, 0.25, 0.08], emissiveIntensity: 0.55 },
+    { legendBonus: true, cultureBonus: true }
   )
 };
 

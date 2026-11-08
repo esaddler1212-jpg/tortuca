@@ -304,10 +304,10 @@ export function buildMissionBoard(
       done: logged >= TOKYO_LANDMARKS.length,
       hint:
         logged >= TOKYO_LANDMARKS.length
-          ? 'Shuto Night Runner unlocked'
+          ? 'Fast family fleet complete — Shuto Night Runner ready'
           : synced.tokyoFlights === 0
             ? 'SFO gate is open — stop on the pink pad, press F'
-            : 'Log every Tokyo spot for the Shuto Night Runner'
+            : 'Each Tokyo landmark unlocks one FF tribute ride'
     });
   }
 

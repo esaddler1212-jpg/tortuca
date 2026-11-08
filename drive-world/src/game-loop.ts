@@ -182,7 +182,6 @@ import {
   HANEDA_PAD,
   SFO_FLIGHT_GATE,
   TOKYO_LANDMARKS,
-  TOKYO_REWARD_VEHICLE_ID,
   buildSfoFlightGate,
   buildTokyo,
   isInTokyo,
@@ -191,6 +190,7 @@ import {
   setTokyoActive,
   tokyoUnlockStatus
 } from './tokyo-map';
+import { TOKYO_FF_GARAGE_LABEL, tokyoVehicleForLandmark } from './tokyo-ff-cars';
 import { FLIGHT_LEG1_SEC, FLIGHT_TOTAL_SEC, TOKYO_FOG, createFlightPlane, flightPose, type FlightRun } from './tokyo-flight';
 import { NIGHT_FOG } from './night-palette';
 
@@ -720,7 +720,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       if (!isTokyoBuilt()) buildTokyo(app);
       setTokyoActive(true);
       app.scene.fog.color = TOKYO_FOG.clone();
-      ui.setMission(`Tokyo bonus — log ${TOKYO_LANDMARKS.length} landmarks · Haneda pad flies home`);
+      ui.setMission(`${TOKYO_FF_GARAGE_LABEL} — 8 landmarks · one FF tribute each · Haneda flies home`);
     } else {
       setTokyoActive(false);
       app.scene.fog.color = NIGHT_FOG.clone();
@@ -754,7 +754,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     progress = saveLastPose(progress, { x: to.x, y, z: to.z, yaw: to.yaw });
     publishHud({ ridingWaymo: false, flightCinematic: null, inTokyo, progress });
     if (run.dir === 'toTokyo') {
-      ui.showToast('Welcome to Tokyo', `${TOKYO_LANDMARKS.length} landmarks — log them all for the Shuto Night Runner`);
+      ui.showToast('Welcome to Tokyo', `${TOKYO_LANDMARKS.length} landmarks — unlock the Fast family fleet`);
     } else {
       ui.showToast('Back at SFO', 'Bay Area night shift resumes');
     }
@@ -1568,14 +1568,13 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         if (Math.hypot(pos.x - lm.x, pos.z - lm.z) > lm.visitRadius) continue;
         progress = visitTokyoLandmark(progress, lm.id);
         playLandmarkChime();
-        ui.showToast(`Tokyo · ${lm.name}`, `${progress.tokyoLandmarkIds.length}/${TOKYO_LANDMARKS.length} — ${lm.blurb}`);
-        if (
-          progress.tokyoLandmarkIds.length >= TOKYO_LANDMARKS.length &&
-          !progress.unlockedVehicleIds.includes(TOKYO_REWARD_VEHICLE_ID)
-        ) {
-          progress = unlockVehicle(progress, TOKYO_REWARD_VEHICLE_ID);
-          ui.showToast('Tokyo complete', `${getVehicleSpec(TOKYO_REWARD_VEHICLE_ID).name} unlocked in every garage`);
+        const rideId = tokyoVehicleForLandmark(lm.id);
+        if (rideId && !progress.unlockedVehicleIds.includes(rideId)) {
+          progress = unlockVehicle(progress, rideId);
+          const ride = getVehicleSpec(rideId);
+          ui.showToast('Fast family unlock', `${ride.name} — ${ride.tagline}`);
         }
+        ui.showToast(`Tokyo · ${lm.name}`, `${progress.tokyoLandmarkIds.length}/${TOKYO_LANDMARKS.length} — ${lm.blurb}`);
         ui.setProgressSummary(progress);
       }
     }
