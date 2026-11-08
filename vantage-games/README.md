@@ -2,7 +2,7 @@
 
 **Title-card launcher** for Tortuca browser games — no sign-in. Scroll **City Nights** and **Battleworld**, tap a card, and the game loads.
 
-Deploy as its **own** Netlify site with base directory `vantage-games` — not Alfred (`alfred2`). See [`../docs/VANTAGE_GAMES_DEPLOY.md`](../docs/VANTAGE_GAMES_DEPLOY.md).
+Deploy as its **own** Netlify site (**`vantagegames1`**, https://vantagegames1.netlify.app) with base directory `vantage-games` — not Alfred (`alfred2`). See [`../docs/VANTAGE_GAMES_DEPLOY.md`](../docs/VANTAGE_GAMES_DEPLOY.md).
 
 ## Bundled games
 

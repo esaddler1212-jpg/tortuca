@@ -5,7 +5,7 @@
 ## Create the site
 
 1. In Netlify: **Add new site** → Import from Git → this repo.
-2. **Site name:** e.g. `vantagegames` or `vantagetortuca` (your choice).
+2. **Site name:** **`vantagegames1`** (production: https://vantagegames1.netlify.app)
 3. **Build settings:**
    - **Base directory:** `vantage-games`
    - **Build command:** `npm ci && npm run build:with-console` (also in [`vantage-games/netlify.toml`](../vantage-games/netlify.toml))
@@ -40,8 +40,10 @@ npm run preview
 
 ## Script deploy
 
+Links and deploys to Netlify site **`vantagegames1`** by default:
+
 ```bash
-VANTAGE_GAMES_SITE_NAME=vantagegames NETLIFY_AUTH_TOKEN=... bash scripts/deploy-netlify.sh
+NETLIFY_AUTH_TOKEN=... bash scripts/deploy-netlify.sh
 ```
 
-(Deploys Family Purpose + VantageGames when the script is run; see script for knobs.)
+Override with `VANTAGE_GAMES_SITE_NAME` if needed. (The script also deploys Family Purpose when run; see `scripts/deploy-netlify.sh`.)

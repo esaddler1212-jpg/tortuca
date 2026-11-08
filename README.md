@@ -57,7 +57,7 @@ Scrollable title cards → **City Nights** and **Battleworld** (bundled via `bui
 
 See [`vantage-games/README.md`](vantage-games/README.md) and [`docs/VANTAGE_GAMES_DEPLOY.md`](docs/VANTAGE_GAMES_DEPLOY.md).
 
-Create a **dedicated Netlify site** (not Alfred): base directory `vantage-games`, build `npm ci && npm run build:with-console`.
+Production site: **`vantagegames1`** (https://vantagegames1.netlify.app). Base directory `vantage-games`, build `npm ci && npm run build:with-console` — not Alfred.
 
 ## License
 
