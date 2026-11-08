@@ -2,11 +2,11 @@
 
 Homage codenames only — not affiliated with Marvel, DC, Toei/Shueisha, etc.
 
-**Removed from playable roster (per product):** Hawkeye, Ant-Man, Captain Marvel — not in game. **Dr. Doom** and **Ultron (Chrome Overmind)** are **villain clones only**, not playable.
+**Removed from playable roster (per product):** Hawkeye, Ant-Man, Captain Marvel, Starfire — not in game. **Dr. Doom** and **Ultron (Chrome Overmind)** are **villain clones only**, not playable.
 
 Regenerate: `tsx scripts/audit-aerial-roster.mts` · Source: `roster-mutations.ts`
 
-## Playable heroes (23)
+## Playable heroes (22)
 
 | Codename | Mutates from | U | Aerial |
 |----------|--------------|---|--------|
@@ -17,7 +17,7 @@ Regenerate: `tsx scripts/audit-aerial-roster.mts` · Source: `roster-mutations.t
 | Shade Knight | Batman | DC | Glide / tactical jetpack |
 | Martian Strider | Martian Manhunter | DC | Innate |
 | Amazon Vanguard | Wonder Woman | DC | Innate |
-| Ember Strider | Starfire | DC | Innate |
+| Gamma Titan | Hulk | Marvel | Innate (gamma leap) |
 | Thunder Zealot | Shazam | DC | Innate |
 | Tin Aviator | Iron Man | Marvel | Tech |
 | Red Codriver | War Machine | Marvel | Tech |

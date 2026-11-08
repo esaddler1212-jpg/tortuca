@@ -27,7 +27,7 @@ export const HERO_MUTATIONS: Record<string, MutationMeta> = {
   'comet-surfer': { mutatesFrom: 'Silver Surfer', universe: 'marvel' },
   'nova-centurion': { mutatesFrom: 'Nova', universe: 'marvel' },
   'solar-envoy': { mutatesFrom: 'Supergirl', universe: 'dc' },
-  'ember-strider': { mutatesFrom: 'Starfire', universe: 'dc' },
+  'gamma-titan': { mutatesFrom: 'Hulk', universe: 'marvel' },
   'flame-jet': { mutatesFrom: 'Human Torch', universe: 'marvel' },
   'wing-captain': { mutatesFrom: 'Falcon', universe: 'marvel' },
   'thunder-zealot': { mutatesFrom: 'Shazam', universe: 'dc' }

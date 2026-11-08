@@ -169,7 +169,7 @@ export const VILLAIN_CLONES: VillainCloneSpec[] = [
     tagline: 'Gamma smash sprint — siege jetpack',
     universe: 'marvel',
     aerial: 'jetpack',
-    rivalHeroIds: ['red-codriver', 'solar-apex', 'tin-aviator'],
+    rivalHeroIds: ['red-codriver', 'solar-apex', 'tin-aviator', 'gamma-titan'],
     color: [0.28, 0.62, 0.22],
     hpMul: 1.45,
     speedMul: 1.2,

@@ -377,20 +377,20 @@ export const HERO_ROSTER: HeroSpec[] = [
     aerial: 'native'
   },
   {
-    id: 'ember-strider',
-    codename: 'Ember Strider',
-    tagline: 'Starbolt arc',
+    id: 'gamma-titan',
+    codename: 'Gamma Titan',
+    tagline: 'Leap-smash gamma shockwave',
     districtId: 'watchtower-annex',
-    homeLabel: 'Diplomatic Wing',
-    powers: ['beam'],
-    flight: { cruiseKmh: 430, boostKmh: 2450, agility: 1.12, mass: 76 },
-    energy: { staminaMax: 122, regenPerSec: 23, superCooldownSec: 16, primaryCooldownSec: 0.22 },
-    smashRadius: 3.2,
+    homeLabel: 'Research Wing',
+    powers: ['synth', 'beam'],
+    flight: { cruiseKmh: 300, boostKmh: 1650, agility: 0.65, mass: 175 },
+    energy: { staminaMax: 155, regenPerSec: 28, superCooldownSec: 20, primaryCooldownSec: 0.35 },
+    smashRadius: 4.8,
     forms: [
-      { id: 'violet', label: 'Violet aura', speedMul: 1, powerMul: 1, color: [0.55, 0.12, 0.75] },
-      { id: 'ember', label: 'Ember rush', speedMul: 1.3, powerMul: 1.2, color: [0.95, 0.35, 0.1] }
+      { id: 'jade', label: 'Jade giant', speedMul: 1, powerMul: 1.15, color: [0.22, 0.62, 0.28] },
+      { id: 'worldbreaker', label: 'Worldbreaker', speedMul: 0.88, powerMul: 1.55, color: [0.35, 0.48, 0.22] }
     ],
-    defaultFormId: 'violet',
+    defaultFormId: 'jade',
     aerial: 'native'
   },
   {
