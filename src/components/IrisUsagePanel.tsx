@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { RefreshCw } from "lucide-react";
 import { authHeaders, ensureSession } from "../lib/google";
 import type { UsageSummary } from "../../shared/irisUsage";
+import { useGuardedAsync } from "../hooks/useGuardedAsync";
 
 const TOOL_LABELS: Record<string, string> = {
   add_todo: "to-dos",
@@ -16,29 +17,15 @@ const secs = (ms: number) => `${(ms / 1000).toFixed(1)} s`;
 
 /** Settings: how Iris is doing this month (Langfuse idea): calls, speed, cost, errors. Numbers only. */
 export function IrisUsagePanel({ googleConnected, timeZone }: { googleConnected: boolean; timeZone: string }) {
-  const [data, setData] = useState<UsageSummary | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      await ensureSession();
-      const res = await fetch(`/api/iris-usage?tz=${encodeURIComponent(timeZone)}`, { headers: authHeaders() });
-      const body = (await res.json().catch(() => ({}))) as UsageSummary & { error?: string };
-      if (!res.ok) throw new Error(body.error ?? "Couldn't load Iris's usage.");
-      setData(body);
-      setError(null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Couldn't load Iris's usage.");
-    } finally {
-      setLoading(false);
-    }
+  const loader = useCallback(async () => {
+    await ensureSession();
+    const res = await fetch(`/api/iris-usage?tz=${encodeURIComponent(timeZone)}`, { headers: authHeaders() });
+    const body = (await res.json().catch(() => ({}))) as UsageSummary & { error?: string };
+    if (!res.ok) throw new Error(body.error ?? "Couldn't load Iris's usage.");
+    return body;
   }, [timeZone]);
 
-  useEffect(() => {
-    if (googleConnected) void load();
-  }, [googleConnected, load]);
+  const { data, error, loading, reload } = useGuardedAsync(loader, [timeZone], { enabled: googleConnected });
 
   if (!googleConnected) return <p className="text-sm text-alfred-mist">Connect Google to see Iris&apos;s usage.</p>;
   const tile = "rounded-md border border-alfred-border/60 px-2.5 py-2";
@@ -55,7 +42,7 @@ export function IrisUsagePanel({ googleConnected, timeZone }: { googleConnected:
         <p className="text-xs text-alfred-mist">
           Every conversation turn: how fast she answered, what it cost and anything that went wrong. Only numbers are kept, never what you said.
         </p>
-        <button type="button" className="btn-ghost shrink-0 p-1" onClick={() => void load()} aria-label="Refresh usage" disabled={loading}>
+        <button type="button" className="btn-ghost shrink-0 p-1" onClick={() => reload()} aria-label="Refresh usage" disabled={loading}>
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
         </button>
       </div>
