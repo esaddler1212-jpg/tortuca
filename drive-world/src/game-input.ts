@@ -61,15 +61,19 @@ export function pollDriveInput(): DriveInput {
   let vertical = kb.vertical;
   if (gp) {
     const ax = gp.axes[0] ?? 0;
-    const gas = -(gp.axes[1] ?? 0);
-    const brake = gp.axes[3] ?? gp.axes[2] ?? 0;
+    const stickY = -(gp.axes[1] ?? 0);
+    const rt = gp.buttons[7]?.value ?? (gp.buttons[7]?.pressed ? 1 : 0);
+    const lt = gp.buttons[6]?.value ?? (gp.buttons[6]?.pressed ? 1 : 0);
     if (Math.abs(ax) > 0.15) steering = -Math.max(-1, Math.min(1, ax));
-    if (gas > 0.2) throttle = 1;
-    else if (brake > 0.2) throttle = -1;
-    if (gp.buttons[4]?.pressed) vertical += 1;
-    if (gp.buttons[5]?.pressed) vertical -= 1;
+    if (rt > 0.15) throttle = 1;
+    else if (lt > 0.15) throttle = -1;
+    else if (stickY > 0.35) throttle = 1;
+    else if (stickY < -0.35) throttle = -1;
+    const rightY = -(gp.axes[3] ?? 0);
+    if (rightY > 0.35 || gp.buttons[12]?.pressed) vertical += 1;
+    if (rightY < -0.35 || gp.buttons[13]?.pressed) vertical -= 1;
   }
-  const nitro = shiftDown || gp?.buttons[7]?.pressed || (gp?.buttons[7]?.value ?? 0) > 0.5;
+  const nitro = shiftDown || !!gp?.buttons[0]?.pressed;
   if (!gp && !isTouchDriveActive()) {
     return { steering, throttle, nitro: shiftDown, vertical };
   }

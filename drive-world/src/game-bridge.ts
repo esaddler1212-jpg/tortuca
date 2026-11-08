@@ -22,7 +22,7 @@ export type HudSnapshot = {
   phase: GamePhase;
   ridingWaymo: boolean;
   progress: SavedProgress | null;
-  nextLandmark: LandmarkDef | null;
+  nextLandmark: Pick<LandmarkDef, 'id' | 'name' | 'x' | 'z'> | null;
   cameraMode: CameraMode;
   waterPhase: number;
   photoMode: boolean;
@@ -66,6 +66,13 @@ export type HudSnapshot = {
   landmarkSprintLabel?: string | null;
   garageInteriorCam?: boolean;
   gamepadConnected?: boolean;
+  simPaused?: boolean;
+  /** Tokyo bonus map active (minimap / nav switch to Tokyo bounds). */
+  inTokyo?: boolean;
+  /** Board-flight prompt at SFO gate / Haneda pad. */
+  flightPrompt?: { label: string; ready: boolean; detail?: string } | null;
+  /** Cinematic flight in progress (0–1 fade to black between legs). */
+  flightCinematic?: { label: string; fade: number } | null;
 };
 
 export type TouchDrive = {
@@ -114,6 +121,7 @@ let setHomeSafehouseHandler: ((id: string) => void) | null = null;
 let claimSafehouseHandler: ((name: string) => void) | null = null;
 let startTaxiHandler: ((contractId: string) => void) | null = null;
 let dynoPullHandler: (() => void) | null = null;
+let boardFlightHandler: (() => void) | null = null;
 
 let touchDrive: TouchDrive = {
   up: false,
@@ -293,4 +301,12 @@ export function computeTouchControls(): { steering: number; throttle: number; ve
   if (t.climb) vertical += 1;
   if (t.descend) vertical -= 1;
   return { steering, throttle, vertical, nitro: t.nitro };
+}
+
+export function registerBoardFlight(fn: () => void): void {
+  boardFlightHandler = fn;
+}
+
+export function requestBoardFlight(): void {
+  boardFlightHandler?.();
 }

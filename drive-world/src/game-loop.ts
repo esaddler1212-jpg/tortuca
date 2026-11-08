@@ -25,6 +25,7 @@ import {
   registerLandHere,
   getNavTarget,
   registerSkipWaymo,
+  requestSkipWaymo,
   registerCycleAutopilotPreset,
   getHudSnapshot,
   registerSavePhotoCard,
@@ -36,7 +37,8 @@ import {
   registerVistaCam,
   registerWaymoReplay,
   registerStartTaxi,
-  registerDynoPull
+  registerDynoPull,
+  registerBoardFlight
 } from './game-bridge';
 import {
   loadProgress,
@@ -54,6 +56,9 @@ import {
   tryUnlockNightCoil,
   tryUnlockSkywayHover,
   saveLastPose,
+  recordTokyoFlight,
+  unlockVehicle,
+  visitTokyoLandmark,
   setCameraMode,
   collectItem,
   recordSpeedTrap,
@@ -173,6 +178,21 @@ import {
   type WaymoRide
 } from './waymo-ride';
 import type { CameraMode } from './game-progress';
+import {
+  HANEDA_PAD,
+  SFO_FLIGHT_GATE,
+  TOKYO_LANDMARKS,
+  buildSfoFlightGate,
+  buildTokyo,
+  isInTokyo,
+  isTokyoBuilt,
+  nextTokyoLandmark,
+  setTokyoActive,
+  tokyoUnlockStatus
+} from './tokyo-map';
+import { TOKYO_FF_GARAGE_LABEL, tokyoVehicleForLandmark } from './tokyo-ff-cars';
+import { FLIGHT_LEG1_SEC, FLIGHT_TOTAL_SEC, TOKYO_FOG, createFlightPlane, flightPose, type FlightRun } from './tokyo-flight';
+import { NIGHT_FOG } from './night-palette';
 
 export type GameSession = {
   vehicle: Entity | null;
@@ -289,6 +309,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     }
     if (e.key === 'c' || e.key === 'C') toggleCamera();
     if (e.key === 'p' || e.key === 'P') togglePhoto();
+    if ((e.key === 'f' || e.key === 'F') && !e.repeat) boardFlight();
     if (e.key === 't' || e.key === 'T') {
       if (!e.repeat) toggleAutopilot();
     }
@@ -540,8 +561,9 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   const toggleCamera = () => cycleCamera(1);
 
   registerSkipWaymo(() => {
-    if (!ridingWaymo) return;
-    endWaymoRide();
+    if (flight) finishFlight();
+    else if (ridingWaymo) endWaymoRide();
+    else if (sightseeing) endWaymoSightseeing();
   });
 
   registerToggleCamera(toggleCamera);
@@ -552,7 +574,6 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       const p = vehicle()!.getPosition();
       photo.pos.set(p.x, p.y + 8, p.z);
     }
-    app.timeScale = photoMode ? 0.38 : 1;
     publishHud({ photoMode });
     document.body.classList.toggle('photo-mode', photoMode);
   };
@@ -641,6 +662,10 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   ui.bindDynoPull(doDynoPull);
 
   registerFastTravel((district: DistrictId) => {
+    if (inTokyo) {
+      ui.showToast('Tokyo', 'Bay fast travel is back home — fly from the Haneda pad');
+      return;
+    }
     if (bayRegionsGated(progress) && district !== 'vallejo') {
       ui.showToast('Chapter 1', 'Vallejo taco + landmark unlocks Bay fast travel');
       return;
@@ -658,6 +683,10 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   registerLandHere((x, z, label) => {
     const ent = vehicle();
     if (!ent || progress.phase !== 'home') return;
+    if (inTokyo || isInTokyo(x, z)) {
+      ui.showToast('Tokyo', 'Map landing is Bay-only — fly between SFO and Haneda');
+      return;
+    }
     if (bayRegionsGated(progress)) {
       if (districtAt(x, z) !== 'vallejo') {
         ui.showToast('Chapter 1', 'Finish Vallejo taco + landmark before leaving North Bay');
@@ -680,8 +709,97 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     ui.showToast('Landed', label);
   });
 
+  buildSfoFlightGate(app);
+  let inTokyo = false;
+  let flight: FlightRun | null = null;
+  let flightGateHintShown = false;
+
+  const applyTokyoAtmosphere = (on: boolean) => {
+    inTokyo = on;
+    if (on) {
+      if (!isTokyoBuilt()) buildTokyo(app);
+      setTokyoActive(true);
+      app.scene.fog.color = TOKYO_FOG.clone();
+      ui.setMission(`${TOKYO_FF_GARAGE_LABEL} — 8 landmarks · one FF tribute each · Haneda flies home`);
+    } else {
+      setTokyoActive(false);
+      app.scene.fog.color = NIGHT_FOG.clone();
+      ui.setMission(missionTextForPhase(progress.phase, progress));
+    }
+  };
+
+  const flightGateStatus = (x: number, z: number) => {
+    if (inTokyo) {
+      return Math.hypot(x - HANEDA_PAD.x, z - HANEDA_PAD.z) < HANEDA_PAD.radius ? ('toBay' as const) : null;
+    }
+    return Math.hypot(x - SFO_FLIGHT_GATE.x, z - SFO_FLIGHT_GATE.z) < SFO_FLIGHT_GATE.radius ? ('toTokyo' as const) : null;
+  };
+
+  const flightEnterDestination = (run: FlightRun) => {
+    if (run.arrived) return;
+    run.arrived = true;
+    applyTokyoAtmosphere(run.dir === 'toTokyo');
+  };
+
+  const finishFlight = () => {
+    const run = flight;
+    if (!run) return;
+    flightEnterDestination(run);
+    run.plane.destroy();
+    flight = null;
+    progress = recordTokyoFlight(progress);
+    const to = run.to;
+    const y = hillOffsetM(to.x, to.z) + 0.8;
+    if (progress.activeVehicleId) void swapVehicle(progress.activeVehicleId, new Vec3(to.x, y, to.z), to.yaw);
+    progress = saveLastPose(progress, { x: to.x, y, z: to.z, yaw: to.yaw });
+    publishHud({ ridingWaymo: false, flightCinematic: null, inTokyo, progress });
+    if (run.dir === 'toTokyo') {
+      ui.showToast('Welcome to Tokyo', `${TOKYO_LANDMARKS.length} landmarks — unlock the Fast family fleet`);
+    } else {
+      ui.showToast('Back at SFO', 'Bay Area night shift resumes');
+    }
+  };
+
+  const boardFlight = () => {
+    if (flight || progress.phase !== 'home' || ridingWaymo || sightseeing || photoMode) return;
+    const ent = vehicle();
+    if (!ent || !progress.activeVehicleId) return;
+    const pos = ent.getPosition();
+    const dir = flightGateStatus(pos.x, pos.z);
+    if (!dir) return;
+    if (dir === 'toTokyo' && !tokyoUnlockStatus(progress).unlocked) {
+      const st = tokyoUnlockStatus(progress);
+      ui.showToast('Tokyo flight locked', `Unlock every car (${st.cars}/${st.carsTotal}) and region (${st.regions}/${st.regionsTotal})`);
+      return;
+    }
+    if (getHudSnapshot().mph > 12) {
+      ui.showToast('Slow down', 'Stop on the gate pad to board.');
+      return;
+    }
+    stopAutopilot(true);
+    ent.enabled = false;
+    const from = dir === 'toTokyo' ? SFO_FLIGHT_GATE : HANEDA_PAD;
+    const to = dir === 'toTokyo' ? HANEDA_PAD : SFO_FLIGHT_GATE;
+    const plane = createFlightPlane(app);
+    plane.setPosition(from.x, 3, from.z);
+    flight = {
+      dir,
+      t: 0,
+      plane,
+      arrived: false,
+      from: { x: from.x, z: from.z, yaw: from.yaw, departYaw: from.departYaw },
+      to: { x: to.x, z: to.z, yaw: to.yaw, arriveYaw: to.arriveYaw }
+    };
+    playWaymoArrival();
+    ui.showToast(dir === 'toTokyo' ? 'SFO → Haneda' : 'Haneda → SFO', 'Night flight — A / Skip to land now');
+  };
+  registerBoardFlight(boardFlight);
+
   const resumeFromSave = () => {
     progress = tryUnlockNightCoil(progress);
+    if (progress.phase === 'home' && progress.lastPose && isInTokyo(progress.lastPose.x, progress.lastPose.z)) {
+      applyTokyoAtmosphere(true);
+    }
     progress = ensureSafehouseUnlocks(progress);
     cameraMode = progress.cameraMode ?? 'chase';
     if (progress.phase === 'waymo_ride') {
@@ -708,6 +826,11 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     destroyPlayerVehicle(player?.entity ?? null);
     player = null;
     ridingWaymo = false;
+    if (flight) {
+      flight.plane.destroy();
+      flight = null;
+    }
+    applyTokyoAtmosphere(false);
     progress = resetProgress();
     cameraMode = 'chase';
     ui.setGarageVisible(false, progress, () => {});
@@ -716,26 +839,44 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
 
   resumeFromSave();
 
+  const externalDrive = { steering: 0, throttle: 0 };
+  (window as unknown as { cityNightsExternalDrive?: typeof externalDrive }).cityNightsExternalDrive = externalDrive;
+
   const camera = app.root.findByName('camera') as Entity | null;
   const bay = app.root.findByName('sf-bay') as Entity | null;
 
   app.on('update', (dt: number) => {
     if (!camera) return;
+    externalDrive.steering = 0;
+    externalDrive.throttle = 0;
 
-    for (const { action, tab } of pollGamepadMenuActions()) {
-      if (action === 'camera-next') cycleCamera(1);
+    const paused = isSimulationPaused() && progress.phase === 'home' && !ridingWaymo && !photoMode;
+    const hudTab = (tab: string) => {
+      window.dispatchEvent(new CustomEvent('drive-world:hud-tab', { detail: tab }));
+      hapticMenu();
+    };
+    for (const action of pollGamepadMenuActions()) {
+      if (action === 'start') hudTab('map');
+      else if (action === 'view') hudTab('settings');
+      else if (action === 'back') {
+        if (photoMode) togglePhoto();
+        else if (sightseeing) endWaymoSightseeing();
+        else hudTab('missions');
+      } else if (paused) continue;
+      else if (action === 'confirm' && (ridingWaymo || sightseeing || flight)) requestSkipWaymo();
+      else if (action === 'tokyo-flight') boardFlight();
+      else if (action === 'camera-next') cycleCamera(1);
       else if (action === 'camera-prev') cycleCamera(-1);
       else if (action === 'photo') togglePhoto();
       else if (action === 'autopilot') toggleAutopilot();
-      else if (action === 'confirm' && ridingWaymo) endWaymoRide();
-      else if (action === 'hud-tab' && tab) {
-        window.dispatchEvent(new CustomEvent('drive-world:hud-tab', { detail: tab }));
-        hapticMenu();
-      }
     }
 
-    if (isSimulationPaused() && progress.phase === 'home' && !ridingWaymo && !photoMode) {
-      publishHud({ gamepadConnected: isGamepadConnected() });
+    const wantScale = paused ? 0 : photoMode ? 0.38 : 1;
+    if (app.timeScale !== wantScale) app.timeScale = wantScale;
+    (window as unknown as { cityNightsDriveLocked?: boolean }).cityNightsDriveLocked = paused || photoMode;
+
+    if (paused) {
+      publishHud({ gamepadConnected: isGamepadConnected(), simPaused: true });
       return;
     }
 
@@ -815,6 +956,38 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       return;
     }
 
+    if (flight) {
+      const run = flight;
+      run.t += dt;
+      const shot = flightPose(run);
+      if (run.t >= FLIGHT_LEG1_SEC) flightEnterDestination(run);
+      run.plane.setPosition(shot.pos);
+      run.plane.lookAt(shot.pos.x + shot.dir.x, shot.pos.y + shot.climb, shot.pos.z + shot.dir.z);
+      camera.setPosition(shot.eye);
+      camera.lookAt(shot.pos);
+      speedEl.textContent = `${shot.mph.toFixed(0)} mph · ${run.dir === 'toTokyo' ? 'SFO → HND' : 'HND → SFO'}`;
+      publishHud({
+        playerX: shot.pos.x,
+        playerZ: shot.pos.z,
+        yaw: run.plane.getEulerAngles().y,
+        mph: shot.mph,
+        phase: progress.phase,
+        ridingWaymo: true,
+        progress,
+        nextLandmark: null,
+        cameraMode,
+        waterPhase: waterT,
+        inTokyo: run.arrived ? run.dir === 'toTokyo' : inTokyo,
+        flightCinematic: {
+          label: run.dir === 'toTokyo' ? 'Night flight to Tokyo · Haneda' : 'Red-eye home · SFO',
+          fade: shot.fade
+        }
+      });
+      updateEngineAudio(Math.min(90, shot.mph * 0.4), false);
+      if (run.t >= FLIGHT_TOTAL_SEC) finishFlight();
+      return;
+    }
+
     const ent = vehicle();
     if (!ent) return;
 
@@ -879,9 +1052,8 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         throttle = t.throttle;
       }
       const vs = scriptInstance(ent, 'vehicle') as { fire?: (e: string, ...args: number[]) => void } | undefined;
-      if (steering !== 0 || throttle !== 0) {
-        vs?.fire?.('vehicle:controls', steering, throttle);
-      }
+      externalDrive.steering = steering;
+      externalDrive.throttle = throttle;
       vs?.fire?.('vehicle:nitro', 1);
       player?.lights.setBrake(throttle === 0 && steering === 0);
     }
@@ -1020,9 +1192,17 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       mph,
       dt
     );
+    const tokyoNext =
+      inTokyo && progress.phase === 'home' ? nextTokyoLandmark(progress.tokyoLandmarkIds, pos.x, pos.z) : null;
+    const bayNextLm =
+      progress.phase === 'home' && !inTokyo ? nextUnvisitedLandmark(progress.visitedLandmarkIds, pos.x, pos.z) : null;
     const nextLm =
-      progress.phase === 'home' ? nextUnvisitedLandmark(progress.visitedLandmarkIds, pos.x, pos.z) : null;
-    const chapterPin = progress.phase === 'home' ? chapterObjectivePin(progress) : null;
+      progress.phase !== 'home'
+        ? null
+        : inTokyo
+          ? tokyoNext ?? { id: 'haneda', name: 'Haneda pad — fly home', x: HANEDA_PAD.x, z: HANEDA_PAD.z }
+          : bayNextLm;
+    const chapterPin = progress.phase === 'home' && !inTokyo ? chapterObjectivePin(progress) : null;
 
     const manualNav = getNavTarget();
     let navRoutePoints: { x: number; z: number }[] = [];
@@ -1034,7 +1214,13 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         : nextLm
           ? { label: nextLm.name, x: nextLm.x, z: nextLm.z }
           : null);
-    if (navPin && progress.phase === 'home') {
+    if (navPin && progress.phase === 'home' && inTokyo) {
+      navRoutePoints = [
+        { x: pos.x, z: pos.z },
+        { x: navPin.x, z: navPin.z }
+      ];
+      navTurnLabel = navTurnHint(pos.x, pos.z, yaw, navRoutePoints);
+    } else if (navPin && progress.phase === 'home') {
       if (manualNav?.scenicId) {
         const scenic = SCENIC_ROUTES.find((r) => r.id === manualNav.scenicId);
         navRoutePoints = scenic
@@ -1043,7 +1229,9 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       } else if (manualNav || !nextLm) {
         navRoutePoints = routeWaypointsToPoint(pos.x, pos.z, navPin.x, navPin.z);
       } else {
-        navRoutePoints = routeWaypointsToLandmark(pos.x, pos.z, nextLm);
+        navRoutePoints = bayNextLm
+          ? routeWaypointsToLandmark(pos.x, pos.z, bayNextLm)
+          : routeWaypointsToPoint(pos.x, pos.z, navPin.x, navPin.z);
       }
       navTurnLabel = navTurnHint(pos.x, pos.z, yaw, navRoutePoints);
     }
@@ -1337,11 +1525,27 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         : null,
       heatHunted,
       gamepadConnected: isGamepadConnected(),
+      simPaused: false,
       ghostRivalLabel,
       pinnedChapterLabel: chapterPin?.label ?? null,
       pinnedChapterHint: chapterPin?.hint ?? null,
       landmarkSprintLabel: activeSprintLabel(sprintRuntime),
-      garageInteriorCam: estateGarage
+      garageInteriorCam: estateGarage,
+      inTokyo,
+      flightCinematic: null,
+      flightPrompt: (() => {
+        const gate = progress.phase === 'home' ? flightGateStatus(pos.x, pos.z) : null;
+        if (!gate) return null;
+        if (gate === 'toBay') return { label: 'Fly home to SFO', ready: true };
+        const st = tokyoUnlockStatus(progress);
+        return st.unlocked
+          ? { label: 'Board flight to Tokyo', ready: true }
+          : {
+              label: 'Tokyo flight locked',
+              ready: false,
+              detail: `Cars ${st.cars}/${st.carsTotal} · Regions ${st.regions}/${st.regionsTotal}`
+            };
+      })()
     });
 
     statsT += dt;
@@ -1358,7 +1562,38 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       progress = saveLastPose(progress, { x: pos.x, y: pos.y, z: pos.z, yaw });
     }
 
-    if (progress.phase === 'home') {
+    if (progress.phase === 'home' && inTokyo) {
+      for (const lm of TOKYO_LANDMARKS) {
+        if (progress.tokyoLandmarkIds.includes(lm.id)) continue;
+        if (Math.hypot(pos.x - lm.x, pos.z - lm.z) > lm.visitRadius) continue;
+        progress = visitTokyoLandmark(progress, lm.id);
+        playLandmarkChime();
+        const rideId = tokyoVehicleForLandmark(lm.id);
+        if (rideId && !progress.unlockedVehicleIds.includes(rideId)) {
+          progress = unlockVehicle(progress, rideId);
+          const ride = getVehicleSpec(rideId);
+          ui.showToast('Fast family unlock', `${ride.name} — ${ride.tagline}`);
+        }
+        ui.showToast(`Tokyo · ${lm.name}`, `${progress.tokyoLandmarkIds.length}/${TOKYO_LANDMARKS.length} — ${lm.blurb}`);
+        ui.setProgressSummary(progress);
+      }
+    }
+
+    if (progress.phase === 'home' && !inTokyo) {
+      const atGate = flightGateStatus(pos.x, pos.z) === 'toTokyo';
+      if (atGate && !flightGateHintShown) {
+        flightGateHintShown = true;
+        const st = tokyoUnlockStatus(progress);
+        ui.showToast(
+          st.unlocked ? 'Gate HND · Tokyo' : 'Gate HND · locked',
+          st.unlocked
+            ? 'Stop on the pad and board (F / D-pad ↑)'
+            : `Bonus flight after every car (${st.cars}/${st.carsTotal}) + region (${st.regions}/${st.regionsTotal})`
+        );
+      } else if (!atGate) flightGateHintShown = false;
+    }
+
+    if (progress.phase === 'home' && !inTokyo) {
       for (const lm of LANDMARKS) {
         if (progress.visitedLandmarkIds.includes(lm.id)) continue;
         const d = Math.hypot(pos.x - lm.x, pos.z - lm.z);

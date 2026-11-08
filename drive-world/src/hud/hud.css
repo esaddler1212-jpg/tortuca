@@ -752,6 +752,20 @@ body.photo-mode .react-hud {
   font-size: 0.78rem;
 }
 
+.paused-banner {
+  pointer-events: auto;
+  width: 100%;
+  margin-bottom: 0.35rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 210, 120, 0.5);
+  background: rgba(40, 28, 8, 0.9);
+  color: #ffe6b0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
 .records-panel {
   pointer-events: auto;
   margin-bottom: 0.35rem;
@@ -769,4 +783,93 @@ body.photo-mode .react-hud {
     right: max(2rem, env(safe-area-inset-right));
     bottom: max(2rem, env(safe-area-inset-bottom));
   }
+}
+
+.flight-fade {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  pointer-events: none;
+  z-index: 40;
+  transition: opacity 0.08s linear;
+}
+
+.flight-banner {
+  position: fixed;
+  top: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  background: rgba(20, 8, 30, 0.82);
+  border: 1px solid rgba(255, 90, 180, 0.55);
+  color: #ffd6f0;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  z-index: 41;
+  pointer-events: none;
+}
+
+.flight-prompt {
+  position: fixed;
+  bottom: 22%;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: auto;
+  padding: 0.6rem 1.1rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  z-index: 30;
+  cursor: pointer;
+}
+
+.flight-prompt.ready {
+  background: rgba(60, 10, 50, 0.92);
+  border: 1px solid rgba(255, 90, 180, 0.8);
+  color: #ffe0f4;
+  box-shadow: 0 0 18px rgba(255, 60, 170, 0.45);
+}
+
+.flight-prompt.locked {
+  background: rgba(20, 20, 28, 0.9);
+  border: 1px solid rgba(180, 180, 200, 0.4);
+  color: #c9c9d6;
+}
+
+.flight-prompt-detail {
+  font-size: 0.72rem;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+.minimap-tokyo-ring {
+  fill: none;
+  stroke: rgba(255, 140, 40, 0.85);
+  stroke-width: 1.6;
+}
+
+.minimap-tokyo-road {
+  stroke: rgba(160, 150, 190, 0.28);
+  stroke-width: 0.8;
+}
+
+.minimap-tokyo-water {
+  fill: rgba(40, 90, 170, 0.45);
+}
+
+.minimap-tokyo-pad {
+  fill: rgba(60, 170, 255, 0.9);
+}
+
+.minimap-tokyo-gate {
+  fill: rgba(150, 150, 170, 0.6);
+}
+
+.minimap-tokyo-gate.ready {
+  fill: rgba(255, 80, 180, 0.95);
 }

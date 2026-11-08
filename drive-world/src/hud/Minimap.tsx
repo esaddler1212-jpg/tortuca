@@ -7,6 +7,7 @@ import { NAMED_STREETS } from '../street-registry';
 import { homeServicePoint, resolveHomeSafehouse } from '../safehouse-registry';
 import { GAS_STATIONS } from '../gas-stations';
 import { WORLD_HALF_M } from '../world-config';
+import { HANEDA_PAD, SFO_FLIGHT_GATE, TOKYO_CENTER, TOKYO_HALF_M, TOKYO_LANDMARKS, tokyoUnlockStatus } from '../tokyo-map';
 
 const SIZE = 168;
 const HALF = WORLD_HALF_M;
@@ -18,7 +19,73 @@ function mapY(wz: number): number {
   return ((HALF - wz) / (HALF * 2)) * SIZE;
 }
 
+const T_HALF = TOKYO_HALF_M + 20;
+function tX(wx: number): number {
+  return ((wx - TOKYO_CENTER.x + T_HALF) / (T_HALF * 2)) * SIZE;
+}
+function tY(wz: number): number {
+  return ((T_HALF - (wz - TOKYO_CENTER.z)) / (T_HALF * 2)) * SIZE;
+}
+
+function TokyoMinimap({ snap }: { snap: HudSnapshot }) {
+  const visited = new Set(snap.progress?.tokyoLandmarkIds ?? []);
+  const roads = Array.from({ length: 11 }, (_, i) => (i - 5) * 160);
+  const route = snap.navRoutePoints ?? [];
+  const ring = (480 / (T_HALF * 2)) * SIZE;
+  return (
+    <div className="minimap-wrap">
+      <div className="minimap-title">Tokyo bonus map</div>
+      <svg width={SIZE} height={SIZE} className="minimap" aria-hidden>
+        <rect x={0} y={0} width={SIZE} height={SIZE} className="minimap-bg" />
+        <rect
+          x={tX(TOKYO_CENTER.x + 660)}
+          y={tY(TOKYO_CENTER.z - 660)}
+          width={(160 / (T_HALF * 2)) * SIZE}
+          height={(160 / (T_HALF * 2)) * SIZE}
+          className="minimap-tokyo-water"
+        />
+        {roads.map((r) => (
+          <g key={r}>
+            <line x1={tX(TOKYO_CENTER.x + r)} y1={0} x2={tX(TOKYO_CENTER.x + r)} y2={SIZE} className="minimap-tokyo-road" />
+            <line x1={0} y1={tY(TOKYO_CENTER.z + r)} x2={SIZE} y2={tY(TOKYO_CENTER.z + r)} className="minimap-tokyo-road" />
+          </g>
+        ))}
+        <rect
+          x={SIZE / 2 - ring}
+          y={SIZE / 2 - ring}
+          width={ring * 2}
+          height={ring * 2}
+          className="minimap-tokyo-ring"
+        />
+        <rect x={tX(HANEDA_PAD.x) - 4} y={tY(HANEDA_PAD.z) - 4} width={8} height={8} className="minimap-tokyo-pad" />
+        {TOKYO_LANDMARKS.map((lm) => (
+          <circle
+            key={lm.id}
+            cx={tX(lm.x)}
+            cy={tY(lm.z)}
+            r={visited.has(lm.id) ? 2.5 : 3.8}
+            className={visited.has(lm.id) ? 'minimap-dot done' : 'minimap-dot'}
+          />
+        ))}
+        {route.slice(0, -1).map((a, i) => {
+          const b = route[i + 1]!;
+          return <line key={`r-${i}`} x1={tX(a.x)} y1={tY(a.z)} x2={tX(b.x)} y2={tY(b.z)} className="minimap-route" />;
+        })}
+        <circle
+          cx={tX(snap.playerX)}
+          cy={tY(snap.playerZ)}
+          r={5}
+          className="minimap-player"
+          transform={`rotate(${snap.yaw} ${tX(snap.playerX)} ${tY(snap.playerZ)})`}
+        />
+      </svg>
+    </div>
+  );
+}
+
 export function Minimap({ snap }: { snap: HudSnapshot }) {
+  if (snap.inTokyo) return <TokyoMinimap snap={snap} />;
+  const tokyoReady = snap.progress ? tokyoUnlockStatus(snap.progress).unlocked : false;
   const home = snap.progress ? resolveHomeSafehouse(snap.progress) : null;
   const svc = home ? homeServicePoint(home) : null;
   const visited = new Set(snap.progress?.visitedLandmarkIds ?? []);
@@ -101,6 +168,14 @@ export function Minimap({ snap }: { snap: HudSnapshot }) {
             className={svc.mode === 'valet' ? 'minimap-valet' : 'minimap-garage-door'}
           />
         ) : null}
+        <rect
+          x={mapX(SFO_FLIGHT_GATE.x) - 3.5}
+          y={mapY(SFO_FLIGHT_GATE.z) - 3.5}
+          width={7}
+          height={7}
+          transform={`rotate(45 ${mapX(SFO_FLIGHT_GATE.x)} ${mapY(SFO_FLIGHT_GATE.z)})`}
+          className={tokyoReady ? 'minimap-tokyo-gate ready' : 'minimap-tokyo-gate'}
+        />
         {GAS_STATIONS.map((g) => (
           <circle
             key={g.id}

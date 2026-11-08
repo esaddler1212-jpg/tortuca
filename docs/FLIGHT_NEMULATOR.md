@@ -47,12 +47,13 @@ Production build: `npm run build` → `dist/` (static deploy like `drive-world`)
 | Territory takeovers, advisors, raze/henchmen, **territory-clear** arc beat | Shipped |
 | Infinity Stone hunt vs Thanos/Loki/Ultron homages | Shipped |
 | 40 hero arcs + lattice (`battleworld-arcs.ts`, HUD chip, picker arc + links) | Shipped |
-| X-Men tier A drop (Frost Monarch, Cable Echo, Banshee Wail + Nimrod / Sabretooth) | Shipped |
+| X-Men tier A drop (Frost Monarch, Cable Echo, Banshee Wail + dedicated nemeses) | Shipped |
 | Mission-style **chapter** ladder (`battleworld-chapters.ts`) | Shipped (light v1) |
 | Villain-only **apex** wave 10 (`hero-villain-apex.ts`) | Shipped |
 | Cloud lattice sync (`/api/flight-nemulator-lattice`) | Shipped (optional Blobs) |
 | **`home-mark`** H at every hero home district + villain runway HUD | Shipped |
-| Wave-10 pair rivals (5 pinned finales + rival fallback) | Shipped — see [`FLIGHT_NEMULATOR_BATTLEWORLD_ARCS.md`](./FLIGHT_NEMULATOR_BATTLEWORLD_ARCS.md) |
+| Cutscene dialogue + defeat autosave + dialogue soft-pause | Shipped |
+| Wave-10 pair rivals (1:1 nemesis + 2 Doom pins) | Shipped — see [`FLIGHT_NEMULATOR_BATTLEWORLD_ARCS.md`](./FLIGHT_NEMULATOR_BATTLEWORLD_ARCS.md) |
 | Doom timeline / God Emperor, Solar Lantern rings, symbiote, absorb heroes | Shipped |
 | Home spires, quality override, boost trails, super crater, screen shake | Shipped |
 | Wanted-scaled waves, power-tuned primaries, minimap, photo save, session stats | Shipped |
@@ -67,6 +68,8 @@ Production build: `npm run build` → `dist/` (static deploy like `drive-world`)
 | Multiplayer | Not started |
 | Mission chapters / checkpoint races | Light chapter HUD only — no drive-world races |
 | Blockbench hero GLBs for full roster | **1** pilot (`tin-aviator.glb`, script `npm run build:hero-glb`); rest procedural |
+| Universe-colored district rims / sky rings | Polish |
+| Per-hero district **H** signature beat (beyond Lantern / Ki / Stark) | Content pass |
 | X-Men tier B+ backlog (`FLIGHT_NEMULATOR_XMEN_RESEARCH.md`) | Tier A slice shipped; rest research |
 | Cyber / indie / golden-age factions | Research in [`FLIGHT_NEMULATOR_ROSTER_BACKLOG.md`](./FLIGHT_NEMULATOR_ROSTER_BACKLOG.md) |
 | Lattice cloud pull on boot + auth | POST sync shipped; Tortuca session gate optional |
