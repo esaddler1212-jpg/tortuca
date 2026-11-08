@@ -5,8 +5,10 @@ import {
   customizationBlurb,
   isFullLoadoutHero,
   listHeroLoadouts,
-  loadoutStatsLabel
+  loadoutStatsLabel,
+  suitRoleLabel
 } from '../hero-customization';
+import type { HeroForm, SuitRole } from '../hero-roster';
 import { confirmVillainWorldRemake, continueDyingRoam, selectHero, selectPlayerRole } from '../game-loop';
 import { storedFormId } from '../hero-forms';
 import { ANNIHILATE_HAVOC_USD } from '../villain-annihilate';
@@ -52,6 +54,9 @@ export type GameHudSnapshot = {
   solarCharge?: number;
   nearestFoe?: string | null;
   villainRivals?: string[];
+  pairBossName?: string | null;
+  pairBossHpPct?: number | null;
+  pairBossStatus?: 'incoming' | 'active' | 'defeated' | null;
   fatePrompt?: boolean;
   dyingRoamSeconds?: number;
   worldFatePhase?: string;
@@ -143,6 +148,17 @@ export function HudApp() {
         </select>
         {snap.playerRole === 'hero' && snap.villainRivals && snap.villainRivals.length > 0 && (
           <p className="hud-tag">Rivals: {snap.villainRivals.join(', ')}</p>
+        )}
+        {snap.pairBossStatus === 'incoming' && snap.pairBossName && (
+          <p className="hud-tag">Pair rival incoming: {snap.pairBossName}</p>
+        )}
+        {snap.pairBossStatus === 'active' && snap.pairBossName && (
+          <p className="hud-tag">
+            Final pair duel: {snap.pairBossName} — HP {snap.pairBossHpPct ?? 100}%
+          </p>
+        )}
+        {snap.pairBossStatus === 'defeated' && snap.pairBossName && (
+          <p className="hud-tag">Pair rival down: {snap.pairBossName}</p>
         )}
         <LoadoutPicker heroId={heroId} />
         <CreateHeroPanel
@@ -292,9 +308,12 @@ function LoadoutPicker({ heroId }: { heroId: string }) {
   const full = isFullLoadoutHero(heroId);
   const blurb = customizationBlurb(heroId);
 
+  const roleOrder: SuitRole[] = ['swift', 'siege', 'bulwark', 'balanced'];
+  const byRole = (r: SuitRole) => loadouts.filter((o) => o.suitRole === r);
+
   return (
     <div className={`loadout-picker${full ? ' loadout-picker-full' : ''}`}>
-      <strong>{full ? 'Ability kit' : 'Loadout'}</strong>
+      <strong>{full ? 'Suits & abilities' : 'Loadout'}</strong>
       {blurb && <p className="hud-tag">{blurb}</p>}
       <select
         className="loadout-select"
@@ -305,26 +324,50 @@ function LoadoutPicker({ heroId }: { heroId: string }) {
           selectHero(heroId, v);
         }}
       >
-        <optgroup label={full ? 'Ability kits' : 'Forms'}>
-          {loadouts.map((o) => (
+        {full ? (
+          <>
+            {roleOrder.map(
+              (r) =>
+                byRole(r).length > 0 && (
+                  <optgroup key={r} label={suitRoleLabel(r)}>
+                    {byRole(r).map((o) => (
+                      <option key={o.id} value={o.id}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                )
+            )}
+            {loadouts.filter((o) => !o.suitRole).map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.label}
+              </option>
+            ))}
+          </>
+        ) : (
+          loadouts.map((o) => (
             <option key={o.id} value={o.id}>
               {o.label}
             </option>
-          ))}
-        </optgroup>
+          ))
+        )}
       </select>
       {active && (
         <div className="loadout-preview">
-          {active.abilities.length > 0 ? (
+          <span
+            className="loadout-swatch"
+            style={{
+              background: `rgb(${Math.round(active.color[0] * 255)}, ${Math.round(active.color[1] * 255)}, ${Math.round(active.color[2] * 255)})`
+            }}
+          />
+          {active.abilities.length > 0 && (
             <ul className="loadout-abilities">
               {active.abilities.map((a) => (
                 <li key={a}>{a}</li>
               ))}
             </ul>
-          ) : (
-            <span className="hud-tag">{loadoutStatsLabel(active)}</span>
           )}
-          <span className="hud-tag">{loadoutStatsLabel(active)}</span>
+          <span className="hud-tag">{loadoutStatsLabel(active as unknown as HeroForm)}</span>
         </div>
       )}
     </div>

@@ -1,33 +1,38 @@
 import { listHeroLoadouts } from '../flight-nemulator/src/hero-customization.ts';
 import { getHero } from '../flight-nemulator/src/hero-roster.ts';
 
-const rules: { id: string; minKits: number; minAbilitiesPerKit: number }[] = [
-  { id: 'tin-aviator', minKits: 6, minAbilitiesPerKit: 2 },
-  { id: 'red-codriver', minKits: 6, minAbilitiesPerKit: 2 },
-  { id: 'shade-knight', minKits: 7, minAbilitiesPerKit: 2 }
+const rules: { id: string; minSuits: number; minAbilitiesPerSuit: number }[] = [
+  { id: 'tin-aviator', minSuits: 8, minAbilitiesPerSuit: 2 },
+  { id: 'red-codriver', minSuits: 7, minAbilitiesPerSuit: 2 },
+  { id: 'shade-knight', minSuits: 8, minAbilitiesPerSuit: 2 }
 ];
 
-for (const { id, minKits, minAbilitiesPerKit } of rules) {
+for (const { id, minSuits, minAbilitiesPerSuit } of rules) {
   const spec = getHero(id);
   if (!spec) {
     console.error(`missing hero ${id}`);
     process.exit(1);
   }
-  const kits = listHeroLoadouts(spec);
-  if (kits.length < minKits) {
-    console.error(`${id}: expected >= ${minKits} ability kits, got ${kits.length}`);
+  const suits = listHeroLoadouts(spec);
+  if (suits.length < minSuits) {
+    console.error(`${id}: expected >= ${minSuits} suit loadouts, got ${suits.length}`);
     process.exit(1);
   }
   if (spec.suitVariants && spec.suitVariants.length > 0) {
-    console.error(`${id}: cosmetic suitVariants should be empty — use ability kits in forms`);
+    console.error(`${id}: use forms[] for suit+ability bundles, not suitVariants`);
     process.exit(1);
   }
-  const thin = kits.find((k) => k.abilities.length < minAbilitiesPerKit);
+  const thin = suits.find((k) => k.abilities.length < minAbilitiesPerSuit);
   if (thin) {
-    console.error(`${id}: kit "${thin.label}" needs >= ${minAbilitiesPerKit} abilities`);
+    console.error(`${id}: suit "${thin.label}" needs >= ${minAbilitiesPerSuit} abilities`);
     process.exit(1);
   }
-  console.log(`${spec.codename}: ${kits.length} ability kits`);
+  const missingRole = suits.find((k) => !k.suitRole);
+  if (missingRole) {
+    console.error(`${id}: suit "${missingRole.label}" missing suitRole`);
+    process.exit(1);
+  }
+  console.log(`${spec.codename}: ${suits.length} suits (abilities + roles)`);
 }
 
 console.log('check-hero-loadouts: ok');

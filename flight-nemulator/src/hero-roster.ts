@@ -15,6 +15,8 @@ export type PowerKind =
 
 export type FormToggleId = string;
 
+export type SuitRole = 'swift' | 'siege' | 'bulwark' | 'balanced';
+
 export interface HeroForm {
   id: FormToggleId;
   label: string;
@@ -29,6 +31,11 @@ export interface HeroForm {
   dmgMul?: number;
   superRadiusMul?: number;
   primaryCdMul?: number;
+  /** Flight / tank tradeoff tag for HUD grouping */
+  suitRole?: SuitRole;
+  flightAgilityMul?: number;
+  resilienceMul?: number;
+  staminaRegenMul?: number;
 }
 
 export interface SuitVariant {
@@ -164,86 +171,117 @@ export const HERO_ROSTER: HeroSpec[] = [
     smashRadius: 3.2,
     forms: [
       {
-        id: 'repulsor-burst',
-        label: 'Repulsor burst',
-        abilities: ['Palm repulsors', 'Foot hover jets'],
+        id: 'mk3-classic',
+        label: 'Mk III — red & gold',
+        suitRole: 'balanced',
+        abilities: ['Palm repulsors', 'Foot stabilizers'],
         kitPrimary: 'repulsor',
         speedMul: 1,
         powerMul: 1,
         color: [0.75, 0.15, 0.12]
       },
       {
-        id: 'unibeam',
-        label: 'Chest unibeam',
-        abilities: ['Unibeam lance', 'Range painter'],
+        id: 'mk5-suitcase',
+        label: 'Mk V — compact',
+        suitRole: 'swift',
+        abilities: ['Deployable case wings', 'Snap repulsors'],
         kitPrimary: 'beam',
-        rangeMul: 1.35,
-        dmgMul: 1.12,
-        speedMul: 0.98,
-        powerMul: 1.08,
-        color: [0.82, 0.18, 0.1]
+        primaryCdMul: 0.7,
+        flightAgilityMul: 1.14,
+        speedMul: 1.12,
+        powerMul: 0.94,
+        color: [0.78, 0.16, 0.1]
       },
       {
-        id: 'micro-missiles',
-        label: 'Micro-missile pod',
-        abilities: ['Shoulder micro-missiles', 'Lock flares'],
-        kitPrimary: 'beam',
-        primaryCdMul: 0.62,
-        dmgMul: 0.88,
-        speedMul: 1.06,
-        powerMul: 0.95,
-        color: [0.72, 0.16, 0.12]
-      },
-      {
-        id: 'rocket-barrage',
-        label: 'Rocket salvo',
-        abilities: ['Hand rockets', 'Cluster munitions'],
-        kitPrimary: 'repulsor',
-        primaryCdMul: 1.25,
-        dmgMul: 1.35,
-        rangeMul: 1.15,
-        speedMul: 0.96,
-        powerMul: 1.18,
-        color: [0.68, 0.14, 0.1]
-      },
-      {
-        id: 'emp-pulse',
-        label: 'EMP arc',
-        abilities: ['EMP cone', 'Flight-denial burst'],
+        id: 'mk17-stealth',
+        label: 'Mk XVII — stealth blue',
+        suitRole: 'swift',
+        abilities: ['EMP dart', 'Silent hover'],
         kitPrimary: 'thunder',
-        coneMul: 1.55,
-        dmgMul: 0.78,
-        superRadiusMul: 1.2,
-        speedMul: 1.05,
-        powerMul: 0.92,
+        coneMul: 1.45,
+        dmgMul: 0.82,
+        flightAgilityMul: 1.1,
+        speedMul: 1.1,
+        powerMul: 0.9,
         color: [0.22, 0.32, 0.55]
       },
       {
-        id: 'hulkbuster-siege',
-        label: 'Heavy siege frame',
+        id: 'mk50-nanite',
+        label: 'Mk L — nanite swarm',
+        suitRole: 'swift',
+        abilities: ['Nanite blade', 'Micro-missile bloom'],
+        kitPrimary: 'beam',
+        primaryCdMul: 0.65,
+        rangeMul: 1.15,
+        flightAgilityMul: 1.12,
+        speedMul: 1.15,
+        powerMul: 1.02,
+        color: [0.85, 0.75, 0.2]
+      },
+      {
+        id: 'mk85-endgame',
+        label: 'Mk LXXXV — nanoglow',
+        suitRole: 'siege',
+        abilities: ['Unibeam surge', 'Infinity spark rockets'],
+        kitPrimary: 'beam',
+        rangeMul: 1.3,
+        dmgMul: 1.2,
+        superRadiusMul: 1.25,
+        speedMul: 1.05,
+        powerMul: 1.15,
+        color: [0.88, 0.72, 0.25]
+      },
+      {
+        id: 'hulkbuster',
+        label: 'Hulkbuster — siege',
+        suitRole: 'siege',
         abilities: ['Siege ram', 'Shoulder harpoons'],
         kitPrimary: 'repulsor',
-        dmgMul: 1.45,
-        superRadiusMul: 1.35,
-        primaryCdMul: 1.2,
-        speedMul: 0.82,
-        powerMul: 1.35,
+        dmgMul: 1.5,
+        superRadiusMul: 1.4,
+        primaryCdMul: 1.25,
+        speedMul: 0.8,
+        powerMul: 1.4,
         color: [0.6, 0.12, 0.12]
       },
       {
-        id: 'lasers-lance',
-        label: 'Pulse lasers',
-        abilities: ['Forearm lasers', 'Beam slicer'],
+        id: 'rescue-gold',
+        label: 'Rescue — gold support',
+        suitRole: 'bulwark',
+        abilities: ['Stabilizer field', 'Rescue unibeam'],
         kitPrimary: 'beam',
-        primaryCdMul: 0.85,
-        dmgMul: 1.05,
-        rangeMul: 1.2,
+        resilienceMul: 1.3,
+        staminaRegenMul: 1.25,
+        dmgMul: 0.95,
+        speedMul: 0.97,
+        powerMul: 1.05,
+        color: [0.92, 0.78, 0.22]
+      },
+      {
+        id: 'bleeding-edge',
+        label: 'Bleeding edge — hotrod',
+        suitRole: 'balanced',
+        abilities: ['Bleeding repulsors', 'Pulse lasers'],
+        kitPrimary: 'repulsor',
+        dmgMul: 1.1,
         speedMul: 1.08,
-        powerMul: 1.02,
+        powerMul: 1.1,
         color: [0.92, 0.32, 0.12]
+      },
+      {
+        id: 'rescue-stealth',
+        label: 'Night assault — graphite',
+        suitRole: 'bulwark',
+        abilities: ['Sonar jam', 'Low-signature repulsors'],
+        kitPrimary: 'repulsor',
+        resilienceMul: 1.2,
+        flightAgilityMul: 1.05,
+        speedMul: 1.02,
+        powerMul: 0.92,
+        color: [0.15, 0.18, 0.22]
       }
     ],
-    defaultFormId: 'repulsor-burst',
+    defaultFormId: 'mk3-classic',
     aerial: 'tech'
   },
   {
@@ -394,87 +432,104 @@ export const HERO_ROSTER: HeroSpec[] = [
     smashRadius: 3.4,
     forms: [
       {
-        id: 'salvo-classic',
-        label: 'Salvo cannons',
-        abilities: ['Shoulder salvo', 'Repulsor stabilizers'],
+        id: 'wm-classic',
+        label: 'Classic gunmetal',
+        suitRole: 'balanced',
+        abilities: ['Shoulder salvo', 'Repulsor brace'],
         kitPrimary: 'repulsor',
         speedMul: 1,
         powerMul: 1.1,
         color: [0.55, 0.12, 0.12]
       },
       {
-        id: 'minigun-spree',
-        label: 'Gatling burst',
-        abilities: ['Back-pack minigun', 'Suppressive fire'],
+        id: 'wm-patriot',
+        label: 'Patriot — star livery',
+        suitRole: 'siege',
+        abilities: ['Plasma repeaters', 'Patriot salvo'],
         kitPrimary: 'beam',
-        primaryCdMul: 0.55,
-        dmgMul: 0.82,
-        rangeMul: 0.92,
-        speedMul: 0.94,
-        powerMul: 1.05,
-        color: [0.48, 0.1, 0.1]
+        dmgMul: 1.18,
+        rangeMul: 1.1,
+        speedMul: 0.96,
+        powerMul: 1.15,
+        color: [0.72, 0.14, 0.18]
       },
       {
-        id: 'ex-wife',
-        label: 'Bunker buster',
-        abilities: ['Ex-wife mortar', 'Shockwave slam'],
-        kitPrimary: 'thunder',
-        dmgMul: 1.4,
-        superRadiusMul: 1.5,
-        primaryCdMul: 1.35,
+        id: 'wm-gunship',
+        label: 'Gunship pods',
+        suitRole: 'siege',
+        abilities: ['Micro-gun pods', 'SAM flak cone'],
+        kitPrimary: 'beam',
+        coneMul: 1.35,
+        dmgMul: 1.12,
+        superRadiusMul: 1.2,
         speedMul: 0.88,
         powerMul: 1.28,
         color: [0.38, 0.12, 0.12]
       },
       {
-        id: 'plasma-lances',
-        label: 'Plasma repeaters',
-        abilities: ['Plasma lances', 'Heat sink vents'],
+        id: 'wm-stealth',
+        label: 'Stealth sortie',
+        suitRole: 'swift',
+        abilities: ['Gatling burst', 'Radar veil'],
         kitPrimary: 'beam',
-        dmgMul: 1.22,
-        rangeMul: 1.1,
+        primaryCdMul: 0.58,
+        flightAgilityMul: 1.08,
+        speedMul: 1.06,
+        powerMul: 1.02,
+        color: [0.18, 0.2, 0.24]
+      },
+      {
+        id: 'wm-siege',
+        label: 'Siege hammer chassis',
+        suitRole: 'bulwark',
+        abilities: ['Ex-wife mortar', 'Shock brace plating'],
+        kitPrimary: 'thunder',
+        dmgMul: 1.42,
+        superRadiusMul: 1.45,
+        resilienceMul: 1.25,
+        speedMul: 0.84,
+        powerMul: 1.32,
+        color: [0.28, 0.28, 0.32]
+      },
+      {
+        id: 'wm-desert',
+        label: 'Desert tan depot',
+        suitRole: 'bulwark',
+        abilities: ['Sand shield', 'Heavy rotary'],
+        kitPrimary: 'repulsor',
+        resilienceMul: 1.22,
+        staminaRegenMul: 1.15,
+        dmgMul: 1.08,
         speedMul: 0.95,
-        powerMul: 1.15,
+        powerMul: 1.12,
+        color: [0.58, 0.48, 0.35]
+      },
+      {
+        id: 'wm-plasma',
+        label: 'Plasma repeater kit',
+        suitRole: 'siege',
+        abilities: ['Plasma lances', 'Overheat dump'],
+        kitPrimary: 'beam',
+        dmgMul: 1.25,
+        rangeMul: 1.12,
+        speedMul: 0.93,
+        powerMul: 1.18,
         color: [0.35, 0.15, 0.55]
       },
       {
-        id: 'shock-hammer',
-        label: 'Shock knuckles',
-        abilities: ['Stun knuckles', 'Arc haymakers'],
-        kitPrimary: 'thunder',
-        coneMul: 1.35,
-        dmgMul: 1.1,
-        speedMul: 1.02,
-        powerMul: 1.12,
-        color: [0.62, 0.14, 0.12]
-      },
-      {
-        id: 'sam-sortie',
-        label: 'SAM intercept',
-        abilities: ['Shoulder SAMs', 'Flak cone'],
-        kitPrimary: 'beam',
-        coneMul: 1.4,
-        rangeMul: 1.25,
-        dmgMul: 1.05,
-        superRadiusMul: 1.15,
-        speedMul: 0.9,
-        powerMul: 1.2,
-        color: [0.72, 0.14, 0.18]
-      },
-      {
-        id: 'orbital-bracer',
+        id: 'wm-astro',
         label: 'Orbital bracer',
-        abilities: ['Mag-brace hold', 'Kinetic drop'],
+        suitRole: 'swift',
+        abilities: ['Kinetic drop', 'Orbit assist jets'],
         kitPrimary: 'repulsor',
-        dmgMul: 1.18,
         rangeMul: 1.2,
-        superRadiusMul: 1.25,
-        speedMul: 1.04,
-        powerMul: 1.14,
+        flightAgilityMul: 1.1,
+        speedMul: 1.08,
+        powerMul: 1.1,
         color: [0.52, 0.42, 0.35]
       }
     ],
-    defaultFormId: 'salvo-classic',
+    defaultFormId: 'wm-classic',
     aerial: 'tech'
   },
   {
@@ -506,100 +561,124 @@ export const HERO_ROSTER: HeroSpec[] = [
     smashRadius: 2.2,
     forms: [
       {
-        id: 'night-intercept',
-        label: 'Glide intercept',
-        abilities: ['Cape intercept', 'Silent takedown'],
+        id: 'night-patrol',
+        label: 'Night patrol — charcoal',
+        suitRole: 'balanced',
+        abilities: ['Cape glide', 'Silent takedown'],
         kitPrimary: 'web',
         speedMul: 1,
         powerMul: 1,
         color: [0.1, 0.12, 0.16]
       },
       {
-        id: 'batarang-barrage',
-        label: 'Batarang barrage',
-        abilities: ['Batarang volley', 'Ricochet cones'],
+        id: 'year-one',
+        label: 'Year One — earth cape',
+        suitRole: 'bulwark',
+        abilities: ['Smoke capsule', 'Armored cowl'],
         kitPrimary: 'web',
-        primaryCdMul: 0.7,
-        dmgMul: 0.95,
-        speedMul: 1.04,
+        resilienceMul: 1.2,
+        staminaRegenMul: 1.15,
+        dmgMul: 0.92,
+        speedMul: 0.98,
         powerMul: 1.02,
-        color: [0.12, 0.14, 0.2]
+        color: [0.32, 0.22, 0.15]
       },
       {
-        id: 'grapnel-zip',
-        label: 'Grapnel zip',
-        abilities: ['Grappling hook', 'Wall snare'],
-        kitPrimary: 'web',
-        rangeMul: 1.45,
-        dmgMul: 1.05,
-        speedMul: 1.08,
-        powerMul: 1,
-        color: [0.15, 0.16, 0.22]
-      },
-      {
-        id: 'smoke-veil',
-        label: 'Smoke veil',
-        abilities: ['Smoke capsule', 'EMP batarang'],
-        kitPrimary: 'web',
-        coneMul: 1.6,
-        dmgMul: 0.75,
-        speedMul: 1.02,
-        powerMul: 0.9,
-        color: [0.22, 0.24, 0.28]
-      },
-      {
-        id: 'explosive-foam',
-        label: 'Explosive gel',
-        abilities: ['Burst foam charge', 'Structural weaken'],
+        id: 'arkham',
+        label: 'Arkham — matte black',
+        suitRole: 'siege',
+        abilities: ['Explosive gel', 'Concussion batarang'],
         kitPrimary: 'beam',
-        dmgMul: 1.2,
-        superRadiusMul: 1.2,
+        dmgMul: 1.18,
+        superRadiusMul: 1.15,
         speedMul: 0.98,
         powerMul: 1.12,
-        color: [0.28, 0.22, 0.18]
+        color: [0.08, 0.1, 0.14]
+      },
+      {
+        id: 'detective',
+        label: 'Detective — earth tones',
+        suitRole: 'balanced',
+        abilities: ['Grapnel zip', 'Evidence scanner'],
+        kitPrimary: 'web',
+        rangeMul: 1.35,
+        speedMul: 1.02,
+        powerMul: 1,
+        color: [0.42, 0.35, 0.28]
+      },
+      {
+        id: 'batarang-barrage',
+        label: 'Animated — blue-gray',
+        suitRole: 'swift',
+        abilities: ['Batarang volley', 'Ricochet cones'],
+        kitPrimary: 'web',
+        primaryCdMul: 0.68,
+        flightAgilityMul: 1.12,
+        speedMul: 1.06,
+        powerMul: 1,
+        color: [0.12, 0.18, 0.35]
       },
       {
         id: 'tactical-jet',
-        label: 'Tactical jetpack',
+        label: 'Tactical jetpack rig',
+        suitRole: 'swift',
         abilities: ['Jet burst', 'Drop kick'],
         kitPrimary: 'repulsor',
+        flightAgilityMul: 1.1,
         speedMul: 1.12,
         powerMul: 1.08,
         color: [0.2, 0.22, 0.28]
       },
       {
         id: 'beyond-burn',
-        label: 'Beyond thrust',
+        label: 'Beyond — neon thrust',
+        suitRole: 'swift',
         abilities: ['Rocket boots', 'Sonic batarang'],
         kitPrimary: 'beam',
-        rangeMul: 1.15,
+        rangeMul: 1.12,
+        flightAgilityMul: 1.14,
         speedMul: 1.14,
-        powerMul: 1.1,
+        powerMul: 1.08,
         color: [0.85, 0.12, 0.12]
       },
       {
         id: 'hellbat-burn',
-        label: 'Inferno rig',
+        label: 'Inferno armor',
+        suitRole: 'siege',
         abilities: ['Thermal vent', 'Shock knuckle'],
         kitPrimary: 'beam',
-        dmgMul: 1.35,
-        superRadiusMul: 1.3,
-        speedMul: 1.05,
+        dmgMul: 1.32,
+        superRadiusMul: 1.28,
+        speedMul: 1.02,
         powerMul: 1.25,
         color: [0.62, 0.1, 0.08]
       },
       {
+        id: 'steel-ward',
+        label: 'Steel mantle',
+        suitRole: 'bulwark',
+        abilities: ['Ceramic plates', 'Shock foam'],
+        kitPrimary: 'web',
+        resilienceMul: 1.28,
+        staminaRegenMul: 1.2,
+        dmgMul: 0.9,
+        speedMul: 0.94,
+        powerMul: 1.05,
+        color: [0.35, 0.38, 0.42]
+      },
+      {
         id: 'grapple-lift',
-        label: 'Ceiling grapple',
+        label: 'Glider ascent rig',
+        suitRole: 'balanced',
         abilities: ['Ascender rig', 'Line lifts'],
         kitPrimary: 'web',
-        rangeMul: 1.2,
-        speedMul: 1.06,
+        rangeMul: 1.22,
+        speedMul: 1.05,
         powerMul: 1.02,
         color: [0.15, 0.16, 0.2]
       }
     ],
-    defaultFormId: 'night-intercept',
+    defaultFormId: 'night-patrol',
     aerial: 'glide'
   },
   {

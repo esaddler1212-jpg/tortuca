@@ -1,32 +1,44 @@
 # Flight Nemulator — character customization
 
-## Ability kit tier (deepest combat options)
+## Suit + ability tier (Iron Man, War Machine, Batman)
 
-| Hero | Codename | Kits | What you swap |
-|------|----------|------|----------------|
-| `tin-aviator` | Tin Aviator | **7** | Repulsors, unibeam, micro-missiles, rockets, EMP, siege frame, pulse lasers — each with distinct **range, cooldown, damage, super radius** |
-| `red-codriver` | Red Codriver | **7** | Salvo cannons, gatling, bunker buster, plasma, shock fists, SAM, orbital bracer |
-| `shade-knight` | Shade Knight | **9** | Glider, batarangs, grapple, smoke, explosive gel, jet / Beyond / inferno rigs |
+Each **suit** is one loadout row: paint/color on the mesh, a **role** tag, and a unique **ability pair** with combat tuning.
 
-HUD: **Ability kit** dropdown with per-kit ability list and SPD/PWR %. Selection persists in `localStorage` (`flight-nemulator-form-<heroId>`). Flight assist for Batman jet kits updates live via `effectiveHeroAerial()`.
+| Role | Tradeoff |
+|------|----------|
+| **Swift flight** | Higher speed/agility, lighter firepower |
+| **Siege power** | Heavy damage/supers, slower silhouette |
+| **Bulwark resilience** | Better stamina regen / boost efficiency, tankier |
+| **Balanced** | Default all-rounder |
 
-Cosmetic armor/cape libraries were removed from this tier on purpose — depth is in **abilities**, not paint chips.
+| Hero | Suits | Pair rival (wave 10 boss) |
+|------|-------|---------------------------|
+| `tin-aviator` | 9 | **Dr. Doom** |
+| `red-codriver` | 8 | **Brute Abom** |
+| `shade-knight` | 10 | **Laughing Harlequin** |
 
-## Standard tier (everyone else)
+Other heroes use their first scripted rival for the pair boss if no pin is set.
 
-| Kind | Examples | Customization |
-|------|----------|----------------|
-| **Dual forms** | Ki Wanderer ascended, Phoenix Ember, Solar Apex godmode | 2 forms — speed/power/color |
-| **Ring corps** | Hal / John / Guy / Kyle | 2 forms each + distinct default palette |
-| **Single loadout** | Nova, Comet Surfer | No picker (one silhouette) |
-| **Custom heroes** | Player-crafted | Primary color + power at create time |
+HUD: **Suits & abilities** — grouped by role, color swatch, ability list, SPD/PWR (and RES% on bulwark suits).
+
+## Final pair duel
+
+- Hero role, **wave 10**: regular waves pause, pair rival spawns as an oversized boss that **chases you** (not building siege).
+- Warning ~3 waves earlier; HUD shows incoming/active/defeated + boss HP%.
+- Boss pressure drains stamina when close — **bulwark** suits help.
+- Defeating the pair rival resumes normal waves.
+
+## Standard tier
+
+Dual-form heroes, Lantern corps, custom heroes — unchanged (two forms or create-time color).
 
 ## Technical
 
-- Data: `HeroForm.abilities`, `kitPrimary`, combat multipliers (`hero-roster.ts`)
-- Combat: `primaryStrikeParams(hero, powerMul, form)` (`combat.ts`)
-- UI: `listHeroLoadouts()` (`hero-customization.ts`)
+- `HeroForm`: `suitRole`, `abilities`, `kitPrimary`, combat multipliers, `resilienceMul` / `flightAgilityMul`
+- `hero-pair-boss.ts`: spawn + pinned pairs
+- `faction-npcs.ts`: `isPairBoss` chase AI
 
 ## CI
 
-`tsx scripts/check-hero-loadouts.mts` — Iron Man, War Machine, and Batman each have many ability kits with at least two named abilities per kit and **no** `suitVariants`.
+- `check-hero-loadouts.mts` — suit counts, abilities, roles
+- `check-pair-boss.mts` — pair mappings

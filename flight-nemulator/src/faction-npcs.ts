@@ -13,6 +13,7 @@ import { pickVillainClone, type VillainCloneSpec } from './villain-roster';
 export type FactionNpc = {
   entity: Entity;
   hp: number;
+  maxHp?: number;
   speed: number;
   /** Villain raiders siege buildings; hero interceptors chase the player */
   allegiance: 'villain' | 'hero';
@@ -21,6 +22,7 @@ export type FactionNpc = {
   profileId: string;
   codename: string;
   siegeMul: number;
+  isPairBoss?: boolean;
 };
 
 export function waveNpcCount(wave: number, wantedStars: number, role: PlayerRole): number {
@@ -163,25 +165,32 @@ export function tickFactionNpcs(
     const p = n.entity.getPosition();
 
     if (n.allegiance === 'villain' && role === 'hero') {
-      if (!n.targetTag || !n.targetTag.intact) {
-        n.targetTag = nearestSiegeTarget(tags, p) ?? undefined;
-      }
-      const target = n.targetTag;
-      if (target) {
-        const tp = target.entity.getPosition();
-        const dir = new Vec3(tp.x - p.x, tp.y + target.h * 0.3 - p.y, tp.z - p.z);
-        const len = dir.length();
-        if (len > 2) {
-          dir.normalize();
-          n.entity.setPosition(p.x + dir.x * n.speed * dt, p.y + dir.y * n.speed * dt, p.z + dir.z * n.speed * dt);
-        } else {
-          n.siegeCd -= dt;
-          if (n.siegeCd <= 0) {
-            n.siegeCd = 0.9 + Math.random() * 0.4;
-            const hit = smashDestructible(app, root, target, tier, tp);
-            if (hit) {
-              applyRaiderSiege(city, hit.costUsd * n.siegeMul);
-              n.targetTag = undefined;
+      if (n.isPairBoss) {
+        const dir = new Vec3(playerPos.x - p.x, playerPos.y - p.y, playerPos.z - p.z);
+        if (dir.length() > 0.01) dir.normalize();
+        const chase = n.speed * 1.15;
+        n.entity.setPosition(p.x + dir.x * chase * dt, p.y + dir.y * chase * dt, p.z + dir.z * chase * dt);
+      } else {
+        if (!n.targetTag || !n.targetTag.intact) {
+          n.targetTag = nearestSiegeTarget(tags, p) ?? undefined;
+        }
+        const target = n.targetTag;
+        if (target) {
+          const tp = target.entity.getPosition();
+          const dir = new Vec3(tp.x - p.x, tp.y + target.h * 0.3 - p.y, tp.z - p.z);
+          const len = dir.length();
+          if (len > 2) {
+            dir.normalize();
+            n.entity.setPosition(p.x + dir.x * n.speed * dt, p.y + dir.y * n.speed * dt, p.z + dir.z * n.speed * dt);
+          } else {
+            n.siegeCd -= dt;
+            if (n.siegeCd <= 0) {
+              n.siegeCd = 0.9 + Math.random() * 0.4;
+              const hit = smashDestructible(app, root, target, tier, tp);
+              if (hit) {
+                applyRaiderSiege(city, hit.costUsd * n.siegeMul);
+                n.targetTag = undefined;
+              }
             }
           }
         }

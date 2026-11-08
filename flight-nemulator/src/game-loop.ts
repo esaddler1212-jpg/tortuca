@@ -51,6 +51,12 @@ import { kitHudLabel } from './hero-customization';
 import { effectiveHeroAerial, resolveHeroForm, storedFormId } from './hero-forms';
 import { spawnAtHome } from './districts';
 import { HeroFlightController } from './hero-flight';
+import {
+  PAIR_BOSS_WAVE,
+  pairBossHpPercent,
+  pairVillainCodename,
+  spawnPairBoss
+} from './hero-pair-boss';
 import { bindFlightKeys, pollFlightInput } from './game-input';
 import { setHudSnapshot } from './game-bridge';
 import { detectQualityTier, type QualityTier } from './quality-tier';
@@ -105,6 +111,7 @@ export type GameSession = {
   stats: SessionStats;
   foesStopped: number;
   worldFate: WorldFateState;
+  pairBoss: { spawned: boolean; defeated: boolean; warned: boolean };
 };
 
 let session: GameSession | null = null;
@@ -194,7 +201,8 @@ export async function startGame(app: AppBase): Promise<void> {
     camera,
     stats: loadSessionStats(),
     foesStopped: 0,
-    worldFate: createWorldFate()
+    worldFate: createWorldFate(),
+    pairBoss: { spawned: false, defeated: false, warned: false }
   };
 
   app.on('update', (dt: number) => {
@@ -368,11 +376,42 @@ function tickFrame(s: GameSession, dt: number): void {
     playWaveAlert();
   }
 
+  const pairBossNpc = s.factionNpcs.find((n) => n.isPairBoss);
+  const pairBossAlive = s.pairBoss.spawned && !s.pairBoss.defeated && !!pairBossNpc;
+
+  if (
+    s.playerRole === 'hero' &&
+    !s.pairBoss.defeated &&
+    s.wave >= PAIR_BOSS_WAVE - 3 &&
+    !s.pairBoss.warned
+  ) {
+    s.pairBoss.warned = true;
+    playWaveAlert();
+  }
+
   const maxNpcs =
     s.playerRole === 'hero' ? 6 + Math.floor(s.wave / 2) : 8 + s.wanted.stars * 3;
   s.waveCooldown -= chrono.chronoFrozen ? simDt : dt;
   const roamQuiet = s.worldFate.phase === 'dying_roam';
-  if (!roamQuiet && !chrono.chronoFrozen && s.waveCooldown <= 0 && s.factionNpcs.length < maxNpcs) {
+  const canSpawnWaves = !pairBossAlive && (s.pairBoss.defeated || !s.pairBoss.spawned);
+  if (!roamQuiet && !chrono.chronoFrozen && canSpawnWaves && s.waveCooldown <= 0 && s.factionNpcs.length < maxNpcs) {
+  if (
+    s.playerRole === 'hero' &&
+    !s.pairBoss.spawned &&
+    !s.pairBoss.defeated &&
+    s.wave + 1 >= PAIR_BOSS_WAVE
+  ) {
+    s.wave += 1;
+    for (const n of [...s.factionNpcs]) {
+      s.root.removeChild(n.entity);
+      n.entity.destroy();
+    }
+    s.factionNpcs = [spawnPairBoss(s.app, s.root, pos, s.heroSpec.id)];
+    s.pairBoss.spawned = true;
+    s.waveCooldown = 30;
+    playWaveAlert();
+    addScreenShake(0.75);
+  } else {
     s.wave += 1;
     const cd = s.playerRole === 'hero' ? 14 : Math.max(4, 12 - s.wave * 0.4 - s.wanted.stars);
     s.waveCooldown = cd;
@@ -380,6 +419,16 @@ function tickFrame(s: GameSession, dt: number): void {
     const batch = spawnFactionWave(s.app, s.root, pos, count, s.playerRole, s.heroSpec.id, s.wave);
     s.factionNpcs.push(...batch);
     playWaveAlert();
+  }
+  }
+
+  if (pairBossNpc) {
+    const bp = pairBossNpc.entity.getPosition();
+    const dist = new Vec3(bp.x - pos.x, bp.y - pos.y, bp.z - pos.z).length();
+    if (dist < 42) {
+      const res = s.heroForm.resilienceMul ?? 1;
+      s.hero.stamina = Math.max(0, s.hero.stamina - (10 * simDt) / res);
+    }
   }
   const kills = tickFactionNpcs(
     s.factionNpcs,
@@ -395,6 +444,13 @@ function tickFrame(s: GameSession, dt: number): void {
   if (kills > 0) {
     s.foesStopped += kills;
     s.stats = saveSessionStats({ dronesDestroyed: s.stats.dronesDestroyed + kills });
+  }
+
+  if (s.pairBoss.spawned && !s.pairBoss.defeated && !s.factionNpcs.some((n) => n.isPairBoss)) {
+    s.pairBoss.defeated = true;
+    s.waveCooldown = 16;
+    playSuper();
+    addScreenShake(1.1);
   }
   tickDebris(dt, s.root);
   tickTrails(dt, s.root);
@@ -413,6 +469,8 @@ function tickFrame(s: GameSession, dt: number): void {
   saveSessionStats({ destructionUsd: lifetimeDestruction, wavesCleared: s.wave });
 
   const chron = getChronoState();
+  const bossForHud = s.factionNpcs.find((n) => n.isPairBoss);
+  const bossAliveHud = s.pairBoss.spawned && !s.pairBoss.defeated && !!bossForHud;
   setHudSnapshot({
     heroName: s.heroSpec.codename,
     codename: s.heroSpec.tagline,
@@ -447,6 +505,18 @@ function tickFrame(s: GameSession, dt: number): void {
     nearestFoe: nearestFoeCodename(s.factionNpcs, s.playerRole, pos),
     villainRivals:
       s.playerRole === 'hero' ? villainRivalsForHero(s.heroSpec.id).slice(0, 4) : undefined,
+    pairBossName: s.playerRole === 'hero' ? pairVillainCodename(s.heroSpec.id) : null,
+    pairBossHpPct: pairBossHpPercent(bossForHud),
+    pairBossStatus:
+      s.playerRole !== 'hero'
+        ? null
+        : s.pairBoss.defeated
+          ? 'defeated'
+          : bossAliveHud
+            ? 'active'
+            : s.pairBoss.warned && !s.pairBoss.spawned
+              ? 'incoming'
+              : null,
     fatePrompt: s.worldFate.fatePrompt,
     dyingRoamSeconds: dyingRoamSecondsLeft(s.worldFate, nowMs),
     worldFatePhase: s.worldFate.phase,

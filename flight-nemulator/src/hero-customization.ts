@@ -1,9 +1,9 @@
-import type { HeroForm, HeroSpec } from './hero-roster';
+import type { HeroForm, HeroSpec, SuitRole } from './hero-roster';
 
-/** Heroes with swappable ability kits (not big cosmetic libraries). */
+/** Heroes with combined suit + ability loadouts. */
 export const ABILITY_KIT_HERO_IDS = new Set(['tin-aviator', 'red-codriver', 'shade-knight']);
 
-export type LoadoutGroup = 'kit' | 'form';
+export type LoadoutGroup = SuitRole | 'form' | 'kit';
 
 export interface LoadoutOption {
   id: string;
@@ -13,7 +13,15 @@ export interface LoadoutOption {
   speedMul: number;
   powerMul: number;
   abilities: string[];
+  suitRole?: SuitRole;
 }
+
+const ROLE_LABEL: Record<SuitRole, string> = {
+  swift: 'Swift flight',
+  siege: 'Siege power',
+  bulwark: 'Bulwark resilience',
+  balanced: 'Balanced'
+};
 
 export function isAbilityKitHero(heroId: string): boolean {
   return ABILITY_KIT_HERO_IDS.has(heroId);
@@ -26,30 +34,40 @@ export function listHeroLoadouts(spec: HeroSpec): LoadoutOption[] {
   return spec.forms.map((f) => ({
     id: f.id,
     label: f.label,
-    group: isAbilityKitHero(spec.id) ? 'kit' : 'form',
+    group: (f.suitRole ?? (isAbilityKitHero(spec.id) ? 'kit' : 'form')) as LoadoutGroup,
     color: f.color,
     speedMul: f.speedMul,
     powerMul: f.powerMul,
-    abilities: f.abilities ?? []
+    abilities: f.abilities ?? [],
+    suitRole: f.suitRole
   }));
+}
+
+export function suitRoleLabel(role: SuitRole | undefined): string {
+  return role ? ROLE_LABEL[role] : 'Loadout';
 }
 
 export function kitHudLabel(form: HeroForm): string {
   const spd = Math.round(form.speedMul * 100);
   const pwr = Math.round(form.powerMul * 100);
+  const role = form.suitRole ? ROLE_LABEL[form.suitRole] : '';
   const tail = form.abilities?.length ? form.abilities.join(' · ') : form.label;
-  return `${form.label} · ${tail} · SPD ${spd}% · PWR ${pwr}%`;
+  const prefix = role ? `${role} · ` : '';
+  return `${form.label} · ${prefix}${tail} · SPD ${spd}% · PWR ${pwr}%`;
 }
 
 export function loadoutStatsLabel(form: HeroForm): string {
   const spd = Math.round(form.speedMul * 100);
   const pwr = Math.round(form.powerMul * 100);
-  return `SPD ${spd}% · PWR ${pwr}%`;
+  const res = form.resilienceMul ? ` · RES ${Math.round(form.resilienceMul * 100)}%` : '';
+  return `SPD ${spd}% · PWR ${pwr}%${res}`;
 }
 
 export function customizationBlurb(heroId: string): string | null {
-  if (heroId === 'tin-aviator') return 'Swap repulsor, unibeam, missiles, and siege tools mid-flight.';
-  if (heroId === 'red-codriver') return 'Shoulder cannons, miniguns, plasma, and bunker busters.';
-  if (heroId === 'shade-knight') return 'Gadgets, grapples, smoke, and jet rigs — not costume closets.';
+  if (heroId === 'tin-aviator') {
+    return 'Pick a suit — each paint job bundles different abilities and flight vs. power vs. armor.';
+  }
+  if (heroId === 'red-codriver') return 'Armor liveries with heavy, fast, or tank loadouts.';
+  if (heroId === 'shade-knight') return 'Capes, jets, and armor sets — gadget kits per silhouette.';
   return null;
 }

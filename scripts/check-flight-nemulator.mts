@@ -22,6 +22,7 @@ const required = [
   'src/aerial-mobility.ts',
   'src/roster-mutations.ts',
   'src/hero-customization.ts',
+  'src/hero-pair-boss.ts',
   'src/hero-rivals.ts',
   'src/world-fate.ts',
   'src/world-persist.ts',
@@ -42,6 +43,12 @@ const loadouts = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-hero-lo
   stdio: 'inherit'
 });
 if (loadouts.status !== 0) process.exit(loadouts.status ?? 1);
+
+const pairBoss = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-pair-boss.mts')], {
+  cwd: root,
+  stdio: 'inherit'
+});
+if (pairBoss.status !== 0) process.exit(pairBoss.status ?? 1);
 
 const audit = spawnSync('npx', ['tsx', path.join(root, 'scripts/audit-aerial-roster.mts')], {
   cwd: root,
