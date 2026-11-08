@@ -2,21 +2,37 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 const root = path.resolve(import.meta.dirname, '..');
-const catalog = path.join(root, 'gamedev-resources', 'tortuca-playcanvas.json');
-const pin = path.join(root, 'gamedev-resources', 'upstream-pin.json');
-const install = path.join(root, 'tools/gamedev-resources/install-free-packs.sh');
+const files = [
+  'gamedev-resources/tortuca-playcanvas.json',
+  'gamedev-resources/tortuca-public-apis.json',
+  'gamedev-resources/tortuca-game-engines.json',
+  'gamedev-resources/upstream-pin.json',
+  'tools/gamedev-resources/install-free-packs.sh',
+  'docs/BLOCKBENCH_WORKFLOW.md'
+];
 
-for (const f of [catalog, pin, install]) {
+for (const rel of files) {
+  const f = path.join(root, rel);
   if (!existsSync(f)) {
     console.error(`gamedev-resources missing ${f}`);
     process.exit(1);
   }
 }
 
-const data = JSON.parse(readFileSync(catalog, 'utf8')) as { entries: unknown[] };
-if (!data.entries?.length) {
-  console.error('tortuca-playcanvas.json has no entries');
+const play = JSON.parse(readFileSync(path.join(root, 'gamedev-resources/tortuca-playcanvas.json'), 'utf8')) as {
+  entries: unknown[];
+};
+const apis = JSON.parse(readFileSync(path.join(root, 'gamedev-resources/tortuca-public-apis.json'), 'utf8')) as {
+  entries: unknown[];
+};
+if (!play.entries?.length || !apis.entries?.length) {
+  console.error('catalog missing entries');
   process.exit(1);
 }
 
-console.log(`check-gamedev-resources: ok (${data.entries.length} entries, upstream ${JSON.parse(readFileSync(pin, 'utf8')).commit?.slice(0, 8)})`);
+const pin = JSON.parse(readFileSync(path.join(root, 'gamedev-resources/upstream-pin.json'), 'utf8')) as {
+  kavexGameDevResources?: { commit?: string };
+};
+console.log(
+  `check-gamedev-resources: ok (play=${play.entries.length} apis=${apis.entries.length} kavex=${pin.kavexGameDevResources?.commit?.slice(0, 8)})`
+);

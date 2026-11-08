@@ -1,8 +1,17 @@
 {
-  "repo": "https://github.com/Kavex/GameDev-Resources",
-  "commit": "f7c89aae1128fe1ab5f5acaec4c1ab76ee87c7c3",
-  "syncedAt": "2026-11-08T15:59:57.341Z",
-  "readmeLines": 573,
-  "catalogEntries": 16,
-  "spotCheckMissing": 0
+  "syncedAt": "2026-11-08T16:06:40.090Z",
+  "kavexGameDevResources": {
+    "repo": "https://github.com/Kavex/GameDev-Resources",
+    "commit": "f7c89aae1128fe1ab5f5acaec4c1ab76ee87c7c3"
+  },
+  "publicApis": {
+    "repo": "https://github.com/public-apis/public-apis",
+    "commit": "88706670ac0ffaad7bf3c6307747e2515f638bed"
+  },
+  "blockbench": {
+    "repo": "https://github.com/JannisX11/blockbench",
+    "commit": "ec0b2827104d0799c153bfb5f867579c0c44652f"
+  },
+  "githubCollectionGameEngines": "https://github.com/collections/game-engines",
+  "catalogEntries": 16
 }

@@ -12,6 +12,8 @@ npm run dev
 
 Production build: `npm run build` → `dist/` (static deploy like `drive-world`).
 
+**Free assets:** see [`GAMEDEV_RESOURCES.md`](./GAMEDEV_RESOURCES.md). Optional Kenney audio/city GLBs: `bash tools/gamedev-resources/install-free-packs.sh --all` from repo root.
+
 ## Design (v1)
 
 | Area | Behavior |

@@ -3,7 +3,7 @@ import { getHudSnapshot, setTouchFlight } from '../game-bridge';
 import { HERO_ROSTER } from '../hero-roster';
 import { selectHero } from '../game-loop';
 import { loadCustomHeroes, saveCustomHero, type CustomHeroDraft } from '../custom-hero';
-import { researchNewHeroIdeas } from '../character-research';
+import { researchHeroBundle } from '../character-research';
 import { Minimap } from './Minimap';
 import { setQualityOverride } from '../game-settings';
 import { downloadPhoto } from '../photo-mode';
@@ -172,6 +172,7 @@ function SuitPicker({ heroId }: { heroId: string }) {
 function CreateHeroPanel({ onCreated }: { onCreated: (id: string) => void }) {
   const [name, setName] = useState('Sky Forger');
   const [ideas, setIdeas] = useState<string[]>([]);
+  const [assets, setAssets] = useState<string[]>([]);
 
   return (
     <div style={{ marginTop: 10, fontSize: '0.85rem' }}>
@@ -202,13 +203,19 @@ function CreateHeroPanel({ onCreated }: { onCreated: (id: string) => void }) {
         type="button"
         style={{ marginTop: 6, width: '100%' }}
         onClick={async () => {
-          const drafts = await researchNewHeroIdeas(name);
+          const { drafts, cc0Assets } = await researchHeroBundle(name);
           setIdeas(drafts.map((d) => `${d.codename}: ${d.tagline}`));
+          setAssets(cc0Assets.map((a) => `CC0: ${a.title}`));
         }}
       >
         Research ideas (offline ok)
       </button>
       {ideas.map((line) => (
+        <div key={line} className="hud-tag">
+          {line}
+        </div>
+      ))}
+      {assets.map((line) => (
         <div key={line} className="hud-tag">
           {line}
         </div>

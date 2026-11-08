@@ -1,49 +1,41 @@
 import { spawnSync } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 const root = path.resolve(import.meta.dirname, '..');
 const pinPath = path.join(root, 'gamedev-resources', 'upstream-pin.json');
 const catalogPath = path.join(root, 'gamedev-resources', 'tortuca-playcanvas.json');
 
-const clone = spawnSync(
-  'git',
-  ['clone', '--depth', '1', 'https://github.com/Kavex/GameDev-Resources.git', '/tmp/kavex-gdr-sync'],
-  { stdio: 'pipe', encoding: 'utf8' }
-);
-if (clone.status !== 0) {
-  console.error('sync-gamedev-resources: clone failed', clone.stderr);
-  process.exit(1);
+function shallowRev(repo: string, dir: string): string {
+  rmSync(dir, { recursive: true, force: true });
+  const clone = spawnSync('git', ['clone', '--depth', '1', repo, dir], { stdio: 'pipe', encoding: 'utf8' });
+  if (clone.status !== 0) return '';
+  const rev = spawnSync('git', ['-C', dir, 'rev-parse', 'HEAD'], { encoding: 'utf8' });
+  return rev.stdout?.trim() ?? '';
 }
 
-const rev = spawnSync('git', ['-C', '/tmp/kavex-gdr-sync', 'rev-parse', 'HEAD'], {
-  encoding: 'utf8'
-});
-const readme = readFileSync('/tmp/kavex-gdr-sync/README.md', 'utf8');
-const catalog = JSON.parse(readFileSync(catalogPath, 'utf8')) as { entries: { url: string }[] };
+const kavexRev = shallowRev('https://github.com/Kavex/GameDev-Resources.git', '/tmp/kavex-gdr-sync');
+const apisRev = shallowRev('https://github.com/public-apis/public-apis.git', '/tmp/public-apis-sync');
+const blockRev = shallowRev('https://github.com/JannisX11/blockbench.git', '/tmp/blockbench-sync');
 
-let missing = 0;
-for (const e of catalog.entries) {
-  const host = new URL(e.url).hostname.replace(/^www\./, '');
-  if (!readme.includes(host.split('.')[0])) {
-    /* loose check — many URLs still valid if README reshuffles */
-  }
-}
+const catalog = JSON.parse(readFileSync(catalogPath, 'utf8')) as { entries: unknown[] };
 
 writeFileSync(
   pinPath,
   JSON.stringify(
     {
-      repo: 'https://github.com/Kavex/GameDev-Resources',
-      commit: rev.stdout.trim(),
       syncedAt: new Date().toISOString(),
-      readmeLines: readme.split('\n').length,
-      catalogEntries: catalog.entries.length,
-      spotCheckMissing: missing
+      kavexGameDevResources: kavexRev ? { repo: 'https://github.com/Kavex/GameDev-Resources', commit: kavexRev } : null,
+      publicApis: apisRev ? { repo: 'https://github.com/public-apis/public-apis', commit: apisRev } : null,
+      blockbench: blockRev ? { repo: 'https://github.com/JannisX11/blockbench', commit: blockRev } : null,
+      githubCollectionGameEngines: 'https://github.com/collections/game-engines',
+      catalogEntries: catalog.entries.length
     },
     null,
     2
   )
 );
 
-console.log(`sync-gamedev-resources: pinned ${rev.stdout.trim().slice(0, 8)} (${catalog.entries.length} curated entries)`);
+console.log(
+  `sync-gamedev-resources: kavex=${kavexRev.slice(0, 8)} public-apis=${apisRev.slice(0, 8)} blockbench=${blockRev.slice(0, 8)}`
+);

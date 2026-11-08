@@ -1,12 +1,19 @@
 # GameDev resources for Tortuca games
 
-We use [Kavex/GameDev-Resources](https://github.com/Kavex/GameDev-Resources) as the **master index** and maintain a smaller [**Tortuca PlayCanvas catalog**](../gamedev-resources/tortuca-playcanvas.json) for agents and humans.
+We comb multiple **free resource indexes**:
+
+| Source | Tortuca slice |
+|--------|----------------|
+| [Kavex/GameDev-Resources](https://github.com/Kavex/GameDev-Resources) | [`tortuca-playcanvas.json`](../gamedev-resources/tortuca-playcanvas.json) — assets, audio, tools |
+| [public-apis/public-apis](https://github.com/public-apis/public-apis) | [`tortuca-public-apis.json`](../gamedev-resources/tortuca-public-apis.json) — browser-safe APIs |
+| [GitHub **game-engines** collection](https://github.com/collections/game-engines) | [`tortuca-game-engines.json`](../gamedev-resources/tortuca-game-engines.json) |
+| [JannisX11/blockbench](https://github.com/JannisX11/blockbench) | [`BLOCKBENCH_WORKFLOW.md`](./BLOCKBENCH_WORKFLOW.md) — hero GLB pipeline |
 
 ## Quick commands
 
 | Command | Purpose |
 |---------|---------|
-| `npm run gamedev-resources:sync` | Pin upstream GameDev-Resources commit |
+| `npm run gamedev-resources:sync` | Pin upstream commits (Kavex + public-apis) |
 | `bash tools/gamedev-resources/install-free-packs.sh --all` | Pull CC0 Kenney audio + city GLBs locally |
 
 ## Already in repo

@@ -5,7 +5,12 @@ Curated **100% free** entries from [Kavex/GameDev-Resources](https://github.com/
 - [`drive-world/`](../drive-world/) — City Nights driving
 - [`flight-nemulator/`](../flight-nemulator/) — hero flight sandbox
 
-Machine-readable list: [`tortuca-playcanvas.json`](./tortuca-playcanvas.json).
+Machine-readable lists:
+
+- [`tortuca-playcanvas.json`](./tortuca-playcanvas.json) — art/audio/tools (from Kavex)
+- [`tortuca-public-apis.json`](./tortuca-public-apis.json) — APIs (`public-apis` list + Tortuca wiring)
+- [`tortuca-game-engines.json`](./tortuca-game-engines.json) — GitHub [game-engines](https://github.com/collections/game-engines) collection
+- [`BLOCKBENCH_WORKFLOW.md`](../docs/BLOCKBENCH_WORKFLOW.md) — Blockbench → glTF → PlayCanvas
 
 ## Sync upstream index
 
