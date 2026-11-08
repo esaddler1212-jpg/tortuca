@@ -75,9 +75,10 @@ npm run dev
 ## Art direction (locked)
 
 - **Low-poly Bay Area at night** — Karl-the-fog palette, sodium streetlights, International Orange bridge accents
-- **Geography (stylised)** — bay on **+Z (east)**; hills rise toward **−Z (west)**; downtown stacks near origin; water + bridge meshes in `build-bay.ts`
-- **Freeways** — cross arterials (101 / 80-ish); no events, just drive
-- Code: `night-palette.ts`, `bay-terrain.ts`, `build-city.ts`, `build-bay.ts`
+- **SF → Vallejo** — three mini districts (`DISTRICTS` in `world-config.ts`): **San Francisco** (hills, tall blocks), **East Bay** (mid-rise along the bay), **Vallejo** (flat/wide waterfront)
+- **Drivable freeway** — `FREEWAY_ROUTE` + collision decks in `build-freeway.ts`: on-ramps at ground level, **elevated Bay Bridge section**, then I-80 north-east into Vallejo
+- Spawn in SF near I-80; follow the lit corridor to Vallejo (compressed ~2.5 km game scale)
+- Code: `build-districts.ts`, `build-freeway.ts`, `build-bay.ts`, `bay-terrain.ts`
 
 ## Map shape (still open)
 

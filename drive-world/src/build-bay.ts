@@ -1,24 +1,9 @@
 import { Color, Entity, StandardMaterial, type AppBase } from 'playcanvas';
 
-import { BAY_BRIDGE_ORANGE, BAY_WATER_DEEP, BAY_WATER_GLOW } from './night-palette';
-import { BAY_WATER_CENTER_Z, BAY_WATER_DEPTH_M, WORLD_HALF_M } from './world-config';
+import { BAY_WATER_DEEP, BAY_WATER_GLOW } from './night-palette';
+import { BAY_WATER_BOUNDS, WORLD_HALF_M } from './world-config';
 
-function bridgeMaterial(orange: boolean): StandardMaterial {
-  const mat = new StandardMaterial();
-  if (orange) {
-    mat.diffuse = BAY_BRIDGE_ORANGE;
-    mat.emissive = BAY_BRIDGE_ORANGE;
-    mat.emissiveIntensity = 0.35;
-  } else {
-    mat.diffuse = new Color(0.18, 0.2, 0.22);
-    mat.metalness = 0.35;
-    mat.gloss = 0.4;
-  }
-  mat.update();
-  return mat;
-}
-
-/** San Francisco Bay water plane (east). */
+/** San Francisco Bay between districts (under the bridge corridor). */
 export function buildBayWater(app: AppBase): void {
   const water = new StandardMaterial();
   water.diffuse = BAY_WATER_DEEP;
@@ -28,57 +13,23 @@ export function buildBayWater(app: AppBase): void {
   water.metalness = 0.05;
   water.update();
 
+  const cx = (BAY_WATER_BOUNDS.minX + BAY_WATER_BOUNDS.maxX) * 0.5;
+  const cz = BAY_WATER_BOUNDS.centerZ;
+  const w = BAY_WATER_BOUNDS.maxX - BAY_WATER_BOUNDS.minX;
+  const d = BAY_WATER_BOUNDS.depthZ;
+
   const bay = new Entity('sf-bay');
-  bay.setLocalScale(WORLD_HALF_M * 2.2, 0.08, BAY_WATER_DEPTH_M);
-  bay.setPosition(0, -0.05, BAY_WATER_CENTER_Z);
+  bay.setLocalScale(w, 0.08, d);
+  bay.setPosition(cx, -0.12, cz);
   bay.addComponent('render', { type: 'box', material: water });
   app.root.addChild(bay);
-}
 
-/** Low-poly Golden Gate–inspired span (west), Bay Bridge–style east span over water. */
-export function buildBayBridges(app: AppBase): void {
-  const orange = bridgeMaterial(true);
-  const steel = bridgeMaterial(false);
-
-  const gateZ = -520;
-  const deck = new Entity('golden-gate-deck');
-  deck.setLocalScale(320, 4, 12);
-  deck.setPosition(0, 38, gateZ);
-  deck.addComponent('render', { type: 'box', material: orange });
-  app.root.addChild(deck);
-
-  for (const sx of [-155, 155]) {
-    const tower = new Entity(`gate-tower-${sx}`);
-    tower.setLocalScale(8, 98, 8);
-    tower.setPosition(sx, 49, gateZ);
-    tower.addComponent('render', { type: 'box', material: orange });
-    app.root.addChild(tower);
-  }
-
-  const cables = new Entity('gate-cables');
-  cables.setLocalScale(300, 1.2, 1.2);
-  cables.setPosition(0, 78, gateZ - 6);
-  cables.addComponent('render', { type: 'box', material: orange });
-  app.root.addChild(cables);
-
-  const bayBridgeZ = 720;
-  const bayDeck = new Entity('bay-bridge-deck');
-  bayDeck.setLocalScale(480, 3.5, 14);
-  bayDeck.setPosition(40, 26, bayBridgeZ);
-  bayDeck.addComponent('render', { type: 'box', material: steel });
-  app.root.addChild(bayDeck);
-
-  for (const tx of [-180, -60, 80, 200]) {
-    const pier = new Entity(`bay-pier-${tx}`);
-    pier.setLocalScale(7, 32, 7);
-    pier.setPosition(tx, 16, bayBridgeZ);
-    pier.addComponent('render', { type: 'box', material: steel });
-    app.root.addChild(pier);
-  }
-
-  const accent = new Entity('bay-bridge-accent');
-  accent.setLocalScale(480, 0.8, 2);
-  accent.setPosition(40, 28.5, bayBridgeZ);
-  accent.addComponent('render', { type: 'box', material: orange });
-  app.root.addChild(accent);
+  const fringe = new Entity('bay-fringe');
+  fringe.setLocalScale(WORLD_HALF_M * 2, 0.06, WORLD_HALF_M * 2);
+  fringe.setPosition(0, -0.25, 0);
+  const fringeMat = new StandardMaterial();
+  fringeMat.diffuse = new Color(0.04, 0.05, 0.06);
+  fringeMat.update();
+  fringe.addComponent('render', { type: 'box', material: fringeMat });
+  app.root.addChild(fringe);
 }

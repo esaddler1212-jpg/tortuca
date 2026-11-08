@@ -24,7 +24,7 @@ import {
 
 import { buildDrivingWorld } from './build-world';
 import { NIGHT_AMBIENT, NIGHT_SKY } from './night-palette';
-import { DRIVE_TUNING, WORLD_HALF_M } from './world-config';
+import { DRIVE_TUNING, SPAWN_SF, WORLD_HALF_M } from './world-config';
 
 WasmModule.setConfig('Ammo', {
   glueUrl: './ammo/ammo.wasm.js',
@@ -137,7 +137,7 @@ vehicle.script!.create('vehicle', {
   }
 });
 vehicle.script!.create('vehicleControls');
-vehicle.setLocalPosition(0, 1.5, 0);
+vehicle.setLocalPosition(SPAWN_SF.x, SPAWN_SF.y + 0.5, SPAWN_SF.z);
 
 const chassis = new Entity('chassis');
 chassis.addComponent('collision', { type: 'box', halfExtents: new Vec3(0.95, 0.4, 1.9) });

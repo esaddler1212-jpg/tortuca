@@ -1,6 +1,6 @@
 # Drive World (prototype)
 
-PlayCanvas + Ammo **raycast vehicle** in a **low-poly Bay Area night** — fog, bay water to the east, orange bridge spans, hill-grade blocks; drive as fast as you want.
+PlayCanvas + Ammo **raycast vehicle** on **I-80 from mini San Francisco to mini Vallejo** — drivable freeway + Bay Bridge deck, East Bay in between; low-poly night fog.
 
 ```bash
 npm install
