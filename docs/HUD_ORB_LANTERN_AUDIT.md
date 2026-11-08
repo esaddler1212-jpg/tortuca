@@ -11,8 +11,7 @@ App.tsx
 │   └── CoreRing kara={combo135 && karaOrb}
 │       └── KaraFilamentOrb ← useHudAccent() → CSS --accent-*
 ├── ParticleCoreBackdrop (combo particle viz; uses accent utilities)
-└── LanternUnlockGate (?irisEmbed=1&irisTheme=<mode>)
-        └── public/lantern/index.html (bootstrap clone, CC BY-NC)
+└── Lantern ritual → God's Eye only (`gods-eye/LANTERN_RITUAL.md`)
 ```
 
 | Pref (`hudPrefs`) | Default | Effect |
@@ -20,7 +19,7 @@ App.tsx
 | `combo135` | on | Reactor layout + command deck + particle slot |
 | `karaOrb` | on | Filament canvas instead of static cyan “eye” |
 | `particleViz` | `orbits` | Behind-ring particles |
-| `lanternUnlock` | on | Once-per-day full-screen gate |
+| `voicePersona` | auto | JARVIS / FRIDAY motion skin (Settings → HUD) |
 | `reactorSkin` | on | Phone hold-to-talk chrome (accent-themed, not hard-coded pink) |
 
 Storage: `src/lib/hudPrefs.ts` (localStorage, `_v` migrations).
@@ -46,10 +45,10 @@ Storage: `src/lib/hudPrefs.ts` (localStorage, `_v` migrations).
 3. **Where** — Filament orb is on **home** (lg command deck), not inside every module.
 4. **PWA cache** — hard refresh after deploy; service worker may serve old JS.
 
-## Lantern unlock
+## Lantern (God's Eye only — not IRIS home)
 
 1. `npm run lantern:bootstrap` clones [futurist-lantern](https://github.com/htongyai/futurist-lantern) → `public/lantern/` (gitignored).
-2. **Netlify:** `netlify.toml` runs `lantern:bootstrap` before `build`.
+2. See **`gods-eye/LANTERN_RITUAL.md`**; IRIS Netlify build does not bootstrap lantern by default.
 3. `futurist-lantern/bootstrap.sh` patches:
    - John's lantern oath (HTML + TTS via `__IRIS_EMBED_OATH`)
    - `postMessage({ type: 'iris:lantern-complete' })`

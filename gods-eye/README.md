@@ -2,6 +2,8 @@
 
 This folder does **not** ship the [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view) app inside the IRIS repo (heavy `node_modules`, `.env` keys, caches). You **clone upstream on your machine** (e.g. iMac) and run it there. IRIS only stores a **URL** in **Vitals → Bay Area Pulse → Link God's Eye globe** (`shared/godsEye.ts`).
 
+**Lantern daily oath** (Futurist Lantern / John's text) is reserved for God's Eye — see [`LANTERN_RITUAL.md`](./LANTERN_RITUAL.md), not the IRIS home screen.
+
 ## Quick start (iMac as server)
 
 1. **Requirements:** Node **24.14+** or **26.x** (see upstream README). Run `npm run doctor` after install.

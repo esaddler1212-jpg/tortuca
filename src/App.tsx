@@ -91,17 +91,13 @@ import { TeamPanel } from "./components/hud/TeamPanel";
 import { EasySupplyStorePanel } from "./components/hud/EasySupplyStorePanel";
 import { InstallAppBanner } from "./components/InstallAppBanner";
 import { useHudPrefs } from "./hooks/useHudPrefs";
-import { isLanternUnlockedToday } from "./lib/hudPrefs";
 import { HudHomeCommandDeck } from "./components/hud/HudHomeCommandDeck";
 import { ParticleCoreBackdrop } from "./components/hud/ParticleCoreBackdrop";
-import { LanternUnlockGate } from "./components/hud/LanternUnlockGate";
+import { resolveVoicePersona } from "./lib/voicePersona";
 
 export default function App() {
   const { settings, persist, updateCity, saving, error, setError } = useSettings();
   const { prefs: hudPrefs, update: updateHudPrefs } = useHudPrefs();
-  const [lanternOpen, setLanternOpen] = useState(
-    () => hudPrefs.lanternUnlock && !isLanternUnlockedToday(settings.timezone),
-  );
   // Re-evaluates all time-of-day logic every minute and when the app is reopened.
   const now = useNow();
   const { weather, loading: weatherLoading, error: weatherError } = useWeather(settings);
@@ -577,6 +573,20 @@ export default function App() {
       convo.pendingGreeting ||
       (activeModule !== null && irisVoiceDeckOpen));
 
+  const voicePersona = resolveVoicePersona(hudPrefs.voicePersona, {
+    voiceDeckOpen: irisCinemaVisible,
+    phaseActive: convo.phase !== "idle",
+    focus: mode,
+  });
+
+  useEffect(() => {
+    document.documentElement.dataset.voicePersona = voicePersona;
+  }, [voicePersona]);
+
+  useEffect(() => {
+    document.documentElement.dataset.systemTier = systemStatus === "ok" ? "ok" : systemStatus;
+  }, [systemStatus]);
+
   const todayIrisInline = activeModule === "today" && irisCinemaVisible;
   const mainScrollPad =
     !irisCinemaVisible
@@ -874,8 +884,6 @@ export default function App() {
     </div>
   );
 
-  const showLanternGate = lanternOpen && hudPrefs.lanternUnlock && activeModule === null;
-
   return (
     <div
       className="min-h-screen min-h-[100dvh] relative"
@@ -895,20 +903,15 @@ export default function App() {
         onIrisVoiceToggle={activeModule ? toggleIrisVoiceDeck : undefined}
       />
 
-      {showLanternGate ? (
-        <LanternUnlockGate
-          timezone={settings.timezone}
-          focusMode={mode}
-          onUnlocked={() => {
-            setLanternOpen(false);
-          }}
-        />
-      ) : null}
-
       <main className={`mx-auto px-4 py-4 space-y-4 ${mainScrollPad} ${homeMaxWidth}`}>
         {activeModule ? (
           <>
-            <GlassModule id={activeModule} onClose={closeModule} animateEntry={animateModuleEntry}>
+            <GlassModule
+              id={activeModule}
+              systemStatus={systemStatus}
+              onClose={closeModule}
+              animateEntry={animateModuleEntry}
+            >
               <Suspense fallback={<ModuleLoading />} key={activeModule}>
                 {renderModule(activeModule)}
               </Suspense>

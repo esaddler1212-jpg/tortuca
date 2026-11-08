@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { markLanternUnlockedToday } from "../../lib/hudPrefs";
+import { markLanternUnlockedToday } from "../../lib/lanternRitual";
 
 /**
- * Daily unlock: charge the lantern (John's oath — see futurist-lantern/IRIS_OATH.md).
- * Iframe posts `{ type: 'iris:lantern-complete' }` when the oath finishes (see futurist-lantern/bootstrap patch).
+ * Futurist Lantern daily oath — reserved for **God's Eye** / Vitals ritual, not IRIS home.
+ * Embed from God's Eye or a future Pulse entry; requires `npm run lantern:bootstrap`.
+ * See `gods-eye/LANTERN_RITUAL.md`.
  */
-export function LanternUnlockGate({
+export function LanternRitualGate({
   timezone,
   focusMode = "school",
   onUnlocked,

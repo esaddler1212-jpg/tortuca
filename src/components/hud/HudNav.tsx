@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ChevronDown, X } from "lucide-react";
 import { HUD_MORE as MORE_IDS, HUD_TABS as TAB_IDS, HUD_MODULES, moduleLabel, type HudModuleId } from "../../../shared/hudModules";
+import type { SystemStatus } from "./HudHeader";
 
 const labelOf = (id: HudModuleId) => moduleLabel(id);
 
@@ -132,12 +133,14 @@ export function GlassModule({
   id,
   onClose,
   animateEntry = true,
+  systemStatus = "ok",
   children,
 }: {
   id: HudModuleId;
   onClose: () => void;
   /** Slide-in only when opening from home — not when switching tabs. */
   animateEntry?: boolean;
+  systemStatus?: SystemStatus;
   children: ReactNode;
 }) {
   const label = labelOf(id);
@@ -146,7 +149,7 @@ export function GlassModule({
   const dragRef = useRef(0);
   return (
     <section
-      className={`hud-glass hud-glass-module relative ${animateEntry ? "animate-hud-sheet" : ""}`}
+      className={`hud-glass hud-glass-module relative ${animateEntry ? "animate-hud-sheet" : ""} ${systemStatus !== "ok" ? "hud-glass--ultron" : ""}`}
       aria-label={`${label} module`}
       style={drag ? { transform: `translateY(${drag}px)`, transition: "none" } : undefined}
     >
