@@ -123,6 +123,10 @@ export type GameSession = {
   progress: SavedProgress;
 };
 
+function scriptInstance(ent: Entity, name: string): unknown {
+  return (ent.script as unknown as Record<string, unknown> | undefined)?.[name];
+}
+
 export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSession {
   const ui = wireGameUi();
   let progress = loadProgress();
@@ -282,11 +286,12 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     if (!progress.activeVehicleId || !draftCustom) return;
     const pos = vehicle()?.getPosition().clone();
     const yaw = vehicle()?.getEulerAngles().y ?? 15;
-    progress = setVehicleCustomization(progress, progress.activeVehicleId, draftCustom);
-    const tune = appliedTuning(getVehicleSpec(progress.activeVehicleId), draftCustom);
+    const activeId = progress.activeVehicleId;
+    progress = setVehicleCustomization(progress, activeId, draftCustom);
+    const tune = appliedTuning(getVehicleSpec(activeId), draftCustom);
     playerBaseEngineForce = tune.maxEngineForce;
     exhaustGain = tune.exhaustGain;
-    swapVehicle(progress.activeVehicleId, pos, yaw);
+    swapVehicle(activeId, pos, yaw);
     ui.showToast('Applied', 'Paint and tuning updated for this car.');
   };
 
@@ -322,7 +327,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     ui.setAutonomousMode(false);
     ui.setMission(missionTextForPhase('home'));
     swapVehicle(vehicleId, safehouseSpawn(), 195);
-    ui.showToast('You’re driving', 'Hit every beacon in a region to unlock that region’s car.');
+    ui.showToast('You’re driving', 'Find a region’s taco truck plus any landmark to unlock its car and safehouse.');
     ui.setProgressSummary(progress);
     unlockAudio();
     void unlockMusic();
@@ -425,7 +430,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     const place =
       near?.vista.name ??
       nextUnvisitedLandmark(progress.visitedLandmarkIds, pos.x, pos.z)?.name ??
-      DISTRICT_LABELS[dist];
+      (dist ? DISTRICT_LABELS[dist] : 'Bay Area');
     const vid = progress.activeVehicleId;
     void saveCruisePhotoCard({
       vehicleName: vid ? getVehicleSpec(vid).name : 'Cruiser',
@@ -681,7 +686,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       updateEngineAudio(mph, true, exhaustGain);
       player?.lights.setBrake(false);
     } else if (aerial) {
-      const fs = ent.script?.flightVehicle as
+      const fs = scriptInstance(ent, 'flightVehicle') as
         | { fire?: (e: string, ...args: number[]) => void }
         | undefined;
       fs?.fire?.('flight:controls', drive.steering, drive.throttle, drive.vertical);
@@ -695,7 +700,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         steering = t.steering;
         throttle = t.throttle;
       }
-      const vs = ent.script?.vehicle as { fire?: (e: string, ...args: number[]) => void } | undefined;
+      const vs = scriptInstance(ent, 'vehicle') as { fire?: (e: string, ...args: number[]) => void } | undefined;
       if (steering !== 0 || throttle !== 0) {
         vs?.fire?.('vehicle:controls', steering, throttle);
       }
@@ -752,8 +757,8 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     applyDriveCamera(camera, ent, activeCam, dt, vistaLook);
 
     if (!onAutopilot) {
-      const vehScript = ent.script?.vehicle as { speed?: number; brakingVisual?: boolean } | undefined;
-      const flightScript = ent.script?.flightVehicle as { speed?: number } | undefined;
+      const vehScript = scriptInstance(ent, 'vehicle') as { speed?: number; brakingVisual?: boolean } | undefined;
+      const flightScript = scriptInstance(ent, 'flightVehicle') as { speed?: number } | undefined;
       const speedKmh = aerial ? Math.abs(flightScript?.speed ?? 0) : Math.abs(vehScript?.speed ?? 0);
       mph = speedKmh * 0.621371;
       speedEl.textContent = aerial
@@ -766,7 +771,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     progress = heatFromSpeedTrap(progress, mph, pos.x, pos.z);
     progress = tickFuel(progress, settings, mph, progress.activeVehicleId, dt);
     if (!aerial && progress.activeVehicleId) {
-      const veh = ent.script?.vehicle as { maxEngineForce?: number } | undefined;
+      const veh = scriptInstance(ent, 'vehicle') as { maxEngineForce?: number } | undefined;
       if (veh && typeof veh.maxEngineForce === 'number') {
         veh.maxEngineForce = playerBaseEngineForce * fuelMultiplier(progress, settings, progress.activeVehicleId);
       }
@@ -853,7 +858,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         if (stars > best) {
           parkingHoldT += dt;
           if (parkingHoldT > 0.85) {
-            const outcome = recordParkingStars(progress, parkingSpot.id, stars);
+            const outcome = recordParkingStars(progress, parkingSpot.id, stars as 1 | 2 | 3);
             progress = outcome.progress;
             progress = appendJournal(progress, { kind: 'parking', id: parkingSpot.id, label: parkingSpot.name });
             ui.showToast('Parked', `${parkingSpot.name} · ${stars}★`);

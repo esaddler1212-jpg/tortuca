@@ -2,6 +2,7 @@ import type { SavedProgress } from './game-progress';
 import { loadProgress, saveProgress } from './game-progress';
 
 const SYNC_KEY = 'city-nights-sync-key';
+const SUPPORTED_SAVE_VERSIONS = [5, 6, 7];
 const API = import.meta.env.VITE_CITY_NIGHTS_API ?? '/.netlify/functions/city-nights-progress';
 
 export function getOrCreateSyncKey(): string {
@@ -49,7 +50,7 @@ export async function pushCloudProgress(progress: SavedProgress): Promise<boolea
 export async function tryMergeCloudOnBoot(): Promise<void> {
   const local = loadProgress();
   const remote = await pullCloudProgress();
-  if (!remote || (remote.version !== 5 && remote.version !== 6 && remote.version !== 7)) return;
+  if (!remote || !SUPPORTED_SAVE_VERSIONS.includes((remote as { version: number }).version)) return;
   const localScore =
     local.visitedLandmarkIds.length * 10 + local.unlockedVehicleIds.length * 5 + local.collectedIds.length;
   const remoteScore =
@@ -74,7 +75,7 @@ export function exportProgressJson(): string {
 export function importProgressJson(raw: string): boolean {
   try {
     const parsed = JSON.parse(raw) as SavedProgress;
-    if (parsed.version !== 5 && parsed.version !== 6 && parsed.version !== 7) return false;
+    if (!SUPPORTED_SAVE_VERSIONS.includes((parsed as { version: number }).version)) return false;
     saveProgress({
       ...parsed,
       version: 7,

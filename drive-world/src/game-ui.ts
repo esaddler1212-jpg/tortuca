@@ -2,7 +2,7 @@ import { DISTRICT_LABELS, LANDMARKS } from './landmark-registry';
 import type { GamePhase, SavedProgress } from './game-progress';
 import { GARAGE_STARTER_IDS, VEHICLE_CATALOG } from './vehicle-catalog';
 import { COLLECTIBLES } from './world-extras';
-import { districtHasLandmarkVisit, districtTacoFound } from './city-checkpoints';
+import { districtTacoFound } from './city-checkpoints';
 import { TOTAL_LANDMARKS, countRegionsComplete, TOTAL_REGIONS } from './game-progress';
 import type { HomeServiceMode } from './safehouse-registry';
 import type { DistrictId } from './world-config';
@@ -78,15 +78,9 @@ export function wireGameUi(): GameUi {
     setProgressSummary(progress) {
       const done = progress.visitedLandmarkIds.length;
       const regions = countRegionsComplete(progress);
-      const regionLines = (Object.keys(DISTRICT_LABELS) as DistrictId[])
-        .map((d) => {
-          const mark = progress.unlockedRegionIds.includes(d) ? '✓' : '·';
-          const taco = districtTacoFound(progress, d) ? 'T' : 't';
-          const lm = districtHasLandmarkVisit(progress, d) ? 'L' : 'l';
-          return `${mark} ${DISTRICT_LABELS[d]} ${taco}${lm}`;
-        })
-        .join(' · ');
-      progressEl.textContent = `Landmarks ${done}/${TOTAL_LANDMARKS} · Regions ${regions}/${TOTAL_REGIONS} — ${regionLines}`;
+      const districts = Object.keys(DISTRICT_LABELS) as DistrictId[];
+      const tacos = districts.filter((d) => districtTacoFound(progress, d)).length;
+      progressEl.textContent = `Landmarks ${done}/${TOTAL_LANDMARKS} · Regions ${regions}/${TOTAL_REGIONS} · Taco trucks ${tacos}/${districts.length}`;
     },
     setAutonomousMode(active: boolean) {
       hudEl.classList.toggle('autonomous', active);
@@ -224,5 +218,5 @@ export function wireGameUi(): GameUi {
 export function missionTextForPhase(phase: GamePhase): string {
   if (phase === 'waymo_ride') return 'Waymo rider — autonomous run to Vallejo Safehouse';
   if (phase === 'pick_car') return 'Safehouse — pick up your car';
-  return 'Clear every landmark in a region to unlock that region’s ride';
+  return 'Find each region’s taco truck + any landmark to unlock its ride';
 }

@@ -132,7 +132,7 @@ function defaultProgress(): SavedProgress {
   };
 }
 
-function withV7Defaults(p: Partial<SavedProgress> & { version: number }): SavedProgress {
+function withV7Defaults(p: Partial<Omit<SavedProgress, 'version'>> & { version: number }): SavedProgress {
   return {
     ...defaultProgress(),
     ...p,
@@ -163,14 +163,18 @@ function migrateRaw(parsed: Record<string, unknown>): SavedProgress | null {
   if (parsed.version === 5) return withV7Defaults(parsed as SavedProgress & { version: 5 });
   if (parsed.version === 4) return withV7Defaults(parsed as SavedProgress & { version: 4 });
   if (parsed.version === 3) {
-    const p = parsed as SavedProgress & { version: 3 };
-    return withV7Defaults({ ...p, lastPose: null, cameraMode: 'chase' });
+    const p = parsed as unknown as Omit<SavedProgress, 'version'>;
+    return withV7Defaults({ ...p, version: 3, lastPose: null, cameraMode: 'chase' });
   }
   if (parsed.version === 2) {
-    const p = parsed as SavedProgress & { version: 2; customizations?: Record<string, VehicleCustomization> };
+    const p = parsed as unknown as Omit<SavedProgress, 'version' | 'customizations'> & {
+      version: 2;
+      customizations?: Record<string, VehicleCustomization>;
+    };
     const { version: _v, ...rest } = p;
     return withV7Defaults({
       ...rest,
+      version: 2,
       customizations: p.customizations ?? {},
       lastPose: null,
       cameraMode: 'chase'

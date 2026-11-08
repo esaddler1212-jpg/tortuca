@@ -2,6 +2,11 @@
   box-sizing: border-box;
 }
 
+/* Class rules like `.overlay { display: flex }` otherwise beat the `hidden` attribute. */
+[hidden] {
+  display: none !important;
+}
+
 html {
   height: 100%;
   height: -webkit-fill-available;
@@ -198,10 +203,14 @@ body {
   opacity: 0.75;
 }
 
+/* Left column: the React HUD owns the right edge. */
 .garage {
   position: fixed;
-  right: max(1rem, env(safe-area-inset-right));
-  top: max(1rem, env(safe-area-inset-top));
+  left: max(1rem, env(safe-area-inset-left));
+  top: 11rem;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  overflow-y: auto;
+  overflow-x: hidden;
   z-index: 3;
   width: 14rem;
   padding: 0.75rem;
