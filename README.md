@@ -14,6 +14,7 @@ its own README, build, and (typically) its own Netlify site.
 | **God's Eye** | [`gods-eye/`](gods-eye/) | Local 3D globe ([upstream](https://github.com/bilawalsidhu/gods-eye-view)): run on Mac; link from IRIS Pulse — [same Wi‑Fi + remote](gods-eye/README.md) |
 | **JARVIS-OS-V.2** | [`jarvis-os-v2/`](jarvis-os-v2/) | Local Gemini Jarvis ([upstream](https://github.com/MAL19INDUSTRIES/JARVIS-OS-V.2)): clone + [cherry-pick only](jarvis-os-v2/CHERRY_PICK.md) — not Iris |
 | **Herald OS** | [`herald-os/`](herald-os/) | Agent-native desktop ([upstream](https://github.com/iamlukethedev/Herald-OS)): [cherry-pick](herald-os/CHERRY_PICK.md) — speech/TTS helpers only in Iris |
+| **cobalt** | [`cobalt/`](cobalt/) | Public media saver ([upstream](https://github.com/imputnet/cobalt)): **AGPL API stays off Netlify**; [companion](cobalt/CHERRY_PICK.md) + Hub URL paste |
 | **City Nights** | [`drive-world/`](drive-world/) | Open-world Bay Area night driving (PlayCanvas) — **separate Netlify site**; see [`docs/CITY_NIGHTS_DEPLOY.md`](docs/CITY_NIGHTS_DEPLOY.md) |
 
 ### Alfred (repo root)

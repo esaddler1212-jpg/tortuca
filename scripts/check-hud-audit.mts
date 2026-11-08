@@ -264,6 +264,7 @@ ok("prod app update watch", read("src/main.tsx").includes("startAppUpdateWatch")
 ok("iris: persona cache_control", irisTs.includes('cache_control: { type: "ephemeral" }'));
 ok("iris: team context cache_control", irisTs.includes("teamContextForIris()") && irisTs.includes("cache_control"));
 ok("vite vendor chunk split", read("vite.config.ts").includes("manualChunks"));
+ok("cobalt httpClipboard in Hub", read("src/components/HubPanel.tsx").includes("readHttpLinkFromClipboard"));
 
 for (const id of ["today", "inbox", "plan", "hub", "meal", "research", "channels"] as const) {
   ok(`lazy prefetch: ${id}`, read("src/lazyModules.tsx").includes(`${id}:`));
