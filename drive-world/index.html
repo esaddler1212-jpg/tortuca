@@ -8,12 +8,13 @@
   </head>
   <body>
     <canvas id="application-canvas"></canvas>
+    <div id="react-hud"></div>
     <div id="hud" class="hud" aria-live="polite">
       <h1>Bay Night</h1>
       <p id="mission" class="hint">Loading…</p>
       <p id="vehicle-name" class="vehicle-name"></p>
       <p id="progress" class="progress-line"></p>
-      <p id="speed">0 mph</p>
+      <p id="speed" class="legacy-speed">0 mph</p>
       <button id="reset-progress" type="button" class="reset-btn">New game</button>
     </div>
 
@@ -36,6 +37,7 @@
         <label class="slider-row">Glow <input id="slider-glow" type="range" min="0" max="100" /></label>
         <label class="slider-row">Power <input id="slider-power" type="range" min="0" max="100" /></label>
         <label class="slider-row">Grip <input id="slider-grip" type="range" min="0" max="100" /></label>
+        <label class="slider-row">Wheels <input id="slider-wheel" type="range" min="0" max="100" /></label>
         <button id="apply-custom" type="button" class="apply-custom">Apply &amp; refresh</button>
       </div>
     </div>

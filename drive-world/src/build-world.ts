@@ -3,6 +3,7 @@ import { Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas'
 import { buildBayWater } from './build-bay';
 import { buildAllDistricts, buildFreewayLamps } from './build-districts';
 import { buildAllFreeways } from './build-freeway';
+import { buildFreewayRamps } from './build-freeway-ramps';
 import { buildBayAreaLandmarks } from './build-landmarks';
 import { buildMissionSites } from './build-mission-sites';
 import { NIGHT_FOG } from './night-palette';
@@ -27,6 +28,7 @@ export function buildDrivingWorld(app: AppBase): void {
 
   buildBayWater(app);
   buildAllFreeways(app);
+  buildFreewayRamps(app);
   buildAllDistricts(app);
   buildBayAreaLandmarks(app);
   buildMissionSites(app);

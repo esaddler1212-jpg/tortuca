@@ -87,7 +87,7 @@ export function buildBayAreaLandmarks(app: AppBase): void {
   pyramid(app, 'transamerica', -930, -350, 52, 220, glass);
   box(app, 'salesforce-tower', -870, 130, -300, 22, 260, 22, glass, true);
   box(app, 'coit-tower', -640, 55, -700, 14, 110, 14, warm, true);
-  box(app, 'ferry-clock', -780, 18, -520, 50, 36, 18, stone);
+  box(app, 'ferry-clock', -780, 18, -520, 50, 36, 18, stone, true);
   box(app, 'ferry-tower', -780, 42, -520, 8, 28, 8, warm);
   box(app, 'palace-dome', -1040, 14, -180, 36, 16, 36, stone);
   box(app, 'palace-ring', -1040, 22, -180, 48, 6, 48, matConcrete());
@@ -95,13 +95,13 @@ export function buildBayAreaLandmarks(app: AppBase): void {
   bridgeSpan(app, 'golden-gate', -1190, -820, 80, 42);
 
   // —— Marin / North Bay ——
-  box(app, 'sausalito-hill', -1180, 25, 320, 80, 50, 40, stone);
+  box(app, 'sausalito-hill', -1180, 25, 320, 80, 50, 40, stone, true);
   box(app, 'napa-silo', 720, 35, 1380, 18, 70, 18, warm);
   box(app, 'carquinez-tower', 520, 55, 1180, 12, 110, 12, matOrange());
 
   // —— East Bay ——
   pyramid(app, 'sather-campanile', 500, 80, 48, 140, warm);
-  box(app, 'fox-theater', 600, 12, -360, 42, 24, 16, warm);
+  box(app, 'fox-theater', 600, 12, -360, 42, 24, 16, warm, true);
   box(app, 'fox-marquee', 600, 26, -368, 38, 4, 20, matOrange());
   ringBuilding(app, 'oakland-arena', 780, -200, 55, matConcrete());
 

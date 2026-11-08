@@ -35,7 +35,10 @@ export function createPlayerVehicle(
   customization?: VehicleCustomization
 ): Entity {
   const spec = getVehicleSpec(vehicleId);
-  const tuning = appliedTuning(spec, customization ?? { paintPreset: 'bay-blue', glow: 0.45, power: 0.55, grip: 0.5 });
+  const tuning = appliedTuning(
+    spec,
+    customization ?? { paintPreset: 'bay-blue', glow: 0.45, power: 0.55, grip: 0.5, wheel: 0.5 }
+  );
   const paint = chassisMaterial(tuning);
 
   const glass = new StandardMaterial();
@@ -54,7 +57,7 @@ export function createPlayerVehicle(
       attributes: {
         debugRender: true,
         isFront: def.front,
-        radius: 0.38 * Math.sqrt(scaleWheel),
+        radius: 0.38 * Math.sqrt(scaleWheel) * tuning.wheelScale,
         width: 0.32,
         frictionSlip: tuning.frictionSlip,
         suspensionStiffness: 12
@@ -98,6 +101,26 @@ export function createPlayerVehicle(
   cabin.addComponent('collision', { type: 'box', halfExtents: new Vec3(cx * 0.88, cy * 0.85, cz * 0.55) });
   cabin.setLocalPosition(0, cy * 2 + 0.15, -cz * 0.12);
   cabin.addComponent('render', { type: 'box', material: glass });
+
+  if (vehicleId.startsWith('region-south-bay')) {
+    const wing = new Entity('ev-wing');
+    wing.setLocalScale(0.15, 0.08, 1.6);
+    wing.setLocalPosition(0, 0.75, 0);
+    wing.addComponent('render', { type: 'box', material: paint });
+    vehicle.addChild(wing);
+  } else if (vehicleId.startsWith('region-vallejo') || vehicleId.includes('ute')) {
+    const rack = new Entity('bed-rack');
+    rack.setLocalScale(0.9, 0.12, 0.55);
+    rack.setLocalPosition(0, 1.05, -cz * 0.45);
+    rack.addComponent('render', { type: 'box', material: paint });
+    vehicle.addChild(rack);
+  } else if (vehicleId.startsWith('region-')) {
+    const spoiler = new Entity('spoiler');
+    spoiler.setLocalScale(cx * 1.1, 0.06, 0.35);
+    spoiler.setLocalPosition(0, cy * 2.2, -cz * 0.72);
+    spoiler.addComponent('render', { type: 'box', material: paint });
+    vehicle.addChild(spoiler);
+  }
 
   wheels.forEach((w) => vehicle.addChild(w));
   vehicle.addChild(chassis);

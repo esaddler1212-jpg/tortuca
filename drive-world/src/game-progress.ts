@@ -9,8 +9,12 @@ import {
 
 export type GamePhase = 'waymo_ride' | 'pick_car' | 'home';
 
+export type SavedPose = { x: number; y: number; z: number; yaw: number };
+
+export type CameraMode = 'chase' | 'cockpit';
+
 export type SavedProgress = {
-  version: 3;
+  version: 4;
   phase: GamePhase;
   activeVehicleId: string | null;
   unlockedVehicleIds: string[];
@@ -18,29 +22,43 @@ export type SavedProgress = {
   unlockedRegionIds: DistrictId[];
   safehouseReached: boolean;
   customizations: Record<string, VehicleCustomization>;
+  lastPose: SavedPose | null;
+  cameraMode: CameraMode;
 };
 
-const STORAGE_KEY = 'drive-world-progress-v3';
+const STORAGE_KEY = 'drive-world-progress-v4';
 
 function defaultProgress(): SavedProgress {
   return {
-    version: 3,
+    version: 4,
     phase: 'waymo_ride',
     activeVehicleId: null,
     unlockedVehicleIds: [],
     visitedLandmarkIds: [],
     unlockedRegionIds: [],
     safehouseReached: false,
-    customizations: {}
+    customizations: {},
+    lastPose: null,
+    cameraMode: 'chase'
   };
 }
 
 function migrateRaw(parsed: Record<string, unknown>): SavedProgress | null {
-  if (parsed.version === 3) return parsed as SavedProgress;
+  if (parsed.version === 4) return parsed as SavedProgress;
+  if (parsed.version === 3) {
+    const p = parsed as SavedProgress & { version: 3 };
+    return { ...p, version: 4, lastPose: null, cameraMode: 'chase' };
+  }
   if (parsed.version === 2) {
     const p = parsed as SavedProgress & { version: 2; customizations?: Record<string, VehicleCustomization> };
-    const { version: _v, customizations: _c, ...rest } = p;
-    return { ...rest, version: 3, customizations: p.customizations ?? {} };
+    const { version: _v, ...rest } = p;
+    return {
+      ...rest,
+      version: 4,
+      customizations: p.customizations ?? {},
+      lastPose: null,
+      cameraMode: 'chase'
+    };
   }
   return null;
 }
@@ -142,6 +160,18 @@ export function tryUnlockCompletedRegions(progress: SavedProgress): {
 export function setActiveVehicle(progress: SavedProgress, vehicleId: string): SavedProgress {
   if (!progress.unlockedVehicleIds.includes(vehicleId)) return progress;
   const next = { ...progress, activeVehicleId: vehicleId };
+  saveProgress(next);
+  return next;
+}
+
+export function saveLastPose(progress: SavedProgress, pose: SavedPose): SavedProgress {
+  const next = { ...progress, lastPose: pose };
+  saveProgress(next);
+  return next;
+}
+
+export function setCameraMode(progress: SavedProgress, cameraMode: CameraMode): SavedProgress {
+  const next = { ...progress, cameraMode };
   saveProgress(next);
   return next;
 }

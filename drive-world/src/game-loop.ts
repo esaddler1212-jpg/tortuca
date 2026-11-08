@@ -1,6 +1,13 @@
-import { Entity, Vec3, type AppBase } from 'playcanvas';
+import { Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
 
 import { hillOffsetM } from './bay-terrain';
+import {
+  computeTouchControls,
+  isTouchDriveActive,
+  publishHud,
+  registerSkipWaymo,
+  registerToggleCamera
+} from './game-bridge';
 import {
   loadProgress,
   resetProgress,
@@ -11,14 +18,19 @@ import {
   getVehicleCustomization,
   setVehicleCustomization,
   tryUnlockCompletedRegions,
+  saveLastPose,
+  setCameraMode,
   type SavedProgress
 } from './game-progress';
+import { playLandmarkChime, playWaymoArrival, unlockAudio, updateEngineAudio } from './game-audio';
 import { missionTextForPhase, wireGameUi } from './game-ui';
 import { DISTRICT_LABELS, LANDMARKS, VALLEJO_SAFEHOUSE } from './landmark-registry';
+import { nextUnvisitedLandmark } from './landmark-navigation';
 import { getVehicleSpec } from './vehicle-catalog';
+import type { VehicleCustomization } from './vehicle-customization';
 import { createPlayerVehicle, destroyPlayerVehicle } from './vehicle-factory';
 import { buildWaymoRidePath, spawnWaymoRide, waymoPassengerCameraOffset, type WaymoRide } from './waymo-ride';
-import type { VehicleCustomization } from './vehicle-customization';
+import type { CameraMode } from './game-progress';
 
 export type GameSession = {
   vehicle: Entity | null;
@@ -33,6 +45,14 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   let nearGarage = false;
   let ridingWaymo = progress.phase === 'waymo_ride';
   let draftCustom: VehicleCustomization | null = null;
+  let cameraMode: CameraMode = progress.cameraMode ?? 'chase';
+  let poseSaveT = 0;
+  let waterT = 0;
+
+  window.addEventListener('drive-world:unlock-audio', () => unlockAudio(), { once: false });
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'c' || e.key === 'C') toggleCamera();
+  });
 
   const safehouseSpawn = () =>
     new Vec3(
@@ -41,14 +61,20 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       VALLEJO_SAFEHOUSE.z + 18
     );
 
+  const spawnFromProgress = (): Vec3 => {
+    const pose = progress.lastPose;
+    if (progress.phase === 'home' && pose) return new Vec3(pose.x, pose.y, pose.z);
+    return safehouseSpawn();
+  };
+
   function swapVehicle(vehicleId: string, pos?: Vec3, yaw?: number) {
     const old = vehicle?.getPosition();
     const oldRot = vehicle?.getEulerAngles();
     destroyPlayerVehicle(vehicle);
-    const p = pos ?? old ?? safehouseSpawn();
+    const p = pos ?? old ?? spawnFromProgress();
     const custom = getVehicleCustomization(progress, vehicleId);
     draftCustom = { ...custom };
-    vehicle = createPlayerVehicle(app, vehicleId, p, yaw ?? oldRot?.y ?? 15, custom);
+    vehicle = createPlayerVehicle(app, vehicleId, p, yaw ?? oldRot?.y ?? progress.lastPose?.yaw ?? 15, custom);
     progress = setActiveVehicle(progress, vehicleId);
     ui.setVehicleName(getVehicleSpec(vehicleId).name);
     ui.setProgressSummary(progress);
@@ -93,6 +119,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     swapVehicle(vehicleId, safehouseSpawn(), 195);
     ui.showToast('You’re driving', 'Hit every beacon in a region to unlock that region’s car.');
     ui.setProgressSummary(progress);
+    unlockAudio();
   };
 
   const endWaymoRide = () => {
@@ -103,8 +130,10 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     ui.setAutonomousMode(false);
     ui.setMission(missionTextForPhase('pick_car'));
     ui.setVehicleName('');
+    playWaymoArrival();
     ui.showToast('Arrived at Safehouse', 'Pick up your car — then tour the Bay for regional unlocks.');
     ui.showCarPicker(beginAfterGaragePick);
+    publishHud({ ridingWaymo: false, phase: progress.phase, progress });
   };
 
   const startWaymoRide = () => {
@@ -117,9 +146,24 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     ui.setGarageVisible(false, progress, () => {});
     const path = buildWaymoRidePath();
     waymo = spawnWaymoRide(app, path);
+    publishHud({ ridingWaymo: true, phase: 'waymo_ride', progress });
   };
 
+  const toggleCamera = () => {
+    cameraMode = cameraMode === 'chase' ? 'cockpit' : 'chase';
+    progress = setCameraMode(progress, cameraMode);
+    publishHud({ cameraMode });
+  };
+
+  registerSkipWaymo(() => {
+    if (!ridingWaymo) return;
+    endWaymoRide();
+  });
+
+  registerToggleCamera(toggleCamera);
+
   const resumeFromSave = () => {
+    cameraMode = progress.cameraMode ?? 'chase';
     if (progress.phase === 'waymo_ride') {
       startWaymoRide();
       return;
@@ -132,8 +176,10 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     ui.setMission(missionTextForPhase('home'));
     ui.setProgressSummary(progress);
     if (progress.activeVehicleId) {
-      swapVehicle(progress.activeVehicleId, safehouseSpawn());
+      const yaw = progress.lastPose?.yaw ?? 15;
+      swapVehicle(progress.activeVehicleId, spawnFromProgress(), yaw);
     }
+    publishHud({ progress, phase: progress.phase, cameraMode });
   };
 
   ui.bindReset(() => {
@@ -143,18 +189,28 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     vehicle = null;
     ridingWaymo = false;
     progress = resetProgress();
+    cameraMode = 'chase';
     ui.setGarageVisible(false, progress, () => {});
     startWaymoRide();
   });
 
   resumeFromSave();
 
-  const camOffset = new Vec3(0, 3.2, 7.5);
+  const chaseOffset = new Vec3(0, 3.2, 7.5);
+  const cockpitOffset = new Vec3(0, 0.95, 0.15);
   const lookAhead = 12;
   const camera = app.root.findByName('camera') as Entity | null;
+  const bay = app.root.findByName('sf-bay') as Entity | null;
 
   app.on('update', (dt: number) => {
     if (!camera) return;
+    waterT += dt;
+
+    const bayMat = (bay?.render?.meshInstances?.[0]?.material ?? null) as StandardMaterial | null;
+    if (bayMat) {
+      bayMat.emissiveIntensity = 0.16 + Math.sin(waterT * 0.9) * 0.07;
+      bayMat.update();
+    }
 
     if (ridingWaymo && waymo) {
       const still = waymo.update(dt);
@@ -174,27 +230,74 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       );
       camera.lookAt(look);
       speedEl.textContent = `${waymo.currentMph.toFixed(0)} mph · Waymo`;
+      const yaw = waymo.root.getEulerAngles().y;
+      publishHud({
+        playerX: pos.x,
+        playerZ: pos.z,
+        yaw,
+        mph: waymo.currentMph,
+        phase: progress.phase,
+        ridingWaymo: true,
+        progress,
+        nextLandmark: null,
+        cameraMode,
+        waterPhase: waterT
+      });
+      updateEngineAudio(waymo.currentMph, false);
       if (!still) endWaymoRide();
       return;
     }
 
     if (!vehicle) return;
 
+    if (isTouchDriveActive()) {
+      const { steering, throttle } = computeTouchControls();
+      const vs = vehicle.script?.vehicle as { fire?: (e: string, s: number, t: number) => void } | undefined;
+      vs?.fire?.('vehicle:controls', steering, throttle);
+    }
+
     const pos = vehicle.getPosition();
     const forward = vehicle.forward;
     const right = vehicle.right;
+    const offset = cameraMode === 'cockpit' ? cockpitOffset : chaseOffset;
+    const camBack = cameraMode === 'cockpit' ? 0 : offset.z;
     const target = new Vec3(
-      pos.x - forward.x * camOffset.z + right.x * camOffset.x,
-      pos.y + camOffset.y,
-      pos.z - forward.z * camOffset.z + right.z * camOffset.x
+      pos.x - forward.x * camBack + right.x * offset.x,
+      pos.y + offset.y,
+      pos.z - forward.z * camBack + right.z * offset.x
     );
     camera.setPosition(target);
-    const look = new Vec3(pos.x + forward.x * lookAhead, pos.y + 0.8, pos.z + forward.z * lookAhead);
+    const lookDist = cameraMode === 'cockpit' ? 32 : lookAhead;
+    const look = new Vec3(pos.x + forward.x * lookDist, pos.y + 0.75, pos.z + forward.z * lookDist);
     camera.lookAt(look);
 
     const vehScript = vehicle.script?.vehicle as { speed?: number } | undefined;
     const mph = Math.abs(vehScript?.speed ?? 0) * 0.621371;
     speedEl.textContent = `${mph.toFixed(0)} mph`;
+    updateEngineAudio(mph, true);
+
+    const yaw = vehicle.getEulerAngles().y;
+    const nextLm =
+      progress.phase === 'home' ? nextUnvisitedLandmark(progress.visitedLandmarkIds, pos.x, pos.z) : null;
+
+    publishHud({
+      playerX: pos.x,
+      playerZ: pos.z,
+      yaw,
+      mph,
+      phase: progress.phase,
+      ridingWaymo: false,
+      progress,
+      nextLandmark: nextLm,
+      cameraMode,
+      waterPhase: waterT
+    });
+
+    poseSaveT += dt;
+    if (progress.phase === 'home' && poseSaveT > 2.5) {
+      poseSaveT = 0;
+      progress = saveLastPose(progress, { x: pos.x, y: pos.y, z: pos.z, yaw });
+    }
 
     if (progress.phase === 'home') {
       const gdx = pos.x - VALLEJO_SAFEHOUSE.x;
@@ -211,6 +314,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         const d = Math.hypot(pos.x - lm.x, pos.z - lm.z);
         if (d > lm.visitRadius) continue;
         progress = visitLandmark(progress, lm.id);
+        playLandmarkChime();
         ui.setProgressSummary(progress);
         ui.showToast('Landmark logged', lm.name);
 
@@ -221,10 +325,12 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
           ui.showToast(`${DISTRICT_LABELS[u.district]} complete`, `Unlocked ${car.name}`);
         }
         ui.setProgressSummary(progress);
-        if (nearGarage) ui.setGarageVisible(true, progress, onGarageSelect);
+        if (nearGarage) refreshGarageUi();
       }
     }
   });
+
+  window.addEventListener('pointerdown', () => unlockAudio(), { once: true });
 
   return { get vehicle() { return vehicle; }, progress };
 }

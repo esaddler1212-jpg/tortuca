@@ -22,6 +22,7 @@ import {
 
 import { buildDrivingWorld } from './build-world';
 import { startGameSession } from './game-loop';
+import { mountReactHud } from './hud/mount';
 import { NIGHT_AMBIENT, NIGHT_SKY } from './night-palette';
 import { WORLD_HALF_M } from './world-config';
 
@@ -33,6 +34,8 @@ WasmModule.setConfig('Ammo', {
 await new Promise<void>((resolve) => {
   WasmModule.getInstance('Ammo', () => resolve());
 });
+
+mountReactHud();
 
 const canvas = document.getElementById('application-canvas') as HTMLCanvasElement;
 const speedEl = document.getElementById('speed') as HTMLParagraphElement;

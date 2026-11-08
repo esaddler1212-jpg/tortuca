@@ -8,6 +8,8 @@ export type VehicleCustomization = {
   power: number;
   /** 0–1 → wheel friction */
   grip: number;
+  /** 0–1 → wheel radius scale */
+  wheel: number;
 };
 
 export type PaintPreset = {
@@ -30,7 +32,8 @@ export const DEFAULT_CUSTOMIZATION: VehicleCustomization = {
   paintPreset: 'bay-blue',
   glow: 0.45,
   power: 0.55,
-  grip: 0.5
+  grip: 0.5,
+  wheel: 0.5
 };
 
 export function defaultCustomizationFor(spec: VehicleSpec): VehicleCustomization {
@@ -56,16 +59,19 @@ export function appliedTuning(spec: VehicleSpec, custom: VehicleCustomization): 
   emissiveIntensity: number;
   diffuse: [number, number, number];
   emissive: [number, number, number];
+  wheelScale: number;
 } {
   const preset = resolvePaintPreset(custom.paintPreset);
   const powerMul = 0.85 + custom.power * 0.4;
   const friction = 920 + custom.grip * 520;
   const glow = 0.15 + custom.glow * 0.65;
+  const wheelScale = 0.88 + custom.wheel * 0.28;
   return {
     maxEngineForce: spec.maxEngineForce * powerMul,
     frictionSlip: friction,
     emissiveIntensity: glow,
     diffuse: preset.diffuse,
-    emissive: preset.emissive
+    emissive: preset.emissive,
+    wheelScale
   };
 }

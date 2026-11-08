@@ -121,13 +121,15 @@ export function wireGameUi(): GameUi {
       const glow = el<HTMLInputElement>('slider-glow');
       const power = el<HTMLInputElement>('slider-power');
       const grip = el<HTMLInputElement>('slider-grip');
+      const wheel = el<HTMLInputElement>('slider-wheel');
 
       const emit = () => {
         onChange({
           paintPreset: selectedPaint,
           glow: Number(glow.value) / 100,
           power: Number(power.value) / 100,
-          grip: Number(grip.value) / 100
+          grip: Number(grip.value) / 100,
+          wheel: Number(wheel.value) / 100
         });
       };
 
@@ -154,9 +156,11 @@ export function wireGameUi(): GameUi {
       glow.value = String(Math.round(custom.glow * 100));
       power.value = String(Math.round(custom.power * 100));
       grip.value = String(Math.round(custom.grip * 100));
+      wheel.value = String(Math.round((custom.wheel ?? 0.5) * 100));
       glow.oninput = emit;
       power.oninput = emit;
       grip.oninput = emit;
+      wheel.oninput = emit;
       el<HTMLButtonElement>('apply-custom').onclick = onApply;
     },
     bindReset(onReset) {

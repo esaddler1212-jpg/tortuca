@@ -35,7 +35,7 @@ The world follows the usual **Bay Area macro regions** (same mental model as the
 1. **SFO airport** — **Waymo** autonomous ride (no driving); it follows **101 → I-80** to the **Vallejo Safehouse**.
 2. **Safehouse** — choose 1 of 3 **garage starters** (`Safehouse Cruiser`, `Sport`, `Ute`); you drive from here.
 3. **Regions** — visit **every landmark** in a macro region (SF, Marin, East Bay, Vallejo, Peninsula, South Bay) to unlock that **region’s signature car** (6 unlocks).
-4. **Garage** — at the safehouse, swap rides and **customize** paint / glow / power / grip (per car, saved in browser). Progress: `localStorage` `drive-world-progress-v3`; **New game** restarts the Waymo intro.
+4. **Garage** — swap rides; **customize** paint / glow / power / grip / wheels. **React HUD**: minimap, next landmark, region checklist, touch pedals, cockpit cam (C), skip Waymo. Progress: `drive-world-progress-v4` (saves **last parking pose**). Deploy: [`DRIVE_WORLD_DEPLOY.md`](./DRIVE_WORLD_DEPLOY.md).
 
 Gap checklist: [`DRIVE_WORLD_STATUS.md`](./DRIVE_WORLD_STATUS.md).
 
