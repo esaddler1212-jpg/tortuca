@@ -36,6 +36,7 @@ import {
   type MoneyCategory,
   type WatchResult,
 } from "../../shared/hub";
+import { readHttpLinkFromClipboard } from "../../shared/httpClipboard";
 import { authHeaders, ensureSession } from "../lib/google";
 import { useSpeechInput } from "../hooks/useSpeechInput";
 import { promptForMemo } from "../lib/promptGenerator";
@@ -254,7 +255,24 @@ function FeedEditor({ hub, update, onDone }: { hub: HubState; update: Props["upd
         }}
       >
         <input className="input-field" placeholder="Name (e.g. a YouTube channel)" value={name} onChange={(e) => setName(e.target.value)} aria-label="Source name" />
-        <input className="input-field" placeholder="RSS URL" value={url} onChange={(e) => setUrl(e.target.value)} aria-label="Feed URL" inputMode="url" />
+        <div className="flex gap-2">
+          <input
+            className="input-field min-w-0 flex-1"
+            placeholder="RSS URL"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            aria-label="Feed URL"
+            inputMode="url"
+          />
+          <button
+            type="button"
+            className="btn-ghost shrink-0 px-2 text-xs"
+            onClick={() => void readHttpLinkFromClipboard().then((href) => href && setUrl(href))}
+            aria-label="Paste URL from clipboard"
+          >
+            Paste
+          </button>
+        </div>
         <div className="flex gap-2">
           <select className="input-field flex-1" value={topic} onChange={(e) => setTopic(e.target.value as FeedTopic)} aria-label="Topic">
             {FEED_TOPICS.map((t) => (

@@ -13,6 +13,7 @@ Ranked ideas from upstream projects, Anthropic docs, and this repo’s audits. *
 | **Vendor code split** | Vite best practice | Shipped: `lucide`, `date-fns`, `leaflet` chunks |
 | **Module chunk prefetch** | Existing `lazyModules.tsx` | On `focusModule` prefetch — verify on slow 3G |
 | **PWA deploy reload** | Internal | `appUpdate.ts` on visibility |
+| **Clipboard URL paste (Hub)** | [cobalt](https://github.com/imputnet/cobalt) web pattern | `shared/httpClipboard.ts`; self-hosted cobalt API optional for Tortuga B-roll |
 
 ## Tier 2 — Product UX (no new backend stack)
 
