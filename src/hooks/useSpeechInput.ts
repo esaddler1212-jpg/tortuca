@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { isNoiseTranscript } from "../../shared/speechText";
 
 /** Minimal typing for the browser Web Speech API (Safari/Chrome prefix it). */
 interface SpeechRecognitionResultLike {
@@ -132,7 +133,7 @@ export function useSpeechInput(onFinal: (text: string) => void) {
       setInterim("");
       const text = committedRef.current.trim();
       committedRef.current = "";
-      if (text) onFinalRef.current(text);
+      if (text && !isNoiseTranscript(text)) onFinalRef.current(text);
     };
     recRef.current = rec;
     setError(null);

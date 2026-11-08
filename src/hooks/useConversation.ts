@@ -6,6 +6,7 @@ import { addDays } from "../../shared/timezone";
 import { isHudModuleId, matchModuleFromSpeech, type HudModuleId } from "../../shared/hudModules";
 import { isIrisSpecialistId, type IrisSpecialistId } from "../../shared/irisTeam";
 import { readDelegateHistory, writeLastDelegate } from "../../shared/irisTeamActivity";
+import { isStopPhrase } from "../../shared/speechText";
 
 export type Turn = { role: "user" | "assistant"; content: string; /** Read-out of the brief, not a real exchange. */ brief?: boolean };
 /** What the Iris ring shows. */
@@ -226,7 +227,7 @@ export function useConversation(opts: {
         }
         // Anything else: a normal conversation starting with what E said.
       }
-      if (GOODBYE.test(said)) {
+      if (GOODBYE.test(said) || isStopPhrase(said)) {
         wrapUp();
         return;
       }

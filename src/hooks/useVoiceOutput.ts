@@ -4,6 +4,7 @@ import {
   recommendationRank,
   tierRank,
 } from "../../shared/irisVoices";
+import { sanitizeForSpeech } from "../../shared/speechText";
 
 const MUTE_KEY = "alfred-voice-muted";
 const listeners = new Set<(muted: boolean) => void>();
@@ -218,7 +219,7 @@ export function useVoiceOutput() {
     const run = ++speakRun;
     // Sentence-sized pieces: Chrome stops long utterances partway (~15 s),
     // and short pieces let a tap cut her off cleanly.
-    const parts = speechChunks(text);
+    const parts = speechChunks(sanitizeForSpeech(text));
     const voice = pickVoice();
     const { rate, pitch } = getVoicePrefs();
     let started = false;
