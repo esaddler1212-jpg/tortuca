@@ -218,7 +218,7 @@ export async function runIris(
       output_config: { effort: "low" },
       system: [
         { type: "text", text: PERSONA, cache_control: { type: "ephemeral" } },
-        { type: "text", text: teamContextForIris() },
+        { type: "text", text: teamContextForIris(), cache_control: { type: "ephemeral" } },
         { type: "text", text: `Right now:\n${context.slice(0, IRIS_MAX_CONTEXT_CHARS)}` },
         ...(memory.length ? [{ type: "text" as const, text: `What you remember about E:\n${memory.map((m) => `- ${m}`).join("\n")}` }] : []),
       ],

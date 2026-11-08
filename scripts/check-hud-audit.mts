@@ -239,6 +239,14 @@ ok("AGENTS.md guardrails doc", fs.existsSync(path.join(root, "AGENTS.md")));
 ok("shared agentGuardrails module", fs.existsSync(path.join(root, "shared/agentGuardrails.ts")));
 ok("Iris team prompt includes guardrails", read("shared/irisTeam.ts").includes("agentGuardrailsPrompt"));
 ok("thin programming policy module", fs.existsSync(path.join(root, "shared/thinProgrammingPolicy.ts")));
+ok("herald speechText module", fs.existsSync(path.join(root, "shared/speechText.ts")));
+ok("herald voiceIntents fast path", fs.existsSync(path.join(root, "shared/voiceIntents.ts")));
+ok("useConversation: fastModuleNavigation", read("src/hooks/useConversation.ts").includes("fastModuleNavigation"));
+ok("useGuardedAsync hook", fs.existsSync(path.join(root, "src/hooks/useGuardedAsync.ts")));
+ok("prod app update watch", read("src/main.tsx").includes("startAppUpdateWatch"));
+ok("iris: persona cache_control", irisTs.includes('cache_control: { type: "ephemeral" }'));
+ok("iris: team context cache_control", irisTs.includes("teamContextForIris()") && irisTs.includes("cache_control"));
+ok("vite vendor chunk split", read("vite.config.ts").includes("manualChunks"));
 
 for (const id of ["today", "inbox", "plan", "hub", "meal", "research", "channels"] as const) {
   ok(`lazy prefetch: ${id}`, read("src/lazyModules.tsx").includes(`${id}:`));
