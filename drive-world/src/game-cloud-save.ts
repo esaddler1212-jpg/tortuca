@@ -4,6 +4,8 @@ import { loadProgress, saveProgress } from './game-progress';
 const SYNC_KEY = 'city-nights-sync-key';
 const SUPPORTED_SAVE_VERSIONS = [5, 6, 7, 8, 9];
 const API = import.meta.env.VITE_CITY_NIGHTS_API ?? '/.netlify/functions/city-nights-progress';
+let lastClientPushMs = 0;
+const CLIENT_PUSH_GAP_MS = 24_000;
 
 export function getOrCreateSyncKey(): string {
   let key = localStorage.getItem(SYNC_KEY);
@@ -34,12 +36,15 @@ export async function pullCloudProgress(): Promise<SavedProgress | null> {
 }
 
 export async function pushCloudProgress(progress: SavedProgress): Promise<boolean> {
+  const now = Date.now();
+  if (now - lastClientPushMs < CLIENT_PUSH_GAP_MS) return false;
   try {
     const res = await fetch(API, {
       method: 'POST',
       headers: headers(),
       body: JSON.stringify({ progress })
     });
+    if (res.ok || res.status === 429) lastClientPushMs = now;
     return res.ok;
   } catch {
     return false;

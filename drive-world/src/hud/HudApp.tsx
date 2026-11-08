@@ -43,10 +43,75 @@ import { JournalPanel } from './JournalPanel';
 import { SafehousePanel } from './SafehousePanel';
 import { MusicPanel } from './MusicPanel';
 
+function PinnedObjective({ snap }: { snap: HudSnapshot }) {
+  if (snap.ridingWaymo || snap.photoMode || !snap.pinnedChapterLabel) return null;
+  return (
+    <div className="pinned-objective" aria-live="polite">
+      <strong>Chapter</strong> — {snap.pinnedChapterLabel}
+      {snap.pinnedChapterHint ? <span className="pinned-hint"> · {snap.pinnedChapterHint}</span> : null}
+    </div>
+  );
+}
+
+function HudDrawerTabs({ snap }: { snap: HudSnapshot }) {
+  const [tab, setTab] = useState<'map' | 'missions' | 'garage' | 'settings'>('missions');
+  if (snap.photoMode || snap.ridingWaymo) return null;
+  return (
+    <div className="hud-drawer-stack">
+      <div className="hud-tabs" role="tablist" aria-label="HUD panels">
+        {(['map', 'missions', 'garage', 'settings'] as const).map((id) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={tab === id}
+            className={`hud-tab ${tab === id ? 'active' : ''}`}
+            onClick={() => setTab(id)}
+          >
+            {id === 'map' ? 'Map' : id === 'missions' ? 'Missions' : id === 'garage' ? 'Garage' : 'Settings'}
+          </button>
+        ))}
+      </div>
+      <div className="hud-tab-panel" role="tabpanel">
+        {tab === 'map' && (
+          <>
+            <LandSearchPanel snap={snap} />
+            <FastTravel snap={snap} />
+            <LandmarkPanel snap={snap} />
+          </>
+        )}
+        {tab === 'missions' && (
+          <>
+            {snap.landmarkSprintLabel ? (
+              <div className="sprint-armed">Sprint: {snap.landmarkSprintLabel}</div>
+            ) : null}
+            <MissionBoard snap={snap} />
+            <StatsPanel snap={snap} />
+          </>
+        )}
+        {tab === 'garage' && (
+          <>
+            {snap.garageInteriorCam ? <div className="sprint-armed">Garage interior cam</div> : null}
+            <SafehousePanel snap={snap} />
+          </>
+        )}
+        {tab === 'settings' && (
+          <>
+            <SettingsPanel />
+            <MusicPanel />
+            <JournalPanel snap={snap} />
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function NavHint({ snap }: { snap: HudSnapshot }) {
   if (snap.ridingWaymo || snap.photoMode) return null;
   const pin =
     snap.navTarget ??
+    snap.navObjective ??
     (snap.nextLandmark
       ? { label: snap.nextLandmark.name, x: snap.nextLandmark.x, z: snap.nextLandmark.z }
       : null);
@@ -455,8 +520,8 @@ export function HudApp() {
           <strong>{snap.vistaName}</strong> — slow orbit · <button type="button" className="link-btn" onClick={() => requestVistaCam()}>Vista cam (V)</button>
         </div>
       )}
+      <PinnedObjective snap={snap} />
       <NavHint snap={snap} />
-      <LandSearchPanel snap={snap} />
       {snap.flightMode && !snap.photoMode && (
         <p className="flight-hint">Space/⤒ climb · Ctrl/⤓ sink · WASD · Shift boost</p>
       )}
@@ -474,19 +539,12 @@ export function HudApp() {
       {snap.activeSideshowName && !snap.photoMode && (
         <div className="parking-hint">Sideshow tonight: {snap.activeSideshowName}</div>
       )}
-      <SafehousePanel snap={snap} />
-      <MusicPanel />
-      <JournalPanel snap={snap} />
-      <MissionBoard snap={snap} />
-      <StatsPanel snap={snap} />
-      <SettingsPanel />
-      <FastTravel snap={snap} />
+      <HudDrawerTabs snap={snap} />
       {snap.nearGarageReplay && snap.phase === 'home' && !snap.ridingWaymo && (
         <button type="button" className="skip-waymo" onClick={() => requestWaymoReplay()}>
           Replay Waymo intro route
         </button>
       )}
-      {!snap.photoMode && <LandmarkPanel snap={snap} />}
       {showTouch && <TouchControlsImpl flight={!!snap.flightMode} />}
       {snap.photoMode && (
         <p className="photo-hint">

@@ -75,7 +75,14 @@ import {
   unlockAudio,
   updateEngineAudio
 } from './game-audio';
-import { applyDriveCamera, CAMERA_CYCLE, cameraModeLabel } from './camera-profiles';
+import {
+  applyDriveCamera,
+  applyGarageInteriorCamera,
+  CAMERA_CYCLE,
+  cameraModeLabel
+} from './camera-profiles';
+import { activeSprintLabel, freshSprintRuntime, tickLandmarkSprint } from './landmark-sprints';
+import { chapterObjectivePin } from './mission-nav';
 import { appendJournal } from './cruise-journal';
 import { nearestCruiseVista, type CruiseVistaDef } from './cruise-vistas';
 import { loadSettings, saveSettings } from './game-settings';
@@ -183,6 +190,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   let exhaustGain = 1;
   let worldTime = 0;
   let cpmRuntime = freshCpmRuntime();
+  let sprintRuntime = freshSprintRuntime();
   let taxiRuntime = freshTaxiRuntime();
   let meetHoldT = 0;
   let lastYawDeg = 0;
@@ -818,10 +826,22 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   }
 
     const pos = ent.getPosition();
+    if (!onAutopilot) {
+      const vehScriptEarly = scriptInstance(ent, 'vehicle') as { speed?: number } | undefined;
+      const flightScriptEarly = scriptInstance(ent, 'flightVehicle') as { speed?: number } | undefined;
+      const speedKmhEarly = aerial
+        ? Math.abs(flightScriptEarly?.speed ?? 0)
+        : Math.abs(vehScriptEarly?.speed ?? 0);
+      mph = speedKmhEarly * 0.621371;
+    }
     if (sideshowSite && shouldNotifySideshow(pos.x, pos.z, sideshowSite)) {
       ui.showToast('Sideshow meet', `${sideshowSite.name} — respect the lot`);
     }
     const vistaNear = nearestCruiseVista(pos.x, pos.z);
+    const shGarage =
+      progress.phase === 'home' ? nearUnlockedSafehouse(progress, pos.x, pos.z) : null;
+    const estateGarage =
+      shGarage?.atService === true && shGarage.house.id === 'vallejo-safehouse' && mph < 22;
     let activeCam = cameraMode;
     if (
       vistaNear &&
@@ -842,7 +862,11 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
             z: (vistaLookTarget ?? vistaNear!.vista).lookAtZ
           }
         : null;
-    applyDriveCamera(camera, ent, activeCam, dt, vistaLook);
+    if (estateGarage && !onAutopilot && !aerial) {
+      applyGarageInteriorCamera(camera, ent, shGarage!.house.x, shGarage!.house.z, dt);
+    } else {
+      applyDriveCamera(camera, ent, activeCam, dt, vistaLook, app);
+    }
 
     if (!onAutopilot) {
       const vehScript = scriptInstance(ent, 'vehicle') as { speed?: number; brakingVisual?: boolean } | undefined;
@@ -902,13 +926,18 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     );
     const nextLm =
       progress.phase === 'home' ? nextUnvisitedLandmark(progress.visitedLandmarkIds, pos.x, pos.z) : null;
+    const chapterPin = progress.phase === 'home' ? chapterObjectivePin(progress) : null;
 
     const manualNav = getNavTarget();
     let navRoutePoints: { x: number; z: number }[] = [];
     let navTurnLabel = '';
     const navPin =
       manualNav ??
-      (nextLm ? { label: nextLm.name, x: nextLm.x, z: nextLm.z } : null);
+      (chapterPin
+        ? { label: chapterPin.label, x: chapterPin.x, z: chapterPin.z }
+        : nextLm
+          ? { label: nextLm.name, x: nextLm.x, z: nextLm.z }
+          : null);
     if (navPin && progress.phase === 'home') {
       if (manualNav?.scenicId) {
         const scenic = SCENIC_ROUTES.find((r) => r.id === manualNav.scenicId);
@@ -1114,6 +1143,14 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         }
       } else meetHoldT = 0;
 
+      const sprintOut = tickLandmarkSprint(sprintRuntime, progress, pos.x, pos.z, mph, performance.now());
+      sprintRuntime = sprintOut.rt;
+      if (sprintOut.progress !== progress) progress = sprintOut.progress;
+      if (sprintOut.toast) {
+        ui.showToast(sprintOut.toast.title, sprintOut.toast.body, 4800);
+        if (sprintOut.toast.title.includes('PB')) playVistaChime();
+      }
+
       syncMissionProgress();
     }
 
@@ -1180,6 +1217,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
           : undefined,
       activeSideshowName: sideshowSite?.name,
       navTarget: manualNav,
+      navObjective: manualNav ? null : navPin ? { label: navPin.label, x: navPin.x, z: navPin.z } : null,
       navTurnLabel,
       navRoutePoints,
       storefrontStripLabel: strip ? `${strip.label} — ${strip.shops[0] ?? 'shops'}` : null,
@@ -1194,7 +1232,11 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         ? `gate ${Math.min(cpmRuntime.timeGateIndex, taDef.gates.length)}/${taDef.gates.length}`
         : null,
       heatHunted,
-      ghostRivalLabel
+      ghostRivalLabel,
+      pinnedChapterLabel: chapterPin?.label ?? null,
+      pinnedChapterHint: chapterPin?.hint ?? null,
+      landmarkSprintLabel: activeSprintLabel(sprintRuntime),
+      garageInteriorCam: estateGarage
     });
 
     statsT += dt;
