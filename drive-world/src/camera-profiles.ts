@@ -1,6 +1,26 @@
 import { Vec3, type Entity } from 'playcanvas';
 
+import { hillOffsetM } from './bay-terrain';
 import type { CameraMode } from './game-progress';
+
+function terrainBlocksCamLine(
+  eyeX: number,
+  eyeY: number,
+  eyeZ: number,
+  camX: number,
+  camY: number,
+  camZ: number
+): boolean {
+  const steps = 7;
+  for (let i = 1; i < steps; i++) {
+    const t = i / steps;
+    const x = eyeX + (camX - eyeX) * t;
+    const z = eyeZ + (camZ - eyeZ) * t;
+    const y = eyeY + (camY - eyeY) * t;
+    if (y < hillOffsetM(x, z) + 5.2) return true;
+  }
+  return false;
+}
 
 export type CameraProfile = {
   offset: Vec3;
@@ -148,7 +168,18 @@ export function applyDriveCamera(
     off = new Vec3(sin * 10, prof.offset.y, cos * 10);
   }
 
-  const camBack = mode === 'cockpit' ? 0 : off.z;
+  let camBack = mode === 'cockpit' ? 0 : off.z;
+  if (camBack > 0.5 && (mode === 'chase' || mode === 'low' || mode === 'cinematic')) {
+    const eyeY = pos.y + 1.15;
+    for (let pass = 0; pass < 4; pass++) {
+      const tx = pos.x - forward.x * camBack + right.x * off.x;
+      const ty = pos.y + off.y;
+      const tz = pos.z - forward.z * camBack + right.z * off.x;
+      if (!terrainBlocksCamLine(pos.x, eyeY, pos.z, tx, ty, tz)) break;
+      camBack *= 0.62;
+    }
+    camBack = Math.max(2.8, camBack);
+  }
   const target = new Vec3(
     pos.x - forward.x * camBack + right.x * off.x,
     pos.y + off.y,

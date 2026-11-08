@@ -37,6 +37,12 @@ function ensureCtx(): AudioContext | null {
   if (ctx) return ctx;
   try {
     ctx = new AudioContext();
+    ctx.addEventListener('statechange', () => {
+      if (!ctx) return;
+      if (ctx.state === 'suspended' || (ctx.state as string) === 'interrupted') {
+        void ctx.resume().catch(() => {});
+      }
+    });
     masterGain = ctx.createGain();
     masterGain.gain.value = 0;
     masterGain.connect(ctx.destination);

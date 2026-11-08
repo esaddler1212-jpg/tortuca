@@ -119,7 +119,7 @@ function LandSearchPanel({ snap }: { snap: HudSnapshot }) {
 function LandmarkPanel({ snap }: { snap: HudSnapshot }) {
   const visited = new Set(snap.progress?.visitedLandmarkIds ?? []);
   return (
-    <details className="landmark-panel" open>
+    <details className="landmark-panel" {...(isTouchPrimary() ? {} : { open: true })}>
       <summary>Landmarks ({visited.size}/{LANDMARKS.length})</summary>
       <ul>
         {(Object.keys(DISTRICT_LABELS) as DistrictId[]).map((d) => {
@@ -219,7 +219,7 @@ function MissionBoard({ snap }: { snap: HudSnapshot }) {
   );
   const taxiOffer = snap.progress ? nextTaxiContract(snap.progress, 'vallejo') : null;
   return (
-    <details className="mission-panel" open>
+    <details className="mission-panel" {...(isTouchPrimary() ? {} : { open: true })}>
       <summary>Missions · CPM · Horizon · MC</summary>
       {taxiOffer && !snap.progress?.activeTaxiId ? (
         <button
@@ -505,8 +505,23 @@ function TouchControlsImpl({ flight }: { flight: boolean }) {
       window.dispatchEvent(new CustomEvent('drive-world:unlock-audio'));
       setTouchDrive({ [key]: down });
     };
+  const clearAll = () => {
+    setTouchDrive({
+      up: false,
+      down: false,
+      left: false,
+      right: false,
+      climb: false,
+      descend: false,
+      nitro: false
+    });
+  };
   return (
-    <div className={`touch-drive ${flight ? 'touch-flight' : ''}`} aria-label="Touch driving controls">
+    <div
+      className={`touch-drive ${flight ? 'touch-flight' : ''}`}
+      aria-label="Touch driving controls"
+      onPointerCancel={clearAll}
+    >
       <button type="button" className="touch-btn up" onPointerDown={press('up', true)} onPointerUp={press('up', false)} onPointerLeave={press('up', false)}>
         ▲
       </button>

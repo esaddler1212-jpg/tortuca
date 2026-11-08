@@ -229,6 +229,15 @@
   animation: heat-pulse 0.9s ease-in-out infinite;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .heat-meter.hunted {
+    animation: none;
+  }
+  .race-bar-fill {
+    transition: none;
+  }
+}
+
 @keyframes heat-pulse {
   0%,
   100% {

@@ -15,6 +15,12 @@ function ensureContext(): AudioContext | null {
   if (ctx) return ctx;
   try {
     ctx = new AudioContext();
+    ctx.addEventListener('statechange', () => {
+      if (!ctx) return;
+      if (ctx.state === 'suspended' || (ctx.state as string) === 'interrupted') {
+        void ctx.resume().catch(() => {});
+      }
+    });
     return ctx;
   } catch {
     return null;
