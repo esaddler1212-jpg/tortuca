@@ -90,7 +90,8 @@ export function HudApp() {
       )}
       <div className="hud-toolbar">
         <button type="button" className="cam-toggle" onClick={() => requestToggleCamera()}>
-          Camera: {snap.cameraMode === 'cockpit' ? 'Cockpit' : 'Chase'} (C)
+          Camera:{' '}
+          {snap.cameraMode === 'cockpit' ? 'Cockpit' : snap.cameraMode === 'drone' ? 'Drone' : 'Chase'} (C)
         </button>
         <span className="hud-mph">{Math.round(snap.mph)} mph</span>
       </div>

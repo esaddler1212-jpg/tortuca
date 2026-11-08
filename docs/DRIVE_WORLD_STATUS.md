@@ -9,7 +9,7 @@ Runnable prototype: [`drive-world/`](../drive-world/). Stack: **PlayCanvas** (wo
 | Full Bay map, freeways, landmarks, Waymo intro, regional unlocks | ✅ |
 | Safehouse garage + per-car customization (paint, glow, power, grip, wheels) | ✅ |
 | **React HUD**: minimap, landmark regions, next-landmark nav | ✅ |
-| **Cockpit / chase cam** (C key or button) | ✅ |
+| **Chase / cockpit / drone cam** (C cycles) | ✅ |
 | **Skip Waymo** | ✅ |
 | **Engine audio** + landmark chime (Web Audio) | ✅ |
 | **Save last pose** (v4 `lastPose`) | ✅ |

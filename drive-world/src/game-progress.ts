@@ -11,7 +11,7 @@ export type GamePhase = 'waymo_ride' | 'pick_car' | 'home';
 
 export type SavedPose = { x: number; y: number; z: number; yaw: number };
 
-export type CameraMode = 'chase' | 'cockpit';
+export type CameraMode = 'chase' | 'cockpit' | 'drone';
 
 export type SavedProgress = {
   version: 4;

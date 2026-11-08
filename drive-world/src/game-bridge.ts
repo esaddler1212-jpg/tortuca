@@ -1,7 +1,7 @@
 import type { GamePhase, SavedProgress } from './game-progress';
 import type { LandmarkDef } from './landmark-registry';
 
-export type CameraMode = 'chase' | 'cockpit';
+export type CameraMode = 'chase' | 'cockpit' | 'drone';
 
 export type HudSnapshot = {
   playerX: number;

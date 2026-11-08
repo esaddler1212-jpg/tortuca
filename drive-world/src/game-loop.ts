@@ -149,8 +149,11 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     publishHud({ ridingWaymo: true, phase: 'waymo_ride', progress });
   };
 
+  const cameraCycle: CameraMode[] = ['chase', 'cockpit', 'drone'];
+
   const toggleCamera = () => {
-    cameraMode = cameraMode === 'chase' ? 'cockpit' : 'chase';
+    const idx = cameraCycle.indexOf(cameraMode);
+    cameraMode = cameraCycle[(idx + 1) % cameraCycle.length];
     progress = setCameraMode(progress, cameraMode);
     publishHud({ cameraMode });
   };
@@ -198,7 +201,10 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
 
   const chaseOffset = new Vec3(0, 3.2, 7.5);
   const cockpitOffset = new Vec3(0, 0.95, 0.15);
+  const droneHeight = 24;
+  const droneBack = 10;
   const lookAhead = 12;
+  let droneCamPos = new Vec3();
   const camera = app.root.findByName('camera') as Entity | null;
   const bay = app.root.findByName('sf-bay') as Entity | null;
 
@@ -259,17 +265,30 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     const pos = vehicle.getPosition();
     const forward = vehicle.forward;
     const right = vehicle.right;
-    const offset = cameraMode === 'cockpit' ? cockpitOffset : chaseOffset;
-    const camBack = cameraMode === 'cockpit' ? 0 : offset.z;
-    const target = new Vec3(
-      pos.x - forward.x * camBack + right.x * offset.x,
-      pos.y + offset.y,
-      pos.z - forward.z * camBack + right.z * offset.x
-    );
-    camera.setPosition(target);
-    const lookDist = cameraMode === 'cockpit' ? 32 : lookAhead;
-    const look = new Vec3(pos.x + forward.x * lookDist, pos.y + 0.75, pos.z + forward.z * lookDist);
-    camera.lookAt(look);
+    if (cameraMode === 'drone') {
+      const goal = new Vec3(
+        pos.x - forward.x * droneBack,
+        pos.y + droneHeight,
+        pos.z - forward.z * droneBack
+      );
+      droneCamPos.lerp(goal, Math.min(1, dt * 4.5));
+      camera.setPosition(droneCamPos);
+      const look = new Vec3(pos.x + forward.x * 6, pos.y + 0.6, pos.z + forward.z * 6);
+      camera.lookAt(look);
+    } else {
+      const offset = cameraMode === 'cockpit' ? cockpitOffset : chaseOffset;
+      const camBack = cameraMode === 'cockpit' ? 0 : offset.z;
+      const target = new Vec3(
+        pos.x - forward.x * camBack + right.x * offset.x,
+        pos.y + offset.y,
+        pos.z - forward.z * camBack + right.z * offset.x
+      );
+      camera.setPosition(target);
+      const lookDist = cameraMode === 'cockpit' ? 32 : lookAhead;
+      const look = new Vec3(pos.x + forward.x * lookDist, pos.y + 0.75, pos.z + forward.z * lookDist);
+      camera.lookAt(look);
+      droneCamPos.copy(target);
+    }
 
     const vehScript = vehicle.script?.vehicle as { speed?: number } | undefined;
     const mph = Math.abs(vehScript?.speed ?? 0) * 0.621371;
