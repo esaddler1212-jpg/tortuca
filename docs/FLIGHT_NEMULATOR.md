@@ -23,7 +23,7 @@ Production build: `npm run build` → `dist/` (static deploy like `drive-world`)
 | Destruction | Ram **destructibles** only; chunk debris on capable hardware, instant vanish on low tier |
 | Ruins | Buildings **stay ruined** for the session |
 | Role | **Hero** — stop **villain clones** (DBZ / Marvel / DC homage roster paired to your hero). **Villain** — hero interceptors chase you |
-| Clones | 21 in `villain-roster.ts` with rival pairings |
+| Clones | 25 in `villain-roster.ts` with rival pairings |
 | Mutations | Full homage map in [`FLIGHT_NEMULATOR_FULL_ROSTER.md`](./FLIGHT_NEMULATOR_FULL_ROSTER.md) and `roster-mutations.ts` |
 | World fate | **Villain:** city ≤12% → **5 min dying roam** → auto reset or **Remake in my image** (themed Earth + your statues at every district). **Hero:** save at ≥52% integrity after clearing waves → **monument in hometown only** (persists) |
 | Combat | Primary / throw / super; wave spawns depend on role |
@@ -40,7 +40,7 @@ Production build: `npm run build` → `dist/` (static deploy like `drive-world`)
 - Boost trails, super crater ring, camera shake
 - Wanted-scaled defense waves + power-specific primaries
 - Minimap, session lifetime stats, photo save
-- Expanded roster (Shade Knight, Amazon Vanguard, Bolt Archer, Ant Scale, Dr. Doom)
+- Expanded roster (Velocity Streak, DBZ ki squad, villains-only Doom & Ultron)
 - `POST /api/flight-nemulator-research` homage draft suggestions (main repo function)
 
 ## v2 (not in v1)

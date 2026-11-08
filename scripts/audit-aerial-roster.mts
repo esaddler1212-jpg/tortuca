@@ -6,8 +6,6 @@ import { HERO_ROSTER } from '../flight-nemulator/src/hero-roster.ts';
 import { VILLAIN_CLONES } from '../flight-nemulator/src/villain-roster.ts';
 import { HERO_MUTATIONS, VILLAIN_MUTATIONS } from '../flight-nemulator/src/roster-mutations.ts';
 
-const DBZ_HERO = new Set(['ki-wanderer', 'ki-prince']);
-
 function printRow(name: string, mode: AerialMobility, note: string): void {
   console.log(`  ${name.padEnd(22)} ${AERIAL_LABELS[mode].padEnd(22)} ${note}`);
 }
@@ -16,8 +14,8 @@ function printMutationRow(codename: string, mutatesFrom: string, uni: string, ae
   console.log(`  ${codename.padEnd(22)} → ${mutatesFrom.padEnd(36)} [${uni}] ${aerial}`);
 }
 
-const marvelDcHeroes = HERO_ROSTER.filter((h) => !DBZ_HERO.has(h.id));
-const dbzHeroes = HERO_ROSTER.filter((h) => DBZ_HERO.has(h.id));
+const dbzHeroes = HERO_ROSTER.filter((h) => HERO_MUTATIONS[h.id]?.universe === 'dbz');
+const marvelDcHeroes = HERO_ROSTER.filter((h) => HERO_MUTATIONS[h.id]?.universe !== 'dbz');
 const dbzVillains = VILLAIN_CLONES.filter((v) => v.universe === 'dbz');
 const marvelDcVillains = VILLAIN_CLONES.filter((v) => v.universe !== 'dbz');
 

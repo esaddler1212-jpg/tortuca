@@ -128,37 +128,6 @@ export const HERO_ROSTER: HeroSpec[] = [
     aerial: 'native'
   },
   {
-    id: 'chrome-overmind',
-    codename: 'Chrome Overmind',
-    tagline: 'Drone swarm salvos',
-    districtId: 'sokovia-memorial',
-    homeLabel: 'Memorial Apex',
-    powers: ['repulsor', 'beam'],
-    flight: { cruiseKmh: 340, boostKmh: 1900, agility: 1.15, mass: 105 },
-    energy: { staminaMax: 90, regenPerSec: 28, superCooldownSec: 14, primaryCooldownSec: 0.18 },
-    smashRadius: 3.0,
-    forms: [{ id: 'prime', label: 'Prime body', speedMul: 1, powerMul: 1, color: [0.35, 0.4, 0.45] }],
-    defaultFormId: 'prime',
-    aerial: 'tech'
-  },
-  {
-    id: 'doctor-doom',
-    codename: 'Dr. Doom',
-    tagline: 'Sovereign blast — doomfield siege',
-    districtId: 'sokovia-memorial',
-    homeLabel: 'Royal Citadel',
-    powers: ['beam', 'telekinesis'],
-    flight: { cruiseKmh: 350, boostKmh: 2050, agility: 0.95, mass: 118 },
-    energy: { staminaMax: 125, regenPerSec: 20, superCooldownSec: 17, primaryCooldownSec: 0.28 },
-    smashRadius: 3.6,
-    forms: [
-      { id: 'iron', label: 'Iron regalia', speedMul: 1, powerMul: 1.1, color: [0.42, 0.45, 0.5] },
-      { id: 'hood', label: 'Hooded sovereign', speedMul: 0.95, powerMul: 1.25, color: [0.12, 0.42, 0.22] }
-    ],
-    defaultFormId: 'iron',
-    aerial: 'tech'
-  },
-  {
     id: 'storm-hammer',
     codename: 'Storm Hammer',
     tagline: 'Lightning arc smash',
@@ -207,6 +176,57 @@ export const HERO_ROSTER: HeroSpec[] = [
       { id: 'ascended', label: 'Ascended', speedMul: 1.4, powerMul: 1.5, color: [0.75, 0.15, 0.55] }
     ],
     defaultFormId: 'base',
+    aerial: 'ki'
+  },
+  {
+    id: 'ki-sage',
+    codename: 'Ki Sage',
+    tagline: 'Regen barrage — stretch counter',
+    districtId: 'ki-plateau',
+    homeLabel: 'Sky Temple Ledge',
+    powers: ['ki', 'beam'],
+    flight: { cruiseKmh: 430, boostKmh: 2600, agility: 1.1, mass: 86 },
+    energy: { staminaMax: 132, regenPerSec: 32, superCooldownSec: 17, primaryCooldownSec: 0.22 },
+    smashRadius: 3.4,
+    forms: [
+      { id: 'tunic', label: 'Temple tunic', speedMul: 1, powerMul: 1, color: [0.22, 0.55, 0.32] },
+      { id: 'orange', label: 'Orange gi', speedMul: 1.08, powerMul: 1.12, color: [0.92, 0.45, 0.12] }
+    ],
+    defaultFormId: 'tunic',
+    aerial: 'ki'
+  },
+  {
+    id: 'time-blade',
+    codename: 'Time Blade',
+    tagline: 'Sword flash — timeline dive',
+    districtId: 'ki-plateau',
+    homeLabel: 'Capsule Ruins',
+    powers: ['ki', 'beam'],
+    flight: { cruiseKmh: 470, boostKmh: 2900, agility: 1.22, mass: 80 },
+    energy: { staminaMax: 128, regenPerSec: 27, superCooldownSec: 16, primaryCooldownSec: 0.2 },
+    smashRadius: 3.3,
+    forms: [
+      { id: 'future', label: 'Future jacket', speedMul: 1, powerMul: 1.05, color: [0.15, 0.18, 0.42] },
+      { id: 'rage', label: 'Super surge', speedMul: 1.35, powerMul: 1.4, color: [0.85, 0.22, 0.18] }
+    ],
+    defaultFormId: 'future',
+    aerial: 'ki'
+  },
+  {
+    id: 'hybrid-warden',
+    codename: 'Hybrid Warden',
+    tagline: 'Hidden potential smash',
+    districtId: 'ki-plateau',
+    homeLabel: 'Scholar Cliff',
+    powers: ['ki'],
+    flight: { cruiseKmh: 460, boostKmh: 2850, agility: 1.15, mass: 84 },
+    energy: { staminaMax: 142, regenPerSec: 26, superCooldownSec: 18, primaryCooldownSec: 0.22 },
+    smashRadius: 3.8,
+    forms: [
+      { id: 'scholar', label: 'Scholar', speedMul: 0.95, powerMul: 1.15, color: [0.45, 0.32, 0.22] },
+      { id: 'unleashed', label: 'Unleashed', speedMul: 1.25, powerMul: 1.45, color: [0.95, 0.75, 0.2] }
+    ],
+    defaultFormId: 'scholar',
     aerial: 'ki'
   },
   {
@@ -292,35 +312,21 @@ export const HERO_ROSTER: HeroSpec[] = [
     aerial: 'native'
   },
   {
-    id: 'bolt-archer',
-    codename: 'Bolt Archer',
-    tagline: 'ARC jetpack trick volleys',
-    districtId: 'stark-nexus',
-    homeLabel: 'Rooftop Range',
-    powers: ['beam'],
-    flight: { cruiseKmh: 220, boostKmh: 980, agility: 1.25, mass: 70 },
-    energy: { staminaMax: 90, regenPerSec: 30, superCooldownSec: 14, primaryCooldownSec: 0.12 },
-    smashRadius: 2.0,
-    forms: [{ id: 'purple', label: 'Tech suit', speedMul: 1, powerMul: 1, color: [0.55, 0.15, 0.75] }],
-    defaultFormId: 'purple',
-    aerial: 'jetpack'
-  },
-  {
-    id: 'ant-scale',
-    codename: 'Ant Scale',
-    tagline: 'Pym vector hop — belt jets',
-    districtId: 'stark-nexus',
-    homeLabel: 'Lab Sublevel',
-    powers: ['synth'],
-    flight: { cruiseKmh: 300, boostKmh: 1500, agility: 1.4, mass: 65 },
-    energy: { staminaMax: 105, regenPerSec: 24, superCooldownSec: 15, primaryCooldownSec: 0.2 },
-    smashRadius: 1.8,
+    id: 'velocity-streak',
+    codename: 'Velocity Streak',
+    tagline: 'Speed-force afterimage rush',
+    districtId: 'coast-city',
+    homeLabel: 'Forensics Annex',
+    powers: ['beam', 'synth'],
+    flight: { cruiseKmh: 520, boostKmh: 3400, agility: 1.45, mass: 68 },
+    energy: { staminaMax: 108, regenPerSec: 35, superCooldownSec: 13, primaryCooldownSec: 0.12 },
+    smashRadius: 2.8,
     forms: [
-      { id: 'small', label: 'Sub-scale', speedMul: 1.2, powerMul: 0.75, color: [0.65, 0.2, 0.15] },
-      { id: 'giant', label: 'Giant', speedMul: 0.85, powerMul: 1.35, color: [0.55, 0.12, 0.12] }
+      { id: 'scarlet', label: 'Scarlet suit', speedMul: 1, powerMul: 1, color: [0.82, 0.12, 0.1] },
+      { id: 'lightning', label: 'Lightning trail', speedMul: 1.28, powerMul: 1.18, color: [0.95, 0.72, 0.15] }
     ],
-    defaultFormId: 'small',
-    aerial: 'jetpack'
+    defaultFormId: 'scarlet',
+    aerial: 'native'
   },
   {
     id: 'comet-surfer',
@@ -337,23 +343,6 @@ export const HERO_ROSTER: HeroSpec[] = [
       { id: 'cosmic', label: 'Cosmic flare', speedMul: 1.25, powerMul: 1.35, color: [0.95, 0.45, 0.2] }
     ],
     defaultFormId: 'silver',
-    aerial: 'native'
-  },
-  {
-    id: 'photon-vanguard',
-    codename: 'Photon Vanguard',
-    tagline: 'Binary dive — photon lance',
-    districtId: 'coast-city',
-    homeLabel: 'Emerald Pier',
-    powers: ['beam'],
-    flight: { cruiseKmh: 410, boostKmh: 2350, agility: 1.0, mass: 86 },
-    energy: { staminaMax: 128, regenPerSec: 21, superCooldownSec: 18, primaryCooldownSec: 0.26 },
-    smashRadius: 3.7,
-    forms: [
-      { id: 'binary', label: 'Binary', speedMul: 1.15, powerMul: 1.4, color: [0.92, 0.35, 0.12] },
-      { id: 'standard', label: 'Standard', speedMul: 1, powerMul: 1, color: [0.75, 0.18, 0.22] }
-    ],
-    defaultFormId: 'standard',
     aerial: 'native'
   },
   {
