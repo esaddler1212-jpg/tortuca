@@ -5,6 +5,7 @@ import { LANDMARKS } from '../landmark-registry';
 import { CITY_HUBS } from '../city-map-registry';
 import { NAMED_STREETS } from '../street-registry';
 import { homeServicePoint, resolveHomeSafehouse } from '../safehouse-registry';
+import { GAS_STATIONS } from '../gas-stations';
 import { WORLD_HALF_M } from '../world-config';
 
 const SIZE = 168;
@@ -100,15 +101,39 @@ export function Minimap({ snap }: { snap: HudSnapshot }) {
             className={svc.mode === 'valet' ? 'minimap-valet' : 'minimap-garage-door'}
           />
         ) : null}
-        {next && (
-          <line
-            x1={mapX(snap.playerX)}
-            y1={mapY(snap.playerZ)}
-            x2={mapX(next.x)}
-            y2={mapY(next.z)}
-            className="minimap-route"
+        {GAS_STATIONS.map((g) => (
+          <circle
+            key={g.id}
+            cx={mapX(g.x)}
+            cy={mapY(g.z)}
+            r={2.2}
+            className="minimap-gas"
           />
-        )}
+        ))}
+        {(() => {
+          const routePts =
+            snap.navRoutePoints && snap.navRoutePoints.length > 1
+              ? snap.navRoutePoints
+              : next
+                ? [
+                    { x: snap.playerX, z: snap.playerZ },
+                    { x: next.x, z: next.z }
+                  ]
+                : [];
+          return routePts.slice(0, -1).map((a, i) => {
+            const b = routePts[i + 1]!;
+            return (
+              <line
+                key={`route-${i}`}
+                x1={mapX(a.x)}
+                y1={mapY(a.z)}
+                x2={mapX(b.x)}
+                y2={mapY(b.z)}
+                className="minimap-route"
+              />
+            );
+          });
+        })()}
         {pulse > 0 ? (
           <circle
             cx={mapX(snap.playerX)}

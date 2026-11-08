@@ -10,6 +10,7 @@ import { districtHasLandmarkVisit, districtTacoFound } from './city-checkpoints'
 import { DISTRICT_LABELS, LANDMARKS } from './landmark-registry';
 import { nextUnvisitedLandmark } from './landmark-navigation';
 import type { SavedProgress } from './game-progress';
+import { nearestGasStationAnywhere } from './bay-navigation';
 import { LANDMARK_PARKING, parkingSpotsCleared, parkingSpotCount } from './landmark-parking';
 import { SCENIC_ROUTES, SPEED_TRAPS } from './world-extras';
 import type { DistrictId } from './world-config';
@@ -19,7 +20,8 @@ export type MissionLine = { id: string; label: string; done: boolean; hint?: str
 export function buildMissionBoard(
   progress: SavedProgress,
   playerX: number,
-  playerZ: number
+  playerZ: number,
+  fuelPercent?: number
 ): MissionLine[] {
   const lines: MissionLine[] = [];
 
@@ -30,6 +32,18 @@ export function buildMissionBoard(
   if (progress.phase === 'pick_car') {
     lines.push({ id: 'pick', label: 'Pick a safehouse starter at the garage', done: false });
     return lines;
+  }
+
+  if (fuelPercent !== undefined && fuelPercent < 28) {
+    const pump = nearestGasStationAnywhere(playerX, playerZ);
+    if (pump) {
+      lines.push({
+        id: 'fuel-low',
+        label: `Low fuel — head to ${pump.name}`,
+        done: false,
+        hint: 'Stop below 5 mph on the green pad'
+      });
+    }
   }
 
   const next = nextUnvisitedLandmark(progress.visitedLandmarkIds, playerX, playerZ);

@@ -31,6 +31,14 @@ Default home is the **Vallejo estate** with a **Fast & Furious–style garage**.
 
 **Bay homage fleet** (fan tribute, not affiliated): collect glowing tokens to unlock Time Warp Coupe (**hover flight**), Hyphy Short Bus, Cookie Tour Bus, Say Hey Lowrider, and Beast Mode Cart. **Sideshow meetups** rotate every ~2.5 minutes across eight lots (lineup + donut cars) — toggle in Settings.
 
+### Bay navigation (EarthNG-inspired, compressed map)
+
+- **Street-following routes** on monument loops (`bay-navigation.ts`) with turn hints and a multi-segment minimap line.
+- **City map search** — find any hub or landmark, **Route** (pin) or **Land here** (teleport under ~22 mph).
+- **Storefront strips** near Telegraph, Emeryville Bay St, Embarcadero, and Concord plaza (3D signs + HUD strip label).
+- **Hub parking rows** at every `CITY_HUBS` center; **green dots** on the minimap are free gas pumps.
+- **Bay quality preset** in Settings (Chromebook / Balanced / Lush) adjusts fog, traffic, sideshow, and fuel sim.
+
 ## Deploy
 
 See [`docs/CITY_NIGHTS_DEPLOY.md`](../docs/CITY_NIGHTS_DEPLOY.md).

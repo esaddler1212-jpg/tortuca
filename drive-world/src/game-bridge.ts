@@ -38,6 +38,10 @@ export type HudSnapshot = {
   nearGas?: boolean;
   parkingSpotName?: string;
   activeSideshowName?: string;
+  navTarget?: { label: string; x: number; z: number } | null;
+  navTurnLabel?: string;
+  navRoutePoints?: { x: number; z: number }[];
+  storefrontStripLabel?: string | null;
 };
 
 export type TouchDrive = {
@@ -75,6 +79,8 @@ let skipWaymoHandler: (() => void) | null = null;
 let toggleCameraHandler: (() => void) | null = null;
 let togglePhotoHandler: (() => void) | null = null;
 let fastTravelHandler: ((d: DistrictId) => void) | null = null;
+let landHereHandler: ((x: number, z: number, label: string) => void) | null = null;
+let navTarget: { label: string; x: number; z: number } | null = null;
 let toggleAutopilotHandler: (() => void) | null = null;
 let cycleAutopilotPresetHandler: (() => void) | null = null;
 let savePhotoCardHandler: (() => void) | null = null;
@@ -122,6 +128,23 @@ export function registerTogglePhoto(fn: () => void): void {
 
 export function registerFastTravel(fn: (d: DistrictId) => void): void {
   fastTravelHandler = fn;
+}
+
+export function registerLandHere(fn: (x: number, z: number, label: string) => void): void {
+  landHereHandler = fn;
+}
+
+export function requestLandHere(x: number, z: number, label: string): void {
+  landHereHandler?.(x, z, label);
+}
+
+export function requestSetNavTarget(target: { label: string; x: number; z: number } | null): void {
+  navTarget = target;
+  publishHud({ navTarget: target });
+}
+
+export function getNavTarget(): { label: string; x: number; z: number } | null {
+  return navTarget;
 }
 
 export function registerToggleAutopilot(fn: () => void): void {

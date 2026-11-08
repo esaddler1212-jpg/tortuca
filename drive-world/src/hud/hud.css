@@ -141,6 +141,68 @@
   max-width: 200px;
   opacity: 0.9;
   text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+  pointer-events: auto;
+}
+
+.nav-turn {
+  display: block;
+  font-size: 0.68rem;
+  opacity: 0.85;
+}
+
+.nav-clear {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.65rem;
+}
+
+.minimap-gas {
+  fill: rgba(80, 220, 140, 0.75);
+}
+
+.land-search-panel {
+  pointer-events: auto;
+  max-width: 220px;
+  padding: 0.35rem 0.45rem;
+  border-radius: 8px;
+  background: rgba(6, 10, 18, 0.88);
+  border: 1px solid rgba(100, 160, 220, 0.25);
+}
+
+.land-search-input {
+  width: 100%;
+  margin: 0.35rem 0;
+  padding: 0.25rem 0.4rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.35);
+  color: inherit;
+  font-size: 0.72rem;
+}
+
+.land-search-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 8rem;
+  overflow-y: auto;
+}
+
+.land-search-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-bottom: 0.35rem;
+  font-size: 0.68rem;
+}
+
+.land-search-kind {
+  opacity: 0.55;
+}
+
+.land-search-actions {
+  display: flex;
+  gap: 0.5rem;
 }
 
 .heat-meter {

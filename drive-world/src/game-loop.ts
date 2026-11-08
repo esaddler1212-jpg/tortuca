@@ -1,6 +1,12 @@
 import { Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
 
 import { hillOffsetM } from './bay-terrain';
+import {
+  navTurnHint,
+  routeWaypointsToLandmark,
+  routeWaypointsToPoint
+} from './bay-navigation';
+import { nearestStorefrontStrip } from './storefront-strips';
 import { nearestTacoTruck } from './city-checkpoints';
 import { nearestGasStation } from './gas-stations';
 import { fuelMultiplier, fuelPercent, refillFuel, tickFuel } from './fuel-system';
@@ -13,6 +19,8 @@ import {
   isTouchDriveActive,
   publishHud,
   registerFastTravel,
+  registerLandHere,
+  getNavTarget,
   registerSkipWaymo,
   registerCycleAutopilotPreset,
   getHudSnapshot,
@@ -481,6 +489,19 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     ui.showToast('Waymo drop', spot.label);
   });
 
+  registerLandHere((x, z, label) => {
+    const ent = vehicle();
+    if (!ent || progress.phase !== 'home') return;
+    const mphNow = getHudSnapshot().mph;
+    if (mphNow > 22) {
+      ui.showToast('Slow down', 'Under ~22 mph to land here.');
+      return;
+    }
+    ent.setPosition(x, hillOffsetM(x, z) + 0.8, z);
+    ent.rigidbody?.applyImpulse(0, 0, 0);
+    ui.showToast('Landed', label);
+  });
+
   const resumeFromSave = () => {
     progress = tryUnlockNightCoil(progress);
     progress = ensureSafehouseUnlocks(progress);
@@ -740,6 +761,21 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     const nextLm =
       progress.phase === 'home' ? nextUnvisitedLandmark(progress.visitedLandmarkIds, pos.x, pos.z) : null;
 
+    const manualNav = getNavTarget();
+    let navRoutePoints: { x: number; z: number }[] = [];
+    let navTurnLabel = '';
+    const navPin =
+      manualNav ??
+      (nextLm ? { label: nextLm.name, x: nextLm.x, z: nextLm.z } : null);
+    if (navPin && progress.phase === 'home') {
+      navRoutePoints =
+        manualNav || !nextLm
+          ? routeWaypointsToPoint(pos.x, pos.z, navPin.x, navPin.z)
+          : routeWaypointsToLandmark(pos.x, pos.z, nextLm);
+      navTurnLabel = navTurnHint(pos.x, pos.z, yaw, navRoutePoints);
+    }
+    const strip = nearestStorefrontStrip(pos.x, pos.z);
+
     if (progress.phase === 'home') {
       progress = ensureSafehouseUnlocks(progress);
       const near = nearUnlockedSafehouse(progress, pos.x, pos.z);
@@ -840,7 +876,11 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         parkingSpot && mph < 8
           ? `${parkingSpot.name}${(progress.parkingStars[parkingSpot.id] ?? 0) > 0 ? ` · ${progress.parkingStars[parkingSpot.id]}★` : ''}`
           : undefined,
-      activeSideshowName: sideshowSite?.name
+      activeSideshowName: sideshowSite?.name,
+      navTarget: manualNav,
+      navTurnLabel,
+      navRoutePoints,
+      storefrontStripLabel: strip ? `${strip.label} — ${strip.shops[0] ?? 'shops'}` : null
     });
 
     statsT += dt;

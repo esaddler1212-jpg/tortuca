@@ -6,6 +6,7 @@ import { buildAllDistricts, buildFreewayLamps } from './build-districts';
 import { buildAllFreeways } from './build-freeway';
 import { buildFreewayRamps } from './build-freeway-ramps';
 import { buildBayAreaLandmarks } from './build-landmarks';
+import { buildHubParkingLots, buildStorefrontSigns } from './build-hub-world';
 import { buildParkingSpots, buildGasStations } from './build-parking-gas';
 import { buildTacoTrucks } from './build-taco-trucks';
 import { buildMissionSites } from './build-mission-sites';
@@ -40,6 +41,8 @@ export function buildDrivingWorld(app: AppBase): void {
   buildAllFreeways(app);
   buildFreewayRamps(app);
   buildCityStreets(app);
+  buildHubParkingLots(app);
+  buildStorefrontSigns(app);
   buildLombardStreet(app);
   buildCollectibles(app);
   buildCruiseVistas(app);
