@@ -1,9 +1,10 @@
 import { Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
 
+import { CITY_HUBS, pointInCityHub, type CityHub } from './city-map-registry';
 import { hillOffsetM } from './bay-terrain';
 import { BAY_WINDOW_LIGHTS, hash2 } from './night-palette';
-import { nearDistrictStreetGrid, tooCloseToFreeway } from './street-utils';
-import { DISTRICTS, type DistrictId, type DistrictSpec } from './world-config';
+import { nearHubStreetGrid, tooCloseToFreeway } from './street-utils';
+import { DISTRICTS, FREEWAY_ROUTES, FREEWAY_WIDTH_M, type DistrictId, type DistrictSpec } from './world-config';
 
 const BUILDING_BASE = new Color(0.07, 0.075, 0.1);
 
@@ -27,24 +28,32 @@ function buildingMaterial(index: number): StandardMaterial {
   return mat;
 }
 
-function buildDistrict(app: AppBase, spec: DistrictSpec, materials: StandardMaterial[]): void {
-  for (let bx = spec.minX; bx < spec.maxX; bx += spec.blockM) {
-    for (let bz = spec.minZ; bz < spec.maxZ; bz += spec.blockM) {
-      const cx = bx + spec.blockM * 0.5;
-      const cz = bz + spec.blockM * 0.5;
+function buildHubDistrict(app: AppBase, hub: CityHub, spec: DistrictSpec, materials: StandardMaterial[]): void {
+  const blockM = hub.blockM ?? spec.blockM;
+  const minX = hub.centerX - hub.radiusM;
+  const maxX = hub.centerX + hub.radiusM;
+  const minZ = hub.centerZ - hub.radiusM;
+  const maxZ = hub.centerZ + hub.radiusM;
+
+  for (let bx = minX; bx < maxX; bx += blockM) {
+    for (let bz = minZ; bz < maxZ; bz += blockM) {
+      const cx = bx + blockM * 0.5;
+      const cz = bz + blockM * 0.5;
+      if (!pointInCityHub(cx, cz, hub)) continue;
       if (tooCloseToFreeway(cx, cz)) continue;
-      if (nearDistrictStreetGrid(cx, cz, spec)) continue;
+      if (nearHubStreetGrid(cx, cz, hub)) continue;
 
       const roll = hash2(cx, cz);
       if (roll < 0.14) continue;
 
       const count = roll > 0.78 ? 2 : 1;
       for (let t = 0; t < count; t++) {
-        const ox = (hash2(cx + t, cz) - 0.5) * (spec.blockM * 0.35);
-        const oz = (hash2(cz + t, cx) - 0.5) * (spec.blockM * 0.35);
+        const ox = (hash2(cx + t, cz) - 0.5) * (blockM * 0.35);
+        const oz = (hash2(cz + t, cx) - 0.5) * (blockM * 0.35);
         const x = cx + ox;
         const z = cz + oz;
-        if (nearDistrictStreetGrid(x, z, spec)) continue;
+        if (!pointInCityHub(x, z, hub)) continue;
+        if (nearHubStreetGrid(x, z, hub)) continue;
 
         const groundY = spec.flat ? hash2(x, z) * 1.2 : hillOffsetM(x, z);
         const footprint =
@@ -53,7 +62,7 @@ function buildDistrict(app: AppBase, spec: DistrictSpec, materials: StandardMate
           (spec.heightMin + hash2(z, x) * (spec.heightMax - spec.heightMin)) * spec.heightMul;
         const matIndex = Math.floor(hash2(x + height, z) * BAY_WINDOW_LIGHTS.length);
 
-        const tower = new Entity(`${spec.id}-${Math.round(x)}-${Math.round(z)}`);
+        const tower = new Entity(`${hub.id}-${Math.round(x)}-${Math.round(z)}`);
         tower.setLocalScale(footprint, height, footprint);
         tower.setPosition(x, groundY + height * 0.5, z);
         tower.addComponent('render', { type: 'box', material: materials[matIndex] });
@@ -83,24 +92,24 @@ function addDistrictSign(app: AppBase, spec: DistrictSpec, x: number, z: number)
 export function buildAllDistricts(app: AppBase): void {
   const materials = BAY_WINDOW_LIGHTS.map((_, i) => buildingMaterial(i));
 
-  (Object.keys(DISTRICTS) as DistrictId[]).forEach((id) => {
-    buildDistrict(app, DISTRICTS[id], materials);
-  });
+  for (const hub of CITY_HUBS) {
+    buildHubDistrict(app, hub, DISTRICTS[hub.district], materials);
+  }
 
-  addDistrictSign(app, DISTRICTS.sf, -720, -720);
-  addDistrictSign(app, DISTRICTS.marin, -980, 280);
-  addDistrictSign(app, DISTRICTS.eastBay, 620, -280);
-  addDistrictSign(app, DISTRICTS.vallejo, 620, 880);
-  addDistrictSign(app, DISTRICTS.peninsula, -620, -1380);
-  addDistrictSign(app, DISTRICTS.southBay, 520, -1520);
+  const signed = new Set<DistrictId>();
+  for (const hub of CITY_HUBS) {
+    if (signed.has(hub.district)) continue;
+    signed.add(hub.district);
+    addDistrictSign(app, DISTRICTS[hub.district], hub.centerX, hub.centerZ);
+  }
 }
 
 export function buildFreewayLamps(app: AppBase, spacing: number, limit: number): void {
   let count = 0;
   for (const route of FREEWAY_ROUTES) {
     for (let i = 0; i < route.length - 1 && count < limit; i++) {
-      const a = route[i];
-      const b = route[i + 1];
+      const a = route[i]!;
+      const b = route[i + 1]!;
       const dx = b.x - a.x;
       const dz = b.z - a.z;
       const len = Math.hypot(dx, dz);

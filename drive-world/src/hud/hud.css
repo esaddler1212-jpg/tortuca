@@ -93,6 +93,13 @@
   stroke-width: 1;
 }
 
+.minimap-city-hub {
+  fill: none;
+  stroke: rgba(90, 140, 200, 0.35);
+  stroke-width: 1;
+  stroke-dasharray: 3 2;
+}
+
 .minimap-arterial {
   stroke: rgba(140, 150, 165, 0.45);
   stroke-width: 1.2;

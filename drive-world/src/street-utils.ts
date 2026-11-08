@@ -1,5 +1,6 @@
 import { hillOffsetM } from './bay-terrain';
-import { BAY_WATER_BOUNDS, FREEWAY_ROUTES, FREEWAY_WIDTH_M, type DistrictSpec } from './world-config';
+import type { CityHub } from './city-map-registry';
+import { BAY_WATER_BOUNDS, FREEWAY_ROUTES, FREEWAY_WIDTH_M } from './world-config';
 
 export const GRID_STREET_WIDTH_M = 12;
 export const ARTERIAL_STREET_WIDTH_M = 18;
@@ -37,8 +38,25 @@ export function inBayWater(x: number, z: number): boolean {
   );
 }
 
-/** Manhattan grid — streets on block boundaries between building parcels. */
-export function nearDistrictStreetGrid(x: number, z: number, spec: DistrictSpec, streetW = GRID_STREET_WIDTH_M): boolean {
+/** Manhattan grid — streets on block boundaries between building parcels (city hub local map). */
+export function nearHubStreetGrid(x: number, z: number, hub: CityHub, streetW = GRID_STREET_WIDTH_M): boolean {
+  const blockM = hub.blockM ?? 52;
+  const minX = hub.centerX - hub.radiusM;
+  const minZ = hub.centerZ - hub.radiusM;
+  const modX = ((x - minX) % blockM + blockM) % blockM;
+  const modZ = ((z - minZ) % blockM + blockM) % blockM;
+  const edgeX = Math.min(modX, blockM - modX);
+  const edgeZ = Math.min(modZ, blockM - modZ);
+  return edgeX < streetW * 0.55 || edgeZ < streetW * 0.55;
+}
+
+/** @deprecated use nearHubStreetGrid — kept for callers migrating off full-district grids */
+export function nearDistrictStreetGrid(
+  x: number,
+  z: number,
+  spec: { minX: number; minZ: number; blockM: number },
+  streetW = GRID_STREET_WIDTH_M
+): boolean {
   const modX = ((x - spec.minX) % spec.blockM + spec.blockM) % spec.blockM;
   const modZ = ((z - spec.minZ) % spec.blockM + spec.blockM) % spec.blockM;
   const edgeX = Math.min(modX, spec.blockM - modX);

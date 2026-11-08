@@ -1,6 +1,15 @@
 import { Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
 
+import {
+  CITY_HUBS,
+  HUB_CONNECTORS,
+  LANDMARK_STREET_ROUTES,
+  pointInCityHub,
+  pointsForLandmarks,
+  type CityHub
+} from './city-map-registry';
 import { hillOffsetM } from './bay-terrain';
+import { LANDMARKS } from './landmark-registry';
 import { NAMED_STREETS } from './street-registry';
 import {
   ARTERIAL_STREET_WIDTH_M,
@@ -9,12 +18,12 @@ import {
   streetDeckY,
   tooCloseToFreeway
 } from './street-utils';
-import { DISTRICTS, type DistrictId, type DistrictSpec } from './world-config';
 
 export type StreetMaterials = {
   asphalt: StandardMaterial;
   line: StandardMaterial;
   arterial: StandardMaterial;
+  plaza: StandardMaterial;
 };
 
 function streetMaterials(): StreetMaterials {
@@ -38,7 +47,14 @@ function streetMaterials(): StreetMaterials {
   line.emissiveIntensity = 0.35;
   line.update();
 
-  return { asphalt, line, arterial };
+  const plaza = new StandardMaterial();
+  plaza.diffuse = new Color(0.14, 0.14, 0.16);
+  plaza.gloss = 0.35;
+  plaza.emissive = new Color(0.08, 0.1, 0.14);
+  plaza.emissiveIntensity = 0.15;
+  plaza.update();
+
+  return { asphalt, line, arterial, plaza };
 }
 
 function segmentClear(ax: number, az: number, bx: number, bz: number): boolean {
@@ -93,50 +109,105 @@ function addStreetDeck(
   app.root.addChild(mark);
 }
 
-function buildDistrictGrid(app: AppBase, spec: DistrictSpec, mats: StreetMaterials): void {
-  const tag = `grid-${spec.id}`;
-  for (let x = spec.minX; x <= spec.maxX; x += spec.blockM) {
-    addStreetDeck(app, x, spec.minZ, x, spec.maxZ, GRID_STREET_WIDTH_M, mats, tag, false);
+function clipSegmentToHub(
+  ax: number,
+  az: number,
+  bx: number,
+  bz: number,
+  hub: CityHub
+): { ax: number; az: number; bx: number; bz: number } | null {
+  const samples = 12;
+  let first: { x: number; z: number } | null = null;
+  let last: { x: number; z: number } | null = null;
+  for (let i = 0; i <= samples; i++) {
+    const t = i / samples;
+    const x = ax + (bx - ax) * t;
+    const z = az + (bz - az) * t;
+    if (!pointInCityHub(x, z, hub)) continue;
+    if (!first) first = { x, z };
+    last = { x, z };
   }
-  for (let z = spec.minZ; z <= spec.maxZ; z += spec.blockM) {
-    addStreetDeck(app, spec.minX, z, spec.maxX, z, GRID_STREET_WIDTH_M, mats, tag, false);
-  }
+  if (!first || !last) return null;
+  return { ax: first.x, az: first.z, bx: last.x, bz: last.z };
 }
 
-function buildNamedArterials(app: AppBase, mats: StreetMaterials): void {
-  for (const street of NAMED_STREETS) {
-    const w = street.width ?? ARTERIAL_STREET_WIDTH_M;
-    for (let i = 0; i < street.points.length - 1; i++) {
-      const a = street.points[i]!;
-      const b = street.points[i + 1]!;
-      addStreetDeck(app, a.x, a.z, b.x, b.z, w, mats, `arterial-${street.id}`, true);
+function buildHubGrid(app: AppBase, hub: CityHub, mats: StreetMaterials): void {
+  const blockM = hub.blockM ?? 52;
+  const tag = `hub-${hub.id}`;
+  const minX = hub.centerX - hub.radiusM;
+  const maxX = hub.centerX + hub.radiusM;
+  const minZ = hub.centerZ - hub.radiusM;
+  const maxZ = hub.centerZ + hub.radiusM;
+
+  for (let x = minX; x <= maxX; x += blockM) {
+    const clipped = clipSegmentToHub(x, minZ, x, maxZ, hub);
+    if (clipped) {
+      addStreetDeck(app, clipped.ax, clipped.az, clipped.bx, clipped.bz, GRID_STREET_WIDTH_M, mats, tag, false);
     }
-    const mid = street.points[Math.floor(street.points.length / 2)]!;
-    const sy = hillOffsetM(mid.x, mid.z) + 0.2;
-    const sign = new Entity(`street-sign-${street.id}`);
-    sign.setLocalScale(0.25, 3.2, 1.2);
-    sign.setPosition(mid.x, sy + 4, mid.z);
-    const signMat = new StandardMaterial();
-    signMat.emissive = new Color(0.35, 0.75, 0.95);
-    signMat.emissiveIntensity = 0.65;
-    signMat.update();
-    sign.addComponent('render', { type: 'box', material: signMat });
-    app.root.addChild(sign);
+  }
+  for (let z = minZ; z <= maxZ; z += blockM) {
+    const clipped = clipSegmentToHub(minX, z, maxX, z, hub);
+    if (clipped) {
+      addStreetDeck(app, clipped.ax, clipped.az, clipped.bx, clipped.bz, GRID_STREET_WIDTH_M, mats, tag, false);
+    }
   }
 }
 
-function addSparseStreetLamps(app: AppBase, spec: DistrictSpec, limit: number): void {
+function buildPointRoute(
+  app: AppBase,
+  points: { x: number; z: number }[],
+  width: number,
+  tag: string,
+  ring: boolean,
+  mats: StreetMaterials
+) {
+  if (points.length < 2) return;
+  for (let i = 0; i < points.length - 1; i++) {
+    const a = points[i]!;
+    const b = points[i + 1]!;
+    addStreetDeck(app, a.x, a.z, b.x, b.z, width, mats, tag, true);
+  }
+  if (ring) {
+    const a = points[points.length - 1]!;
+    const b = points[0]!;
+    addStreetDeck(app, a.x, a.z, b.x, b.z, width, mats, `${tag}-ring`, true);
+  }
+}
+
+function buildLandmarkPlazas(app: AppBase, mats: StreetMaterials): void {
+  for (const lm of LANDMARKS) {
+    const hub = CITY_HUBS.find(
+      (h) => h.district === lm.district && pointInCityHub(lm.x, lm.z, h)
+    );
+    if (!hub) continue;
+    const y = hillOffsetM(lm.x, lm.z) + 0.08;
+    const pad = new Entity(`plaza-${lm.id}`);
+    const span = Math.min(48, lm.visitRadius * 1.1);
+    pad.setLocalScale(span, 0.18, span);
+    pad.setPosition(lm.x, y, lm.z);
+    pad.addComponent('render', { type: 'box', material: mats.plaza });
+    pad.addComponent('collision', {
+      type: 'box',
+      halfExtents: new Vec3(span / 2, 0.09, span / 2)
+    });
+    pad.addComponent('rigidbody', { type: 'static' });
+    app.root.addChild(pad);
+  }
+}
+
+function addHubLamps(app: AppBase, hub: CityHub, limit: number): void {
   const lampMat = new StandardMaterial();
   lampMat.emissive = new Color(1, 0.84, 0.55);
   lampMat.emissiveIntensity = 1.2;
   lampMat.update();
+  const blockM = hub.blockM ?? 52;
   let n = 0;
-  for (let x = spec.minX; x <= spec.maxX && n < limit; x += spec.blockM * 2) {
-    for (let z = spec.minZ; z <= spec.maxZ && n < limit; z += spec.blockM * 2) {
+  for (let x = hub.centerX - hub.radiusM; x <= hub.centerX + hub.radiusM && n < limit; x += blockM * 2) {
+    for (let z = hub.centerZ - hub.radiusM; z <= hub.centerZ + hub.radiusM && n < limit; z += blockM * 2) {
+      if (!pointInCityHub(x, z, hub)) continue;
       if (tooCloseToFreeway(x, z, 28)) continue;
-      if (inBayWater(x, z)) continue;
       const y = hillOffsetM(x, z) + 0.2;
-      const pole = new Entity(`st-lamp-${spec.id}-${n}`);
+      const pole = new Entity(`hub-lamp-${hub.id}-${n}`);
       pole.setLocalScale(0.28, 4.2, 0.28);
       pole.setPosition(x, y + 2.1, z);
       pole.addComponent('render', { type: 'box', material: lampMat });
@@ -146,11 +217,43 @@ function addSparseStreetLamps(app: AppBase, spec: DistrictSpec, limit: number): 
   }
 }
 
+function addHubLabel(app: AppBase, hub: CityHub): void {
+  const y = hillOffsetM(hub.centerX, hub.centerZ) + 0.2;
+  const sign = new Entity(`hub-label-${hub.id}`);
+  sign.setLocalScale(1.2, 8, 4.5);
+  sign.setPosition(hub.centerX, y + 10, hub.centerZ);
+  const signMat = new StandardMaterial();
+  signMat.emissive = new Color(0.25, 0.55, 0.9);
+  signMat.emissiveIntensity = 0.75;
+  signMat.update();
+  sign.addComponent('render', { type: 'box', material: signMat });
+  app.root.addChild(sign);
+}
+
 export function buildCityStreets(app: AppBase): void {
   const mats = streetMaterials();
-  (Object.keys(DISTRICTS) as DistrictId[]).forEach((id) => {
-    buildDistrictGrid(app, DISTRICTS[id], mats);
-    addSparseStreetLamps(app, DISTRICTS[id], 18);
-  });
-  buildNamedArterials(app, mats);
+
+  for (const hub of CITY_HUBS) {
+    buildHubGrid(app, hub, mats);
+    addHubLamps(app, hub, 14);
+    addHubLabel(app, hub);
+  }
+
+  for (const route of LANDMARK_STREET_ROUTES) {
+    if (route.landmarkIds.length < 2) continue;
+    const pts = pointsForLandmarks(route.landmarkIds);
+    buildPointRoute(app, pts, route.width ?? ARTERIAL_STREET_WIDTH_M, `lm-route-${route.id}`, !!route.ring, mats);
+  }
+
+  for (const conn of HUB_CONNECTORS) {
+    if (conn.points.length < 2) continue;
+    buildPointRoute(app, conn.points, conn.width ?? 15, `hub-link-${conn.id}`, false, mats);
+  }
+
+  for (const street of NAMED_STREETS) {
+    const w = street.width ?? ARTERIAL_STREET_WIDTH_M;
+    buildPointRoute(app, street.points, w, `arterial-${street.id}`, false, mats);
+  }
+
+  buildLandmarkPlazas(app, mats);
 }
