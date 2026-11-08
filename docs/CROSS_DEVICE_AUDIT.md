@@ -51,6 +51,8 @@ npm run test:os        # full release gate (includes test:devices)
 
 ## Related docs
 
+- [`IRIS_MAX_CAPACITY_AUDIT.md`](./IRIS_MAX_CAPACITY_AUDIT.md) — full OS/UI gate + manual QA
+- [`IRIS_IMPROVEMENTS_RESEARCH.md`](./IRIS_IMPROVEMENTS_RESEARCH.md) — ranked upgrade backlog
 - [`HUD_ORB_LANTERN_AUDIT.md`](./HUD_ORB_LANTERN_AUDIT.md) — orb accent + daily lantern
 - `README.md` — iPad PWA install blurb
 

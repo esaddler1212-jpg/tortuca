@@ -26,7 +26,7 @@ its own README, build, and (typically) its own Netlify site.
 npm install
 npm run dev
 npx netlify dev   # Woodhouse aggregator + Google OAuth
-npm run test:os   # build + time + iris + research + HUD/OS audit + guardrails + thin auditor
+npm run test:os   # build + time + iris + research + HUD/OS audit + guardrails + thin auditor (see docs/IRIS_MAX_CAPACITY_AUDIT.md)
 # or: npm run build && npm run test:time && npm run test:iris && npm run test:research && npm run test:audit
 ```
 
