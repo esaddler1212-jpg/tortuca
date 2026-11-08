@@ -72,10 +72,13 @@ npm run dev
 
 **WASD / arrows** — full throttle allowed.
 
-## Still worth deciding (map only)
+## Art direction (locked)
 
-1. **Shape** — square island, ring road, or one giant peninsula with long straights?
-2. **Terrain** — dead flat + highways first vs rolling hills immediately?
-3. **Look** — stylized low-poly dusk vs bright midday?
+- **Low-poly** procedural box towers with neon emissive bands
+- **Night city** — dark wet roads, yellow centre lines, street lamps, minimal moonlight
+- Prototype: `build-city.ts` + `night-palette.ts` in `drive-world/`
 
-Those three only affect art and tile layout, not game systems.
+## Map shape (still open)
+
+1. **Layout** — cross highways through dense blocks (current) vs ring freeway around the core?
+2. **Terrain** — stay flat for max speed vs add gentle hills at the map edge?

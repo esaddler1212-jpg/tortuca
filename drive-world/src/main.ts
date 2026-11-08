@@ -23,6 +23,7 @@ import {
 } from 'playcanvas';
 
 import { buildDrivingWorld } from './build-world';
+import { NIGHT_AMBIENT, NIGHT_SKY } from './night-palette';
 import { DRIVE_TUNING, WORLD_HALF_M } from './world-config';
 
 WasmModule.setConfig('Ammo', {
@@ -71,10 +72,10 @@ await new Promise<void>((resolve) => {
 
 app.start();
 
-app.scene.ambientLight = new Color(0.35, 0.38, 0.45);
-app.scene.fog = Color.BLACK;
-app.scene.fogStart = 120;
-app.scene.fogEnd = Math.min(2400, WORLD_HALF_M * 1.1);
+app.scene.ambientLight = NIGHT_AMBIENT.clone();
+app.scene.exposure = 0.55;
+app.scene.fogStart = 90;
+app.scene.fogEnd = Math.min(2200, WORLD_HALF_M * 1.05);
 
 buildDrivingWorld(app);
 
@@ -103,14 +104,18 @@ const wheels = wheelDefs.map((def) => {
 });
 
 const paint = new StandardMaterial();
-paint.diffuse = new Color(0.78, 0.14, 0.12);
-paint.metalness = 0.35;
-paint.gloss = 0.55;
+paint.diffuse = new Color(0.12, 0.12, 0.14);
+paint.emissive = new Color(0.95, 0.2, 0.45);
+paint.emissiveIntensity = 0.35;
+paint.metalness = 0.4;
+paint.gloss = 0.6;
 paint.update();
 
 const glass = new StandardMaterial();
-glass.diffuse = new Color(0.2, 0.25, 0.35);
-glass.opacity = 0.55;
+glass.diffuse = new Color(0.05, 0.08, 0.12);
+glass.emissive = new Color(0.2, 0.5, 0.9);
+glass.emissiveIntensity = 0.25;
+glass.opacity = 0.65;
 glass.blendType = 2;
 glass.update();
 
@@ -149,23 +154,23 @@ vehicle.addChild(chassis);
 vehicle.addChild(cabin);
 app.root.addChild(vehicle);
 
-const sun = new Entity('sun');
-sun.addComponent('light', {
+const moon = new Entity('moon');
+moon.addComponent('light', {
   type: 'directional',
-  color: new Color(1, 0.96, 0.88),
-  intensity: 1.35,
+  color: new Color(0.45, 0.5, 0.75),
+  intensity: 0.22,
   castShadows: true,
-  shadowDistance: 180,
-  shadowResolution: 2048
+  shadowDistance: 140,
+  shadowResolution: 1024
 });
-sun.setEulerAngles(48, 25, 0);
-app.root.addChild(sun);
+moon.setEulerAngles(55, 30, 0);
+app.root.addChild(moon);
 
 const camera = new Entity('camera');
 camera.addComponent('camera', {
-  fov: 72,
+  fov: 74,
   farClip: 2800,
-  clearColor: new Color(0.45, 0.55, 0.75)
+  clearColor: NIGHT_SKY.clone()
 });
 app.root.addChild(camera);
 

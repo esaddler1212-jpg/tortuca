@@ -1,6 +1,6 @@
 # Drive World (prototype)
 
-PlayCanvas + Ammo **raycast vehicle** on a **multi-kilometre** map — cruise and drive as fast as you want; no races or events.
+PlayCanvas + Ammo **raycast vehicle** on a **multi-kilometre low-poly night city** — neon blocks, street lamps, wet roads; drive as fast as you want.
 
 ```bash
 npm install

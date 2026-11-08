@@ -1,5 +1,7 @@
 import { Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
 
+import { buildLowPolyNightCity, buildStreetLamps } from './build-city';
+import { NIGHT_FOG } from './night-palette';
 import { STRIPE_SPACING_M, WORLD_HALF_M } from './world-config';
 
 type WorldAssets = {
@@ -10,18 +12,21 @@ type WorldAssets = {
 
 function materials(): WorldAssets {
   const asphalt = new StandardMaterial();
-  asphalt.diffuse = new Color(0.11, 0.12, 0.14);
-  asphalt.gloss = 0.22;
+  asphalt.diffuse = new Color(0.05, 0.05, 0.06);
+  asphalt.gloss = 0.55;
+  asphalt.metalness = 0.1;
   asphalt.update();
 
   const highway = new StandardMaterial();
-  highway.diffuse = new Color(0.14, 0.15, 0.17);
-  highway.gloss = 0.28;
+  highway.diffuse = new Color(0.07, 0.07, 0.08);
+  highway.gloss = 0.65;
+  highway.metalness = 0.12;
   highway.update();
 
   const stripe = new StandardMaterial();
-  stripe.diffuse = new Color(0.93, 0.91, 0.84);
-  stripe.emissive = new Color(0.06, 0.06, 0.05);
+  stripe.diffuse = new Color(0.85, 0.72, 0.2);
+  stripe.emissive = new Color(0.35, 0.28, 0.05);
+  stripe.emissiveIntensity = 0.4;
   stripe.update();
 
   return { asphalt, stripe, highway };
@@ -30,6 +35,8 @@ function materials(): WorldAssets {
 export function buildDrivingWorld(app: AppBase): WorldAssets {
   const mats = materials();
   const h = WORLD_HALF_M;
+
+  app.scene.fog = NIGHT_FOG.clone();
 
   const ground = new Entity('ground');
   ground.setLocalScale(h * 2, 0.4, h * 2);
@@ -51,7 +58,8 @@ export function buildDrivingWorld(app: AppBase): WorldAssets {
   eastWest.addComponent('render', { type: 'box', material: mats.highway });
   app.root.addChild(eastWest);
 
-  for (let z = -h + STRIPE_SPACING_M; z < h; z += STRIPE_SPACING_M) {
+  const stripeExtent = Math.min(h, 1200);
+  for (let z = -stripeExtent + STRIPE_SPACING_M; z < stripeExtent; z += STRIPE_SPACING_M) {
     const mark = new Entity(`ns-stripe-${z}`);
     mark.setLocalScale(0.35, 0.02, 3.5);
     mark.setPosition(0, 0.03, z);
@@ -59,13 +67,16 @@ export function buildDrivingWorld(app: AppBase): WorldAssets {
     app.root.addChild(mark);
   }
 
-  for (let x = -h + STRIPE_SPACING_M; x < h; x += STRIPE_SPACING_M) {
+  for (let x = -stripeExtent + STRIPE_SPACING_M; x < stripeExtent; x += STRIPE_SPACING_M) {
     const mark = new Entity(`ew-stripe-${x}`);
     mark.setLocalScale(3.5, 0.02, 0.35);
     mark.setPosition(x, 0.03, 0);
     mark.addComponent('render', { type: 'box', material: mats.stripe });
     app.root.addChild(mark);
   }
+
+  buildLowPolyNightCity(app);
+  buildStreetLamps(app, 90, 96);
 
   return mats;
 }
