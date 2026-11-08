@@ -6,7 +6,7 @@ Compressed **Bay Area night sandbox** in `drive-world/`. Not a AAA open world; a
 
 | Layer | Shipped |
 |-------|---------|
-| **World** | ~5.2 km half-extent, 6 districts, procedural blocks, freeways (80/101/880/280/24), bay water, ramps, Lombard, traffic toggle |
+| **World** | ~5.2 km half-extent, 6 districts, procedural blocks, freeways (80/101/880/280/24/680/580/780 — topology from regional maps), bay water, ramps, Lombard, traffic toggle |
 | **Progression** | Waymo intro → garage starter → visit all landmarks per region → regional car |
 | **Extra vehicles** | Aerial (scenic + rotor token), legend homages (collectibles), Kenney + CC0 glTF |
 | **Systems** | Nitro, gamepad, touch pad (ground), scenic routes, speed traps, fast travel, photo mode, drone/chase/cockpit cam, fog, garage tuning |

@@ -9,7 +9,6 @@ import { buildMissionSites } from './build-mission-sites';
 import {
   buildCollectibles,
   buildCruiseVistas,
-  buildExtraFreeways,
   buildLombardStreet,
   spawnAmbientTraffic
 } from './build-world-extras';
@@ -35,7 +34,6 @@ export function buildDrivingWorld(app: AppBase): void {
 
   buildBayWater(app);
   buildAllFreeways(app);
-  buildExtraFreeways(app);
   buildFreewayRamps(app);
   buildLombardStreet(app);
   buildCollectibles(app);

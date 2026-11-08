@@ -1,6 +1,6 @@
 # City Nights
 
-Open-world **Bay Area night driving** prototype (PlayCanvas + Ammo + React HUD).
+Open-world **Bay Area night driving** prototype (PlayCanvas + Ammo + React HUD). Freeway waypoints in `world-config.ts` follow the real corridor layout (I-80, 101/280 pair, 880 east shore, 24, 680, 580 Marin, 780 Carquinez) on a compressed map.
 
 Folder name remains `drive-world/` for Netlify base-directory wiring; the product name is **City Nights**.
 

@@ -97,7 +97,7 @@ export function buildFreewayPath(app: AppBase, route: FreewayWaypoint[], mats: F
 
 export function buildAllFreeways(app: AppBase): FreewayMaterials {
   const mats = freewayMaterials();
-  const tags = ['i80', 'us101', 'i880'];
+  const tags = ['i80', 'us101', 'i880', 'i280', 'sr24', 'i680', 'i580', 'i780'];
   FREEWAY_ROUTES.forEach((route, i) => buildFreewayPath(app, route, mats, tags[i] ?? `fw${i}`));
 
   const bridgeMid = FREEWAY_I80[5];
