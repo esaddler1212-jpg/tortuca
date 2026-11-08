@@ -65,7 +65,7 @@ export function TeamPanel({ timeZone, onOpenModule, onAskSpecialist }: Props) {
         >
           <p className="font-mono text-[10px] uppercase tracking-widest text-cyan-400/70">{IRIS_CAPTAIN.title}</p>
           <p className="font-display text-lg text-cyan-100">{IRIS_CAPTAIN.name}</p>
-          <p className="text-[11px] text-cyan-100/60 mt-1">Relays specialist reports · consult_specialist</p>
+          <p className="text-[11px] text-cyan-100/60 mt-1">Iris answers most modules · Scout &amp; Scribe on delegate</p>
         </div>
         <div className="relative mt-2 w-full max-w-md">
           <div className="absolute left-1/2 top-0 h-px w-[72%] -translate-x-1/2 bg-cyan-400/25" aria-hidden />

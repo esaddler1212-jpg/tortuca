@@ -53,6 +53,18 @@ Ranked ideas from upstream projects, Anthropic docs, and this repo’s audits. *
 4. Monitor `cache_read_input_tokens` in usage store.
 5. Specialist hops: keep `IRIS_MAX_HOPS` low; dedupe delegates (already).
 
+## Team audit findings (Nov 8, 2026)
+
+| Finding | Status |
+|---------|--------|
+| Every context-reading specialist matched the `IRIS modules (open with open_module)` registry line (it lists every domain's keywords), so their reports echoed the module list instead of real data | Fixed: `specialistExcerpt` skips the registry line |
+| With no domain match, specialists fell back to the first 12 context lines, so Courier could report Today items as inbox findings | Fixed: reports "nothing on file" and points E to the module |
+| Woodhouse ignored the `delegateHistory` it received and summarized an empty list unless the context happened to contain a Delegates line | Fixed: uses the real history |
+| Context-only specialists added extra model hops | **Done:** Iris answers from Right now; `consult_specialist` tool is **scout** and **scribe** only (Team roster unchanged in UI) |
+| Caching the conversation across hops (a third `cache_control` breakpoint on the latest message) only pays off on multi-hop turns; single-hop turns would pay the 1.25× cache write for nothing | Deferred: check the hops-per-turn mix in Settings → Iris usage first |
+
+Regression checks: `npm run test:audit` (specialist domain excerpts, Woodhouse history).
+
 ## Where to track
 
 - Implementation status: this file + [`IRIS_MAX_CAPACITY_AUDIT.md`](./IRIS_MAX_CAPACITY_AUDIT.md)

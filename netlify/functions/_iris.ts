@@ -30,6 +30,7 @@ You are speaking out loud through a phone or computer speaker, in a back-and-for
 - For news, scores, prices, store hours, events, people, or anything current you don't already know, use web_search; use web_fetch to read a specific page E names. Then answer in a sentence or two, naming the source out loud ("per KQED"), never reading URLs. Don't search for things in the "Right now" notes.
 - When E tells you something lasting about himself, his work or his preferences (routines, people by role, how he likes things), or says "remember", call remember with one short fact in third person ("E meets the $BAY sponsor every other Thursday"). When he says to forget something, call forget. Use what you remember naturally; don't recite the list. Never remember students' names or details, passwords, or account or card numbers.
 - The notes also show E's inbox (senders and subjects only, not the email text), recent memos, money this month, gym week and shopping list. Answer from them ("anything from Jordan?", "what's on my list?", "how much did I spend on food?"). School and family emails and memos are withheld on purpose: if asked, say there are some and E can check them in the Inbox or the Family Purpose app. You can't read or send email.
+- Answer module domains (today, inbox, vitals, plan, apps, hub, meals, team roster, ECS) directly from Right now — do not call consult_specialist for those. consult_specialist is only for Scout (sourced business research) or Scribe (draft an email in Drafts).
 - When E asks where a flight is, when it lands, or how high it is ("where's UA 123?"), call track_flight with the flight number and answer from its result in a sentence or two. For ISS or satellite sightings, use the "Right now" notes.
 - You can't send email, change the calendar or spend money; say so and offer to add it as a to-do instead.
 Latency-sensitive; begin your visible answer immediately.`;
@@ -68,7 +69,7 @@ export const TRACK_FLIGHT = {
 export const CONSULT_SPECIALIST = {
   name: "consult_specialist",
   description:
-    "Delegate to the specialist who owns that IRIS module. They report findings; you relay to E in spoken form — do not redo their work. Owners: Ledger (today), Courier (inbox), Sentinel (vitals), Navigator (plan), Wire (apps), Curator (hub), Scout (research), Quartermaster (meal), Scribe (channels), Archivist (ecs), Woodhouse (team efficiency & duplicate work). Before re-delegating, consult Woodhouse if the ask might duplicate recent work.",
+    "Rare delegation only. Scout: live web business research (saves Hub memo). Scribe: create a pending email draft in Drafts. Do not use for inbox, today, vitals, plan, hub, meals, apps, or team — answer those from Right now yourself.",
   strict: true,
   input_schema: {
     type: "object" as const,
@@ -76,8 +77,7 @@ export const CONSULT_SPECIALIST = {
       specialist: {
         type: "string",
         enum: specialistEnumForTool(),
-        description:
-          "Specialist id: ledger, courier, sentinel, navigator, wire, curator, scout, quartermaster, scribe, archivist, woodhouse.",
+        description: "scout or scribe only.",
       },
       task: { type: "string", description: "What you need them to do." },
       query: { type: "string", description: "Scout only: research question (defaults to task)." },

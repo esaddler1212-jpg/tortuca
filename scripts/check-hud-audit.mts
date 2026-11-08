@@ -29,6 +29,7 @@ import {
   tasksSimilar,
   type IrisDelegateLog,
 } from "../shared/irisTeamActivity.ts";
+import type { IrisSpecialistId } from "../shared/irisTeam.ts";
 import { shopifyContextForIris, shopifyReadiness } from "../shared/shopify.ts";
 import { stocksContext } from "../shared/irisContext.ts";
 import { channelsSummary, normalizeChannels, pendingDrafts } from "../shared/channels.ts";
@@ -67,7 +68,7 @@ ok("woodhouse owns team module", IRIS_TEAM.find((s) => s.id === "woodhouse")?.mo
 ok("team prompt: duplicate guard", teamContextForIris().includes("DUPLICATE BLOCKED"));
 
 const toolIds = specialistEnumForTool().slice().sort();
-ok("consult_specialist enum matches roster", toolIds.join(",") === IRIS_SPECIALIST_IDS.slice().sort().join(","));
+ok("consult_specialist enum is scout + scribe only", toolIds.join(",") === "scout,scribe");
 const specialistsTs = read("netlify/functions/_irisSpecialists.ts");
 for (const id of IRIS_SPECIALIST_IDS) {
   ok(`consult handler: case ${id}`, new RegExp(`case "${id}"`).test(specialistsTs));
@@ -146,22 +147,38 @@ ok("CommandBar not imported in App", !appTs.includes('from "./components/Command
 // ── Server consult duplicate block (no API) ────────────────────────────
 const noopClient = {} as Anthropic;
 const blocked = await consultSpecialist(noopClient, {
-  specialist: "courier",
-  task: "summarize unread mail",
+  specialist: "scout",
+  task: "research bay area doc sponsors",
   context: "",
   sessionId: "audit",
   who: "audit@test",
   timeZone: "America/Los_Angeles",
   delegateHistory: [
     {
-      specialist: "courier",
+      specialist: "scout",
       at: new Date().toISOString(),
-      task: "summarize my unread mail",
-      report: "Three unread, two need reply.",
+      task: "research bay sponsors for documentary",
+      report: "Three leads saved.",
     },
   ],
 });
-ok("consultSpecialist blocks duplicate courier", blocked.deduped === true && blocked.summary.includes("DUPLICATE BLOCKED"));
+ok("consultSpecialist blocks duplicate scout", blocked.deduped === true && blocked.summary.includes("DUPLICATE BLOCKED"));
+
+// ── Specialist reports carry only their own domain ──────────────────────
+const dayContext = [
+  "It is Sunday, November 8 at 9:00 AM (America/Los_Angeles). Mode: Weekend. Location: Vallejo.",
+  "Do today: call the bank; renew registration (urgent).",
+  `IRIS modules (open with open_module): ${moduleContextForIris()}.`,
+].join("\n");
+const consult = (specialist: IrisSpecialistId, task: string, delegateHistory: IrisDelegateLog[] = []) =>
+  consultSpecialist(noopClient, { specialist, task, context: dayContext, sessionId: "audit", who: "audit@test", timeZone: "America/Los_Angeles", delegateHistory });
+const courierSkip = await consult("courier", "what is in my inbox");
+ok("courier consult skipped (Iris answers)", courierSkip.summary.includes("no consult needed"));
+const ledgerSkip = await consult("ledger", "what do I have today");
+ok("ledger consult skipped (Iris answers)", ledgerSkip.summary.includes("no consult needed"));
+ok("team context: Iris answers modules directly", teamContextForIris().includes("do not call consult_specialist for ledger"));
+const excerptTs = read("netlify/functions/_irisSpecialists.ts");
+ok("specialistExcerpt skips registry", excerptTs.includes("REGISTRY_LINE") && excerptTs.includes("specialistExcerpt"));
 
 // ── Extended pass: commerce, markets, channels, APIs ────────────────────
 ok("stocksContext mentions watchlist", stocksContext({
