@@ -2,6 +2,7 @@ import type { Handler } from '@netlify/functions';
 import { getStore } from '@netlify/blobs';
 
 const STORE = 'city-nights-saves';
+const MIN_WRITE_GAP_MS = 22_000;
 
 function corsHeaders(): Record<string, string> {
   return {
@@ -29,6 +30,7 @@ export const handler: Handler = async (event) => {
 
   const store = getStore({ name: STORE, consistency: 'strong' });
   const blobKey = `progress/${key}.json`;
+  const metaKey = `meta/${key}.json`;
 
   if (event.httpMethod === 'GET') {
     const data = await store.get(blobKey, { type: 'text' });
@@ -46,6 +48,21 @@ export const handler: Handler = async (event) => {
     if (!event.body || event.body.length > 120_000) {
       return { statusCode: 413, headers: corsHeaders(), body: 'Payload too large' };
     }
+    const metaRaw = await store.get(metaKey, { type: 'text' });
+    if (metaRaw) {
+      try {
+        const meta = JSON.parse(metaRaw) as { lastWriteMs?: number };
+        if (meta.lastWriteMs && Date.now() - meta.lastWriteMs < MIN_WRITE_GAP_MS) {
+          return {
+            statusCode: 429,
+            headers: { ...corsHeaders(), 'Retry-After': '25', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ok: false, reason: 'throttled' })
+          };
+        }
+      } catch {
+        /* */
+      }
+    }
     let parsed: unknown;
     try {
       parsed = JSON.parse(event.body) as { progress?: unknown };
@@ -57,6 +74,7 @@ export const handler: Handler = async (event) => {
       return { statusCode: 400, headers: corsHeaders(), body: 'Missing progress object' };
     }
     await store.set(blobKey, JSON.stringify(progress));
+    await store.set(metaKey, JSON.stringify({ lastWriteMs: Date.now() }));
     return { statusCode: 200, headers: corsHeaders(), body: '{"ok":true}' };
   }
 

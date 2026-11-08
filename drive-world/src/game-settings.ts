@@ -20,6 +20,10 @@ export type GameSettings = {
   musicEnabled: boolean;
   musicUsePlaylist: boolean;
   autopilotPreset: AutopilotPreset;
+  /** SF/Marin mist + wet-road mood */
+  coastalWeatherEnabled: boolean;
+  /** Anonymous session length rollups (no PII) */
+  shareSessionStats: boolean;
 };
 
 const KEY = 'drive-world-settings-v1';
@@ -37,7 +41,9 @@ const defaults: GameSettings = {
   musicStation: 'ambient',
   musicEnabled: true,
   musicUsePlaylist: false,
-  autopilotPreset: 'tour'
+  autopilotPreset: 'tour',
+  coastalWeatherEnabled: true,
+  shareSessionStats: true
 };
 
 export function loadSettings(): GameSettings {

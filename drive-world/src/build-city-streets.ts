@@ -9,6 +9,7 @@ import {
   type CityHub
 } from './city-map-registry';
 import { hillOffsetM } from './bay-terrain';
+import { loadSettings } from './game-settings';
 import { LANDMARKS } from './landmark-registry';
 import { crossingForHub } from './street-name-registry';
 import { NAMED_STREETS } from './street-registry';
@@ -262,9 +263,11 @@ function buildHubStreetSigns(app: AppBase): void {
 export function buildCityStreets(app: AppBase): void {
   const mats = streetMaterials();
 
+  const preset = loadSettings().bayQualityPreset;
+  const hubLampLimit = preset === 'chromebook' ? 5 : preset === 'lush' ? 18 : 14;
   for (const hub of CITY_HUBS) {
     buildHubGrid(app, hub, mats);
-    addHubLamps(app, hub, 14);
+    addHubLamps(app, hub, hubLampLimit);
   }
 
   for (const route of LANDMARK_STREET_ROUTES) {

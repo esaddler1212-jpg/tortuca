@@ -15,6 +15,7 @@ its own README, build, and (typically) its own Netlify site.
 | **JARVIS-OS-V.2** | [`jarvis-os-v2/`](jarvis-os-v2/) | Local Gemini Jarvis ([upstream](https://github.com/MAL19INDUSTRIES/JARVIS-OS-V.2)): clone + [cherry-pick only](jarvis-os-v2/CHERRY_PICK.md) — not Iris |
 | **Herald OS** | [`herald-os/`](herald-os/) | Agent-native desktop ([upstream](https://github.com/iamlukethedev/Herald-OS)): [cherry-pick](herald-os/CHERRY_PICK.md) — speech/TTS helpers only in Iris |
 | **City Nights** | [`drive-world/`](drive-world/) | Open-world Bay Area night driving (PlayCanvas) — **separate Netlify site**; see [`docs/CITY_NIGHTS_DEPLOY.md`](docs/CITY_NIGHTS_DEPLOY.md) |
+| **Flight Nemulator** | [`flight-nemulator/`](flight-nemulator/) | Homage hero flight sandbox (PlayCanvas) — **separate Netlify site** (base dir `flight-nemulator`); see [`docs/FLIGHT_NEMULATOR.md`](docs/FLIGHT_NEMULATOR.md) |
 
 ### Alfred (repo root)
 

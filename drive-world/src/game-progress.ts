@@ -19,6 +19,8 @@ import {
   type VehicleCustomization
 } from './vehicle-customization';
 import { seedGhostTapes } from './cpm-ghost';
+import { tryUnlockCraftVehicles } from './craft-vehicle-unlocks';
+import { migrateRenamedVehicles } from './save-vehicle-migrations';
 
 export type GamePhase = 'waymo_ride' | 'pick_car' | 'home';
 
@@ -97,6 +99,8 @@ export type SavedProgress = {
   vehicleStats: Record<string, VehicleStats>;
   /** Speed-trap heat 0–5 */
   heatLevel: number;
+  /** Highest heat level reached (unlock tracking) */
+  heatPeakEver: number;
   visitedVistaIds: string[];
   journal: JournalEntry[];
   homeSafehouseId: string;
@@ -113,6 +117,7 @@ export type SavedProgress = {
   cpmDragBestET: number | null;
   /** Personal-best ghost tapes for drag/time rivalry HUD */
   cpmGhostTapes: Record<string, CpmGhostTape>;
+  landmarkSprintMs: Record<string, number>;
   taxiCompletedIds: string[];
   dynoRunCount: number;
   meetBadges: string[];
@@ -141,6 +146,7 @@ function defaultProgress(): SavedProgress {
     scenicProgress: {},
     vehicleStats: {},
     heatLevel: 0,
+    heatPeakEver: 0,
     visitedVistaIds: [],
     journal: [],
     homeSafehouseId: defaultHomeSafehouseId(),
@@ -153,6 +159,7 @@ function defaultProgress(): SavedProgress {
     cpmTimeAttackMs: {},
     cpmDragBestET: null,
     cpmGhostTapes: {},
+    landmarkSprintMs: {},
     taxiCompletedIds: [],
     dynoRunCount: 0,
     meetBadges: [],
@@ -161,7 +168,7 @@ function defaultProgress(): SavedProgress {
 }
 
 function withV9Defaults(p: Partial<Omit<SavedProgress, 'version'>> & { version: number }): SavedProgress {
-  return {
+  const base: SavedProgress = {
     ...defaultProgress(),
     ...p,
     version: 9,
@@ -174,6 +181,7 @@ function withV9Defaults(p: Partial<Omit<SavedProgress, 'version'>> & { version: 
     scenicProgress: p.scenicProgress ?? {},
     vehicleStats: p.vehicleStats ?? {},
     heatLevel: typeof p.heatLevel === 'number' ? p.heatLevel : 0,
+    heatPeakEver: typeof p.heatPeakEver === 'number' ? p.heatPeakEver : 0,
     visitedVistaIds: p.visitedVistaIds ?? [],
     journal: p.journal ?? [],
     homeSafehouseId: p.homeSafehouseId ?? defaultHomeSafehouseId(),
@@ -186,12 +194,14 @@ function withV9Defaults(p: Partial<Omit<SavedProgress, 'version'>> & { version: 
     cpmTimeAttackMs: p.cpmTimeAttackMs ?? {},
     cpmDragBestET: p.cpmDragBestET ?? null,
     cpmGhostTapes: p.cpmGhostTapes ?? {},
+    landmarkSprintMs: p.landmarkSprintMs ?? {},
     taxiCompletedIds: p.taxiCompletedIds ?? [],
     dynoRunCount: p.dynoRunCount ?? 0,
     meetBadges: p.meetBadges ?? [],
     activeTaxiId: p.activeTaxiId ?? null,
     cameraMode: normalizeCameraMode(p.cameraMode)
   };
+  return migrateRenamedVehicles(base);
 }
 
 function migrateRaw(parsed: Record<string, unknown>): SavedProgress | null {
@@ -387,6 +397,7 @@ export function collectItem(progress: SavedProgress, id: string, paintId: string
   next = tryUnlockCoastHeli(next);
   next = tryUnlockLegendVehicles(next);
   next = tryUnlockCultureVehicles(next);
+  next = tryUnlockCraftVehicles(next).progress;
   next = tryUnlockNightCoil(next);
   saveProgress(next);
   return next;

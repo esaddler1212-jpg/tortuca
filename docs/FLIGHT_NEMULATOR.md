@@ -32,4 +32,8 @@ Multiplayer, mission chapters, checkpoint races.
 
 ## Tortuca / IRIS
 
-Standalone Netlify site or `public/flight-nemulator/` redirect — same pattern as [PLAYCANVAS_INBROWSER_GAME.md](./PLAYCANVAS_INBROWSER_GAME.md).
+Standalone Netlify site: create a site from this repo with **base directory `flight-nemulator`**; `flight-nemulator/netlify.toml` sets the build (`npm ci && npm run build`), publish dir `dist`, and SPA fallback.
+
+## Testing
+
+`npm run test:smoke` boots `dist/` in headless Chrome, taps start, holds W for 3 s, and fails on runtime errors (set `CHROME_PATH` if Chrome is not auto-detected). CI: `.github/workflows/flight-nemulator.yml` runs build + smoke on changes under `flight-nemulator/`.

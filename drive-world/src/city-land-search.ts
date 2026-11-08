@@ -1,6 +1,9 @@
 import { CITY_HUBS } from './city-map-registry';
 import { LANDMARKS } from './landmark-registry';
+import { bayRegionsGated } from './mission-chapters';
+import type { SavedProgress } from './game-progress';
 import { SCENIC_ROUTES } from './world-extras';
+import type { DistrictId } from './world-config';
 
 export type LandTarget = {
   id: string;
@@ -9,7 +12,21 @@ export type LandTarget = {
   z: number;
   kind: 'hub' | 'landmark' | 'scenic';
   scenicId?: string;
+  district?: DistrictId;
 };
+
+export function landTargetDistrict(target: LandTarget): DistrictId | null {
+  if (target.district) return target.district;
+  if (target.kind === 'scenic') return null;
+  return null;
+}
+
+export function isLandTargetAllowed(progress: SavedProgress, target: LandTarget): boolean {
+  if (!bayRegionsGated(progress)) return true;
+  const d = landTargetDistrict(target);
+  if (!d) return false;
+  return d === 'vallejo';
+}
 
 export function searchLandTargets(query: string, limit = 10): LandTarget[] {
   const q = query.trim().toLowerCase();
@@ -22,7 +39,8 @@ export function searchLandTargets(query: string, limit = 10): LandTarget[] {
       label: hub.label,
       x: hub.centerX,
       z: hub.centerZ,
-      kind: 'hub'
+      kind: 'hub',
+      district: hub.district
     });
   }
   for (const lm of LANDMARKS) {
@@ -32,7 +50,8 @@ export function searchLandTargets(query: string, limit = 10): LandTarget[] {
       label: lm.name,
       x: lm.x,
       z: lm.z,
-      kind: 'landmark'
+      kind: 'landmark',
+      district: lm.district
     });
   }
   for (const route of SCENIC_ROUTES) {

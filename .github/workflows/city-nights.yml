@@ -24,4 +24,9 @@ jobs:
           cache-dependency-path: drive-world/package-lock.json
       - run: npm ci
       - run: npm run build
-      - run: npm run test:smoke
+      - name: Install Chromium for smoke test
+        run: sudo apt-get update -qq && sudo apt-get install -y chromium-browser
+      - name: Smoke boot
+        env:
+          CHROME_PATH: /usr/bin/chromium-browser
+        run: npm run test:smoke

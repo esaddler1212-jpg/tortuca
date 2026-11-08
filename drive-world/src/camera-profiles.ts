@@ -1,4 +1,4 @@
-import { Vec3, type Entity } from 'playcanvas';
+import { Vec3, type AppBase, type Entity } from 'playcanvas';
 
 import { hillOffsetM } from './bay-terrain';
 import type { CameraMode } from './game-progress';
@@ -20,6 +20,25 @@ function terrainBlocksCamLine(
     if (y < hillOffsetM(x, z) + 5.2) return true;
   }
   return false;
+}
+
+function physicsBlocksCamLine(
+  app: AppBase | null,
+  eyeX: number,
+  eyeY: number,
+  eyeZ: number,
+  camX: number,
+  camY: number,
+  camZ: number
+): boolean {
+  if (!app?.systems.rigidbody) return false;
+  const from = new Vec3(eyeX, eyeY, eyeZ);
+  const to = new Vec3(camX, camY, camZ);
+  const hit = app.systems.rigidbody.raycastFirst(from, to);
+  if (!hit) return false;
+  const entName = hit.entity.name ?? '';
+  if (entName.startsWith('ground') || entName.includes('freeway')) return false;
+  return true;
 }
 
 export type CameraProfile = {
@@ -123,12 +142,29 @@ export function cameraModeLabel(mode: CameraMode): string {
   return labels[mode] ?? 'Chase';
 }
 
+/** Forza-style static look inside Vallejo estate garage bay. */
+export function applyGarageInteriorCamera(
+  camera: Entity,
+  ent: Entity,
+  estateX: number,
+  estateZ: number,
+  dt: number
+): void {
+  const pos = ent.getPosition();
+  const look = new Vec3(pos.x, pos.y + 0.9, pos.z);
+  const target = new Vec3(estateX - 11, hillOffsetM(estateX, estateZ) + 6.5, estateZ + 4);
+  smoothPos.lerp(smoothPos, target, Math.min(1, dt * 5));
+  camera.setPosition(smoothPos);
+  camera.lookAt(look);
+}
+
 export function applyDriveCamera(
   camera: Entity,
   ent: Entity,
   mode: CameraMode,
   dt: number,
-  vistaLook?: { x: number; y: number; z: number } | null
+  vistaLook?: { x: number; y: number; z: number } | null,
+  app: AppBase | null = null
 ): void {
   const prof = cameraProfile(mode);
   const pos = ent.getPosition();
@@ -175,7 +211,9 @@ export function applyDriveCamera(
       const tx = pos.x - forward.x * camBack + right.x * off.x;
       const ty = pos.y + off.y;
       const tz = pos.z - forward.z * camBack + right.z * off.x;
-      if (!terrainBlocksCamLine(pos.x, eyeY, pos.z, tx, ty, tz)) break;
+      const terrainHit = terrainBlocksCamLine(pos.x, eyeY, pos.z, tx, ty, tz);
+      const physicsHit = physicsBlocksCamLine(app, pos.x, eyeY, pos.z, tx, ty, tz);
+      if (!terrainHit && !physicsHit) break;
       camBack *= 0.62;
     }
     camBack = Math.max(2.8, camBack);
