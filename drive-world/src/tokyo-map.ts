@@ -49,7 +49,7 @@ export function isInTokyo(x: number, z: number): boolean {
   return Math.abs(x - TOKYO_CENTER.x) < TOKYO_HALF_M + 200 && Math.abs(z - TOKYO_CENTER.z) < TOKYO_HALF_M + 200;
 }
 
-/** Every Bay car (Tokyo reward excluded) + all six regions. */
+/** Every Bay car (all `tokyo-*` ids excluded) + all six regions. */
 export function tokyoUnlockStatus(progress: SavedProgress): {
   unlocked: boolean;
   cars: number;
@@ -129,12 +129,12 @@ export function buildSfoFlightGate(app: AppBase): void {
   const pad = new Entity('sfo-tokyo-gate-pad');
   pad.setLocalScale(SFO_FLIGHT_GATE.radius * 1.4, 0.06, SFO_FLIGHT_GATE.radius * 1.4);
   pad.setPosition(SFO_FLIGHT_GATE.x, 0.04, SFO_FLIGHT_GATE.z);
-  pad.addComponent('render', { type: 'box', material: mat([0.05, 0.03, 0.08], [0.9, 0.2, 0.6], 0.5) });
+  pad.addComponent('render', { type: 'box', material: mat([0.06, 0.03, 0.02], [0.98, 0.42, 0.08], 0.55) });
   gate.addChild(pad);
   const sign = new Entity('sfo-tokyo-gate-sign');
   sign.setLocalScale(14, 4, 0.4);
   sign.setPosition(SFO_FLIGHT_GATE.x, 7, SFO_FLIGHT_GATE.z + SFO_FLIGHT_GATE.radius * 0.7);
-  sign.addComponent('render', { type: 'box', material: mat([0.1, 0.05, 0.1], [1, 0.3, 0.7], 0.9) });
+  sign.addComponent('render', { type: 'box', material: mat([0.08, 0.04, 0.02], [1, 0.45, 0.1], 0.95) });
   gate.addChild(sign);
   app.root.addChild(gate);
 }

@@ -137,7 +137,7 @@ h = await hud();
 check('cinematic lands in Tokyo', h.inTokyo && h.x > 8000, `(${h.x.toFixed(0)}, ${h.z.toFixed(0)}) flights=${h.flights}`);
 const car = await carState();
 check('car spawned on Tokyo ground', !!car && car.y > -0.5 && car.y < 3, car ? `y=${car.y.toFixed(2)}` : 'no car');
-check('minimap switches to Tokyo', (await page.$eval('.minimap-title', (e) => e.textContent)) === 'Tokyo bonus map');
+check('minimap switches to Tokyo', (await page.$eval('.minimap-title', (e) => e.textContent)) === 'Tokyo · FF bonus map');
 check('nav points at a Tokyo landmark', !!h.next && h.next !== 'Haneda pad — fly home', h.next);
 if (shot) await page.screenshot({ path: `${shot}/tokyo-03-haneda.png` });
 
@@ -181,6 +181,10 @@ for (const [id, x, z] of marks) {
 h = await hud();
 check('all Tokyo landmarks logged', h.tokyoIds.length === marks.length, `${h.tokyoIds.length}/${marks.length}`);
 check('Shuto Night Runner unlocked', h.reward);
+const ffFleet = await page.evaluate(() =>
+  (window.__cityNights.hud().progress?.unlockedVehicleIds ?? []).filter((id) => id.startsWith('tokyo-')).length
+);
+check('full Tokyo FF fleet unlocked', ffFleet === 8, `${ffFleet}/8`);
 
 await teleport(8360, -640);
 await sleep(3500);

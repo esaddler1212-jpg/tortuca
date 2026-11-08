@@ -7,6 +7,7 @@ import { NAMED_STREETS } from '../street-registry';
 import { homeServicePoint, resolveHomeSafehouse } from '../safehouse-registry';
 import { GAS_STATIONS } from '../gas-stations';
 import { WORLD_HALF_M } from '../world-config';
+import { TOKYO_MINIMAP_TITLE } from '../tokyo-ff-cars';
 import { HANEDA_PAD, SFO_FLIGHT_GATE, TOKYO_CENTER, TOKYO_HALF_M, TOKYO_LANDMARKS, tokyoUnlockStatus } from '../tokyo-map';
 
 const SIZE = 168;
@@ -34,7 +35,7 @@ function TokyoMinimap({ snap }: { snap: HudSnapshot }) {
   const ring = (480 / (T_HALF * 2)) * SIZE;
   return (
     <div className="minimap-wrap">
-      <div className="minimap-title">Tokyo bonus map</div>
+      <div className="minimap-title">{TOKYO_MINIMAP_TITLE}</div>
       <svg width={SIZE} height={SIZE} className="minimap" aria-hidden>
         <rect x={0} y={0} width={SIZE} height={SIZE} className="minimap-bg" />
         <rect

@@ -1569,12 +1569,17 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         progress = visitTokyoLandmark(progress, lm.id);
         playLandmarkChime();
         const rideId = tokyoVehicleForLandmark(lm.id);
-        if (rideId && !progress.unlockedVehicleIds.includes(rideId)) {
+        const hadRide = rideId ? progress.unlockedVehicleIds.includes(rideId) : true;
+        if (rideId && !hadRide) {
           progress = unlockVehicle(progress, rideId);
-          const ride = getVehicleSpec(rideId);
-          ui.showToast('Fast family unlock', `${ride.name} — ${ride.tagline}`);
         }
-        ui.showToast(`Tokyo · ${lm.name}`, `${progress.tokyoLandmarkIds.length}/${TOKYO_LANDMARKS.length} — ${lm.blurb}`);
+        const progressLine = `${progress.tokyoLandmarkIds.length}/${TOKYO_LANDMARKS.length} — ${lm.blurb}`;
+        if (rideId && !hadRide) {
+          const ride = getVehicleSpec(rideId);
+          ui.showToast(`Tokyo · ${lm.name}`, `✦ ${ride.name} — ${progressLine}`);
+        } else {
+          ui.showToast(`Tokyo · ${lm.name}`, progressLine);
+        }
         ui.setProgressSummary(progress);
       }
     }

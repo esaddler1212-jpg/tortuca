@@ -30,7 +30,7 @@ import { GAMEPAD_GLYPHS } from '../gamepad-hub';
 import { setSimulationPaused } from '../console-graphics';
 import { nextTaxiContract } from '../cpm-taxi';
 import { requestBoardFlight, requestStartTaxi } from '../game-bridge';
-import { TOKYO_FF_GARAGE_LABEL } from '../tokyo-ff-cars';
+import { TOKYO_FF_GARAGE_LABEL, tokyoFleetUnlockedCount } from '../tokyo-ff-cars';
 import { TOKYO_LANDMARKS, tokyoUnlockStatus } from '../tokyo-map';
 import { heatLabel } from '../game-heat';
 import {
@@ -254,7 +254,7 @@ function RecordsPanel({ snap }: { snap: HudSnapshot }) {
         <li>Scenic routes {p.scenicCompleted.length}</li>
         <li>
           {tokyo.unlocked
-            ? `${TOKYO_FF_GARAGE_LABEL} · ${p.tokyoLandmarkIds.length}/${TOKYO_LANDMARKS.length} landmarks · flights ${p.tokyoFlights}`
+            ? `${TOKYO_FF_GARAGE_LABEL} · fleet ${tokyoFleetUnlockedCount(p)}/8 · landmarks ${p.tokyoLandmarkIds.length}/${TOKYO_LANDMARKS.length} · flights ${p.tokyoFlights}`
             : `Tokyo flight: Bay cars ${tokyo.cars}/${tokyo.carsTotal} · regions ${tokyo.regions}/${tokyo.regionsTotal}`}
         </li>
       </ul>

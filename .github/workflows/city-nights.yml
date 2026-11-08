@@ -26,6 +26,13 @@ jobs:
         id: chrome
       - run: npm ci
       - run: npm run build
+      - run: npm run test:wiring
       - run: npm run test:smoke
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
+      - run: npm run test:playtest
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
+      - run: npm run test:tokyo
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}

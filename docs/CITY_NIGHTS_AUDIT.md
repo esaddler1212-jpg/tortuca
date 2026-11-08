@@ -35,7 +35,7 @@ Compressed **Bay Area night sandbox** in `drive-world/` (PlayCanvas 2.23 + Ammo 
 |------|-----|-------|
 | ~~**Browser smoke test in CI**~~ | **Done:** `drive-world/scripts/smoke-boot.mjs` + `npm run test:smoke` in `.github/workflows/city-nights.yml` | **Done:** smoke skips Waymo and holds W for 5 s |
 | ~~**Chase camera collision**~~ | **Done:** raycast in `camera-profiles.ts` skips the player car and Tokyo ground; chase uses Bullet +Z travel (opposite PlayCanvas `forward`). Tight garages can still clip | Raycast from car to camera target, pull camera in on hit |
-| ~~**Tokyo bonus map**~~ | **Done:** unlock all Bay cars + regions → SFO gate → Haneda; 8 landmarks + Shuto Night Runner (`npm run test:tokyo`) | Mini MCLA Remix–style second city east of the Bay |
+| ~~**Tokyo bonus map**~~ | **Done:** Bay completion → SFO FF gate → Haneda; **8 landmarks = 8 FF tribute cars** (`npm run test:tokyo`, `test:wiring`) | MCLA Remix–style second map + Fast family fleet |
 | ~~**HUD density**~~ | **Done:** tabbed Map / Missions / Garage / Settings drawer. Was: right column stacks ~10 panels (missions, stats, settings, fast travel, landmarks, search, music, journal…). Crowded at 1280×720, worse on phones | Collapse into one tabbed "Map / Missions / Garage / Settings" drawer; keep minimap + speed always on |
 | ~~**First-session clarity**~~ | **Done:** one pinned Chapter 1 objective (Vallejo taco + landmark opens the Bay). Was: player lands at Vallejo with 37 landmarks, 6 taco trucks, 14 parking bays, 10 vistas, 5 homage tokens, scenic routes — no "do this first" | Single pinned objective that advances (first taco truck → first unlock), rest behind the mission tab |
 | ~~**Nav hint polish**~~ | **Done:** legs < 80 m skipped. Was: shows `Bear right · 0.0 mi` when the next leg point is close | Skip legs < ~80 m; show street name of next leg when available |
@@ -76,5 +76,14 @@ Compressed **Bay Area night sandbox** in `drive-world/` (PlayCanvas 2.23 + Ammo 
 - Homage content carries "not affiliated" copy.
 
 ---
+
+## Pass 3 (Nov 2026) — console feel + Tokyo polish
+
+| Item | Status |
+|------|--------|
+| Console-feel (pause, gamepad RT/LT, frame cap) | Shipped #106 + `test:playtest` |
+| Chase camera Bullet +Z + self-raycast skip | Fixed; playtest dot check |
+| Tokyo FF fleet (8 landmarks → 8 cars) | `tokyo-ff-cars.ts` + `test:wiring` |
+| CI City Nights | `test:wiring`, `test:playtest`, `test:tokyo` in workflow |
 
 _Pass 2: boot crash fixes, typecheck gate, layout fix, headless smoke. Prior pass covered Telegraph / Caldecott / Orinda / Concord / Walnut Creek / Martinez geography._
