@@ -143,7 +143,7 @@ export const VILLAIN_CLONES: VillainCloneSpec[] = [
     tagline: 'Steel skeleton twist',
     universe: 'marvel',
     aerial: 'magnet',
-    rivalHeroIds: ['chrome-sage', 'wall-crawler', 'tin-aviator'],
+    rivalHeroIds: ['chrome-sage', 'wall-crawler', 'tin-aviator', 'storm-caller', 'phoenix-ember'],
     color: [0.72, 0.12, 0.15],
     hpMul: 1.15,
     speedMul: 1,
@@ -344,6 +344,84 @@ export const VILLAIN_CLONES: VillainCloneSpec[] = [
     speedMul: 1.3,
     siegeMul: 1.1,
     scale: [2.6, 3.2, 2]
+  },
+  {
+    id: 'mirror-streak',
+    codename: 'Mirror Streak',
+    tagline: 'Negative speed-force scourge',
+    universe: 'dc',
+    aerial: 'native',
+    rivalHeroIds: ['velocity-streak'],
+    color: [0.72, 0.08, 0.12],
+    hpMul: 1.15,
+    speedMul: 1.45,
+    siegeMul: 1.15,
+    scale: [2.7, 3.2, 2.1]
+  },
+  {
+    id: 'bizarro-eclipse',
+    codename: 'Bizarro Eclipse',
+    tagline: 'Inverted sun-hate fumble siege',
+    universe: 'dc',
+    aerial: 'native',
+    rivalHeroIds: ['solar-apex', 'solar-envoy'],
+    color: [0.82, 0.78, 0.55],
+    hpMul: 1.3,
+    speedMul: 0.85,
+    siegeMul: 1.35,
+    scale: [3.1, 3.9, 2.4]
+  },
+  {
+    id: 'harbinger-titan',
+    codename: 'Harbinger Titan',
+    tagline: 'World-Devourer skim',
+    universe: 'marvel',
+    aerial: 'native',
+    rivalHeroIds: ['comet-surfer', 'nova-centurion', 'solar-apex', 'phoenix-ember'],
+    color: [0.68, 0.42, 0.22],
+    hpMul: 1.85,
+    speedMul: 0.6,
+    siegeMul: 1.75,
+    scale: [4.2, 5, 3.4]
+  },
+  {
+    id: 'void-colossus',
+    codename: 'Void Colossus',
+    tagline: 'Gray stillness crushing glide',
+    universe: 'dbz',
+    aerial: 'ki',
+    rivalHeroIds: ['ki-wanderer', 'ki-prince', 'hybrid-warden', 'legend-bruiser'],
+    color: [0.62, 0.65, 0.68],
+    hpMul: 1.8,
+    speedMul: 0.95,
+    siegeMul: 1.6,
+    scale: [3.6, 4.4, 2.8]
+  },
+  {
+    id: 'angel-attendant',
+    codename: 'Angel Attendant',
+    tagline: 'Angel ki lesson strike',
+    universe: 'dbz',
+    aerial: 'ki',
+    rivalHeroIds: ['ki-wanderer', 'ki-prince', 'cataclysm-deity'],
+    color: [0.95, 0.95, 0.98],
+    hpMul: 1.5,
+    speedMul: 1.35,
+    siegeMul: 1.4,
+    scale: [3, 3.6, 2.3]
+  },
+  {
+    id: 'cinder-phoenix',
+    codename: 'Cinder Phoenix',
+    tagline: 'Corrupted cosmic flare siege',
+    universe: 'marvel',
+    aerial: 'native',
+    rivalHeroIds: ['phoenix-ember', 'storm-caller', 'chrome-sage'],
+    color: [0.95, 0.22, 0.08],
+    hpMul: 1.45,
+    speedMul: 1.1,
+    siegeMul: 1.5,
+    scale: [3.2, 4, 2.5]
   }
 ];
 

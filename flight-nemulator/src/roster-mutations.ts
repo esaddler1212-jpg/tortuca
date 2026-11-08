@@ -30,7 +30,12 @@ export const HERO_MUTATIONS: Record<string, MutationMeta> = {
   'gamma-titan': { mutatesFrom: 'Hulk', universe: 'marvel' },
   'flame-jet': { mutatesFrom: 'Human Torch', universe: 'marvel' },
   'wing-captain': { mutatesFrom: 'Falcon', universe: 'marvel' },
-  'thunder-zealot': { mutatesFrom: 'Shazam', universe: 'dc' }
+  'thunder-zealot': { mutatesFrom: 'Shazam', universe: 'dc' },
+  'storm-caller': { mutatesFrom: 'Storm', universe: 'marvel' },
+  'sorcerer-apex': { mutatesFrom: 'Doctor Strange', universe: 'marvel' },
+  'sky-tyrant': { mutatesFrom: 'Hawkman', universe: 'dc' },
+  'phoenix-ember': { mutatesFrom: 'Jean Grey / Phoenix', universe: 'marvel' },
+  'wing-archon': { mutatesFrom: 'Angel / Archangel', universe: 'marvel' }
 };
 
 export const VILLAIN_MUTATIONS: Record<string, MutationMeta> = {
@@ -41,14 +46,19 @@ export const VILLAIN_MUTATIONS: Record<string, MutationMeta> = {
   'legend-bruiser': { mutatesFrom: 'Broly', universe: 'dbz' },
   'cataclysm-deity': { mutatesFrom: 'Beerus', universe: 'dbz' },
   'android-phalanx': { mutatesFrom: 'Android 17 / 18 archetype', universe: 'dbz' },
+  'void-colossus': { mutatesFrom: 'Jiren', universe: 'dbz' },
+  'angel-attendant': { mutatesFrom: 'Whis', universe: 'dbz' },
   'doctor-doom': { mutatesFrom: 'Doctor Doom', universe: 'marvel' },
   'chrome-overmind': { mutatesFrom: 'Ultron', universe: 'marvel' },
   'magnet-warden': { mutatesFrom: 'Magneto', universe: 'marvel' },
   'titan-snap-echo': { mutatesFrom: 'Thanos', universe: 'marvel' },
   'brute-abom': { mutatesFrom: 'Abomination', universe: 'marvel' },
   'venom-echo': { mutatesFrom: 'Venom', universe: 'marvel' },
+  'cinder-phoenix': { mutatesFrom: 'Dark Phoenix', universe: 'marvel' },
   'laughing-harlequin': { mutatesFrom: 'Joker & Harley Quinn', universe: 'dc' },
   'krypton-eclipse': { mutatesFrom: 'General Zod', universe: 'dc' },
+  'mirror-streak': { mutatesFrom: 'Reverse-Flash', universe: 'dc' },
+  'bizarro-eclipse': { mutatesFrom: 'Bizarro', universe: 'dc' },
   'deathstroke-arc': { mutatesFrom: 'Deathstroke', universe: 'dc' },
   'night-gargoyle': { mutatesFrom: 'Man-Bat', universe: 'dc' },
   'doomsday-echo': { mutatesFrom: 'Doomsday', universe: 'dc' },
@@ -58,5 +68,6 @@ export const VILLAIN_MUTATIONS: Record<string, MutationMeta> = {
   'brain-colossus': { mutatesFrom: 'Brainiac', universe: 'dc' },
   'trickster-prince': { mutatesFrom: 'Loki', universe: 'marvel' },
   'sine-warden': { mutatesFrom: 'Sinestro', universe: 'dc' },
-  'steel-wraith': { mutatesFrom: 'Liquid-metal assassin (T-1000 archetype)', universe: 'marvel' }
+  'steel-wraith': { mutatesFrom: 'Liquid-metal assassin (T-1000 archetype)', universe: 'marvel' },
+  'harbinger-titan': { mutatesFrom: 'Galactus', universe: 'marvel' }
 };

@@ -443,6 +443,91 @@ export const HERO_ROSTER: HeroSpec[] = [
     ],
     defaultFormId: 'champion',
     aerial: 'native'
+  },
+  {
+    id: 'storm-caller',
+    codename: 'Storm Caller',
+    tagline: 'Tempest jetstream rider',
+    districtId: 'watchtower-annex',
+    homeLabel: 'Weather Dome',
+    powers: ['thunder', 'beam'],
+    flight: { cruiseKmh: 400, boostKmh: 2300, agility: 1.08, mass: 82 },
+    energy: { staminaMax: 125, regenPerSec: 24, superCooldownSec: 17, primaryCooldownSec: 0.26 },
+    smashRadius: 3.5,
+    forms: [
+      { id: 'ororo', label: 'White queen', speedMul: 1, powerMul: 1, color: [0.95, 0.95, 0.98] },
+      { id: 'goddess', label: 'Goddess mode', speedMul: 1.15, powerMul: 1.35, color: [0.12, 0.15, 0.22] }
+    ],
+    defaultFormId: 'ororo',
+    aerial: 'native'
+  },
+  {
+    id: 'sorcerer-apex',
+    codename: 'Sorcerer Apex',
+    tagline: 'Crimson mantle levitation',
+    districtId: 'gotham-nights',
+    homeLabel: 'Sanctum Loft',
+    powers: ['telekinesis', 'beam'],
+    flight: { cruiseKmh: 370, boostKmh: 2100, agility: 1.05, mass: 86 },
+    energy: { staminaMax: 140, regenPerSec: 22, superCooldownSec: 18, primaryCooldownSec: 0.28 },
+    smashRadius: 3.3,
+    forms: [
+      { id: 'cloak', label: 'Cloak of levitation', speedMul: 1, powerMul: 1.05, color: [0.15, 0.12, 0.18] },
+      { id: 'time', label: 'Time-split', speedMul: 1.12, powerMul: 1.25, color: [0.75, 0.12, 0.12] }
+    ],
+    defaultFormId: 'cloak',
+    aerial: 'native'
+  },
+  {
+    id: 'sky-tyrant',
+    codename: 'Sky Tyrant',
+    tagline: 'Nth-wing shock ram',
+    districtId: 'asgard-embassy',
+    homeLabel: 'Reincarnation Spire',
+    powers: ['beam'],
+    flight: { cruiseKmh: 390, boostKmh: 2050, agility: 1.0, mass: 95 },
+    energy: { staminaMax: 118, regenPerSec: 20, superCooldownSec: 19, primaryCooldownSec: 0.3 },
+    smashRadius: 3.4,
+    forms: [
+      { id: 'bronze', label: 'Bronze harness', speedMul: 1, powerMul: 1, color: [0.55, 0.38, 0.18] },
+      { id: 'hawk', label: 'Predator dive', speedMul: 1.18, powerMul: 1.15, color: [0.72, 0.52, 0.22] }
+    ],
+    defaultFormId: 'bronze',
+    aerial: 'native'
+  },
+  {
+    id: 'phoenix-ember',
+    codename: 'Phoenix Ember',
+    tagline: 'Telekinetic cosmic flare',
+    districtId: 'watchtower-annex',
+    homeLabel: 'X-Jet Pad',
+    powers: ['telekinesis', 'beam'],
+    flight: { cruiseKmh: 420, boostKmh: 2500, agility: 1.02, mass: 84 },
+    energy: { staminaMax: 132, regenPerSec: 23, superCooldownSec: 16, primaryCooldownSec: 0.24 },
+    smashRadius: 3.6,
+    forms: [
+      { id: 'jean', label: 'Resonance', speedMul: 1, powerMul: 1, color: [0.18, 0.22, 0.65] },
+      { id: 'phoenix', label: 'Phoenix', speedMul: 1.22, powerMul: 1.45, color: [0.92, 0.42, 0.12] }
+    ],
+    defaultFormId: 'jean',
+    aerial: 'native'
+  },
+  {
+    id: 'wing-archon',
+    codename: 'Wing Archon',
+    tagline: 'Metal pinion dive',
+    districtId: 'stark-nexus',
+    homeLabel: 'Mansion Aviary',
+    powers: ['beam', 'optic'],
+    flight: { cruiseKmh: 410, boostKmh: 2200, agility: 1.18, mass: 78 },
+    energy: { staminaMax: 115, regenPerSec: 26, superCooldownSec: 15, primaryCooldownSec: 0.2 },
+    smashRadius: 3.0,
+    forms: [
+      { id: 'feather', label: 'Feathered', speedMul: 1.05, powerMul: 0.95, color: [0.92, 0.88, 0.75] },
+      { id: 'metal', label: 'Metal wings', speedMul: 1.1, powerMul: 1.2, color: [0.55, 0.58, 0.62] }
+    ],
+    defaultFormId: 'feather',
+    aerial: 'native'
   }
 ];
 
