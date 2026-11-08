@@ -220,9 +220,8 @@ function migrateRaw(parsed: Record<string, unknown>): SavedProgress | null {
       version: 2;
       customizations?: Record<string, VehicleCustomization>;
     };
-    const { version: _v, ...rest } = p;
     return withV9Defaults({
-      ...rest,
+      ...p,
       version: 2,
       customizations: p.customizations ?? {},
       lastPose: null,
@@ -448,7 +447,7 @@ export function tickScenicRoute(progress: SavedProgress, routeId: string, checkp
   const cur = progress.scenicProgress[routeId] ?? 0;
   if (checkpointIdx !== cur) return progress;
   const nextIdx = cur + 1;
-  let next: SavedProgress = {
+  const next: SavedProgress = {
     ...progress,
     scenicProgress: { ...progress.scenicProgress, [routeId]: nextIdx }
   };

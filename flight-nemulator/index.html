@@ -6,34 +6,19 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
-    <meta name="description" content="Flight Nemulator — fly homage heroes through destructible comic-inspired cities." />
+    <meta name="description" content="Flight Nemulator — Battleworld: Marvel, DC, and DBZ homage heroes on one destructible planet." />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#0a0e18" />
     <title>Flight Nemulator</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0e18'/%3E%3Cpath d='M6 20 16 6l10 14-10-4z' fill='%23ffb347'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="/src/starter.css" />
   </head>
   <body>
     <div id="tap-start" class="tap-start" role="button" tabindex="0">
       <span class="tap-start-title">Flight Nemulator</span>
-      <span class="tap-start-sub">Tap to fly · pick a hero at your home base</span>
+      <span class="tap-start-sub">Battleworld · Marvel · DC · DBZ — tap to fly</span>
     </div>
     <canvas id="application-canvas"></canvas>
     <div id="react-hud"></div>
-    <script>
-      (function () {
-        if (!/\/flight-nemulator(\/|$)/.test(location.pathname)) return;
-        var a = document.createElement('a');
-        a.href = '../';
-        a.textContent = '◯ Console';
-        a.setAttribute('aria-label', 'Back to Tortuca Console');
-        a.style.cssText =
-          'position:fixed;z-index:20000;top:max(10px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));' +
-          'font:600 11px/1 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;color:#e8eef8;' +
-          'padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.22);background:rgba(8,12,20,.55);backdrop-filter:blur(8px)';
-        document.body.appendChild(a);
-      })();
-    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

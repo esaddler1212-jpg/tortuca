@@ -219,7 +219,7 @@ function createAerialVehicle(
     vehicle.addChild(rotor);
   }
 
-  const lights = attachVehicleLights(vehicle, app);
+  const lights = attachVehicleLights(vehicle);
   app.root.addChild(vehicle);
   return { entity: vehicle, lights };
 }
@@ -406,7 +406,7 @@ export function createPlayerVehicle(
   ) {
     attachLegendAccents(vehicle, vehicleId, paint, cx, cz, tuning.rideDrop);
   }
-  const lights = attachVehicleLights(vehicle, app);
+  const lights = attachVehicleLights(vehicle);
   app.root.addChild(vehicle);
   return { entity: vehicle, lights };
 }

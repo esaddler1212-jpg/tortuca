@@ -1,7 +1,7 @@
 import { Color, StandardMaterial, type AppBase, type Asset, type Entity } from 'playcanvas';
 
 import { appliedTuning } from './vehicle-customization';
-import { glbPathForVehicle as pathForId, VEHICLE_GLB } from './vehicle-gltf-paths';
+import { glbPathForVehicle as pathForId } from './vehicle-gltf-paths';
 
 export { VEHICLE_GLB, glbPathForVehicle } from './vehicle-gltf-paths';
 

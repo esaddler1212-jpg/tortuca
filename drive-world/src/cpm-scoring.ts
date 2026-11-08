@@ -4,8 +4,7 @@ import {
   TIME_ATTACKS,
   type CpmZoneHit,
   type DriftPadDef,
-  type DragStripDef,
-  type TimeAttackDef
+  type DragStripDef
 } from './cpm-challenges';
 import type { SavedProgress } from './game-progress';
 
