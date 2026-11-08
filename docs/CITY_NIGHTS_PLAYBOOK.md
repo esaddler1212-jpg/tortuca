@@ -28,6 +28,10 @@ Anonymous `cn-tel-*` id; periodic beacons with **session length**, quality prese
 - Tester save reset tooling
 - Formal beta program
 
+## Music (more tracks)
+
+Procedural radio ships in-game; add loops you own under `public/music/`. Optional local generator: [**ACE-Step 1.5**](../tools/ace-step/) (`npm run ace-step:bootstrap`) — export OGG, update `playlist.json`. See [upstream toolchain index](./UPSTREAM_GAME_TOOLCHAIN.md).
+
 ## Next engineering priorities
 
 1. **Performance** — draw calls, hub hitch, VRAM (Chromebook-first)

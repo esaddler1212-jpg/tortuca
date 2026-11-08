@@ -34,6 +34,10 @@ Ranked ideas from upstream projects, Anthropic docs, and this repo’s audits. *
 | [**xtool**](https://github.com/xtool-org/xtool) | Native iOS shell if PWA limits bite — `xtool/CHERRY_PICK.md` |
 | **God's Eye** | Pulse globe host; Tailscale + LAN |
 | **OpenJarvis / alfred-jarvis** | ECS desktop research, not replacement for `/api/ask` |
+| [**ACE-Step 1.5**](https://github.com/ace-step/ACE-Step-1.5) | Local instrumentals → City Nights `public/music/` — `tools/ace-step/` |
+| [**Claude Code Game Studios**](https://github.com/Donchitos/Claude-Code-Game-Studios) | `/smoke-check`, `/perf-profile`, minimal rigor — `tools/claude-code-game-studios/` |
+| [**UnrealClaude**](https://github.com/Natfii/UnrealClaude) | UE 5.7 + MCP on workstation — `tools/unreal-claude/` |
+| [**Audio2Face-3D SDK**](https://github.com/NVIDIA/Audio2Face-3D-SDK) | Film / avatar lip-sync sidecar — `tools/audio2face-3d/` |
 
 ## Tier 4 — Larger bets (explicit approval)
 
