@@ -7,10 +7,10 @@ Compressed **Bay Area night sandbox** in `drive-world/`. Not a AAA open world; a
 | Layer | Shipped |
 |-------|---------|
 | **World** | ~5.2 km half-extent, **15 landmark hubs** (per-city mini maps), monument street loops, plaza pads, freeways between hubs, procedural blocks inside hubs only, ramps, Lombard, traffic toggle |
-| **Progression** | Waymo intro → garage starter → visit all landmarks per region → regional car |
+| **Progression** | Waymo intro → garage starter → **taco truck + any landmark per region** → regional car + preset safehouse |
 | **Extra vehicles** | Aerial (scenic + rotor token), legend homages (collectibles), Kenney + CC0 glTF |
 | **Systems** | Nitro, gamepad, touch pad (ground), scenic routes, speed traps, fast travel, photo mode, drone/chase/cockpit cam, fog, garage tuning |
-| **Persistence** | `localStorage` v5 (pose, stats, unlocks) |
+| **Persistence** | `localStorage` save **v6** (`tacoTrucksFound`, pose, stats, unlocks) — same key as v5 |
 | **Deploy** | Separate Netlify site, folder `drive-world`, product name **City Nights** |
 
 ## Geography you asked about
@@ -18,7 +18,8 @@ Compressed **Bay Area night sandbox** in `drive-world/`. Not a AAA open world; a
 | Place | In game? |
 |-------|----------|
 | **Telegraph Ave** (Berkeley → Oakland) | Yes — landmark + shop strip meshes |
-| **Emeryville (Bay St / Shellmound)** | Yes — landmark hub + named streets |
+| **Emeryville (Bay St / Shellmound / Pixar)** | Yes — hub, **Pixar campus** landmark, taco truck |
+| **Chase Center (SF)** | Yes — Mission Bay arena landmark + nearby taco truck |
 | **Caldecott / tunnel side** | Yes — portal landmark + **Hwy 24** spine to Concord |
 | **Orinda** | Yes — hillside / theatre beacon |
 | **Concord** | Yes — plaza landmark (east along 24) |
@@ -68,7 +69,7 @@ Compared to *Forza Horizon*, *TDU*, *Need for Speed*, *Cruis’n* / arcade roame
 
 ## Content balance note
 
-East Bay now has **12** landmarks (was 6). Clearing the region takes longer — intentional for “inner East Bay + 24 corridor” fantasy. If it feels grindy, split a **`lamorinda`** district later or lower `visitRadius` on suburban pins.
+East Bay has **13** landmarks; region unlock no longer requires visiting all of them — only the **Emeryville taco truck** plus **one** landmark anywhere in the district.
 
 ## Player-facing gaps to watch on Chromebook
 

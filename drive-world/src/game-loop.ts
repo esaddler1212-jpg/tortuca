@@ -1,6 +1,7 @@
 import { Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
 
 import { hillOffsetM } from './bay-terrain';
+import { nearestTacoTruck } from './city-checkpoints';
 import {
   computeTouchControls,
   isTouchDriveActive,
@@ -29,6 +30,7 @@ import {
   getVehicleCustomization,
   setVehicleCustomization,
   tryUnlockCompletedRegions,
+  findTacoTruck,
   tryUnlockNightCoil,
   tryUnlockSkywayHover,
   saveLastPose,
@@ -779,7 +781,24 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         progress = unlocks.progress;
         for (const u of unlocks.newlyUnlocked) {
           const car = getVehicleSpec(u.vehicleId);
-          ui.showToast(`${DISTRICT_LABELS[u.district]} complete`, `Unlocked ${car.name}`);
+          ui.showToast(`${DISTRICT_LABELS[u.district]} unlocked`, `${car.name} + regional safehouse`);
+        }
+        progress = ensureSafehouseUnlocks(progress);
+        ui.setProgressSummary(progress);
+        if (nearGarage) refreshGarageUi();
+      }
+
+      const tacoNear = nearestTacoTruck(pos.x, pos.z);
+      if (tacoNear && mph < 22 && !progress.tacoTrucksFound.includes(tacoNear.district)) {
+        progress = findTacoTruck(progress, tacoNear.district);
+        progress = appendJournal(progress, { kind: 'taco', id: tacoNear.district, label: tacoNear.name });
+        ui.showToast('Taco truck found', `${DISTRICT_LABELS[tacoNear.district]} — log any landmark to unlock the region`);
+        ui.setProgressSummary(progress);
+        const unlocks = tryUnlockCompletedRegions(progress);
+        progress = unlocks.progress;
+        for (const u of unlocks.newlyUnlocked) {
+          const car = getVehicleSpec(u.vehicleId);
+          ui.showToast(`${DISTRICT_LABELS[u.district]} unlocked`, `${car.name} + regional safehouse`);
         }
         progress = ensureSafehouseUnlocks(progress);
         ui.setProgressSummary(progress);

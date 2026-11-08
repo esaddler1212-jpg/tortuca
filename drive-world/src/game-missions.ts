@@ -5,12 +5,8 @@ import {
   REGION_VEHICLE_IDS,
   getVehicleSpec
 } from './vehicle-catalog';
-import {
-  DISTRICT_LABELS,
-  LANDMARKS,
-  districtLandmarkTotal,
-  districtLandmarksVisited,
-} from './landmark-registry';
+import { districtHasLandmarkVisit, districtTacoFound } from './city-checkpoints';
+import { DISTRICT_LABELS, LANDMARKS } from './landmark-registry';
 import { nextUnvisitedLandmark } from './landmark-navigation';
 import type { SavedProgress } from './game-progress';
 import { SCENIC_ROUTES, SPEED_TRAPS } from './world-extras';
@@ -45,14 +41,17 @@ export function buildMissionBoard(
   }
 
   (Object.keys(DISTRICT_LABELS) as DistrictId[]).forEach((d) => {
-    const v = districtLandmarksVisited(progress.visitedLandmarkIds, d);
-    const t = districtLandmarkTotal(d);
-    const complete = v >= t;
+    const unlocked = progress.unlockedRegionIds.includes(d);
+    const taco = districtTacoFound(progress, d);
+    const landmark = districtHasLandmarkVisit(progress, d);
+    const reward = getVehicleSpec(REGION_VEHICLE_IDS[d]).name;
     lines.push({
       id: `region-${d}`,
-      label: `${DISTRICT_LABELS[d]} ${v}/${t}`,
-      done: complete,
-      hint: complete ? 'Regional car unlocked' : `Reward: ${getVehicleSpec(REGION_VEHICLE_IDS[d]).name}`
+      label: `${DISTRICT_LABELS[d]} — taco ${taco ? '✓' : '…'} · landmark ${landmark ? '✓' : '…'}`,
+      done: unlocked,
+      hint: unlocked
+        ? `${reward} + safehouse`
+        : `Find the taco truck + any landmark → ${reward}`
     });
   });
 

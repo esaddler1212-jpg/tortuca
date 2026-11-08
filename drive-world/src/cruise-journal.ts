@@ -38,7 +38,14 @@ export function journalLines(progress: SavedProgress): string[] {
   lines.push(`Landmarks: ${progress.visitedLandmarkIds.length}`);
   const recent = (progress.journal ?? []).slice(0, 8);
   for (const e of recent) {
-    const kind = e.kind === 'vista' ? 'Vista' : e.kind === 'scenic' ? 'Scenic' : 'Landmark';
+    const kind =
+      e.kind === 'vista'
+        ? 'Vista'
+        : e.kind === 'scenic'
+          ? 'Scenic'
+          : e.kind === 'taco'
+            ? 'Taco truck'
+            : 'Landmark';
     lines.push(`${kind}: ${e.label}`);
   }
   return lines;

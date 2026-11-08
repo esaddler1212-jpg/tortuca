@@ -66,6 +66,7 @@ export const LANDMARK_STREET_ROUTES: LandmarkStreetRoute[] = [
       'palace',
       'lombard',
       'oracle',
+      'chase-center',
       'coit',
       'fishermans-wharf'
     ],
@@ -83,7 +84,7 @@ export const LANDMARK_STREET_ROUTES: LandmarkStreetRoute[] = [
     id: 'oakland-loop',
     district: 'eastBay',
     label: 'Oakland loop',
-    landmarkIds: ['lake-merritt', 'emeryville-bay', 'fox', 'oakland-arena', 'telegraph-ave'],
+    landmarkIds: ['lake-merritt', 'emeryville-bay', 'pixar-campus', 'fox', 'oakland-arena', 'telegraph-ave'],
     width: 17,
     ring: true
   },

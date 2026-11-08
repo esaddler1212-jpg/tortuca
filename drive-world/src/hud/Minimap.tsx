@@ -1,5 +1,6 @@
 import type { HudSnapshot } from '../game-bridge';
 import { CRUISE_VISTAS } from '../cruise-vistas';
+import { TACO_TRUCKS } from '../city-taco-trucks';
 import { LANDMARKS } from '../landmark-registry';
 import { CITY_HUBS } from '../city-map-registry';
 import { NAMED_STREETS } from '../street-registry';
@@ -20,6 +21,7 @@ export function Minimap({ snap }: { snap: HudSnapshot }) {
   const home = snap.progress ? resolveHomeSafehouse(snap.progress) : null;
   const svc = home ? homeServicePoint(home) : null;
   const visited = new Set(snap.progress?.visitedLandmarkIds ?? []);
+  const tacosFound = new Set(snap.progress?.tacoTrucksFound ?? []);
   const vistas = new Set(snap.progress?.visitedVistaIds ?? []);
   const next = snap.nextLandmark;
   const pulse = snap.atVista ? 4 + Math.sin((snap.vistaPulse ?? 0) * 4) * 2 : 0;
@@ -60,6 +62,16 @@ export function Minimap({ snap }: { snap: HudSnapshot }) {
             cy={mapY(v.z)}
             r={vistas.has(v.id) ? 2 : 2.8}
             className={vistas.has(v.id) ? 'minimap-vista done' : 'minimap-vista'}
+          />
+        ))}
+        {TACO_TRUCKS.map((t) => (
+          <rect
+            key={`taco-${t.district}`}
+            x={mapX(t.x) - (tacosFound.has(t.district) ? 2.5 : 3.5)}
+            y={mapY(t.z) - (tacosFound.has(t.district) ? 2.5 : 3.5)}
+            width={tacosFound.has(t.district) ? 5 : 7}
+            height={tacosFound.has(t.district) ? 5 : 7}
+            className={tacosFound.has(t.district) ? 'minimap-taco done' : 'minimap-taco'}
           />
         ))}
         {LANDMARKS.map((lm) => (

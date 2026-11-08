@@ -1,11 +1,7 @@
-import {
-  DISTRICT_LABELS,
-  districtLandmarkTotal,
-  districtLandmarksVisited,
-  LANDMARKS
-} from './landmark-registry';
+import { DISTRICT_LABELS, LANDMARKS } from './landmark-registry';
 import type { GamePhase, SavedProgress } from './game-progress';
 import { GARAGE_STARTER_IDS, VEHICLE_CATALOG } from './vehicle-catalog';
+import { districtHasLandmarkVisit, districtTacoFound } from './city-checkpoints';
 import { TOTAL_LANDMARKS, countRegionsComplete, TOTAL_REGIONS } from './game-progress';
 import type { HomeServiceMode } from './safehouse-registry';
 import type { DistrictId } from './world-config';
@@ -82,10 +78,10 @@ export function wireGameUi(): GameUi {
       const regions = countRegionsComplete(progress);
       const regionLines = (Object.keys(DISTRICT_LABELS) as DistrictId[])
         .map((d) => {
-          const v = districtLandmarksVisited(progress.visitedLandmarkIds, d);
-          const t = districtLandmarkTotal(d);
           const mark = progress.unlockedRegionIds.includes(d) ? '✓' : '·';
-          return `${mark} ${DISTRICT_LABELS[d]} ${v}/${t}`;
+          const taco = districtTacoFound(progress, d) ? 'T' : 't';
+          const lm = districtHasLandmarkVisit(progress, d) ? 'L' : 'l';
+          return `${mark} ${DISTRICT_LABELS[d]} ${taco}${lm}`;
         })
         .join(' · ');
       progressEl.textContent = `Landmarks ${done}/${TOTAL_LANDMARKS} · Regions ${regions}/${TOTAL_REGIONS} — ${regionLines}`;

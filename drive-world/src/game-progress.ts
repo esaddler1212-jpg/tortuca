@@ -8,7 +8,8 @@ import {
 } from './vehicle-catalog';
 import { defaultHomeSafehouseId, ensureSafehouseUnlocks } from './safehouse-registry';
 import { SCENIC_ROUTES } from './world-extras';
-import { isDistrictComplete, regionUnlockVehicleId, LANDMARKS } from './landmark-registry';
+import { isDistrictCheckpointSatisfied } from './city-checkpoints';
+import { regionUnlockVehicleId, LANDMARKS } from './landmark-registry';
 import type { DistrictId } from './world-config';
 import {
   DEFAULT_CUSTOMIZATION,
@@ -52,7 +53,7 @@ export type VehicleStats = { miles: number; topMph: number };
 
 export type JournalEntry = {
   t: number;
-  kind: 'landmark' | 'vista' | 'scenic';
+  kind: 'landmark' | 'vista' | 'scenic' | 'taco';
   id: string;
   label: string;
 };
@@ -67,11 +68,12 @@ export type CustomSafehouse = {
 };
 
 export type SavedProgress = {
-  version: 5;
+  version: 6;
   phase: GamePhase;
   activeVehicleId: string | null;
   unlockedVehicleIds: string[];
   visitedLandmarkIds: string[];
+  tacoTrucksFound: DistrictId[];
   unlockedRegionIds: DistrictId[];
   safehouseReached: boolean;
   customizations: Record<string, VehicleCustomization>;
@@ -96,11 +98,12 @@ const STORAGE_KEY = 'drive-world-progress-v5';
 
 function defaultProgress(): SavedProgress {
   return {
-    version: 5,
+    version: 6,
     phase: 'waymo_ride',
     activeVehicleId: null,
     unlockedVehicleIds: [],
     visitedLandmarkIds: [],
+    tacoTrucksFound: [],
     unlockedRegionIds: [],
     safehouseReached: false,
     customizations: {},
@@ -121,11 +124,12 @@ function defaultProgress(): SavedProgress {
   };
 }
 
-function withV5Defaults(p: Partial<SavedProgress> & { version: number }): SavedProgress {
+function withV6Defaults(p: Partial<SavedProgress> & { version: number }): SavedProgress {
   return {
     ...defaultProgress(),
     ...p,
-    version: 5,
+    version: 6,
+    tacoTrucksFound: p.tacoTrucksFound ?? [],
     collectedIds: p.collectedIds ?? [],
     unlockedPaintIds:
       p.unlockedPaintIds ?? ['bay-blue', 'fog-white', 'bridge-orange', 'neon-cyan', 'cherry-red', 'stealth'],
@@ -144,16 +148,17 @@ function withV5Defaults(p: Partial<SavedProgress> & { version: number }): SavedP
 }
 
 function migrateRaw(parsed: Record<string, unknown>): SavedProgress | null {
-  if (parsed.version === 5) return withV5Defaults(parsed as SavedProgress);
-  if (parsed.version === 4) return withV5Defaults(parsed as SavedProgress & { version: 4 });
+  if (parsed.version === 6) return withV6Defaults(parsed as SavedProgress);
+  if (parsed.version === 5) return withV6Defaults(parsed as SavedProgress & { version: 5 });
+  if (parsed.version === 4) return withV6Defaults(parsed as SavedProgress & { version: 4 });
   if (parsed.version === 3) {
     const p = parsed as SavedProgress & { version: 3 };
-    return withV5Defaults({ ...p, lastPose: null, cameraMode: 'chase' });
+    return withV6Defaults({ ...p, lastPose: null, cameraMode: 'chase' });
   }
   if (parsed.version === 2) {
     const p = parsed as SavedProgress & { version: 2; customizations?: Record<string, VehicleCustomization> };
     const { version: _v, ...rest } = p;
-    return withV5Defaults({
+    return withV6Defaults({
       ...rest,
       customizations: p.customizations ?? {},
       lastPose: null,
@@ -236,6 +241,16 @@ export function visitLandmark(progress: SavedProgress, landmarkId: string): Save
   return next;
 }
 
+export function findTacoTruck(progress: SavedProgress, district: DistrictId): SavedProgress {
+  if (progress.tacoTrucksFound.includes(district)) return progress;
+  const next: SavedProgress = {
+    ...progress,
+    tacoTrucksFound: [...progress.tacoTrucksFound, district]
+  };
+  saveProgress(next);
+  return next;
+}
+
 export function visitCruiseVista(progress: SavedProgress, vistaId: string): SavedProgress {
   if (progress.visitedVistaIds.includes(vistaId)) return progress;
   const next: SavedProgress = {
@@ -256,7 +271,7 @@ export function tryUnlockCompletedRegions(progress: SavedProgress): {
 
   for (const district of districts) {
     if (current.unlockedRegionIds.includes(district)) continue;
-    if (!isDistrictComplete(current.visitedLandmarkIds, district)) continue;
+    if (!isDistrictCheckpointSatisfied(current, district)) continue;
     const vehicleId = regionUnlockVehicleId(district);
     current = {
       ...current,
