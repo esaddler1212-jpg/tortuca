@@ -10,7 +10,9 @@ export const PAIR_BOSS_WAVE = 10;
 /** Boss HP multiplier on top of villain clone tuning. */
 const PAIR_BOSS_HP_SCALE = 14;
 
-const PAIR_VILLAIN_ID: Record<string, string> = {
+/** Scripted wave-10 finales — all other heroes use first `rivalHeroIds` match. */
+export const PAIR_VILLAIN_PINNED: Record<string, string> = {
+  'solar-apex': 'titan-snap-echo',
   'tin-aviator': 'doctor-doom',
   'red-codriver': 'brute-abom',
   'shade-knight': 'laughing-harlequin',
@@ -18,7 +20,7 @@ const PAIR_VILLAIN_ID: Record<string, string> = {
 };
 
 export function pairVillainForHero(heroId: string): VillainCloneSpec {
-  const pinned = PAIR_VILLAIN_ID[heroId];
+  const pinned = PAIR_VILLAIN_PINNED[heroId];
   if (pinned) {
     const v = getVillainClone(pinned);
     if (v) return v;

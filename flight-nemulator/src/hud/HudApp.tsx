@@ -25,6 +25,7 @@ import { ANNIHILATE_HAVOC_USD } from '../villain-annihilate';
 import { getPlayerRole, type PlayerRole } from '../player-role';
 import { loadCustomHeroes, saveCustomHero, type CustomHeroDraft } from '../custom-hero';
 import { researchHeroBundle } from '../character-research';
+import { arcPickerLine } from '../battleworld-arcs';
 import { Minimap } from './Minimap';
 import { setQualityOverride } from '../game-settings';
 import { downloadPhoto } from '../photo-mode';
@@ -110,6 +111,7 @@ export function HudApp() {
 
   const stars = '★'.repeat(snap.wantedStars) + '☆'.repeat(5 - snap.wantedStars);
   const custom = loadCustomHeroes();
+  const arcLine = arcPickerLine(heroId);
 
   return (
     <div className="hud-root">
@@ -175,6 +177,11 @@ export function HudApp() {
             </option>
           ))}
         </select>
+        {arcLine && (
+          <p className="hud-tag hud-hint hud-arc-picker" title="Battleworld arc thread">
+            {arcLine}
+          </p>
+        )}
         {snap.playerRole === 'hero' && snap.villainRivals && snap.villainRivals.length > 0 && (
           <p className="hud-tag">Rivals: {snap.villainRivals.join(', ')}</p>
         )}

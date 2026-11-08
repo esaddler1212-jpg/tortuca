@@ -110,7 +110,11 @@ import {
   DOOM_GOD_EMPEROR_FORM,
   isDoomGodEmperor
 } from './doom-story-arc';
-import { recordArcBeat, battleworldLatticeStrength } from './arc-progress';
+import {
+  battleworldLatticeStrength,
+  maybeRecordTerritoryClear,
+  recordArcBeat
+} from './arc-progress';
 import {
   characterArcHudLine,
   latticeHudLine,
@@ -444,7 +448,14 @@ function tickFrame(s: GameSession, dt: number): void {
     applyTerritoryRazeChoice(s.territory, districtHere, s.city);
   }
   if (input.interact && s.playerRole === 'hero' && districtHere) {
-    if (heroReclaimRazeDistrict(s.territory, districtHere)) playWaveAlert();
+    if (heroReclaimRazeDistrict(s.territory, districtHere)) {
+      playWaveAlert();
+      maybeRecordTerritoryClear(
+        s.heroSpec.id,
+        s.playerRole,
+        territoryTakeoverCount(s.territory)
+      );
+    }
   }
   if (input.interact) {
     const arcTap = tryArcDistrictInteract(s.heroSpec.id, districtHere);
@@ -624,6 +635,7 @@ function tickFrame(s: GameSession, dt: number): void {
   }
   tickInfinityStonePhase(s.infinity, dt, s.factionNpcs, s.app, s.root);
 
+  const takeoversBefore = territoryTakeoverCount(s.territory);
   tickTerritoryInvasion(
     s.territory,
     s.factionNpcs,
@@ -636,6 +648,9 @@ function tickFrame(s: GameSession, dt: number): void {
     s.wave,
     s.city
   );
+  if (s.playerRole === 'hero' && takeoversBefore > 0 && territoryTakeoverCount(s.territory) === 0) {
+    maybeRecordTerritoryClear(s.heroSpec.id, s.playerRole, 0);
+  }
 
   const npcTick = tickFactionNpcs(
     s.factionNpcs,
