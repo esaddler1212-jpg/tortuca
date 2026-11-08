@@ -6,6 +6,7 @@ export const WORLD_HALF_M = 2600;
 export const FREEWAY_WIDTH_M = 34;
 export const STRIPE_SPACING_M = 36;
 
+/** Legacy debug spawn on I-80; game start uses SFO airport in `landmark-registry.ts`. */
 export const SPAWN_SF = new Vec3(-760, 2.2, -490);
 
 export type DistrictId = 'sf' | 'eastBay' | 'vallejo' | 'peninsula' | 'southBay' | 'marin';

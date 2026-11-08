@@ -4,6 +4,7 @@ import { buildBayWater } from './build-bay';
 import { buildAllDistricts, buildFreewayLamps } from './build-districts';
 import { buildAllFreeways } from './build-freeway';
 import { buildBayAreaLandmarks } from './build-landmarks';
+import { buildMissionSites } from './build-mission-sites';
 import { NIGHT_FOG } from './night-palette';
 import { WORLD_HALF_M } from './world-config';
 
@@ -28,5 +29,6 @@ export function buildDrivingWorld(app: AppBase): void {
   buildAllFreeways(app);
   buildAllDistricts(app);
   buildBayAreaLandmarks(app);
+  buildMissionSites(app);
   buildFreewayLamps(app, 120, 140);
 }

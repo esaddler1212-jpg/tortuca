@@ -3,16 +3,35 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Drive World — night city</title>
+    <title>Drive World — Bay Night</title>
     <link rel="stylesheet" href="/src/starter.css" />
   </head>
   <body>
     <canvas id="application-canvas"></canvas>
     <div id="hud" class="hud" aria-live="polite">
       <h1>Bay Night</h1>
-      <p class="hint">I-80 · 101 · 880 loop — landmarks in every region · WASD</p>
+      <p id="mission" class="hint">Loading…</p>
+      <p id="vehicle-name" class="vehicle-name"></p>
+      <p id="progress" class="progress-line"></p>
       <p id="speed">0 mph</p>
+      <button id="reset-progress" type="button" class="reset-btn">New game</button>
     </div>
+
+    <div id="car-picker" class="overlay" hidden>
+      <div class="panel">
+        <h2>SFO — pick a rental</h2>
+        <p class="panel-hint">Then drive north to the Vallejo Safehouse to unlock landmark runs.</p>
+        <div id="picker-grid" class="picker-grid"></div>
+      </div>
+    </div>
+
+    <div id="garage" class="garage" hidden>
+      <h3>Safehouse garage</h3>
+      <div id="garage-list" class="garage-list"></div>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

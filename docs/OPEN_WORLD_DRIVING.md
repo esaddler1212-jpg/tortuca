@@ -30,7 +30,14 @@ The world follows the usual **Bay Area macro regions** (same mental model as the
 
 **Landmarks:** mock low-poly stacks per city — see [`BAY_AREA_LANDMARKS.md`](./BAY_AREA_LANDMARKS.md).
 
-Default spawn: SF on I-80 (`SPAWN_SF`).
+## Progression loop
+
+1. **SFO airport** — choose 1 of 3 rentals (`Rental Compact`, `Black Car`, `Airport Shuttle`).
+2. **First mission** — drive to the **Vallejo Safehouse** (orange lit building, I-80 north).
+3. **After safehouse** — visit **blue beacon landmarks** across the Bay; each stop unlocks a **city-themed car** (19 landmarks → 19 unlocks, plus your starter).
+4. **Garage** — stand near the safehouse to swap any unlocked ride. Progress saves in `localStorage` (`drive-world-progress-v1`); **New game** in the HUD resets.
+
+Landmark ↔ vehicle mapping: [`landmark-registry.ts`](../drive-world/src/landmark-registry.ts) and [`vehicle-catalog.ts`](../drive-world/src/vehicle-catalog.ts).
 
 ## Repo layout
 
@@ -40,6 +47,10 @@ drive-world/
   build-freeway.ts      drivable decks (all routes)
   build-districts.ts    procedural blocks + signs + lamps
   build-landmarks.ts    iconic mock buildings / bridges
+  build-mission-sites.ts  SFO terminal, safehouse, beacons
+  game-loop.ts          car pick, safehouse, landmark unlocks
+  landmark-registry.ts  visit radii + unlock ids
+  vehicle-catalog.ts    starters + Bay Area unlocks
   build-bay.ts          bay water
 ```
 
