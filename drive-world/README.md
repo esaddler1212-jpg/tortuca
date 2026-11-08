@@ -1,6 +1,6 @@
 # Drive World (prototype)
 
-PlayCanvas + Ammo **raycast vehicle** on a large flat map — first step toward an open-world driving game (Forza Horizon / Midnight Club style).
+PlayCanvas + Ammo **raycast vehicle** on a **multi-kilometre** map — cruise and drive as fast as you want; no races or events.
 
 ```bash
 npm install

@@ -1,63 +1,66 @@
-# Open-world driving game (Forza Horizon × Midnight Club)
+# Open-world driving — big map, no speed limit
 
-Browser-first driving on **PlayCanvas** + **Ammo raycast vehicle** physics. Runnable prototype: [`drive-world/`](../drive-world/).
+Browser sandbox: **one large map**, **drive as fast as you want**, no races, events, traffic gimmicks, or progression gates. Runnable prototype: [`drive-world/`](../drive-world/).
 
-## North-star blends
+## Product focus
 
-| Pillar | Forza Horizon | Midnight Club | Our browser scope |
-|--------|---------------|---------------|-------------------|
-| World | Huge biome map, discovery | City freeway grid, shortcuts | **Streaming tiles** + fog horizon; start with 400×400 m flat |
-| Driving | Simulation-lean arcade | Arcade grip, speed reward | **Raycast vehicle** → tune per class |
-| Progression | Festival, car collection | Pink slips, unlock kits | Meta in Netlify Blobs / local save later |
-| Social | Convoys, shared world | Street races, crews | Optional WebRTC / room codes (phase 3) |
-| Audio | Engine layers, radio | Licensed-ish station feel | Web Audio + procedural engine (phase 2) |
+| In | Out |
+|----|-----|
+| Huge continuous world you can roam | Checkpoints, festivals, race queues |
+| Arcade raycast car that keeps pulling | Police heat, pink slips, unlock trees |
+| Speed HUD, chase cam, open throttle | NPC traffic (unless you add it later for atmosphere) |
+| Later: terrain, biomes, loops, tunnels | Multiplayer requirements at v1 |
+
+Think **endless highway / island loop** vibes, not a career mode.
 
 ## Repo layout
 
 ```
-drive-world/          Vite + PlayCanvas prototype (WASD, chase cam, speed HUD)
-docs/PLAYCANVAS_*.md  Org catalog + install scripts
+drive-world/          PlayCanvas + Ammo prototype (≈4 km × 4 km flat, cross highways)
+docs/OPEN_WORLD_*     This doc
 ```
+
+Prototype scale: **`WORLD_HALF_M = 2000`** (see `drive-world/src/world-config.ts`) — about **4 km** per side. Fog pushes the horizon; streaming comes in Phase 1 for 10×–50× larger worlds.
 
 ## Phased roadmap
 
-### Phase 0 — Drivable core (done in prototype)
+### Phase 0 — Drivable core (in progress)
 
-- [x] Ammo WASM + `vehicle.js` raycast setup
-- [x] Large ground + runway stripes
-- [x] Chase camera + mph HUD
-- [ ] Handbrake / drift assist tuning
+- [x] Raycast vehicle + chase cam + mph HUD
+- [x] Multi-km flat world + cross highways + centre dashes
+- [x] High `maxEngineForce` — no code-enforced top speed
+- [ ] Handbrake / slide tuning (optional feel, not competition)
+- [ ] Cockpit cam toggle
 
-### Phase 1 — “Open world” feel (Horizon exploration)
+### Phase 1 — **Big map** (the real goal)
 
-- Heightmap terrain or tiled glTF districts (2–4 km² playable)
-- Chunk loader: activate colliders/render within radius of car
-- Minimap + GPS line to events
-- Day/night + simple weather (fog/rain shader)
-- Traffic: spline-following NPCs with simple avoidance
+- **Chunk streaming** — load/unload ground + road meshes in a ring around the car (8–16 km²+ total)
+- Heightmap or modular glTF tiles (coast, hills, long bridges)
+- Biome tint + sky only (no collectibles required)
+- Warp to origin if you leave the playable border or fall through terrain
+- Optional **minimap** (position only, no pins)
 
-### Phase 2 — Midnight Club energy
+### Phase 2 — Feel at speed
 
-- Boost / nitrous and risk-reward police heat (optional)
-- Quick race queues at map pins
-- Car upgrade garage (grip, top speed, looks)
-- Split-screen or async ghosts (recorded spline replay)
+- Engine pitch from RPM / speed (Web Audio)
+- Motion blur or FOV widen slightly with mph
+- Better car glTF + wheel sync
+- Rolling hills and banked turns that reward flat-out driving
 
-### Phase 3 — Production
+### Phase 3 — Ship
 
-- Licensed or original car meshes (glTF), LODs
-- Netcode: authoritative server or host peer for 8-player cruise
-- Deploy: separate Netlify site or `public/drive/` with SPA redirect exception
+- Deploy standalone site (Netlify) or `public/drive/` with SPA redirect skip
+- Mobile touch controls overlay
+- Save last spawn position locally
 
 ## Technical choices
 
-| Concern | Recommendation |
-|---------|------------------|
-| Engine | `playcanvas` npm (WebGL2/WebGPU) |
-| Vehicle | Engine [`vehicle.js`](https://github.com/playcanvas/engine/blob/main/scripts/physics/vehicle.js) — same as official physics example |
-| World size | Grid of chunks; only 3×3 active; recycle like Minecraft |
-| Assets | Blender → glTF; roads in Blender or splines + extrude |
-| Tools | `npx skills add playcanvas/skills` for agent-assisted scene work |
+| Concern | Approach |
+|---------|----------|
+| Engine | `playcanvas` |
+| Car | [`vehicle.js`](https://github.com/playcanvas/engine/blob/main/scripts/physics/vehicle.js) (Ammo raycast) |
+| World size | Single static collider today; **chunks** for production scale |
+| Performance | Activate only nearby chunk colliders/render; lower shadow distance per chunk |
 
 ## Run locally
 
@@ -67,11 +70,12 @@ npm install
 npm run dev
 ```
 
-## Content you’ll need to decide
+**WASD / arrows** — full throttle allowed.
 
-1. **Setting** — SoCal freeways (MC) vs coastal festival map (FH) vs fictional “Bay Area night”?
-2. **Camera** — Chase only, or cockpit toggle?
-3. **Multiplayer** — cruise-only first, or ranked races day one?
-4. **Art pipeline** — low-poly stylized (faster) vs photoreal glTF cars?
+## Still worth deciding (map only)
 
-Answer those and we can lock Phase 1 chunk size and first district layout.
+1. **Shape** — square island, ring road, or one giant peninsula with long straights?
+2. **Terrain** — dead flat + highways first vs rolling hills immediately?
+3. **Look** — stylized low-poly dusk vs bright midday?
+
+Those three only affect art and tile layout, not game systems.

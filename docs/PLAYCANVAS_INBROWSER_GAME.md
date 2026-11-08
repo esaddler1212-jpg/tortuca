@@ -99,7 +99,7 @@ Top stars (active, game-adjacent):
 
 ## Open-world driving (active prototype)
 
-See [`OPEN_WORLD_DRIVING.md`](./OPEN_WORLD_DRIVING.md) and run [`drive-world/`](../drive-world/) (`npm run dev`) — raycast car on a 400 m map, chase cam, mph HUD.
+See [`OPEN_WORLD_DRIVING.md`](./OPEN_WORLD_DRIVING.md) and run [`drive-world/`](../drive-world/) (`npm run dev`) — raycast car on a ~4 km map, chase cam, mph HUD, no speed cap.
 
 ## Tortuca / IRIS
 

@@ -22,6 +22,9 @@ import {
   createGraphicsDevice
 } from 'playcanvas';
 
+import { buildDrivingWorld } from './build-world';
+import { DRIVE_TUNING, WORLD_HALF_M } from './world-config';
+
 WasmModule.setConfig('Ammo', {
   glueUrl: './ammo/ammo.wasm.js',
   wasmUrl: './ammo/ammo.wasm.wasm'
@@ -70,47 +73,10 @@ app.start();
 
 app.scene.ambientLight = new Color(0.35, 0.38, 0.45);
 app.scene.fog = Color.BLACK;
-app.scene.fogStart = 80;
-app.scene.fogEnd = 420;
+app.scene.fogStart = 120;
+app.scene.fogEnd = Math.min(2400, WORLD_HALF_M * 1.1);
 
-const asphalt = new StandardMaterial();
-asphalt.diffuse = new Color(0.12, 0.13, 0.15);
-asphalt.gloss = 0.25;
-asphalt.update();
-
-const stripe = new StandardMaterial();
-stripe.diffuse = new Color(0.92, 0.9, 0.82);
-stripe.emissive = new Color(0.08, 0.08, 0.06);
-stripe.update();
-
-const grass = new StandardMaterial();
-grass.diffuse = new Color(0.15, 0.35, 0.18);
-grass.update();
-
-/** Prototype “open world” flat — replace with heightfields + streaming (see docs). */
-const WORLD_HALF = 200;
-
-const ground = new Entity('ground');
-ground.setLocalScale(WORLD_HALF * 2, 0.4, WORLD_HALF * 2);
-ground.setPosition(0, -0.2, 0);
-ground.addComponent('render', { type: 'box', material: asphalt });
-ground.addComponent('collision', { type: 'box', halfExtents: new Vec3(WORLD_HALF, 0.2, WORLD_HALF) });
-ground.addComponent('rigidbody', { type: 'static' });
-app.root.addChild(ground);
-
-for (let z = -WORLD_HALF + 40; z < WORLD_HALF; z += 80) {
-  const band = new Entity(`stripe-${z}`);
-  band.setLocalScale(8, 0.05, 2);
-  band.setPosition(0, 0.02, z);
-  band.addComponent('render', { type: 'box', material: stripe });
-  app.root.addChild(band);
-}
-
-const pad = new Entity('spawn-pad');
-pad.setLocalScale(24, 0.1, 24);
-pad.setPosition(0, 0.01, 0);
-pad.addComponent('render', { type: 'box', material: grass });
-app.root.addChild(pad);
+buildDrivingWorld(app);
 
 const wheelDefs = [
   { name: 'FL', pos: new Vec3(0.95, 0.35, 1.35), front: true },
@@ -123,7 +89,14 @@ const wheels = wheelDefs.map((def) => {
   const wheel = new Entity(def.name);
   wheel.addComponent('script');
   wheel.script!.create('vehicleWheel', {
-    attributes: { debugRender: true, isFront: def.front, radius: 0.38, width: 0.32 }
+    attributes: {
+      debugRender: true,
+      isFront: def.front,
+      radius: 0.38,
+      width: 0.32,
+      frictionSlip: 1200,
+      suspensionStiffness: 12
+    }
   });
   wheel.setLocalPosition(def.pos);
   return wheel;
@@ -142,15 +115,20 @@ glass.blendType = 2;
 glass.update();
 
 const vehicle = new Entity('vehicle');
-vehicle.addComponent('rigidbody', { type: 'dynamic', mass: 1100, linearDamping: 0.05, angularDamping: 0.12 });
+vehicle.addComponent('rigidbody', {
+  type: 'dynamic',
+  mass: DRIVE_TUNING.mass,
+  linearDamping: DRIVE_TUNING.linearDamping,
+  angularDamping: 0.1
+});
 vehicle.addComponent('collision', { type: 'compound' });
 vehicle.addComponent('script');
 vehicle.script!.create('vehicle', {
   attributes: {
     wheels,
-    maxEngineForce: 2800,
-    maxBrakingForce: 120,
-    maxSteering: 0.38
+    maxEngineForce: DRIVE_TUNING.maxEngineForce,
+    maxBrakingForce: DRIVE_TUNING.maxBrakingForce,
+    maxSteering: DRIVE_TUNING.maxSteering
   }
 });
 vehicle.script!.create('vehicleControls');
@@ -177,14 +155,18 @@ sun.addComponent('light', {
   color: new Color(1, 0.96, 0.88),
   intensity: 1.35,
   castShadows: true,
-  shadowDistance: 120,
+  shadowDistance: 180,
   shadowResolution: 2048
 });
 sun.setEulerAngles(48, 25, 0);
 app.root.addChild(sun);
 
 const camera = new Entity('camera');
-camera.addComponent('camera', { fov: 72, farClip: 600, clearColor: new Color(0.45, 0.55, 0.75) });
+camera.addComponent('camera', {
+  fov: 72,
+  farClip: 2800,
+  clearColor: new Color(0.45, 0.55, 0.75)
+});
 app.root.addChild(camera);
 
 const camOffset = new Vec3(0, 3.2, 7.5);
