@@ -24,3 +24,16 @@ export function pickHeroInterceptor(playerHeroId: string, wave: number, slot: nu
       : HERO_ROSTER.filter((h) => h.id !== playerHeroId);
   return pool[(wave + slot) % pool.length] ?? HERO_ROSTER[0]!;
 }
+
+/** District home heroes rush in when a villain raids their turf. */
+export function pickHeroDefenderForDistrict(
+  districtId: string,
+  wave: number,
+  slot: number,
+  excludeId: string
+): HeroSpec {
+  const local = HERO_ROSTER.filter((h) => h.districtId === districtId && h.id !== excludeId);
+  if (local.length > 0) return local[(wave + slot) % local.length]!;
+  const alt = HERO_ROSTER.filter((h) => h.id !== excludeId);
+  return alt[(wave + slot) % alt.length] ?? HERO_ROSTER[0]!;
+}

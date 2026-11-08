@@ -29,6 +29,8 @@ const required = [
   'src/hero-venom-bond.ts',
   'src/solar-lantern-arc.ts',
   'src/doom-story-arc.ts',
+  'src/territory-invasion.ts',
+  'src/territory-tick.ts',
   'src/hero-rivals.ts',
   'src/world-fate.ts',
   'src/world-persist.ts',
@@ -61,6 +63,12 @@ const pairBoss = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-pair-bo
   stdio: 'inherit'
 });
 if (pairBoss.status !== 0) process.exit(pairBoss.status ?? 1);
+
+const territory = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-territory-invasion.mts')], {
+  cwd: root,
+  stdio: 'inherit'
+});
+if (territory.status !== 0) process.exit(territory.status ?? 1);
 
 const audit = spawnSync('npx', ['tsx', path.join(root, 'scripts/audit-aerial-roster.mts')], {
   cwd: root,

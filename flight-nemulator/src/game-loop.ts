@@ -7,7 +7,7 @@ import {
   StandardMaterial,
   Vec3
 } from 'playcanvas';
-import { buildMetropolis, getDestructibles, spawnSimpleCars } from './build-city';
+import { buildMetropolis, districtIdAtPosition, getDestructibles, spawnSimpleCars } from './build-city';
 import { buildPlanetShell, earthLabel, initEarthDistrictRing } from './earth-planet';
 import { getChronoState, tickEarthOrbit } from './earth-orbit';
 import {
@@ -110,6 +110,24 @@ import {
   DOOM_GOD_EMPEROR_FORM,
   isDoomGodEmperor
 } from './doom-story-arc';
+import {
+  addDistrictDestruction,
+  canHeroFacePairBoss,
+  createTerritoryState,
+  nearVillainAdvisor,
+  pairHeroHintForPlayerVillain,
+  spawnVillainAdvisors,
+  territoryHudLine,
+  territoryTakeoverCount,
+  villainAdvisorHint,
+  type TerritoryState
+} from './territory-invasion';
+import {
+  applyTerritoryHenchmenChoice,
+  applyTerritoryRazeChoice,
+  heroReclaimRazeDistrict,
+  tickTerritoryInvasion
+} from './territory-tick';
 import { isPhotoMode, togglePhotoMode } from './photo-mode';
 import { fetchManifestIfOnline, getManifestSuggestions } from './updates';
 import { attachHeroGltf } from './hero-gltf';
@@ -142,6 +160,7 @@ export type GameSession = {
   worldFate: WorldFateState;
   pairBoss: { spawned: boolean; defeated: boolean; warned: boolean };
   lanternKeeper: import('./solar-lantern-arc').LanternKeeper | null;
+  territory: TerritoryState;
 };
 
 let session: GameSession | null = null;
@@ -215,6 +234,12 @@ export async function startGame(app: AppBase): Promise<void> {
   });
   app.root.addChild(camera);
 
+  const playerRole = getPlayerRole();
+  const territory = createTerritoryState();
+  if (playerRole === 'villain') {
+    territory.advisors = spawnVillainAdvisors(app, root);
+  }
+
   session = {
     app,
     root,
@@ -224,7 +249,7 @@ export async function startGame(app: AppBase): Promise<void> {
     tier,
     destructionUsd: 0,
     wanted: createWanted(),
-    playerRole: getPlayerRole(),
+    playerRole,
     city: createCityIntegrity(),
     factionNpcs: [],
     wave: 0,
@@ -236,11 +261,12 @@ export async function startGame(app: AppBase): Promise<void> {
     pairBoss: { spawned: false, defeated: false, warned: false },
     lanternKeeper:
       heroSpec.id === SOLAR_HERO_ID &&
-      getPlayerRole() === 'hero' &&
+      playerRole === 'hero' &&
       !lanternKeeperSlain() &&
       !lanternAidForFinalBoss()
         ? spawnLanternKeeper(app, root)
-        : null
+        : null,
+    territory
   };
 
   app.on('update', (dt: number) => {
@@ -340,6 +366,12 @@ function tickFrame(s: GameSession, dt: number): void {
     if (s.playerRole === 'villain') {
       addDestructionHeat(s.wanted, smash.costUsd, dt);
       addVillainHavoc(s.city, smash.costUsd);
+      addDistrictDestruction(
+        s.territory,
+        districtIdAtPosition(pos.x, pos.z),
+        smash.costUsd,
+        s.heroSpec.districtId
+      );
     }
     syncIntegrityFromBuildings(s.city, tags);
     addScreenShake(0.25);
@@ -351,9 +383,35 @@ function tickFrame(s: GameSession, dt: number): void {
     spawnBoostTrail(s.app, s.root, pos.clone(), s.heroForm.color);
   }
 
+  const districtHere = districtIdAtPosition(pos.x, pos.z);
   if (input.interact && s.heroSpec.id === SOLAR_HERO_ID && nearLanternSafeHouse(pos) && !lanternAidForFinalBoss() && !isSolarCorrupted() && !s.pairBoss.spawned) {
     markLanternAid();
     playWaveAlert();
+  }
+  if (input.interact && s.playerRole === 'villain' && districtHere) {
+  const row = s.territory.districts[districtHere];
+    if (row?.status === 'held_choice') {
+      applyTerritoryHenchmenChoice(
+        s.territory,
+        districtHere,
+        s.app,
+        s.root,
+        s.factionNpcs,
+        s.heroSpec.id,
+        s.wave
+      );
+    }
+    const advisor = nearVillainAdvisor(s.territory.advisors, pos);
+    if (advisor) {
+      s.territory.lastHint = villainAdvisorHint(advisor.clone);
+      playWaveAlert();
+    }
+  }
+  if (input.territoryRaze && s.playerRole === 'villain' && districtHere) {
+    applyTerritoryRazeChoice(s.territory, districtHere, s.city);
+  }
+  if (input.interact && s.playerRole === 'hero' && districtHere) {
+    if (heroReclaimRazeDistrict(s.territory, districtHere)) playWaveAlert();
   }
 
   if (input.primary && s.hero.canPrimary()) {
@@ -402,6 +460,12 @@ function tickFrame(s: GameSession, dt: number): void {
     if (s.playerRole === 'villain') {
       addDestructionHeat(s.wanted, blast.costUsd, dt);
       addVillainHavoc(s.city, blast.costUsd);
+      addDistrictDestruction(
+        s.territory,
+        districtIdAtPosition(aim.x, aim.z),
+        blast.costUsd,
+        s.heroSpec.districtId
+      );
     }
     syncIntegrityFromBuildings(s.city, tags);
     spawnCraterMarker(s.app, s.root, aim, blastRadius);
@@ -477,7 +541,8 @@ function tickFrame(s: GameSession, dt: number): void {
     s.playerRole === 'hero' &&
     !s.pairBoss.spawned &&
     !s.pairBoss.defeated &&
-    s.wave + 1 >= PAIR_BOSS_WAVE
+    s.wave + 1 >= PAIR_BOSS_WAVE &&
+    canHeroFacePairBoss(s.territory)
   ) {
     s.wave += 1;
     for (const n of [...s.factionNpcs]) {
@@ -515,6 +580,19 @@ function tickFrame(s: GameSession, dt: number): void {
       s.hero.stamina = Math.max(0, s.hero.stamina - (10 * simDt) / res);
     }
   }
+  tickTerritoryInvasion(
+    s.territory,
+    s.factionNpcs,
+    s.app,
+    s.root,
+    pos,
+    dt,
+    s.playerRole,
+    s.heroSpec.id,
+    s.wave,
+    s.city
+  );
+
   const npcTick = tickFactionNpcs(
     s.factionNpcs,
     pos,
@@ -646,6 +724,17 @@ function tickFrame(s: GameSession, dt: number): void {
       isSolarCorrupted()
     ),
     doomStoryHint: doomStoryHudLine(s.heroSpec.id, s.playerRole),
+    territoryHint: territoryHudLine(
+      s.territory,
+      s.playerRole,
+      districtIdAtPosition(pos.x, pos.z),
+      s.heroSpec.districtId
+    ),
+    villainAdvisorHint: s.territory.lastHint,
+    pairBossBlocked: s.playerRole === 'hero' && !canHeroFacePairBoss(s.territory),
+    takeoverDistricts: territoryTakeoverCount(s.territory),
+    villainScoutHint:
+      s.playerRole === 'villain' ? pairHeroHintForPlayerVillain(s.heroSpec.id) : null,
     alignmentNote: canPickAlignment(s.heroSpec.id)
       ? 'Doom: toggle Hero or Villain below'
       : s.heroSpec.id === VENOM_PLAYABLE_ID
@@ -704,6 +793,30 @@ export function selectPlayerRole(role: PlayerRole): void {
     );
   }
   window.location.reload();
+}
+
+export function confirmTerritoryHenchmen(): void {
+  if (!session || session.playerRole !== 'villain') return;
+  const pos = session.hero.entity.getPosition();
+  const did = districtIdAtPosition(pos.x, pos.z);
+  if (!did) return;
+  applyTerritoryHenchmenChoice(
+    session.territory,
+    did,
+    session.app,
+    session.root,
+    session.factionNpcs,
+    session.heroSpec.id,
+    session.wave
+  );
+}
+
+export function confirmTerritoryRaze(): void {
+  if (!session || session.playerRole !== 'villain') return;
+  const pos = session.hero.entity.getPosition();
+  const did = districtIdAtPosition(pos.x, pos.z);
+  if (!did) return;
+  applyTerritoryRazeChoice(session.territory, did, session.city);
 }
 
 export function requestLanternAidAtSafeHouse(): void {

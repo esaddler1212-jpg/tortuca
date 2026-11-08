@@ -83,6 +83,10 @@ function districtAt(x: number, z: number): DistrictSpec | null {
   return null;
 }
 
+export function districtIdAtPosition(x: number, z: number): string | null {
+  return districtAt(x, z)?.id ?? null;
+}
+
 function gridStep(tier: QualityTier): number {
   if (tier === 'low') return 160;
   if (tier === 'high') return 78;

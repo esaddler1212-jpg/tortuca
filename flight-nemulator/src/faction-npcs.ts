@@ -6,6 +6,7 @@ import type { PlayerRole } from './player-role';
 import { applyRaiderSiege } from './city-integrity';
 import type { CityIntegrityState } from './city-integrity';
 import { attachUnitBox } from './primitive-mesh';
+import { siegeTargetInDistrict } from './territory-invasion';
 import { pickHeroInterceptor } from './hero-rivals';
 import { syncFlightAssistVisuals, type AerialMobility } from './aerial-mobility';
 import { pickVillainClone, type VillainCloneSpec } from './villain-roster';
@@ -25,6 +26,9 @@ export type FactionNpc = {
   isPairBoss?: boolean;
   /** Emerald Pilot assist vs pair boss (Solar Apex story) */
   isLanternAlly?: boolean;
+  districtId?: string;
+  isDistrictDefender?: boolean;
+  isHenchman?: boolean;
 };
 
 export function waveNpcCount(wave: number, wantedStars: number, role: PlayerRole): number {
@@ -212,6 +216,34 @@ export function tickFactionNpcs(
       const dir = new Vec3(playerPos.x - p.x, playerPos.y - p.y, playerPos.z - p.z);
       if (dir.length() > 0.01) dir.normalize();
       n.entity.setPosition(p.x + dir.x * n.speed * dt, p.y + dir.y * n.speed * dt, p.z + dir.z * n.speed * dt);
+    } else if (n.isHenchman && n.allegiance === 'villain' && role === 'hero') {
+      const dir = new Vec3(playerPos.x - p.x, playerPos.y - p.y, playerPos.z - p.z);
+      if (dir.length() > 0.01) dir.normalize();
+      n.entity.setPosition(p.x + dir.x * n.speed * dt, p.y + dir.y * n.speed * dt, p.z + dir.z * n.speed * dt);
+    } else if (n.isHenchman && n.allegiance === 'villain' && n.districtId) {
+      if (!n.targetTag || !n.targetTag.intact) {
+        n.targetTag = siegeTargetInDistrict(tags, p, n.districtId) ?? undefined;
+      }
+      const target = n.targetTag;
+      if (target) {
+        const tp = target.entity.getPosition();
+        const dir = new Vec3(tp.x - p.x, tp.y + target.h * 0.3 - p.y, tp.z - p.z);
+        const len = dir.length();
+        if (len > 2) {
+          dir.normalize();
+          n.entity.setPosition(p.x + dir.x * n.speed * dt, p.y + dir.y * n.speed * dt, p.z + dir.z * n.speed * dt);
+        } else {
+          n.siegeCd -= dt;
+          if (n.siegeCd <= 0) {
+            n.siegeCd = 1.1 + Math.random() * 0.5;
+            const hit = smashDestructible(app, root, target, tier, tp);
+            if (hit) {
+              applyRaiderSiege(city, hit.costUsd * n.siegeMul);
+              n.targetTag = undefined;
+            }
+          }
+        }
+      }
     }
 
     if (n.hp <= 0) {

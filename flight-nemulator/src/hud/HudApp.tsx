@@ -12,6 +12,8 @@ import type { HeroForm, SuitRole } from '../hero-roster';
 import { canPickAlignment, DUAL_ROLE_HERO_ID, isVillainOnlyHero } from '../hero-alignment';
 import { isDoomGodEmperor } from '../doom-story-arc';
 import {
+  confirmTerritoryHenchmen,
+  confirmTerritoryRaze,
   confirmVillainWorldRemake,
   continueDyingRoam,
   requestLanternAidAtSafeHouse,
@@ -78,6 +80,11 @@ export type GameHudSnapshot = {
   lanternSafehouseNear?: boolean;
   lanternArcHint?: string | null;
   doomStoryHint?: string | null;
+  territoryHint?: string | null;
+  villainAdvisorHint?: string | null;
+  pairBossBlocked?: boolean;
+  takeoverDistricts?: number;
+  villainScoutHint?: string | null;
 };
 
 function formatUsd(n: number): string {
@@ -181,6 +188,25 @@ export function HudApp() {
         {snap.venomBondLabel && <p className="hud-tag">{snap.venomBondLabel}</p>}
         {snap.lanternArcHint && <p className="hud-tag">{snap.lanternArcHint}</p>}
         {snap.doomStoryHint && <p className="hud-tag">{snap.doomStoryHint}</p>}
+        {snap.territoryHint && <p className="hud-tag">{snap.territoryHint}</p>}
+        {snap.villainAdvisorHint && <p className="hud-tag hud-hint">{snap.villainAdvisorHint}</p>}
+        {snap.villainScoutHint && <p className="hud-tag">{snap.villainScoutHint}</p>}
+        {snap.pairBossBlocked && (
+          <p className="hud-tag">
+            Final pair boss locked — reclaim {snap.takeoverDistricts ?? 0} villain district
+            {snap.takeoverDistricts === 1 ? '' : 's'} first
+          </p>
+        )}
+        {snap.territoryHint?.includes('H: henchmen') && (
+          <div className="fate-actions">
+            <button type="button" className="hud-roam" onClick={() => confirmTerritoryHenchmen()}>
+              Henchmen hold (H)
+            </button>
+            <button type="button" className="hud-annihilate" onClick={() => confirmTerritoryRaze()}>
+              Raze skyline (G)
+            </button>
+          </div>
+        )}
         {snap.lanternSafehouseNear && snap.playerRole === 'hero' && heroId === 'solar-apex' && (
           <div className="fate-actions">
             <button type="button" className="hud-roam" onClick={() => requestLanternAidAtSafeHouse()}>
