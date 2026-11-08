@@ -83,6 +83,8 @@ import {
 } from './camera-profiles';
 import { activeSprintLabel, freshSprintRuntime, tickLandmarkSprint } from './landmark-sprints';
 import { chapterObjectivePin } from './mission-nav';
+import { tryUnlockCraftVehicles } from './craft-vehicle-unlocks';
+import { tryAwardDistrictMeetBadge, tryUnlockDistrictMeetVehicles } from './district-meets';
 import { bumpHeatPeak, tryUnlockActivityVehicles } from './vehicle-activity-unlocks';
 import { appendJournal } from './cruise-journal';
 import { nearestCruiseVista, type CruiseVistaDef } from './cruise-vistas';
@@ -340,15 +342,24 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     ui.showToast('Applied', 'Paint and tuning updated for this car.');
   };
 
-  const applyActivityVehicleUnlocks = () => {
-    const out = tryUnlockActivityVehicles(progress);
-    if (out.progress === progress) return;
-    progress = out.progress;
-    for (const id of out.newlyUnlocked) {
-      ui.showToast('Vehicle unlocked', getVehicleSpec(id).name, 6200);
-      playLandmarkChime();
-      progress = appendJournal(progress, { kind: 'cpm', id, label: getVehicleSpec(id).name });
+  const applyBonusVehicleUnlocks = () => {
+    const sources = [
+      tryUnlockActivityVehicles(progress),
+      tryUnlockDistrictMeetVehicles(progress),
+      tryUnlockCraftVehicles(progress)
+    ];
+    let changed = false;
+    for (const out of sources) {
+      if (out.progress === progress && out.newlyUnlocked.length === 0) continue;
+      progress = out.progress;
+      changed = true;
+      for (const id of out.newlyUnlocked) {
+        ui.showToast('Vehicle unlocked', getVehicleSpec(id).name, 6200);
+        playLandmarkChime();
+        progress = appendJournal(progress, { kind: 'cpm', id, label: getVehicleSpec(id).name });
+      }
     }
+    if (!changed) return;
     ui.setProgressSummary(progress);
     if (nearGarage) refreshGarageUi();
   };
@@ -1148,14 +1159,15 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         ui.showToast(taxiOut.toast.title, taxiOut.toast.body);
       }
 
-      const nearMeet = Math.hypot(pos.x - 465, pos.z - 955) < 48;
-      if (nearMeet && mph < 12) {
+      if (sideshowSite && mph < 12 && Math.hypot(pos.x - sideshowSite.x, pos.z - sideshowSite.z) < 48) {
         meetHoldT += dt;
-        if (meetHoldT > 2.2 && !progress.meetBadges.includes('vallejo-meet')) {
-          progress = { ...progress, meetBadges: [...progress.meetBadges, 'vallejo-meet'] };
-          ui.showToast('Meet badge', 'Vallejo yard — welcome to the lot');
-          saveProgress(progress);
-          applyActivityVehicleUnlocks();
+        if (meetHoldT > 2.2) {
+          const before = progress.meetBadges.length;
+          progress = tryAwardDistrictMeetBadge(progress, sideshowSite, mph, meetHoldT);
+          if (progress.meetBadges.length > before) {
+            ui.showToast('Meet badge', sideshowSite.name);
+            applyBonusVehicleUnlocks();
+          }
           meetHoldT = 0;
         }
       } else meetHoldT = 0;
@@ -1169,7 +1181,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       }
 
       syncMissionProgress();
-      applyActivityVehicleUnlocks();
+      applyBonusVehicleUnlocks();
     }
 
     const driftPad = nearestDriftPad(pos.x, pos.z);
@@ -1360,7 +1372,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         if (mph > prev) {
           progress = recordSpeedTrap(progress, trap.id, Math.round(mph));
           ui.showToast(trap.name, `${Math.round(mph)} mph`);
-          applyActivityVehicleUnlocks();
+          applyBonusVehicleUnlocks();
         }
       }
 

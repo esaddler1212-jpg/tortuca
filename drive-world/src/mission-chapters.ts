@@ -14,7 +14,7 @@ export const VALLEJO_CHAPTER_STEPS: ChapterStep[] = [
     id: 'v-pick-car',
     chapter: 'vallejo',
     label: 'Pick your starter at the estate',
-    hint: 'Choose Safehouse Cruiser, Sport, or Ute'
+    hint: 'Cruiser, Sport, Ute, or Drifter'
   },
   {
     id: 'v-fuel',

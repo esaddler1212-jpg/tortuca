@@ -58,7 +58,20 @@ function spec(
 }
 
 /** Pick one at the Vallejo safehouse after the Waymo drop-off. */
-export const GARAGE_STARTER_IDS = ['garage-cruiser', 'garage-sport', 'garage-ute'] as const;
+export const GARAGE_STARTER_IDS = ['garage-cruiser', 'garage-sport', 'garage-ute', 'garage-drifter'] as const;
+
+/** Night meet rotation — one car per district badge. */
+export const DISTRICT_MEET_VEHICLE_IDS = [
+  'meet-vallejo-lot',
+  'meet-sf-flash',
+  'meet-marin-breeze',
+  'meet-east-donk',
+  'meet-pen-low',
+  'meet-south-arc'
+] as const;
+
+/** Craft Anything pass — procedural block bodies. */
+export const CRAFT_VEHICLE_IDS = ['craft-bay-wedge', 'craft-night-lift', 'craft-street-spike'] as const;
 
 export const BONUS_AERIAL_IDS = ['bonus-skyway-hover', 'bonus-coast-heli'] as const;
 
@@ -82,7 +95,6 @@ export const AUTOPILOT_VEHICLE_ID = 'bonus-night-coil' as const;
 
 /** Gameplay mastery — meet, sprints, chapter, vistas, heat, speed traps. */
 export const BONUS_ACTIVITY_VEHICLE_IDS = [
-  'bonus-meet-racer',
   'bonus-sprint-king',
   'bonus-chapter-hauler',
   'bonus-vista-liner',
@@ -125,6 +137,21 @@ export const VEHICLE_CATALOG: Record<string, VehicleSpec> = {
     'Vallejo',
     { mass: 1320, maxEngineForce: 6200, maxSteering: 0.33, chassis: { x: 1.05, y: 0.48, z: 2.15 } },
     { diffuse: [0.14, 0.12, 0.1], emissive: [0.75, 0.55, 0.25], emissiveIntensity: 0.25 },
+    { garageStarter: true }
+  ),
+  'garage-drifter': spec(
+    'garage-drifter',
+    'Safehouse Drifter',
+    'Your keys — Vallejo yard slides',
+    'Vallejo',
+    {
+      mass: 940,
+      maxEngineForce: 6200,
+      maxSteering: 0.44,
+      maxBrakingForce: 120,
+      chassis: { x: 0.88, y: 0.3, z: 1.72 }
+    },
+    { diffuse: [0.1, 0.12, 0.14], emissive: [0.55, 0.85, 0.95], emissiveIntensity: 0.42 },
     { garageStarter: true }
   ),
 
@@ -325,13 +352,85 @@ export const VEHICLE_CATALOG: Record<string, VehicleSpec> = {
     {}
   ),
 
-  'bonus-meet-racer': spec(
-    'bonus-meet-racer',
-    'Lot Slant Racer',
-    'Activity — Vallejo night meet',
+  'meet-vallejo-lot': spec(
+    'meet-vallejo-lot',
+    'Vallejo Lot Runner',
+    'Meet — Vallejo yard sideshow',
     'Vallejo',
     { mass: 940, maxEngineForce: 7400, maxSteering: 0.41, chassis: { x: 0.86, y: 0.28, z: 1.68 } },
     { diffuse: [0.2, 0.18, 0.22], emissive: [0.95, 0.45, 0.12], emissiveIntensity: 0.48 },
+    {}
+  ),
+  'meet-sf-flash': spec(
+    'meet-sf-flash',
+    'Fog Flash',
+    'Meet — SF pier lot',
+    'San Francisco',
+    { mass: 900, maxEngineForce: 7000, maxSteering: 0.4, chassis: { x: 0.9, y: 0.32, z: 1.78 } },
+    { diffuse: [0.08, 0.1, 0.12], emissive: [0.45, 0.65, 0.95], emissiveIntensity: 0.45 },
+    {}
+  ),
+  'meet-marin-breeze': spec(
+    'meet-marin-breeze',
+    'Marin Breeze',
+    'Meet — Sausalito view',
+    'Marin',
+    { mass: 1180, maxEngineForce: 5600, maxSteering: 0.35, chassis: { x: 1.02, y: 0.46, z: 2.05 } },
+    { diffuse: [0.12, 0.14, 0.16], emissive: [0.35, 0.75, 0.55], emissiveIntensity: 0.35 },
+    {}
+  ),
+  'meet-east-donk': spec(
+    'meet-east-donk',
+    'Town Donk',
+    'Meet — East Bay lot',
+    'East Bay',
+    { mass: 1320, maxEngineForce: 5200, maxSteering: 0.32, chassis: { x: 1.08, y: 0.55, z: 2.35 } },
+    { diffuse: [0.14, 0.1, 0.08], emissive: [0.85, 0.55, 0.2], emissiveIntensity: 0.42 },
+    {}
+  ),
+  'meet-pen-low': spec(
+    'meet-pen-low',
+    'Sand Low',
+    'Meet — Dumbarton lot',
+    'Peninsula',
+    { mass: 1080, maxEngineForce: 5800, maxSteering: 0.37, chassis: { x: 0.95, y: 0.36, z: 1.95 } },
+    { diffuse: [0.16, 0.14, 0.12], emissive: [0.75, 0.6, 0.4], emissiveIntensity: 0.3 },
+    {}
+  ),
+  'meet-south-arc': spec(
+    'meet-south-arc',
+    'Silicon Arc',
+    'Meet — SAP load-in',
+    'South Bay',
+    { mass: 880, maxEngineForce: 7600, maxSteering: 0.42, chassis: { x: 0.84, y: 0.28, z: 1.65 } },
+    { diffuse: [0.05, 0.07, 0.1], emissive: [0.15, 0.85, 0.92], emissiveIntensity: 0.52 },
+    {}
+  ),
+  'craft-bay-wedge': spec(
+    'craft-bay-wedge',
+    'Bay Wedge',
+    'Craft shard — procedural wedge',
+    'Bay Area',
+    { mass: 860, maxEngineForce: 7200, maxSteering: 0.43, chassis: { x: 0.82, y: 0.26, z: 1.62 } },
+    { diffuse: [0.1, 0.12, 0.14], emissive: [0.25, 0.75, 0.95], emissiveIntensity: 0.55 },
+    {}
+  ),
+  'craft-night-lift': spec(
+    'craft-night-lift',
+    'Night Lift',
+    'Craft shard — roof rack hauler',
+    'Bay Area',
+    { mass: 1240, maxEngineForce: 5800, maxSteering: 0.33, chassis: { x: 1.0, y: 0.5, z: 2.1 } },
+    { diffuse: [0.08, 0.08, 0.1], emissive: [0.55, 0.45, 0.95], emissiveIntensity: 0.38 },
+    {}
+  ),
+  'craft-street-spike': spec(
+    'craft-street-spike',
+    'Street Spike',
+    'Craft shard — finned runner',
+    'Bay Area',
+    { mass: 920, maxEngineForce: 6900, maxSteering: 0.41, chassis: { x: 0.9, y: 0.3, z: 1.75 } },
+    { diffuse: [0.12, 0.06, 0.1], emissive: [0.95, 0.2, 0.55], emissiveIntensity: 0.48 },
     {}
   ),
   'bonus-sprint-king': spec(

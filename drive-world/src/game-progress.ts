@@ -19,6 +19,7 @@ import {
   type VehicleCustomization
 } from './vehicle-customization';
 import { seedGhostTapes } from './cpm-ghost';
+import { tryUnlockCraftVehicles } from './craft-vehicle-unlocks';
 
 export type GamePhase = 'waymo_ride' | 'pick_car' | 'home';
 
@@ -394,6 +395,7 @@ export function collectItem(progress: SavedProgress, id: string, paintId: string
   next = tryUnlockCoastHeli(next);
   next = tryUnlockLegendVehicles(next);
   next = tryUnlockCultureVehicles(next);
+  next = tryUnlockCraftVehicles(next).progress;
   next = tryUnlockNightCoil(next);
   saveProgress(next);
   return next;

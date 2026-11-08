@@ -6,7 +6,8 @@ import {
   type AppBase
 } from 'playcanvas';
 
-import { getVehicleSpec } from './vehicle-catalog';
+import { CRAFT_VEHICLE_IDS, getVehicleSpec } from './vehicle-catalog';
+import { attachCraftVehicleMesh } from './craft-vehicle-mesh';
 import { appliedTuning, mergeCustomization, type VehicleCustomization } from './vehicle-customization';
 import { attachVehicleLights, type VehicleLights } from './vehicle-lights';
 import { attachVehicleGltf, hasGltfForVehicle } from './vehicle-gltf';
@@ -254,6 +255,7 @@ export function createPlayerVehicle(
   rimMat.update();
 
   const useGltfBody = hasGltfForVehicle(vehicleId);
+  const useCraftBody = (CRAFT_VEHICLE_IDS as readonly string[]).includes(vehicleId);
   const scaleWheel = spec.chassis.x / 0.95;
   const wheels = wheelDefs.map((def) => {
     const wheel = new Entity(def.name);
@@ -303,19 +305,21 @@ export function createPlayerVehicle(
   const chassis = new Entity('chassis');
   chassis.addComponent('collision', { type: 'box', halfExtents: new Vec3(cx, cy, cz) });
   chassis.setLocalPosition(0, bodyY, 0);
-  if (!useGltfBody) {
+  if (!useGltfBody && !useCraftBody) {
     chassis.addComponent('render', { type: 'box', material: paint });
   }
 
   const cabin = new Entity('cabin');
   cabin.addComponent('collision', { type: 'box', halfExtents: new Vec3(cx * 0.88, cy * 0.85, cz * 0.55) });
   cabin.setLocalPosition(0, cy * 2 + 0.15 - tuning.rideDrop, -cz * 0.12);
-  if (!useGltfBody) {
+  if (!useGltfBody && !useCraftBody) {
     cabin.addComponent('render', { type: 'box', material: glass });
   }
 
   if (useGltfBody) {
     attachVehicleGltf(vehicle, vehicleId, tuning);
+  } else if (useCraftBody) {
+    attachCraftVehicleMesh(vehicle, vehicleId, custom);
   }
 
   if (tuning.underglowIntensity > 0.05) {

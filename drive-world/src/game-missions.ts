@@ -7,6 +7,7 @@ import {
   getVehicleSpec
 } from './vehicle-catalog';
 import { ACTIVITY_VEHICLE_UNLOCKS } from './vehicle-activity-unlocks';
+import { DISTRICT_MEET_UNLOCKS } from './district-meets';
 import { districtHasLandmarkVisit, districtTacoFound } from './city-checkpoints';
 import { DISTRICT_LABELS, LANDMARKS } from './landmark-registry';
 import { nextUnvisitedLandmark } from './landmark-navigation';
@@ -212,6 +213,33 @@ export function buildMissionBoard(
       label: `Scenic: ${route.name}`,
       done,
       hint: done ? 'Complete' : `Checkpoint ${idx + 1}/${route.points.length}`
+    });
+  }
+
+  for (const meet of DISTRICT_MEET_UNLOCKS) {
+    const owned = synced.unlockedVehicleIds.includes(meet.vehicleId);
+    const atLot = synced.meetBadges.includes(meet.badgeId);
+    lines.push({
+      id: `meet-${meet.district}`,
+      label: `${owned ? '✓' : '○'} Meet car: ${meet.label}`,
+      done: owned,
+      hint: atLot ? 'Unlocked at garage' : 'Tonight’s sideshow — roll in under 12 mph'
+    });
+  }
+
+  const craftHints = [
+    { id: 'craft-w', collectible: 'craft-wedge-shard', label: 'Bay Wedge' },
+    { id: 'craft-l', collectible: 'craft-lift-shard', label: 'Night Lift' },
+    { id: 'craft-s', collectible: 'craft-spike-shard', label: 'Street Spike' }
+  ];
+  for (const h of craftHints) {
+    if (synced.unlockedVehicleIds.some((id) => id.startsWith('craft-'))) continue;
+    if (synced.collectedIds.includes(h.collectible)) continue;
+    lines.push({
+      id: h.id,
+      label: `Craft original: ${h.label}`,
+      done: false,
+      hint: 'Grab the cyan craft shard beacon'
     });
   }
 

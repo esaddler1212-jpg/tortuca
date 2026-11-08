@@ -14,12 +14,6 @@ export type ActivityUnlock = {
 
 export const ACTIVITY_VEHICLE_UNLOCKS: ActivityUnlock[] = [
   {
-    id: 'bonus-meet-racer',
-    label: 'Lot Slant Racer',
-    hint: 'Hold ~12 mph at Vallejo night meet',
-    satisfied: (p) => p.meetBadges.includes('vallejo-meet')
-  },
-  {
     id: 'bonus-sprint-king',
     label: 'Sprint King F1',
     hint: 'Finish every landmark sprint ring once',
