@@ -12,7 +12,7 @@ export NETLIFY_AUTH_TOKEN
 CLI=(npx --yes netlify-cli@23)
 
 FP_SITE_NAME="${FP_SITE_NAME:-family-purpose-checkins}"
-VANTAGE_GAMES_SITE_NAME="${VANTAGE_GAMES_SITE_NAME:-${BATTLEWORLD_SITE_NAME:-${BOYS_SITE_NAME:-vantagegames1}}}"
+VANTAGE_GAMES_SITE_NAME="${VANTAGE_GAMES_SITE_NAME:-vantagegames1}"
 
 echo "=== Deploying Family Purpose (${FP_SITE_NAME}) ==="
 cd "$(dirname "$0")/../family-purpose"
