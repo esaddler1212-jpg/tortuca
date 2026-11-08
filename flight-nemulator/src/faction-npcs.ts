@@ -23,6 +23,8 @@ export type FactionNpc = {
   codename: string;
   siegeMul: number;
   isPairBoss?: boolean;
+  /** Emerald Pilot assist vs pair boss (Solar Apex story) */
+  isLanternAlly?: boolean;
 };
 
 export function waveNpcCount(wave: number, wantedStars: number, role: PlayerRole): number {
@@ -165,7 +167,17 @@ export function tickFactionNpcs(
     const n = npcs[i]!;
     const p = n.entity.getPosition();
 
-    if (n.allegiance === 'villain' && role === 'hero') {
+    const pairBoss = npcs.find((x) => x.isPairBoss);
+    if (n.isLanternAlly && pairBoss) {
+      const bp = pairBoss.entity.getPosition();
+      const dir = new Vec3(bp.x - p.x, bp.y - p.y, bp.z - p.z);
+      if (dir.length() > 0.01) dir.normalize();
+      n.entity.setPosition(p.x + dir.x * n.speed * dt, p.y + dir.y * n.speed * dt, p.z + dir.z * n.speed * dt);
+      const dist = new Vec3(bp.x - p.x, bp.y - p.y, bp.z - p.z).length();
+      if (dist < 55) {
+        pairBoss.hp -= 8 * dt * 2.4;
+      }
+    } else if (n.allegiance === 'villain' && role === 'hero') {
       if (n.isPairBoss) {
         const dir = new Vec3(playerPos.x - p.x, playerPos.y - p.y, playerPos.z - p.z);
         if (dir.length() > 0.01) dir.normalize();

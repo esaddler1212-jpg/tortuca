@@ -12,6 +12,7 @@ export type FlightInput = {
   super: boolean;
   photo: boolean;
   annihilate: boolean;
+  interact: boolean;
 };
 
 const keys = {
@@ -32,6 +33,7 @@ let throwPulse = false;
 let superPulse = false;
 let photoPulse = false;
 let annihilatePulse = false;
+let interactPulse = false;
 
 export function bindFlightKeys(): void {
   window.addEventListener('keydown', (e) => {
@@ -52,6 +54,7 @@ export function bindFlightKeys(): void {
     if (e.key === 'e' || e.key === 'E') superPulse = true;
     if (e.key === 'p' || e.key === 'P') photoPulse = true;
     if (e.key === 'x' || e.key === 'X') annihilatePulse = true;
+    if (e.key === 'h' || e.key === 'H') interactPulse = true;
   });
   window.addEventListener('keyup', (e) => {
     if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') keys.left = false;
@@ -116,12 +119,14 @@ export function pollFlightInput(): FlightInput {
     throw: throwPulse,
     super: superPulse,
     photo: photoPulse,
-    annihilate: annihilatePulse
+    annihilate: annihilatePulse,
+    interact: interactPulse
   };
   primaryPulse = false;
   throwPulse = false;
   superPulse = false;
   photoPulse = false;
   annihilatePulse = false;
+  interactPulse = false;
   return out;
 }

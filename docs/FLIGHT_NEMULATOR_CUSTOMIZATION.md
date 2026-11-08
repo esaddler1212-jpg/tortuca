@@ -33,6 +33,7 @@ HUD: **Suits & abilities** — grouped by role, color swatch, ability list, SPD/
 | Feature | How |
 |---------|-----|
 | **Solar Apex rings** | Loadouts **Emerald ring** (green will) and **Yellow ring** (fear echo) — ring primary + constructs |
+| **Coast Lantern safe house** | Solar Apex at **Coast City**: **H** / ask Emerald Pilot for **final-boss aid** (ally + weakened pair rival) or **attack keeper** → villain + forced **yellow fear ring** |
 | **Latverian Sovereign** | Playable **Doctor Doom** — **only** character with Hero/Villain alignment toggle |
 | **Wall Crawler symbiote** | Defeat **Venom Echo** or **Carnage Echo** → unlock **Symbiote — merged suit** loadout |
 | **Venom bonds** | Play **Venom Echo** (villain) — each **hero** you drop adds a **Bonded — &lt;hero&gt;** loadout (color + power mimic, up to 8) |

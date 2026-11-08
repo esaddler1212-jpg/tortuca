@@ -90,6 +90,18 @@ import {
 } from './hero-absorption';
 import { isSymbioteUnlocked, symbiotePreyProfile, unlockSymbioteSuit } from './hero-symbiote';
 import { bondVenomToHero, venomBondHudLine, VENOM_PLAYABLE_ID } from './hero-venom-bond';
+import {
+  applySolarCorruption,
+  isSolarCorrupted,
+  lanternAidForFinalBoss,
+  lanternArcHudLine,
+  lanternKeeperSlain,
+  markLanternAid,
+  nearLanternSafeHouse,
+  spawnLanternAlly,
+  spawnLanternKeeper,
+  SOLAR_HERO_ID
+} from './solar-lantern-arc';
 import { isPhotoMode, togglePhotoMode } from './photo-mode';
 import { fetchManifestIfOnline, getManifestSuggestions } from './updates';
 import { attachHeroGltf } from './hero-gltf';
@@ -121,6 +133,7 @@ export type GameSession = {
   foesStopped: number;
   worldFate: WorldFateState;
   pairBoss: { spawned: boolean; defeated: boolean; warned: boolean };
+  lanternKeeper: import('./solar-lantern-arc').LanternKeeper | null;
 };
 
 let session: GameSession | null = null;
@@ -212,7 +225,14 @@ export async function startGame(app: AppBase): Promise<void> {
     stats: loadSessionStats(),
     foesStopped: 0,
     worldFate: createWorldFate(),
-    pairBoss: { spawned: false, defeated: false, warned: false }
+    pairBoss: { spawned: false, defeated: false, warned: false },
+    lanternKeeper:
+      heroSpec.id === SOLAR_HERO_ID &&
+      getPlayerRole() === 'hero' &&
+      !lanternKeeperSlain() &&
+      !lanternAidForFinalBoss()
+        ? spawnLanternKeeper(app, root)
+        : null
   };
 
   app.on('update', (dt: number) => {
@@ -317,10 +337,31 @@ function tickFrame(s: GameSession, dt: number): void {
     spawnBoostTrail(s.app, s.root, pos.clone(), s.heroForm.color);
   }
 
+  if (input.interact && s.heroSpec.id === SOLAR_HERO_ID && nearLanternSafeHouse(pos) && !lanternAidForFinalBoss() && !isSolarCorrupted() && !s.pairBoss.spawned) {
+    markLanternAid();
+    playWaveAlert();
+  }
+
   if (input.primary && s.hero.canPrimary()) {
     s.hero.triggerPrimary();
     const aim = s.hero.aimPoint();
     const strike = primaryStrikeParams(s.heroSpec, powerMul, activeForm);
+    if (s.lanternKeeper && s.lanternKeeper.hp > 0) {
+      const kp = s.lanternKeeper.entity.getPosition();
+      const toK = new Vec3(kp.x - pos.x, kp.y - pos.y, kp.z - pos.z).length();
+      const toAim = new Vec3(kp.x - aim.x, kp.y - aim.y, kp.z - aim.z).length();
+      if (toK < strike.range && toAim < strike.cone) {
+        s.lanternKeeper.hp -= strike.dmg;
+        if (s.lanternKeeper.hp <= 0) {
+          s.root.removeChild(s.lanternKeeper.entity);
+          s.lanternKeeper.entity.destroy();
+          s.lanternKeeper = null;
+          applySolarCorruption();
+          playSuper();
+          window.location.reload();
+        }
+      }
+    }
     const hits = damageNpcsInCone(pos, aim, s.factionNpcs, s.playerRole, strike.range, strike.cone, strike.dmg);
     if (hits > 0) {
       const blast =
@@ -429,7 +470,14 @@ function tickFrame(s: GameSession, dt: number): void {
       s.root.removeChild(n.entity);
       n.entity.destroy();
     }
-    s.factionNpcs = [spawnPairBoss(s.app, s.root, pos, s.heroSpec.id)];
+    const boss = spawnPairBoss(s.app, s.root, pos, s.heroSpec.id);
+    if (s.heroSpec.id === SOLAR_HERO_ID && lanternAidForFinalBoss()) {
+      boss.hp *= 0.75;
+      if (boss.maxHp) boss.maxHp *= 0.75;
+      s.factionNpcs = [boss, spawnLanternAlly(s.app, s.root, pos)];
+    } else {
+      s.factionNpcs = [boss];
+    }
     s.pairBoss.spawned = true;
     s.waveCooldown = 30;
     playWaveAlert();
@@ -559,6 +607,13 @@ function tickFrame(s: GameSession, dt: number): void {
     symbioteUnlocked: s.heroSpec.id === 'wall-crawler' ? isSymbioteUnlocked() : undefined,
     absorptionLabel: absorptionHudLine(loadAbsorption(s.heroSpec.id)),
     venomBondLabel: s.heroSpec.id === VENOM_PLAYABLE_ID ? venomBondHudLine() : null,
+    lanternSafehouseNear:
+      s.heroSpec.id === SOLAR_HERO_ID && nearLanternSafeHouse(pos) && s.playerRole === 'hero',
+    lanternArcHint: lanternArcHudLine(
+      nearLanternSafeHouse(pos),
+      lanternAidForFinalBoss(),
+      isSolarCorrupted()
+    ),
     alignmentNote: canPickAlignment(s.heroSpec.id)
       ? 'Doom: toggle Hero or Villain below'
       : s.heroSpec.id === VENOM_PLAYABLE_ID
@@ -611,6 +666,14 @@ export function selectPlayerRole(role: PlayerRole): void {
     );
   }
   window.location.reload();
+}
+
+export function requestLanternAidAtSafeHouse(): void {
+  if (!session || session.heroSpec.id !== SOLAR_HERO_ID) return;
+  const pos = session.hero.entity.getPosition();
+  if (!nearLanternSafeHouse(pos) || lanternAidForFinalBoss() || isSolarCorrupted()) return;
+  markLanternAid();
+  playWaveAlert();
 }
 
 export function selectHero(heroId: string, formId?: string): void {

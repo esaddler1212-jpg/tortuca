@@ -10,7 +10,13 @@ import {
 } from '../hero-customization';
 import type { HeroForm, SuitRole } from '../hero-roster';
 import { canPickAlignment, isVillainOnlyHero } from '../hero-alignment';
-import { confirmVillainWorldRemake, continueDyingRoam, selectHero, selectPlayerRole } from '../game-loop';
+import {
+  confirmVillainWorldRemake,
+  continueDyingRoam,
+  requestLanternAidAtSafeHouse,
+  selectHero,
+  selectPlayerRole
+} from '../game-loop';
 import { storedFormId } from '../hero-forms';
 import { ANNIHILATE_HAVOC_USD } from '../villain-annihilate';
 import { getPlayerRole, type PlayerRole } from '../player-role';
@@ -68,6 +74,8 @@ export type GameHudSnapshot = {
   absorptionLabel?: string | null;
   venomBondLabel?: string | null;
   alignmentNote?: string | null;
+  lanternSafehouseNear?: boolean;
+  lanternArcHint?: string | null;
 };
 
 function formatUsd(n: number): string {
@@ -169,6 +177,15 @@ export function HudApp() {
         {snap.symbioteUnlocked && <p className="hud-tag">Symbiote suit unlocked — pick merged loadout</p>}
         {snap.absorptionLabel && <p className="hud-tag">{snap.absorptionLabel}</p>}
         {snap.venomBondLabel && <p className="hud-tag">{snap.venomBondLabel}</p>}
+        {snap.lanternArcHint && <p className="hud-tag">{snap.lanternArcHint}</p>}
+        {snap.lanternSafehouseNear && snap.playerRole === 'hero' && heroId === 'solar-apex' && (
+          <div className="fate-actions">
+            <button type="button" className="hud-roam" onClick={() => requestLanternAidAtSafeHouse()}>
+              Ask Emerald Pilot for final-boss aid (H)
+            </button>
+            <p className="hud-tag">Or strike the keeper (F) to steal the ring — you turn villain, yellow fear ring.</p>
+          </div>
+        )}
         <LoadoutPicker heroId={heroId} />
         <CreateHeroPanel
           onCreated={(id) => {
@@ -208,7 +225,8 @@ export function HudApp() {
         </p>
       )}
       <p className="hud-hint">
-        WASD steer · boost high around Earth (400+ km/h) · E super / shatter · P photo
+        WASD steer · boost high around Earth (400+ km/h) · E super / shatter · P photo · H interact at
+        Coast Lantern (Solar Apex)
       </p>
 
       <TouchPad />
@@ -254,6 +272,13 @@ function RolePicker({ role, heroId }: { role: PlayerRole; heroId: string }) {
     return (
       <p className="hud-tag settings-bar hud-panel">
         Alignment: Villain — defeat foes to absorb powers
+      </p>
+    );
+  }
+  if (heroId === 'solar-apex' && role === 'villain') {
+    return (
+      <p className="hud-tag settings-bar hud-panel">
+        Alignment: Villain (fear ring — stole Emerald Pilot&apos;s ring)
       </p>
     );
   }
