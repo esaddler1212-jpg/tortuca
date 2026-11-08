@@ -12,7 +12,7 @@ npm install
 npm run dev
 ```
 
-**Public deploy (no Alfred):** [Battleworld portal](../boys-student/README.md) — `boys-student/` Netlify site bundles the game.
+**Public deploy (no Alfred):** [VantageGames](../vantage-games/README.md) — separate Netlify site (`vantage-games/`) bundles the game.
 
 Console tile (both games): [Tortuca Console](../games-hub/README.md) → **Battleworld**.
 

@@ -9,7 +9,7 @@ its own README, build, and (typically) its own Netlify site.
 |---------|------|---------|
 | **Alfred** | repo root | Personal command center — email, calendar, weather, Woodhouse app dashboard |
 | **Family Purpose** | [`family-purpose/`](family-purpose/) | Student check-ins, mentoring group sign-in, debriefs, BOYS curriculum API |
-| **VantageGames** | [`boys-student/`](boys-student/) | Title-card launcher for City Nights + Battleworld (no sign-in) |
+| **VantageGames** | [`vantage-games/`](vantage-games/) | Own Netlify site (`vantagegames1`) — City Nights + Battleworld launcher |
 | **Alfred × OpenJarvis** | [`alfred-jarvis/`](alfred-jarvis/) | Local AI assistant (OpenJarvis) personalized as Alfred: briefings, ECS ops, research, career |
 | **God's Eye** | [`gods-eye/`](gods-eye/) | Local 3D globe ([upstream](https://github.com/bilawalsidhu/gods-eye-view)): run on Mac; link from IRIS Pulse — [same Wi‑Fi + remote](gods-eye/README.md) |
 | **JARVIS-OS-V.2** | [`jarvis-os-v2/`](jarvis-os-v2/) | Local Gemini Jarvis ([upstream](https://github.com/MAL19INDUSTRIES/JARVIS-OS-V.2)): clone + [cherry-pick only](jarvis-os-v2/CHERRY_PICK.md) — not Iris |
@@ -53,11 +53,11 @@ Deploy as a **separate Netlify site** with base directory `family-purpose`.
 
 ### VantageGames
 
-Scrollable title cards → **City Nights** and **Battleworld** (bundled via `build:with-console`). Netlify base directory is still `boys-student/`.
+Scrollable title cards → **City Nights** and **Battleworld** (bundled via `build:with-console`).
 
-See [`boys-student/README.md`](boys-student/README.md).
+See [`vantage-games/README.md`](vantage-games/README.md) and [`docs/VANTAGE_GAMES_DEPLOY.md`](docs/VANTAGE_GAMES_DEPLOY.md).
 
-Deploy as a **separate Netlify site** with base directory `boys-student` and `npm ci && npm run build:with-console`.
+Production: **`vantagegames1`** — base directory **`vantage-games`** (not `drive-world`).
 
 ## License
 
