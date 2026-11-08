@@ -101,7 +101,7 @@ function gradeAlongLeg(px: number, pz: number, legX: number, legZ: number): stri
 export function navTurnHint(px: number, pz: number, yawDeg: number, route: NavPoint[]): string {
   if (route.length < 2) return 'Navigate';
   const leg =
-    route.find((p, i) => i > 0 && dist2(px, pz, p.x, p.z) > 35 ** 2) ?? route[1]!;
+    route.find((p, i) => i > 0 && dist2(px, pz, p.x, p.z) > 80 ** 2) ?? route[1]!;
   const brg = bearingDeg(px, pz, leg.x, leg.z);
   const delta = normalizeAngle(brg - yawDeg);
   const dist = Math.hypot(leg.x - px, leg.z - pz);

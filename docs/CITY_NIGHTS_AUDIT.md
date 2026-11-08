@@ -33,7 +33,7 @@ Compressed **Bay Area night sandbox** in `drive-world/` (PlayCanvas 2.23 + Ammo 
 
 | Need | Why | Scope |
 |------|-----|-------|
-| **Browser smoke test in CI** | Today's crashes shipped because nothing booted the game. A headless Chrome + SwiftShader boot (script used in this audit) catches boot exceptions in ~60 s | `scripts/` CDP script + step in `.github/workflows/city-nights.yml` |
+| ~~**Browser smoke test in CI**~~ | **Done:** `drive-world/scripts/smoke-boot.mjs` + `npm run test:smoke` in `.github/workflows/city-nights.yml` | Extend smoke: skip Waymo → drive 5 s (future) |
 | **Chase camera collision** | Camera clips inside buildings/garage walls at spawn and in dense hubs (visible in smoke screenshots) | Raycast from car to camera target in `camera-profiles.ts`, pull camera in on hit |
 | **HUD density** | Right column stacks ~10 panels (missions, stats, settings, fast travel, landmarks, search, music, journal…). Crowded at 1280×720, worse on phones | Collapse into one tabbed "Map / Missions / Garage / Settings" drawer; keep minimap + speed always on |
 | **First-session clarity** | Player lands at Vallejo with 37 landmarks, 6 taco trucks, 14 parking bays, 10 vistas, 5 homage tokens, scenic routes — no "do this first" | Single pinned objective that advances (first taco truck → first unlock), rest behind the mission tab |
