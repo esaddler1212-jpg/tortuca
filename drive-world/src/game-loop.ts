@@ -42,7 +42,11 @@ import { DISTRICT_LABELS, LANDMARKS, VALLEJO_SAFEHOUSE } from './landmark-regist
 import { nextUnvisitedLandmark } from './landmark-navigation';
 import { getVehicleSpec, isAerialVehicle } from './vehicle-catalog';
 import type { VehicleCustomization } from './vehicle-customization';
+import { pushCloudProgress } from './game-cloud-save';
+import { heatDecay, heatFromSpeedTrap } from './game-heat';
 import { createPlayerVehicle, destroyPlayerVehicle, type PlayerVehicle } from './vehicle-factory';
+import { ensureVehicleModelLoaded, ensureVehicleModelsLoaded } from './vehicle-gltf';
+import type { GameSettings } from './game-settings';
 import type { DistrictId } from './world-config';
 import { buildWaymoRidePath, spawnWaymoRide, waymoPassengerCameraOffset, type WaymoRide } from './waymo-ride';
 import type { CameraMode } from './game-progress';
@@ -70,7 +74,9 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   const photo = createPhotoCamera(new Vec3());
   let lastPos = new Vec3();
   let statsT = 0;
+  let cloudSaveT = 0;
   const photoKeys = { fwd: false, back: false, left: false, right: false, up: false, down: false };
+  const CALDECOTT = { x: 392, z: 265 };
 
   bindDriveKeys();
   window.addEventListener('drive-world:unlock-audio', () => unlockAudio(), { once: false });
@@ -108,7 +114,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     return safehouseSpawn();
   };
 
-  function swapVehicle(vehicleId: string, pos?: Vec3, yaw?: number) {
+  async function swapVehicle(vehicleId: string, pos?: Vec3, yaw?: number) {
     const old = vehicle()?.getPosition();
     const oldRot = vehicle()?.getEulerAngles();
     destroyPlayerVehicle(player?.entity ?? null);
@@ -117,6 +123,11 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     if (isAerialVehicle(vehicleId)) {
       const floor = hillOffsetM(p.x, p.z) + 0.8;
       p.set(p.x, Math.max(p.y, floor + 38), p.z);
+    }
+    try {
+      await ensureVehicleModelLoaded(app, vehicleId);
+    } catch {
+      /* block fallback */
     }
     const custom = getVehicleCustomization(progress, vehicleId);
     draftCustom = { ...custom };
@@ -139,6 +150,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
 
   const refreshGarageUi = () => {
     if (!nearGarage || !progress.activeVehicleId) return;
+    void ensureVehicleModelsLoaded(app, progress.unlockedVehicleIds);
     draftCustom = { ...getVehicleCustomization(progress, progress.activeVehicleId) };
     ui.setGarageVisible(true, progress, onGarageSelect);
     ui.bindCustomize(
@@ -330,11 +342,20 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
 
     updateAmbientTraffic(dt, settings.showTraffic);
 
-    const district = districtAt(ent.getPosition().x, ent.getPosition().z);
+    const posTrack = ent.getPosition();
+    const district = districtAt(posTrack.x, posTrack.z);
     const fogStrength = regionalFogStrength(district);
     const fog = fogDistances(fogStrength, settings.fogQuality);
     app.scene.fogStart = fog.start;
     app.scene.fogEnd = fog.end;
+    const tunnelD = Math.hypot(posTrack.x - CALDECOTT.x, posTrack.z - CALDECOTT.z);
+    if (tunnelD < 100) {
+      const tunnelT = 1 - tunnelD / 100;
+      app.scene.fogEnd = fog.end * (1 - tunnelT * 0.5);
+      app.scene.exposure = 0.55 - tunnelT * 0.24;
+    } else {
+      app.scene.exposure = 0.55;
+    }
 
     const drive = pollDriveInput();
     const aerial = progress.activeVehicleId ? isAerialVehicle(progress.activeVehicleId) : false;
@@ -418,6 +439,14 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       ? `${mph.toFixed(0)} mph · ${getVehicleSpec(progress.activeVehicleId!).locomotion === 'helicopter' ? 'Heli' : 'Hover'}`
       : `${mph.toFixed(0)} mph`;
     updateEngineAudio(mph, true);
+
+    progress = heatDecay(progress, mph, dt);
+    progress = heatFromSpeedTrap(progress, mph, pos.x, pos.z);
+    cloudSaveT += dt;
+    if (cloudSaveT > 50 && progress.phase === 'home') {
+      cloudSaveT = 0;
+      void pushCloudProgress(progress);
+    }
 
     const yaw = ent.getEulerAngles().y;
     const nextLm =

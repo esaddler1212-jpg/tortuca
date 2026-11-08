@@ -1,0 +1,26 @@
+name: City Nights
+
+on:
+  push:
+    paths:
+      - 'drive-world/**'
+      - '.github/workflows/city-nights.yml'
+  pull_request:
+    paths:
+      - 'drive-world/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: drive-world
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: drive-world/package-lock.json
+      - run: npm ci
+      - run: npm run build

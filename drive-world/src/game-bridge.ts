@@ -27,6 +27,8 @@ export type TouchDrive = {
   down: boolean;
   left: boolean;
   right: boolean;
+  climb: boolean;
+  descend: boolean;
 };
 
 type HudListener = (snap: HudSnapshot) => void;
@@ -62,7 +64,7 @@ let toggleCameraHandler: (() => void) | null = null;
 let togglePhotoHandler: (() => void) | null = null;
 let fastTravelHandler: ((d: DistrictId) => void) | null = null;
 
-let touchDrive: TouchDrive = { up: false, down: false, left: false, right: false };
+let touchDrive: TouchDrive = { up: false, down: false, left: false, right: false, climb: false, descend: false };
 
 export function publishHud(patch: Partial<HudSnapshot>): void {
   snapshot = { ...snapshot, ...patch };
@@ -120,16 +122,26 @@ export function getTouchDrive(): TouchDrive {
 }
 
 export function isTouchDriveActive(): boolean {
-  return touchDrive.up || touchDrive.down || touchDrive.left || touchDrive.right;
+  return (
+    touchDrive.up ||
+    touchDrive.down ||
+    touchDrive.left ||
+    touchDrive.right ||
+    touchDrive.climb ||
+    touchDrive.descend
+  );
 }
 
-export function computeTouchControls(): { steering: number; throttle: number } {
+export function computeTouchControls(): { steering: number; throttle: number; vertical: number } {
   const t = touchDrive;
   let steering = 0;
   let throttle = 0;
+  let vertical = 0;
   if (t.left) steering += 1;
   if (t.right) steering -= 1;
   if (t.up) throttle += 1;
   if (t.down) throttle -= 1;
-  return { steering, throttle };
+  if (t.climb) vertical += 1;
+  if (t.descend) vertical -= 1;
+  return { steering, throttle, vertical };
 }

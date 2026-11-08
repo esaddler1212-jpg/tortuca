@@ -1,72 +1,43 @@
 import { Color, StandardMaterial, type AppBase, type Asset, type Entity } from 'playcanvas';
 
 import { appliedTuning } from './vehicle-customization';
+import { glbPathForVehicle as pathForId, VEHICLE_GLB } from './vehicle-gltf-paths';
+
+export { VEHICLE_GLB, glbPathForVehicle } from './vehicle-gltf-paths';
 
 type VehicleTuning = ReturnType<typeof appliedTuning>;
 
-/** Kenney Car Kit (CC0) — shorepine/kenney mirror, see CREDITS.md */
-const KENNEY = './models/kenney';
-const CC0 = './models/cc0';
-
-/** glb file per vehicle id */
-export const VEHICLE_GLB: Record<string, string> = {
-  'garage-cruiser': `${KENNEY}/sedan.glb`,
-  'garage-sport': `${KENNEY}/hatchback-sports.glb`,
-  'garage-ute': `${KENNEY}/truck.glb`,
-  'region-sf-night': `${KENNEY}/taxi.glb`,
-  'region-marin-coast': `${KENNEY}/suv.glb`,
-  'region-east-bay': `${KENNEY}/police.glb`,
-  'region-vallejo': `${KENNEY}/delivery.glb`,
-  'region-peninsula': `${KENNEY}/sedan.glb`,
-  'region-south-bay': `${KENNEY}/race-future.glb`,
-  'bonus-skyway-hover': `${KENNEY}/race-future.glb`,
-  'bonus-coast-heli': `${CC0}/helicopter.glb`,
-  'bonus-gotham-knight': `${KENNEY}/sedan-sports.glb`,
-  'bonus-scarlet-five': `${KENNEY}/race.glb`,
-  default: `${KENNEY}/sedan.glb`
-};
-
-const VISUAL_BY_ID: Record<string, GltfVisualOptions> = {
-  'garage-ute': { scale: 2.15, yawOffsetDeg: 90, yOffset: -0.42 },
-  'region-vallejo': { scale: 2.12, yawOffsetDeg: 90, yOffset: -0.4 },
-  'region-marin-coast': { scale: 2.0, yawOffsetDeg: 90, yOffset: -0.38 },
-  'bonus-skyway-hover': { scale: 2.25, yawOffsetDeg: 90, yOffset: -0.15 },
-  'bonus-coast-heli': { scale: 0.32, yawOffsetDeg: -90, yOffset: -1.1 },
-  'bonus-gotham-knight': { scale: 2.08, yawOffsetDeg: 90, yOffset: -0.3 },
-  'bonus-scarlet-five': { scale: 2.05, yawOffsetDeg: 90, yOffset: -0.26 }
-};
-
 const loaded = new Map<string, Asset>();
 
-function uniquePaths(): string[] {
-  return [...new Set(Object.values(VEHICLE_GLB))];
+const BOOT_PATHS = ['./models/kenney/sedan.glb', './models/kenney/race-future.glb'];
+
+function loadUrl(app: AppBase, url: string): Promise<void> {
+  if (loaded.has(url)) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    app.assets.loadFromUrl(url, 'container', (err, asset) => {
+      if (err || !asset) {
+        reject(err ?? new Error(`Failed to load ${url}`));
+        return;
+      }
+      loaded.set(url, asset);
+      resolve();
+    });
+  });
 }
 
-export function glbPathForVehicle(vehicleId: string): string {
-  return VEHICLE_GLB[vehicleId] ?? VEHICLE_GLB.default;
+/** Small first paint — starter sedan + hover mesh shared by Waymo path. */
+export function preloadBootVehicleModels(app: AppBase): Promise<void> {
+  return Promise.all(BOOT_PATHS.map((url) => loadUrl(app, url))).then(() => undefined);
 }
 
-export function preloadVehicleModels(app: AppBase): Promise<void> {
-  const paths = uniquePaths();
-  return Promise.all(
-    paths.map(
-      (url) =>
-        new Promise<void>((resolve, reject) => {
-          if (loaded.has(url)) {
-            resolve();
-            return;
-          }
-          app.assets.loadFromUrl(url, 'container', (err, asset) => {
-            if (err || !asset) {
-              reject(err ?? new Error(`Failed to load ${url}`));
-              return;
-            }
-            loaded.set(url, asset);
-            resolve();
-          });
-        })
-    )
-  ).then(() => undefined);
+export async function ensureVehicleModelLoaded(app: AppBase, vehicleId: string): Promise<void> {
+  const url = pathForId(vehicleId);
+  await loadUrl(app, url);
+}
+
+export async function ensureVehicleModelsLoaded(app: AppBase, vehicleIds: string[]): Promise<void> {
+  const paths = [...new Set(vehicleIds.map((id) => pathForId(id)))];
+  await Promise.all(paths.map((url) => loadUrl(app, url)));
 }
 
 export type GltfVisualOptions = {
@@ -76,6 +47,16 @@ export type GltfVisualOptions = {
 };
 
 const DEFAULT_VISUAL: GltfVisualOptions = { scale: 2.05, yawOffsetDeg: 90, yOffset: -0.35 };
+
+const VISUAL_BY_ID: Record<string, GltfVisualOptions> = {
+  'garage-ute': { scale: 2.15, yawOffsetDeg: 90, yOffset: -0.42 },
+  'region-vallejo': { scale: 2.12, yawOffsetDeg: 90, yOffset: -0.4 },
+  'region-marin-coast': { scale: 2.0, yawOffsetDeg: 90, yOffset: -0.38 },
+  'bonus-skyway-hover': { scale: 2.28, yawOffsetDeg: 90, yOffset: -0.12 },
+  'bonus-coast-heli': { scale: 0.34, yawOffsetDeg: -90, yOffset: -1.05 },
+  'bonus-gotham-knight': { scale: 2.08, yawOffsetDeg: 90, yOffset: -0.3 },
+  'bonus-scarlet-five': { scale: 2.05, yawOffsetDeg: 90, yOffset: -0.26 }
+};
 
 function visualOptsFor(vehicleId: string): GltfVisualOptions {
   return { ...DEFAULT_VISUAL, ...VISUAL_BY_ID[vehicleId] };
@@ -117,7 +98,7 @@ export function attachVehicleGltf(
   vehicleId: string,
   tuning?: VehicleTuning
 ): Entity | null {
-  const url = glbPathForVehicle(vehicleId);
+  const url = pathForId(vehicleId);
   const asset = loaded.get(url);
   if (!asset?.resource) return null;
 
@@ -146,5 +127,5 @@ export function attachVehicleGltf(
 }
 
 export function hasGltfForVehicle(vehicleId: string): boolean {
-  return loaded.has(glbPathForVehicle(vehicleId));
+  return loaded.has(pathForId(vehicleId));
 }

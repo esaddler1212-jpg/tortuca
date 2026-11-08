@@ -16,6 +16,16 @@ import type { DistrictId } from '../world-config';
 import { Minimap } from './Minimap';
 import { loadSettings, saveSettings, type GameSettings } from '../game-settings';
 import { FAST_TRAVEL } from '../world-extras';
+import { buildMissionBoard } from '../game-missions';
+import { heatLabel } from '../game-heat';
+import {
+  exportProgressJson,
+  getOrCreateSyncKey,
+  importProgressJson,
+  pullCloudProgress,
+  pushCloudProgress
+} from '../game-cloud-save';
+import { loadProgress, saveProgress } from '../game-progress';
 
 function NavHint({ snap }: { snap: HudSnapshot }) {
   const next = snap.nextLandmark;
@@ -63,16 +73,102 @@ function StatsPanel({ snap }: { snap: HudSnapshot }) {
   );
 }
 
+function HeatMeter({ snap }: { snap: HudSnapshot }) {
+  const heat = snap.progress?.heatLevel ?? 0;
+  if (heat < 0.35 || snap.ridingWaymo) return null;
+  const pct = Math.min(100, (heat / 5) * 100);
+  return (
+    <div className="heat-meter" title="Speed-trap heat">
+      Heat: {heatLabel(heat)} ({Math.round(pct)}%)
+      <div className="heat-bar">
+        <div className="heat-fill" style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function MissionBoard({ snap }: { snap: HudSnapshot }) {
+  if (!snap.progress || snap.photoMode || snap.ridingWaymo) return null;
+  const lines = buildMissionBoard(snap.progress, snap.playerX, snap.playerZ);
+  return (
+    <details className="mission-panel" open>
+      <summary>Missions</summary>
+      <ul>
+        {lines.slice(0, 10).map((m) => (
+          <li key={m.id} className={m.done ? 'mission-done' : ''}>
+            {m.label}
+            {m.hint ? <span className="mission-hint"> — {m.hint}</span> : null}
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
+}
+
 function SettingsPanel() {
   const [s, setS] = useState<GameSettings>(loadSettings());
+  const [syncMsg, setSyncMsg] = useState('');
   const apply = (next: GameSettings) => {
     setS(next);
     saveSettings(next);
     window.dispatchEvent(new CustomEvent('drive-world:settings', { detail: next }));
   };
+  const syncKey = getOrCreateSyncKey();
   return (
     <details className="settings-panel">
       <summary>Settings</summary>
+      <p className="sync-key-line">
+        Cloud sync key: <code>{syncKey}</code>
+      </p>
+      <div className="sync-actions">
+        <button
+          type="button"
+          className="sync-btn"
+          onClick={async () => {
+            const remote = await pullCloudProgress();
+            if (remote) {
+              saveProgress(remote);
+              setSyncMsg('Pulled cloud save — reload to apply');
+            } else setSyncMsg('No cloud save for this key');
+          }}
+        >
+          Pull cloud
+        </button>
+        <button
+          type="button"
+          className="sync-btn"
+          onClick={async () => {
+            const ok = await pushCloudProgress(loadProgress());
+            setSyncMsg(ok ? 'Pushed to cloud' : 'Push failed (enable Netlify Blobs)');
+          }}
+        >
+          Push cloud
+        </button>
+        <button
+          type="button"
+          className="sync-btn"
+          onClick={() => {
+            void navigator.clipboard?.writeText(exportProgressJson());
+            setSyncMsg('Copied save JSON');
+          }}
+        >
+          Copy JSON
+        </button>
+      </div>
+      {syncMsg ? <p className="sync-msg">{syncMsg}</p> : null}
+      <label className="slider-row">
+        Import JSON
+        <input
+          type="file"
+          accept="application/json,.json"
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            const text = await file.text();
+            setSyncMsg(importProgressJson(text) ? 'Imported — reload page' : 'Invalid save file');
+          }}
+        />
+      </label>
       <label className="slider-row">
         Volume
         <input
@@ -155,14 +251,16 @@ export function HudApp() {
       {!snap.photoMode && <Minimap snap={snap} />}
       <NavHint snap={snap} />
       {snap.flightMode && !snap.photoMode && (
-        <p className="flight-hint">Space climb · Ctrl sink · WASD steer · Shift boost</p>
+        <p className="flight-hint">Space/⤒ climb · Ctrl/⤓ sink · WASD · Shift boost</p>
       )}
+      <HeatMeter snap={snap} />
+      <MissionBoard snap={snap} />
       <StatsPanel snap={snap} />
       <SettingsPanel />
       <FastTravel snap={snap} />
       {!snap.photoMode && <LandmarkPanel snap={snap} />}
       {showTouch && snap.phase === 'home' && !snap.ridingWaymo && (
-        <TouchControlsImpl />
+        <TouchControlsImpl flight={!!snap.flightMode} />
       )}
       {snap.photoMode && (
         <p className="photo-hint">WASD move · Q/E altitude · P exit · Screenshot: system capture</p>
@@ -171,14 +269,16 @@ export function HudApp() {
   );
 }
 
-function TouchControlsImpl() {
-  const press = (key: 'up' | 'down' | 'left' | 'right', down: boolean) => (e: React.PointerEvent) => {
-    e.preventDefault();
-    window.dispatchEvent(new CustomEvent('drive-world:unlock-audio'));
-    setTouchDrive({ [key]: down });
-  };
+function TouchControlsImpl({ flight }: { flight: boolean }) {
+  const press =
+    (key: 'up' | 'down' | 'left' | 'right' | 'climb' | 'descend', down: boolean) =>
+    (e: React.PointerEvent) => {
+      e.preventDefault();
+      window.dispatchEvent(new CustomEvent('drive-world:unlock-audio'));
+      setTouchDrive({ [key]: down });
+    };
   return (
-    <div className="touch-drive" aria-label="Touch driving controls">
+    <div className={`touch-drive ${flight ? 'touch-flight' : ''}`} aria-label="Touch driving controls">
       <button type="button" className="touch-btn up" onPointerDown={press('up', true)} onPointerUp={press('up', false)} onPointerLeave={press('up', false)}>
         ▲
       </button>
@@ -191,6 +291,28 @@ function TouchControlsImpl() {
       <button type="button" className="touch-btn right" onPointerDown={press('right', true)} onPointerUp={press('right', false)} onPointerLeave={press('right', false)}>
         ▶
       </button>
+      {flight ? (
+        <>
+          <button
+            type="button"
+            className="touch-btn climb"
+            onPointerDown={press('climb', true)}
+            onPointerUp={press('climb', false)}
+            onPointerLeave={press('climb', false)}
+          >
+            ⤒
+          </button>
+          <button
+            type="button"
+            className="touch-btn descend"
+            onPointerDown={press('descend', true)}
+            onPointerUp={press('descend', false)}
+            onPointerLeave={press('descend', false)}
+          >
+            ⤓
+          </button>
+        </>
+      ) : null}
     </div>
   );
 }

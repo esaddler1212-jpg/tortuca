@@ -54,7 +54,7 @@ export function pollDriveInput(): DriveInput {
   const empty: DriveInput = { steering: 0, throttle: 0, nitro: shiftDown, vertical: 0 };
   if (isTouchDriveActive()) {
     const t = computeTouchControls();
-    return { steering: t.steering, throttle: t.throttle, nitro: shiftDown, vertical: 0 };
+    return { steering: t.steering, throttle: t.throttle, nitro: shiftDown, vertical: t.vertical };
   }
   const gp = navigator.getGamepads?.()[0];
   let steering = kb.steering;

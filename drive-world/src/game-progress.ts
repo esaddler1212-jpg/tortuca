@@ -39,6 +39,8 @@ export type SavedProgress = {
   scenicCompleted: string[];
   scenicProgress: Record<string, number>;
   vehicleStats: Record<string, VehicleStats>;
+  /** Speed-trap heat 0–5 */
+  heatLevel: number;
 };
 
 const STORAGE_KEY = 'drive-world-progress-v5';
@@ -60,7 +62,8 @@ function defaultProgress(): SavedProgress {
     speedTrapBests: {},
     scenicCompleted: [],
     scenicProgress: {},
-    vehicleStats: {}
+    vehicleStats: {},
+    heatLevel: 0
   };
 }
 
@@ -75,12 +78,13 @@ function withV5Defaults(p: Partial<SavedProgress> & { version: number }): SavedP
     speedTrapBests: p.speedTrapBests ?? {},
     scenicCompleted: p.scenicCompleted ?? [],
     scenicProgress: p.scenicProgress ?? {},
-    vehicleStats: p.vehicleStats ?? {}
+    vehicleStats: p.vehicleStats ?? {},
+    heatLevel: typeof p.heatLevel === 'number' ? p.heatLevel : 0
   };
 }
 
 function migrateRaw(parsed: Record<string, unknown>): SavedProgress | null {
-  if (parsed.version === 5) return parsed as SavedProgress;
+  if (parsed.version === 5) return withV5Defaults(parsed as SavedProgress);
   if (parsed.version === 4) return withV5Defaults(parsed as SavedProgress & { version: 4 });
   if (parsed.version === 3) {
     const p = parsed as SavedProgress & { version: 3 };

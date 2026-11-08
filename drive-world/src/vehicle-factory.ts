@@ -103,8 +103,8 @@ function createAerialVehicle(
   vehicle.script!.create('flightVehicle', {
     attributes: {
       mode: flightMode,
-      thrust: spec.locomotion === 'helicopter' ? 32000 : 26000,
-      lift: spec.locomotion === 'helicopter' ? 34000 : 30000,
+      thrust: spec.locomotion === 'helicopter' ? 34000 : 28500,
+      lift: spec.locomotion === 'helicopter' ? 36000 : 32000,
       yawRate: spec.locomotion === 'helicopter' ? 1.35 : 1.1,
       pitchRate: spec.locomotion === 'helicopter' ? 0.95 : 0.8
     }

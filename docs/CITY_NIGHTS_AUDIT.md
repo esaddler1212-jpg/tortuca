@@ -49,7 +49,9 @@ Compared to *Forza Horizon*, *TDU*, *Need for Speed*, *Cruis’n* / arcade roame
 | Controller remap | Partial (gamepad + defaults) |
 | Mobile flight | Touch drive only on ground |
 
-**Reasonable next bets** (if you want “more game” without scope explosion): mission board text, one police “heat” meter on speed traps, lazy GLB load, tunnel camera fade, touch altitude buttons, cloud save via Tortuca auth.
+**Shipped (post-audit wave):** mission board HUD, speed-trap heat meter, lazy GLB boot load + per-vehicle fetch, Caldecott tunnel fog/exposure fade, touch climb/sink for flight, Netlify Blobs cloud sync key, GitHub `city-nights` build workflow.
+
+**Still optional:** full Tortuca Google-session cloud (cross-origin cookies), police chase AI, lazy code-split HUD.
 
 ## Cleanup backlog (engineering)
 

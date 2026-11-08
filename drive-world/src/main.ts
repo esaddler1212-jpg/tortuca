@@ -28,7 +28,8 @@ import {
 
 import { buildDrivingWorld } from './build-world';
 import { startGameSession } from './game-loop';
-import { preloadVehicleModels } from './vehicle-gltf';
+import { tryMergeCloudOnBoot } from './game-cloud-save';
+import { preloadBootVehicleModels } from './vehicle-gltf';
 import { mountReactHud } from './hud/mount';
 import { NIGHT_AMBIENT, NIGHT_SKY } from './night-palette';
 import { WORLD_HALF_M } from './world-config';
@@ -97,9 +98,14 @@ app.scene.fogEnd = Math.min(2200, WORLD_HALF_M * 0.85);
 buildDrivingWorld(app);
 
 try {
-  await preloadVehicleModels(app);
+  await tryMergeCloudOnBoot();
+} catch {
+  /* optional cloud */
+}
+try {
+  await preloadBootVehicleModels(app);
 } catch (err) {
-  console.warn('[drive-world] Kenney car models failed to preload; block fallback only.', err);
+  console.warn('[city-nights] Boot vehicle models failed to preload; block fallback only.', err);
 }
 
 const moon = new Entity('moon');
