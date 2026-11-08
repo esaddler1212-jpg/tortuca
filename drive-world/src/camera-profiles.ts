@@ -24,7 +24,13 @@ function terrainBlocksCamLine(
 
 function isCamOccluder(entName: string, vehicleEnt: Entity | null, hitEntity: Entity | null): boolean {
   if (!entName) return false;
-  if (entName.startsWith('ground') || entName.includes('freeway') || entName.startsWith('tokyo-ground')) {
+  if (
+    entName.startsWith('ground') ||
+    entName.startsWith('bay-terrain') ||
+    entName.endsWith('-col') ||
+    entName.includes('freeway') ||
+    entName.startsWith('tokyo-ground')
+  ) {
     return false;
   }
   if (!vehicleEnt || !hitEntity) return true;

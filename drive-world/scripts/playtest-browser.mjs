@@ -64,6 +64,12 @@ if (card) {
   await sleep(2500);
 }
 check('home phase after car pick', (await hud()).phase === 'home', (await hud()).phase);
+check(
+  '3D bay terrain present',
+  await page.evaluate(
+    () => !!window.__cityNights.app.root.find((n) => n.name === 'bay-terrain-root')?.children?.length
+  )
+);
 
 await page.evaluate(() => {
   const buttons = Array.from({ length: 17 }, () => ({ pressed: false, touched: false, value: 0 }));

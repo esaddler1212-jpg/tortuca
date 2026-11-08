@@ -1,6 +1,7 @@
-import { Color, Entity, FOG_LINEAR, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
+import { FOG_LINEAR, type AppBase } from 'playcanvas';
 
 import { buildBayWater } from './build-bay';
+import { buildBayGround } from './build-bay-ground';
 import { buildCityStreets } from './build-city-streets';
 import { buildAllDistricts, buildFreewayLamps } from './build-districts';
 import { initHubStreaming } from './hub-streaming';
@@ -29,26 +30,12 @@ import {
 import { spawnHubStreetTraffic } from './hub-street-traffic';
 import { buildSideshowMeets } from './sideshow-meets';
 import { NIGHT_FOG } from './night-palette';
-import { WORLD_HALF_M } from './world-config';
-
 export function buildDrivingWorld(app: AppBase): void {
   app.scene.fog.type = FOG_LINEAR;
   app.scene.fog.color = NIGHT_FOG.clone();
 
-  const groundMat = new StandardMaterial();
-  groundMat.diffuse = new Color(0.04, 0.045, 0.05);
-  groundMat.gloss = 0.2;
-  groundMat.update();
-
-  const h = WORLD_HALF_M;
-  const ground = new Entity('ground');
-  ground.setLocalScale(h * 2, 0.4, h * 2);
-  ground.setPosition(0, -0.35, 0);
-  ground.addComponent('render', { type: 'box', material: groundMat });
-  ground.addComponent('collision', { type: 'box', halfExtents: new Vec3(h, 0.2, h) });
-  ground.addComponent('rigidbody', { type: 'static' });
-  app.root.addChild(ground);
-
+  const preset = loadSettings().bayQualityPreset;
+  buildBayGround(app, preset);
   buildBayWater(app);
   buildAllFreeways(app);
   buildFreewayRamps(app);
@@ -58,7 +45,6 @@ export function buildDrivingWorld(app: AppBase): void {
   buildLombardStreet(app);
   buildCollectibles(app);
   buildCruiseVistas(app);
-  const preset = loadSettings().bayQualityPreset;
   spawnAmbientTraffic(app, preset);
   spawnHubStreetTraffic(app, preset);
   buildSideshowMeets(app);

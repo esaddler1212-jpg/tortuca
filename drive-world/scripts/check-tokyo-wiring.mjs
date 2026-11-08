@@ -39,6 +39,13 @@ for (const id of ffIds) {
   if (!mappedCars.has(id)) errors.push(`FF vehicle ${id} not awarded by any landmark`);
 }
 
+if (!read('src/build-world.ts').includes('buildBayGround')) {
+  errors.push('build-world.ts must call buildBayGround');
+}
+if (!read('src/build-bay-ground.ts').includes('addHeightfieldPatch')) {
+  errors.push('build-bay-ground.ts missing heightfield helper');
+}
+
 if (errors.length) {
   console.error('Tokyo wiring audit FAILED:\n' + errors.map((e) => `  · ${e}`).join('\n'));
   process.exit(1);
