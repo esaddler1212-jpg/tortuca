@@ -20,6 +20,7 @@ import {
 } from './vehicle-customization';
 import { seedGhostTapes } from './cpm-ghost';
 import { tryUnlockCraftVehicles } from './craft-vehicle-unlocks';
+import { migrateRenamedVehicles } from './save-vehicle-migrations';
 
 export type GamePhase = 'waymo_ride' | 'pick_car' | 'home';
 
@@ -167,7 +168,7 @@ function defaultProgress(): SavedProgress {
 }
 
 function withV9Defaults(p: Partial<Omit<SavedProgress, 'version'>> & { version: number }): SavedProgress {
-  return {
+  const base: SavedProgress = {
     ...defaultProgress(),
     ...p,
     version: 9,
@@ -200,6 +201,7 @@ function withV9Defaults(p: Partial<Omit<SavedProgress, 'version'>> & { version: 
     activeTaxiId: p.activeTaxiId ?? null,
     cameraMode: normalizeCameraMode(p.cameraMode)
   };
+  return migrateRenamedVehicles(base);
 }
 
 function migrateRaw(parsed: Record<string, unknown>): SavedProgress | null {

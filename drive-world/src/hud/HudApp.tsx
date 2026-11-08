@@ -428,6 +428,32 @@ function SettingsPanel() {
       <label className="checkbox-row">
         <input
           type="checkbox"
+          checked={s.coastalWeatherEnabled !== false}
+          onChange={(e) => apply({ ...s, coastalWeatherEnabled: e.target.checked })}
+        />
+        Coastal rain (SF / Marin)
+      </label>
+      <label className="checkbox-row">
+        <input
+          type="checkbox"
+          checked={s.shareSessionStats !== false}
+          onChange={(e) => apply({ ...s, shareSessionStats: e.target.checked })}
+        />
+        Share anonymous play-time stats
+      </label>
+      <p className="sync-msg">
+        <a
+          className="link-btn"
+          href="https://github.com/esaddler1212-jpg/tortuca/issues/new?labels=city-nights&title=City%20Nights%20feedback"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Send feedback (GitHub)
+        </a>
+      </p>
+      <label className="checkbox-row">
+        <input
+          type="checkbox"
           checked={s.fuelSimEnabled}
           onChange={(e) => apply({ ...s, fuelSimEnabled: e.target.checked })}
         />

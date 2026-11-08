@@ -91,7 +91,7 @@ import { nearestCruiseVista, type CruiseVistaDef } from './cruise-vistas';
 import { loadSettings, saveSettings } from './game-settings';
 import { setMusicDistrict, unlockMusic } from './game-music';
 import { saveCruisePhotoCard } from './photo-share';
-import { districtAt, fogDistances, regionalFogStrength } from './regional-weather';
+import { coastalRainAdjust, districtAt, fogDistances, regionalFogStrength } from './regional-weather';
 import { nearestStreetLabel } from './street-name-registry';
 import { COLLECTIBLES, FAST_TRAVEL, SCENIC_ROUTES, SPEED_TRAPS } from './world-extras';
 import { createPhotoCamera } from './photo-mode';
@@ -149,6 +149,8 @@ import {
 } from './vehicle-catalog';
 import type { VehicleCustomization } from './vehicle-customization';
 import { pushCloudProgress } from './game-cloud-save';
+import { flushSessionTelemetry, installSessionTelemetryFlush, markSessionBoot } from './session-telemetry';
+import { updateHubStreetTraffic } from './hub-street-traffic';
 import { heatDecay, heatFromSpeedTrap } from './game-heat';
 import { createPlayerVehicle, destroyPlayerVehicle, type PlayerVehicle } from './vehicle-factory';
 import { ensureVehicleModelLoaded, ensureVehicleModelsLoaded } from './vehicle-gltf';
@@ -218,6 +220,13 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   let waymoRideElapsed = 0;
   let sightseeing = false;
   let lastDistrict: DistrictId | null = null;
+  let telemetryT = 0;
+  markSessionBoot();
+  installSessionTelemetryFlush(settings.shareSessionStats !== false, () => ({
+    preset: settings.bayQualityPreset ?? 'balanced',
+    district: lastDistrict,
+    phase: progress.phase
+  }));
 
   const stopAutopilot = (restoreCamera = true) => {
     if (!autopilotActive) return;
@@ -784,6 +793,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
 
     worldTime += dt;
     updateAmbientTraffic(dt, settings.showTraffic);
+    updateHubStreetTraffic(dt, settings.showTraffic);
     const sideshowSite = updateSideshowMeets(dt, worldTime, settings.showSideshow);
     const posEarly = ent.getPosition();
     hubStreamT += dt;
@@ -800,15 +810,19 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     }
     const fogStrength = regionalFogStrength(district);
     const fog = fogDistances(fogStrength, settings.fogQuality);
-    app.scene.fogStart = fog.start;
-    app.scene.fogEnd = fog.end;
+    const rainFx =
+      settings.coastalWeatherEnabled !== false
+        ? coastalRainAdjust(district, fog)
+        : { fogStart: fog.start, fogEnd: fog.end, exposure: 0.55 };
+    app.scene.fogStart = rainFx.fogStart;
+    app.scene.fogEnd = rainFx.fogEnd;
     const tunnelD = Math.hypot(posTrack.x - CALDECOTT.x, posTrack.z - CALDECOTT.z);
     if (tunnelD < 100) {
       const tunnelT = 1 - tunnelD / 100;
-      app.scene.fogEnd = fog.end * (1 - tunnelT * 0.5);
-      app.scene.exposure = 0.55 - tunnelT * 0.24;
+      app.scene.fogEnd = rainFx.fogEnd * (1 - tunnelT * 0.5);
+      app.scene.exposure = rainFx.exposure - tunnelT * 0.24;
     } else {
-      app.scene.exposure = 0.55;
+      app.scene.exposure = rainFx.exposure;
     }
 
     const aerial = progress.activeVehicleId ? isAerialVehicle(progress.activeVehicleId) : false;
@@ -952,6 +966,15 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     if (cloudSaveT > 50 && progress.phase === 'home') {
       cloudSaveT = 0;
       void pushCloudProgress(progress);
+    }
+    telemetryT += dt;
+    if (telemetryT > 120) {
+      telemetryT = 0;
+      flushSessionTelemetry(settings.shareSessionStats !== false, {
+        preset: settings.bayQualityPreset ?? 'balanced',
+        district,
+        phase: progress.phase
+      });
     }
 
     const yaw = ent.getEulerAngles().y;

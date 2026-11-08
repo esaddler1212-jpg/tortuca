@@ -26,6 +26,7 @@ import {
   buildLombardStreet,
   spawnAmbientTraffic
 } from './build-world-extras';
+import { spawnHubStreetTraffic } from './hub-street-traffic';
 import { buildSideshowMeets } from './sideshow-meets';
 import { NIGHT_FOG } from './night-palette';
 import { WORLD_HALF_M } from './world-config';
@@ -57,7 +58,9 @@ export function buildDrivingWorld(app: AppBase): void {
   buildLombardStreet(app);
   buildCollectibles(app);
   buildCruiseVistas(app);
-  spawnAmbientTraffic(app, loadSettings().bayQualityPreset);
+  const preset = loadSettings().bayQualityPreset;
+  spawnAmbientTraffic(app, preset);
+  spawnHubStreetTraffic(app, preset);
   buildSideshowMeets(app);
   buildAllDistricts(app);
   initHubStreaming(app, loadSettings().hubStreamingEnabled);

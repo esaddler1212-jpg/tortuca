@@ -59,10 +59,14 @@ function pathFromFreeway(waypoints: { x: number; z: number }[], start: number, e
 export function spawnAmbientTraffic(app: AppBase, preset: BayQualityPreset = 'balanced'): void {
   for (const car of traffic) car.root.destroy();
   traffic.length = 0;
-  if (preset === 'chromebook') return;
 
   const loops: TrafficLoop[] =
-    preset === 'lush'
+    preset === 'chromebook'
+      ? [
+          { path: pathFromFreeway(FREEWAY_I80, 5, 9), cars: 2, speed: 0.11 },
+          { path: pathFromFreeway(FREEWAY_880, 4, 8), cars: 2, speed: 0.1 }
+        ]
+      : preset === 'lush'
       ? [
           { path: pathFromFreeway(FREEWAY_I80, 3, 12), cars: 5, speed: 0.15 },
           { path: pathFromFreeway(FREEWAY_880, 2, 10), cars: 4, speed: 0.12 },
