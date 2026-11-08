@@ -108,6 +108,11 @@ export function buildBayAreaLandmarks(app: AppBase): void {
   box(app, 'fox-marquee', 600, 26, -368, 38, 4, 20, matOrange());
   ringBuilding(app, 'oakland-arena', 780, -200, 55, matConcrete());
   box(app, 'lake-merritt', 620, 4, -120, 70, 3, 50, matGlass());
+  box(app, 'grizzly-lookout', 400, 28, 220, 22, 1.2, 22, matConcrete(), true);
+  box(app, 'grizzly-ridge-a', 388, 22, 208, 8, 18, 8, stone, true);
+  box(app, 'grizzly-ridge-b', 412, 20, 232, 10, 14, 10, stone);
+  box(app, 'grizzly-sign', 400, 34, 218, 14, 7, 1.2, matOrange());
+  box(app, 'grizzly-bear-silhouette', 400, 38, 218.8, 8, 5, 0.4, stone);
 
   // —— Vallejo ——
   box(app, 'mare-island-crane-leg-a', 430, 28, 1020, 4, 56, 4, matOrange());

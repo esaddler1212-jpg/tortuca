@@ -14,8 +14,10 @@ Low-poly **stand-ins** for well-known places. Not to scale; positions follow the
 | | Napa silo | `napa-silo` |
 | | Carquinez strait tower | `carquinez-tower` |
 | **East Bay** | Sather Campanile (Berkeley) | `sather-campanile-*` |
+| | Grizzly Peak overlook | `grizzly-*` |
 | | Fox Theater (Oakland) | `fox-*` |
 | | Oakland Arena ring | `oakland-arena-*` |
+| | Lake Merritt | `lake-merritt` |
 | **Vallejo** | Mare Island crane | `mare-island-crane-*` |
 | **Peninsula** | Hoover Tower | `hoover-tower` |
 | | Dumbarton Bridge | `dumbarton-*` |
