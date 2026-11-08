@@ -32,6 +32,8 @@ const required = [
   'src/territory-invasion.ts',
   'src/territory-tick.ts',
   'src/battleworld.ts',
+  'src/battleworld-arcs.ts',
+  'src/arc-progress.ts',
   'src/infinity-stones-arc.ts',
   'src/infinity-stones-tick.ts',
   'src/hero-rivals.ts',
@@ -66,6 +68,12 @@ const pairBoss = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-pair-bo
   stdio: 'inherit'
 });
 if (pairBoss.status !== 0) process.exit(pairBoss.status ?? 1);
+
+const arcs = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-battleworld-arcs.mts')], {
+  cwd: root,
+  stdio: 'inherit'
+});
+if (arcs.status !== 0) process.exit(arcs.status ?? 1);
 
 const infinity = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-infinity-stones.mts')], {
   cwd: root,

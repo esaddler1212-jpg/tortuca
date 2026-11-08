@@ -110,12 +110,19 @@ import {
   DOOM_GOD_EMPEROR_FORM,
   isDoomGodEmperor
 } from './doom-story-arc';
+import { recordArcBeat, battleworldLatticeStrength } from './arc-progress';
+import {
+  characterArcHudLine,
+  latticeHudLine,
+  tryArcDistrictInteract
+} from './battleworld-arcs';
 import { battleworldRoleBlurb } from './battleworld';
 import {
   createInfinityStoneState,
   infinityBossBlocksFinale,
   infinityPowerMultiplier,
   infinityStonesHudLine,
+  playerInfinityStoneCount,
   resetInfinityHunt,
   type InfinityStoneState
 } from './infinity-stones-arc';
@@ -398,6 +405,8 @@ function tickFrame(s: GameSession, dt: number): void {
 
   const districtHere = districtIdAtPosition(pos.x, pos.z);
   if (input.interact && tryInteractInfinityStone(s.infinity, pos, s.playerRole, s.heroSpec.id)) {
+    recordArcBeat(s.heroSpec.id, 'stone-linked');
+    if (playerInfinityStoneCount() >= 6) recordArcBeat(s.heroSpec.id, 'hunt-ascended');
     playWaveAlert();
     if (
       s.playerRole === 'villain' &&
@@ -436,6 +445,13 @@ function tickFrame(s: GameSession, dt: number): void {
   }
   if (input.interact && s.playerRole === 'hero' && districtHere) {
     if (heroReclaimRazeDistrict(s.territory, districtHere)) playWaveAlert();
+  }
+  if (input.interact) {
+    const arcTap = tryArcDistrictInteract(s.heroSpec.id, districtHere);
+    if (arcTap) {
+      recordArcBeat(s.heroSpec.id, arcTap.beat);
+      playWaveAlert();
+    }
   }
 
   if (input.primary && s.hero.canPrimary()) {
@@ -539,6 +555,7 @@ function tickFrame(s: GameSession, dt: number): void {
     });
     s.worldFate.heroSaved = true;
     s.worldFate.phase = 'hero_saved';
+    recordArcBeat(s.heroSpec.id, 'world-saved');
     playWaveAlert();
   }
 
@@ -652,6 +669,7 @@ function tickFrame(s: GameSession, dt: number): void {
 
   if (s.pairBoss.spawned && !s.pairBoss.defeated && !s.factionNpcs.some((n) => n.isPairBoss)) {
     s.pairBoss.defeated = true;
+    recordArcBeat(s.heroSpec.id, 'pair-down');
     s.waveCooldown = 16;
     playSuper();
     addScreenShake(1.1);
@@ -770,6 +788,22 @@ function tickFrame(s: GameSession, dt: number): void {
     pairBossBlocked:
       s.playerRole === 'hero' &&
       (!canHeroFacePairBoss(s.territory) || infinityBossBlocksFinale(s.factionNpcs)),
+    characterArcHint: characterArcHudLine(s.heroSpec.id, {
+      role: s.playerRole,
+      wave: s.wave,
+      takeoverCount: territoryTakeoverCount(s.territory),
+      pairBossBlocked:
+        s.playerRole === 'hero' &&
+        (!canHeroFacePairBoss(s.territory) || infinityBossBlocksFinale(s.factionNpcs)),
+      playerStones: playerInfinityStoneCount(),
+      stonesSealed: s.infinity.sites.filter((st) => st.claimedBy === 'sealed').length,
+      districtId: districtIdAtPosition(pos.x, pos.z),
+      lattice: battleworldLatticeStrength()
+    }),
+    latticeHint:
+      battleworldLatticeStrength() > 0
+        ? latticeHudLine(battleworldLatticeStrength())
+        : null,
     alignmentNote: canPickAlignment(s.heroSpec.id)
       ? 'Doom: toggle Hero or Villain below'
       : s.heroSpec.id === VENOM_PLAYABLE_ID

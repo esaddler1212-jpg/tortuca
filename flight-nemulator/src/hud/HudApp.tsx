@@ -87,6 +87,8 @@ export type GameHudSnapshot = {
   villainScoutHint?: string | null;
   battleworldTagline?: string | null;
   infinityStoneHint?: string | null;
+  characterArcHint?: string | null;
+  latticeHint?: string | null;
 };
 
 function formatUsd(n: number): string {
@@ -206,6 +208,8 @@ export function HudApp() {
           </p>
         )}
         {snap.infinityStoneHint && <p className="hud-tag">{snap.infinityStoneHint}</p>}
+        {snap.characterArcHint && <p className="hud-tag hud-hint">{snap.characterArcHint}</p>}
+        {snap.latticeHint && <p className="hud-tag">{snap.latticeHint}</p>}
         {snap.territoryHint?.includes('H: henchmen') && (
           <div className="fate-actions">
             <button type="button" className="hud-roam" onClick={() => confirmTerritoryHenchmen()}>
