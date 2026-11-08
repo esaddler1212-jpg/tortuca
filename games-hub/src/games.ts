@@ -20,7 +20,8 @@ export const GAMES: GameTile[] = [
   {
     id: 'flight-nemulator',
     title: 'Battleworld',
-    tagline: 'Flight Nemulator — homage heroes, destructible planet, arc lattice',
+    tagline:
+      'Flight Nemulator — Marvel · DC · DBZ planet · territories · stones · wave-10 pair rivals',
     href: 'flight-nemulator/',
     artClass: 'art-flight-nemulator',
     lastPlayedKey: 'tortuca-console:last-flight-nemulator'

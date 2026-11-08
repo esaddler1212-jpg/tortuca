@@ -25,6 +25,18 @@ const HOMAGE_DRAFTS: Draft[] = [
     tagline: 'Fog-step infiltrator',
     suggestedDistrictId: 'gotham-nights',
     powers: ['web']
+  },
+  {
+    codename: 'Frost Monarch',
+    tagline: 'Diamond queen hover',
+    suggestedDistrictId: 'watchtower-annex',
+    powers: ['telekinesis', 'beam']
+  },
+  {
+    codename: 'Cable Echo',
+    tagline: 'TK field soldier',
+    suggestedDistrictId: 'sokovia-memorial',
+    powers: ['beam', 'telekinesis']
   }
 ];
 

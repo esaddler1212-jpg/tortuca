@@ -19,9 +19,11 @@ Wave **10** spawns one scripted rival (hero role only).
 
 | Mode | Heroes | Boss pick |
 |------|--------|-----------|
-| **Pinned finale** | Tin Aviator, Red Codriver, Shade Knight, Solar Apex, Latverian Sovereign | Fixed villain in `PAIR_VILLAIN_PINNED` (`hero-pair-boss.ts`) |
-| **Rival fallback** | Everyone else (hero alignment) | First villain in `villain-roster.ts` whose `rivalHeroIds` includes the hero |
+| **1:1 nemesis** | Most heroes | `primaryVillainIdForHero` from `roster-expansion.ts` (parity-checked) |
+| **Pinned finale** | Tin Aviator, Latverian Sovereign | `PAIR_VILLAIN_PINNED` overrides nemesis (Dr. Doom homage) |
 | **Exempt** | Cell Mimic, Spirit Buu, Venom Echo (villain-only) | No wave-10 pair duel — villain runway / absorption arcs |
+
+Dialogue cutscenes queue on intro, pair runway, defeats (autosave), and safe houses; **Continue** on HUD. Defeat autosave: `battleworld-autosave.ts`.
 
 CI: `tsx scripts/check-pair-boss.mts` asserts every non-exempt hero has at least one rival villain and that `pairVillainForHero` returns a matching boss.
 
@@ -32,5 +34,7 @@ CI: `tsx scripts/check-pair-boss.mts` asserts every non-exempt hero has at least
 | `territory-clear` | Hero clears the last takeover district (reclaim **H** or auto henchmen clear) |
 | `stone-linked` / `hunt-ascended` | Infinity Stone interact / sixth stone |
 | `corps-oath` / `squad-clash` | District **H** at Coast City / Ki Plateau |
+| `home-mark` | District **H** at hero home turf (all roster; signature beats for Lantern/Ki/Iron still apply) |
 | `pair-down` | Wave-10 pair boss defeated |
 | `world-saved` | Hero save fate at ≥52% integrity |
+| `villain-apex` | Villain-only legend defeats wave-10 hero interceptor |

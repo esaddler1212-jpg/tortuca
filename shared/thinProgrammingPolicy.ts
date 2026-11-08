@@ -18,6 +18,7 @@ export const SESSION_REQUIRED_HANDLERS = [
   "iris-usage",
   "watch-now",
   "weekly-audit",
+  "flight-nemulator-lattice",
 ] as const;
 
 /** Intentionally callable without Google session (public data or OAuth setup). */

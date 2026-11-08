@@ -48,11 +48,11 @@ for (const hero of HERO_ROSTER) {
   }
 
   const rivals = VILLAIN_CLONES.filter((v) => v.rivalHeroIds.includes(hero.id));
-  if (rivals.length === 0) {
+  if (rivals.length === 0 && !pair.primaryRivalHeroId) {
     console.error(`${hero.codename}: no villain lists hero in rivalHeroIds`);
     process.exit(1);
   }
-  if (!pair.rivalHeroIds.includes(hero.id)) {
+  if (!pair.rivalHeroIds.includes(hero.id) && pair.primaryRivalHeroId !== hero.id) {
     console.error(
       `${hero.codename}: pair boss ${pair.codename} is not a rival match (fallback broken)`
     );

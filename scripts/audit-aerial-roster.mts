@@ -56,7 +56,7 @@ for (const v of marvelDcVillains) printRow(v.codename, v.aerial, v.tagline);
 console.log('\n=== Villain clones (DBZ) ===\n');
 for (const v of dbzVillains) printRow(v.codename, v.aerial, v.tagline);
 
-const innate = new Set<AerialMobility>(['native', 'tech', 'ring', 'ki', 'magnet']);
+const innate = new Set<AerialMobility>(['native', 'tech', 'ring', 'ki', 'magnet', 'foot-boost']);
 const assisted = new Set<AerialMobility>(['jetpack', 'glide', 'web-swing']);
 
 const heroInnate = marvelDcHeroes.filter((h) => innate.has(h.aerial)).length;

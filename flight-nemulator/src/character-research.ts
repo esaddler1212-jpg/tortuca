@@ -13,7 +13,10 @@ export type ResearchedHeroDraft = {
   powers: string[];
 };
 
-const RESEARCH_URL = '/api/flight-nemulator-research';
+const RESEARCH_URL =
+  (typeof import.meta !== 'undefined' &&
+    (import.meta as { env?: { VITE_FN_RESEARCH_URL?: string } }).env?.VITE_FN_RESEARCH_URL) ||
+  '/api/flight-nemulator-research';
 
 export type HeroResearchBundle = {
   drafts: ResearchedHeroDraft[];

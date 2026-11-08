@@ -46,7 +46,12 @@ import {
   type HeroForm,
   type HeroSpec
 } from './hero-roster';
-import { aerialHudLabel, syncFlightAssistVisuals } from './aerial-mobility';
+import {
+  aerialHudLabel,
+  footRocketTrailPositions,
+  setFootRocketBoostActive,
+  syncFlightAssistVisuals
+} from './aerial-mobility';
 import { kitHudLabel } from './hero-customization';
 import { effectiveHeroAerial, resolveHeroForm, storedFormId } from './hero-forms';
 import { spawnAtHome } from './districts';
@@ -57,6 +62,7 @@ import {
   pairVillainCodename,
   spawnPairBoss
 } from './hero-pair-boss';
+import { spawnVillainApexInterceptor, VILLAIN_APEX_WAVE, villainApexCodename } from './hero-villain-apex';
 import { bindFlightKeys, pollFlightInput } from './game-input';
 import { setHudSnapshot } from './game-bridge';
 import { detectQualityTier, type QualityTier } from './quality-tier';
@@ -81,7 +87,7 @@ import {
 } from './faction-npcs';
 import { villainRivalsForHero } from './villain-roster';
 import { getPlayerRole, setPlayerRole, type PlayerRole } from './player-role';
-import { canPickAlignment, DUAL_ROLE_HERO_ID, enforceAlignmentForHero } from './hero-alignment';
+import { canPickAlignment, DUAL_ROLE_HERO_ID, enforceAlignmentForHero, isVillainOnlyHero } from './hero-alignment';
 import {
   absorbDefeatedFoe,
   absorptionHudLine,
@@ -112,14 +118,46 @@ import {
 } from './doom-story-arc';
 import {
   battleworldLatticeStrength,
+  latticeBeatChip,
   maybeRecordTerritoryClear,
   recordArcBeat
 } from './arc-progress';
+import { nextBattleworldChapterHint, battleworldChapterChip } from './battleworld-chapters';
 import {
   characterArcHudLine,
   latticeHudLine,
-  tryArcDistrictInteract
+  tryArcDistrictInteract,
+  villainRunwayHudLine
 } from './battleworld-arcs';
+import {
+  consumeLatticeCloudLabel,
+  pullBattleworldLatticeCloud
+} from './battleworld-lattice-cloud';
+import { nearBattleworldSafeHouse } from './battleworld-safe-houses';
+import {
+  autosaveLabel,
+  buildBattleworldAutosave,
+  loadBattleworldAutosave,
+  writeBattleworldAutosave,
+  type DefeatRecord
+} from './battleworld-autosave';
+import {
+  dialogueFoeDefeat,
+  dialogueIntro,
+  dialoguePairEncounter,
+  dialoguePairIncoming,
+  dialoguePairVictory,
+  dialogueSafeHouse,
+  dialogueVillainApexEncounter,
+  pairFoeNameForHero
+} from './battleworld-dialogue';
+import {
+  canQueueGenericDefeatLine,
+  cutsceneHudFields,
+  isDialogueActive,
+  markGenericDefeatLine,
+  queueDialogue
+} from './cutscene-queue';
 import { battleworldRoleBlurb } from './battleworld';
 import {
   createInfinityStoneState,
@@ -154,7 +192,13 @@ import { fetchManifestIfOnline, getManifestSuggestions } from './updates';
 import { attachHeroGltf } from './hero-gltf';
 import { placeKenneyLandmarks } from './build-city-kenney';
 import { placeWorldGachaTowns } from './build-city-worldgacha';
-import { applySkyEnvironment, applyWeatherMood, fetchBayWeatherMood } from './sky-env';
+import { universeForDistrict } from './battleworld-districts';
+import {
+  applyBattleworldUniverseFog,
+  applySkyEnvironment,
+  applyWeatherMood,
+  fetchBayWeatherMood
+} from './sky-env';
 import { currentLoadingTip } from './loading-tips';
 import { loadCustomHeroes, customHeroToSpec } from './custom-hero';
 import { addScreenShake, consumeShake, spawnBoostTrail, spawnCraterMarker, tickTrails } from './vfx';
@@ -183,9 +227,53 @@ export type GameSession = {
   lanternKeeper: import('./solar-lantern-arc').LanternKeeper | null;
   territory: TerritoryState;
   infinity: InfinityStoneState;
+  lastSafeHouseId: string | null;
+  autosaveHint: string | null;
 };
 
 let session: GameSession | null = null;
+
+function tryRestoreBattleworldAutosave(s: GameSession): void {
+  const save = loadBattleworldAutosave();
+  if (!save || save.heroId !== s.heroSpec.id || save.playerRole !== s.playerRole) return;
+  s.wave = save.wave;
+  s.waveCooldown = save.waveCooldown;
+  s.destructionUsd = save.destructionUsd;
+  s.foesStopped = save.foesStopped;
+  s.wanted.stars = save.wantedStars;
+  s.city.integrityPct = save.cityIntegrityPct;
+  s.pairBoss = {
+    spawned: save.pairBossSpawned,
+    defeated: save.pairBossDefeated,
+    warned: save.pairBossWarned
+  };
+  s.stats = save.sessionStats;
+  s.hero.entity.setPosition(new Vec3(save.position.x, save.position.y, save.position.z));
+  s.hero.velocity.set(0, 0, 0);
+  s.autosaveHint = autosaveLabel(save);
+}
+
+function persistDefeatAutosave(s: GameSession, defeat: DefeatRecord): void {
+  const pos = s.hero.entity.getPosition();
+  const save = buildBattleworldAutosave({
+    heroId: s.heroSpec.id,
+    playerRole: s.playerRole,
+    wave: s.wave,
+    waveCooldown: s.waveCooldown,
+    destructionUsd: s.destructionUsd,
+    foesStopped: s.foesStopped,
+    wantedStars: s.wanted.stars,
+    cityIntegrityPct: s.city.integrityPct,
+    pairBossSpawned: s.pairBoss.spawned,
+    pairBossDefeated: s.pairBoss.defeated,
+    pairBossWarned: s.pairBoss.warned,
+    position: { x: pos.x, y: pos.y, z: pos.z },
+    lastDefeat: defeat,
+    sessionStats: s.stats
+  });
+  writeBattleworldAutosave(save);
+  s.autosaveHint = autosaveLabel(save);
+}
 
 function pickHero(): HeroSpec {
   const stored = localStorage.getItem('flight-nemulator-hero-id') ?? DEFAULT_HERO_ID;
@@ -210,6 +298,7 @@ export async function startGame(app: AppBase): Promise<void> {
 
   const tier = detectQualityTier();
   const heroSpec = pickHero();
+  await pullBattleworldLatticeCloud(heroSpec.id);
   enforceAlignmentForHero(heroSpec.id);
   const heroForm = resolveHeroForm(heroSpec, storedFormId(heroSpec));
   const spawn = spawnAtHome(heroSpec.districtId);
@@ -289,8 +378,13 @@ export async function startGame(app: AppBase): Promise<void> {
         ? spawnLanternKeeper(app, root)
         : null,
     territory,
-    infinity: createInfinityStoneState(app, root)
+    infinity: createInfinityStoneState(app, root),
+    lastSafeHouseId: null,
+    autosaveHint: autosaveLabel(loadBattleworldAutosave())
   };
+
+  tryRestoreBattleworldAutosave(session);
+  queueDialogue(dialogueIntro(session.heroSpec.codename, session.playerRole));
 
   app.on('update', (dt: number) => {
     if (!session) return;
@@ -316,7 +410,17 @@ function combatForm(s: GameSession): HeroForm {
 }
 
 function tickFrame(s: GameSession, dt: number): void {
-  const input = pollFlightInput();
+  let input = pollFlightInput();
+  if (isDialogueActive()) {
+    input = {
+      ...input,
+      throttle: Math.min(input.throttle, 0.42),
+      boost: false,
+      primary: false,
+      throw: false,
+      super: false
+    };
+  }
   if (input.photo) togglePhotoMode();
 
   s.hero.form = s.heroForm;
@@ -402,12 +506,29 @@ function tickFrame(s: GameSession, dt: number): void {
     playSmash();
   }
 
+  const heroAerial = effectiveHeroAerial(s.heroSpec, s.heroForm);
+  const boosting = input.boost && s.hero.speedKmh() > 120;
+  if (heroAerial === 'foot-boost') {
+    setFootRocketBoostActive(s.hero.entity, boosting);
+  }
   if (input.boost && s.hero.speedKmh() > 200) {
     playWhoosh();
-    spawnBoostTrail(s.app, s.root, pos.clone(), s.heroForm.color);
+    const flame: [number, number, number] = [
+      s.heroForm.color[0] * 0.45 + 0.35,
+      s.heroForm.color[1] * 0.35 + 0.55,
+      Math.min(1, s.heroForm.color[2] * 0.2 + 0.85)
+    ];
+    if (heroAerial === 'foot-boost') {
+      const [l, r] = footRocketTrailPositions(s.hero.entity);
+      spawnBoostTrail(s.app, s.root, l, flame);
+      spawnBoostTrail(s.app, s.root, r, flame);
+    } else {
+      spawnBoostTrail(s.app, s.root, pos.clone(), s.heroForm.color);
+    }
   }
 
   const districtHere = districtIdAtPosition(pos.x, pos.z);
+  applyBattleworldUniverseFog(s.app, universeForDistrict(districtHere));
   if (input.interact && tryInteractInfinityStone(s.infinity, pos, s.playerRole, s.heroSpec.id)) {
     recordArcBeat(s.heroSpec.id, 'stone-linked');
     if (playerInfinityStoneCount() >= 6) recordArcBeat(s.heroSpec.id, 'hunt-ascended');
@@ -574,13 +695,15 @@ function tickFrame(s: GameSession, dt: number): void {
   const pairBossAlive = s.pairBoss.spawned && !s.pairBoss.defeated && !!pairBossNpc;
 
   if (
-    s.playerRole === 'hero' &&
     !s.pairBoss.defeated &&
     s.wave >= PAIR_BOSS_WAVE - 3 &&
-    !s.pairBoss.warned
+    !s.pairBoss.warned &&
+    (s.playerRole === 'hero' || isVillainOnlyHero(s.heroSpec.id))
   ) {
     s.pairBoss.warned = true;
     playWaveAlert();
+    const foeName = pairFoeNameForHero(s.heroSpec.id);
+    queueDialogue(dialoguePairIncoming(s.heroSpec.codename, foeName));
   }
 
   const maxNpcs =
@@ -614,6 +737,28 @@ function tickFrame(s: GameSession, dt: number): void {
     s.waveCooldown = 30;
     playWaveAlert();
     addScreenShake(0.75);
+    queueDialogue(
+      dialoguePairEncounter(s.heroSpec.codename, pairVillainCodename(s.heroSpec.id))
+    );
+  } else if (
+    isVillainOnlyHero(s.heroSpec.id) &&
+    !s.pairBoss.spawned &&
+    !s.pairBoss.defeated &&
+    s.wave + 1 >= VILLAIN_APEX_WAVE
+  ) {
+    s.wave += 1;
+    for (const n of [...s.factionNpcs]) {
+      s.root.removeChild(n.entity);
+      n.entity.destroy();
+    }
+    s.factionNpcs = [spawnVillainApexInterceptor(s.app, s.root, pos, s.heroSpec.id)];
+    s.pairBoss.spawned = true;
+    s.waveCooldown = 28;
+    playWaveAlert();
+    addScreenShake(0.65);
+    queueDialogue(
+      dialogueVillainApexEncounter(s.heroSpec.codename, villainApexCodename(s.heroSpec.id))
+    );
   } else {
     s.wave += 1;
     const cd = s.playerRole === 'hero' ? 14 : Math.max(4, 12 - s.wave * 0.4 - s.wanted.stars);
@@ -676,6 +821,20 @@ function tickFrame(s: GameSession, dt: number): void {
       resetInfinityHunt(s.infinity, s.app, s.root);
       playSuper();
     }
+    const defeat: DefeatRecord = {
+      profileId: d.profileId,
+      codename: d.codename,
+      isPairBoss: d.isPairBoss
+    };
+    persistDefeatAutosave(s, defeat);
+    if (d.isPairBoss) continue;
+    const namedFoe = d.profileId !== 'generic';
+    if (namedFoe || canQueueGenericDefeatLine(nowMs)) {
+      if (!namedFoe) markGenericDefeatLine(nowMs);
+      queueDialogue(
+        dialogueFoeDefeat(s.heroSpec.codename, s.playerRole, d.profileId, d.codename)
+      );
+    }
   }
   if (kills > 0) {
     s.foesStopped += kills;
@@ -684,7 +843,20 @@ function tickFrame(s: GameSession, dt: number): void {
 
   if (s.pairBoss.spawned && !s.pairBoss.defeated && !s.factionNpcs.some((n) => n.isPairBoss)) {
     s.pairBoss.defeated = true;
-    recordArcBeat(s.heroSpec.id, 'pair-down');
+    if (isVillainOnlyHero(s.heroSpec.id)) {
+      recordArcBeat(s.heroSpec.id, 'villain-apex');
+    } else {
+      recordArcBeat(s.heroSpec.id, 'pair-down');
+    }
+    const finaleName = isVillainOnlyHero(s.heroSpec.id)
+      ? villainApexCodename(s.heroSpec.id)
+      : pairVillainCodename(s.heroSpec.id);
+    queueDialogue(dialoguePairVictory(s.heroSpec.codename, finaleName));
+    persistDefeatAutosave(s, {
+      profileId: 'pair-boss',
+      codename: finaleName,
+      isPairBoss: true
+    });
     s.waveCooldown = 16;
     playSuper();
     addScreenShake(1.1);
@@ -721,6 +893,18 @@ function tickFrame(s: GameSession, dt: number): void {
 
   const lifetimeDestruction = s.stats.destructionUsd + s.destructionUsd;
   saveSessionStats({ destructionUsd: lifetimeDestruction, wavesCleared: s.wave });
+
+  const houseNear = nearBattleworldSafeHouse(
+    pos,
+    s.heroSpec.id,
+    districtIdAtPosition(pos.x, pos.z)
+  );
+  if (houseNear && houseNear.id !== s.lastSafeHouseId) {
+    s.lastSafeHouseId = houseNear.id;
+    queueDialogue(dialogueSafeHouse(s.heroSpec.codename, houseNear.label));
+  } else if (!houseNear) {
+    s.lastSafeHouseId = null;
+  }
 
   const chron = getChronoState();
   const bossForHud = s.factionNpcs.find((n) => n.isPairBoss);
@@ -759,18 +943,23 @@ function tickFrame(s: GameSession, dt: number): void {
     nearestFoe: nearestFoeCodename(s.factionNpcs, s.playerRole, pos),
     villainRivals:
       s.playerRole === 'hero' ? villainRivalsForHero(s.heroSpec.id).slice(0, 4) : undefined,
-    pairBossName: s.playerRole === 'hero' ? pairVillainCodename(s.heroSpec.id) : null,
+    pairBossName:
+      s.playerRole === 'hero'
+        ? pairVillainCodename(s.heroSpec.id)
+        : isVillainOnlyHero(s.heroSpec.id)
+          ? villainApexCodename(s.heroSpec.id)
+          : null,
     pairBossHpPct: pairBossHpPercent(bossForHud),
     pairBossStatus:
-      s.playerRole !== 'hero'
-        ? null
-        : s.pairBoss.defeated
+      s.playerRole === 'hero' || isVillainOnlyHero(s.heroSpec.id)
+        ? s.pairBoss.defeated
           ? 'defeated'
           : bossAliveHud
             ? 'active'
             : s.pairBoss.warned && !s.pairBoss.spawned
               ? 'incoming'
-              : null,
+              : null
+        : null,
     fatePrompt: s.worldFate.fatePrompt,
     dyingRoamSeconds: dyingRoamSecondsLeft(s.worldFate, nowMs),
     worldFatePhase: s.worldFate.phase,
@@ -819,13 +1008,32 @@ function tickFrame(s: GameSession, dt: number): void {
       battleworldLatticeStrength() > 0
         ? latticeHudLine(battleworldLatticeStrength())
         : null,
+    latticeBeatChip: latticeBeatChip(s.heroSpec.id, s.playerRole),
+    latticeCloudHint: consumeLatticeCloudLabel(),
+    safeHouseHint: (() => {
+      const house = nearBattleworldSafeHouse(
+        pos,
+        s.heroSpec.id,
+        districtIdAtPosition(pos.x, pos.z)
+      );
+      return house ? `Safe house: ${house.label} — rest lattice (H)` : null;
+    })(),
+    villainRunwayHint: villainRunwayHudLine(s.heroSpec.id, s.wave),
+    chapterHint: nextBattleworldChapterHint(
+      s.heroSpec.id,
+      s.playerRole,
+      isVillainOnlyHero(s.heroSpec.id)
+    ),
+    chapterChip: battleworldChapterChip(s.heroSpec.id, s.playerRole, isVillainOnlyHero(s.heroSpec.id)),
     alignmentNote: canPickAlignment(s.heroSpec.id)
       ? 'Doom: toggle Hero or Villain below'
       : s.heroSpec.id === VENOM_PLAYABLE_ID
         ? 'Defeat hero responders to bond new loadouts'
         : ABSORBER_HERO_IDS.has(s.heroSpec.id)
           ? 'Absorb fallen foes to copy powers'
-          : null
+          : null,
+    autosaveHint: s.autosaveHint,
+    ...cutsceneHudFields()
   });
 }
 

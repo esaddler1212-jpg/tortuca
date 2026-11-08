@@ -104,6 +104,56 @@ export const DISTRICTS: DistrictSpec[] = [
     accent: [0.4, 0.42, 0.48],
     homeBaseName: 'Memorial Apex',
     skylineMul: 0.75
+  },
+  {
+    id: 'cosmic-dock',
+    label: 'Cosmic Dock',
+    inspiration: 'Orbital trade pier',
+    center: new Vec3(1100, 0, -150),
+    radiusM: 380,
+    accent: [0.55, 0.35, 0.92],
+    homeBaseName: 'Conduit Spire',
+    skylineMul: 1.05
+  },
+  {
+    id: 'nova-station',
+    label: 'Nova Station',
+    inspiration: 'Deep-space berth',
+    center: new Vec3(-1050, 0, -720),
+    radiusM: 360,
+    accent: [0.18, 0.62, 0.88],
+    homeBaseName: 'Nova ring',
+    skylineMul: 0.8
+  },
+  {
+    id: 'viltrum-reach',
+    label: 'Viltrum Reach',
+    inspiration: 'Indie invader embankment',
+    center: new Vec3(650, 0, -1150),
+    radiusM: 400,
+    accent: [0.42, 0.28, 0.82],
+    homeBaseName: 'Viltrum loft',
+    skylineMul: 0.7
+  },
+  {
+    id: 'golden-mile',
+    label: 'Golden Mile',
+    inspiration: 'Golden-age skyway',
+    center: new Vec3(-720, 0, -350),
+    radiusM: 340,
+    accent: [0.88, 0.72, 0.25],
+    homeBaseName: 'Milestone tower',
+    skylineMul: 0.65
+  },
+  {
+    id: 'ion-foundry',
+    label: 'Ion Foundry',
+    inspiration: 'Cyber steel slab',
+    center: new Vec3(250, 0, 1150),
+    radiusM: 420,
+    accent: [0.55, 0.52, 0.58],
+    homeBaseName: 'Alt-mode hangar',
+    skylineMul: 1.15
   }
 ];
 

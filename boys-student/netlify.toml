@@ -1,12 +1,31 @@
+# VantageGames — title-card launcher + games-hub bundle (folder name: boys-student)
+
 [build]
-  command = "npm run build:with-console"
+  command = "npm ci && npm run build:with-console"
   publish = "dist"
 
 [build.environment]
   NODE_VERSION = "22"
 
-# API lives on the Family Purpose Netlify site — set in Netlify env:
-# VITE_BOYS_API_URL = https://your-family-purpose-site.netlify.app
+[[headers]]
+  for = "/console/city-nights/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/console/flight-nemulator/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/console/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
 
 [[redirects]]
   from = "/console/city-nights/*"

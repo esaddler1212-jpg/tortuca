@@ -25,8 +25,10 @@ import { ANNIHILATE_HAVOC_USD } from '../villain-annihilate';
 import { getPlayerRole, type PlayerRole } from '../player-role';
 import { loadCustomHeroes, saveCustomHero, type CustomHeroDraft } from '../custom-hero';
 import { researchHeroBundle } from '../character-research';
-import { arcPickerLine } from '../battleworld-arcs';
+import { arcPickerLine, arcPickerLinks } from '../battleworld-arcs';
+import { HERO_MUTATIONS } from '../roster-mutations';
 import { Minimap } from './Minimap';
+import { acknowledgeDialogue } from '../cutscene-queue';
 import { setQualityOverride } from '../game-settings';
 import { downloadPhoto } from '../photo-mode';
 import type { QualityTier } from '../quality-tier';
@@ -90,6 +92,18 @@ export type GameHudSnapshot = {
   infinityStoneHint?: string | null;
   characterArcHint?: string | null;
   latticeHint?: string | null;
+  latticeCloudHint?: string | null;
+  safeHouseHint?: string | null;
+  latticeBeatChip?: string | null;
+  villainRunwayHint?: string | null;
+  chapterHint?: string | null;
+  chapterChip?: string | null;
+  cutsceneActive?: boolean;
+  cutsceneSpeaker?: string | null;
+  cutsceneText?: string | null;
+  cutsceneSide?: 'hero' | 'foe' | 'narrator' | 'ally' | null;
+  cutsceneQueued?: number;
+  autosaveHint?: string | null;
 };
 
 function formatUsd(n: number): string {
@@ -112,6 +126,8 @@ export function HudApp() {
   const stars = '★'.repeat(snap.wantedStars) + '☆'.repeat(5 - snap.wantedStars);
   const custom = loadCustomHeroes();
   const arcLine = arcPickerLine(heroId);
+  const arcLinks = arcPickerLinks(heroId);
+  const universe = HERO_MUTATIONS[heroId]?.universe;
 
   return (
     <div className="hud-root">
@@ -153,6 +169,10 @@ export function HudApp() {
 
       <Minimap heroX={snap.heroX ?? 0} heroZ={snap.heroZ ?? 0} />
 
+      {snap.cutsceneActive && snap.cutsceneText && (
+        <CutsceneOverlay snap={snap} onContinue={() => acknowledgeDialogue()} />
+      )}
+
       <QualitySettings quality={snap.quality} photoMode={!!snap.photoMode} />
       <RolePicker role={snap.playerRole ?? getPlayerRole()} heroId={heroId} />
       <WorldFatePanel snap={snap} />
@@ -182,6 +202,8 @@ export function HudApp() {
             {arcLine}
           </p>
         )}
+        {arcLinks && <p className="hud-tag hud-hint">{arcLinks}</p>}
+        {universe && <p className="hud-tag">Universe · {universe.toUpperCase()}</p>}
         {snap.playerRole === 'hero' && snap.villainRivals && snap.villainRivals.length > 0 && (
           <p className="hud-tag">Rivals: {snap.villainRivals.join(', ')}</p>
         )}
@@ -216,7 +238,22 @@ export function HudApp() {
         )}
         {snap.infinityStoneHint && <p className="hud-tag">{snap.infinityStoneHint}</p>}
         {snap.characterArcHint && <p className="hud-tag hud-hint">{snap.characterArcHint}</p>}
+        {snap.latticeBeatChip && (
+          <p className="hud-tag hud-lattice-chip" title="Territory · Stones · Home H · Pair · Save">
+            Lattice {snap.latticeBeatChip}
+          </p>
+        )}
+        {snap.villainRunwayHint && <p className="hud-tag hud-hint">{snap.villainRunwayHint}</p>}
+        {snap.chapterChip && (
+          <p className="hud-tag hud-lattice-chip" title="Battleworld chapter ladder">
+            Chapters {snap.chapterChip}
+          </p>
+        )}
+        {snap.chapterHint && <p className="hud-tag hud-hint">{snap.chapterHint}</p>}
         {snap.latticeHint && <p className="hud-tag">{snap.latticeHint}</p>}
+        {snap.latticeCloudHint && <p className="hud-tag hud-hint">{snap.latticeCloudHint}</p>}
+        {snap.safeHouseHint && <p className="hud-tag hud-hint">{snap.safeHouseHint}</p>}
+        {snap.autosaveHint && <p className="hud-tag hud-hint">{snap.autosaveHint}</p>}
         {snap.territoryHint?.includes('H: henchmen') && (
           <div className="fate-actions">
             <button type="button" className="hud-roam" onClick={() => confirmTerritoryHenchmen()}>
@@ -279,6 +316,28 @@ export function HudApp() {
       </p>
 
       <TouchPad />
+    </div>
+  );
+}
+
+function CutsceneOverlay({
+  snap,
+  onContinue
+}: {
+  snap: GameHudSnapshot;
+  onContinue: () => void;
+}) {
+  const side = snap.cutsceneSide ?? 'narrator';
+  return (
+    <div className={`cutscene-overlay cutscene-side-${side}`} role="dialog" aria-live="polite">
+      <div className="cutscene-panel hud-panel">
+        <div className="cutscene-speaker">{snap.cutsceneSpeaker}</div>
+        <p className="cutscene-text">{snap.cutsceneText}</p>
+        <button type="button" className="hud-roam cutscene-continue" onClick={onContinue}>
+          Continue
+          {(snap.cutsceneQueued ?? 0) > 0 ? ` (+${snap.cutsceneQueued} more)` : ''}
+        </button>
+      </div>
     </div>
   );
 }
