@@ -127,6 +127,14 @@ export const IRIS_TEAM: IrisSpecialistDef[] = [
 
 export const IRIS_SPECIALIST_IDS = IRIS_TEAM.map((s) => s.id);
 
+/** Only these specialists run server work (research API, draft creation). Iris answers the rest from Right now. */
+export const DELEGATABLE_SPECIALIST_IDS = ["scout", "scribe"] as const;
+export type DelegatableSpecialistId = (typeof DELEGATABLE_SPECIALIST_IDS)[number];
+
+export function isDelegatableSpecialist(id: string): id is DelegatableSpecialistId {
+  return (DELEGATABLE_SPECIALIST_IDS as readonly string[]).includes(id);
+}
+
 const MODULES_WITH_SPECIALISTS = HUD_MODULE_IDS;
 
 export function specialistById(id: string): IrisSpecialistDef | undefined {
@@ -146,12 +154,12 @@ export function teamContextForIris(): string {
   const owners = IRIS_TEAM.map((s) => `${s.module}→${s.id} (${s.name})`).join(", ");
   const roster = IRIS_TEAM.map((s) => `${s.id} (${s.name}, ${s.module}): ${s.delegateWhen}`).join("; ");
   return (
-    `Each IRIS module has one specialist who owns that work; you are E's only voice out. ` +
-    `When E asks about a module's domain, call consult_specialist for the owner (module map: ${owners}) — don't redo their job yourself. ` +
-    `They return findings; you relay who helped in one short phrase, then their summary in spoken form (no markdown). ` +
-    `When Right now says BLOCK consult_specialist or DUPLICATE BLOCKED, do not call consult_specialist for that work — relay the prior report in one short spoken answer only. ` +
-    `If consult_specialist returns DUPLICATE BLOCKED, never re-run that specialist; relay the stored report. ` +
-    `Skip delegation for one-line facts already in Right now. Roster: ${roster}. ` +
+    `Each IRIS module has a named specialist on the Team roster (${owners}) — they are labels for E, not separate calls you make. ` +
+    `Answer today, inbox, vitals, plan, apps, hub, meals, team efficiency, and ECS log directly from Right now in your own voice; do not call consult_specialist for ledger, courier, sentinel, navigator, wire, curator, quartermaster, archivist, or woodhouse. ` +
+    `consult_specialist is only for scout (live web business research; saves a Hub memo) or scribe (creates a pending email draft in Drafts). ` +
+    `When Scout returns, relay who helped in one short phrase, then the spoken summary. ` +
+    `When Right now says BLOCK consult_specialist or DUPLICATE BLOCKED, do not call consult_specialist — relay the prior report only. ` +
+    `Roster hints (for open_module and phrasing): ${roster}. ` +
     agentGuardrailsPrompt()
   );
 }

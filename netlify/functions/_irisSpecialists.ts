@@ -2,6 +2,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import {
   type IrisSpecialistId,
   IRIS_TEAM,
+  isDelegatableSpecialist,
   specialistById,
 } from "../../shared/irisTeam";
 import {
@@ -83,6 +84,15 @@ export async function consultSpecialist(
       specialist: input.specialist,
       summary: "Unknown specialist id.",
       module: null,
+      memoSaved: false,
+    };
+  }
+
+  if (!isDelegatableSpecialist(input.specialist)) {
+    return {
+      specialist: input.specialist,
+      summary: `Iris answers ${def.name}'s domain from Right now — no consult needed.`,
+      module: def.module,
       memoSaved: false,
     };
   }
@@ -255,5 +265,5 @@ export async function consultSpecialist(
 }
 
 export function specialistEnumForTool(): string[] {
-  return IRIS_TEAM.map((s) => s.id);
+  return [...IRIS_TEAM.filter((s) => isDelegatableSpecialist(s.id)).map((s) => s.id)];
 }
