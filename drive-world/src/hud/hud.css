@@ -752,6 +752,20 @@ body.photo-mode .react-hud {
   font-size: 0.78rem;
 }
 
+.paused-banner {
+  pointer-events: auto;
+  width: 100%;
+  margin-bottom: 0.35rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 210, 120, 0.5);
+  background: rgba(40, 28, 8, 0.9);
+  color: #ffe6b0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
 .records-panel {
   pointer-events: auto;
   margin-bottom: 0.35rem;

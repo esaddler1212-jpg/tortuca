@@ -360,6 +360,10 @@ VehicleControls.prototype.update = function (dt) {
     var targetVehicle = this.targetVehicle ? this.targetVehicle : this.entity;
 
     if (targetVehicle) {
+        if (window.cityNightsDriveLocked) {
+            if (targetVehicle.script.vehicle) targetVehicle.script.vehicle.fire('vehicle:controls', 0, 0);
+            return;
+        }
         var steering = 0;
         var throttle = 0;
 
@@ -367,6 +371,13 @@ VehicleControls.prototype.update = function (dt) {
         if (this.rightButtonPressed || this.rightKeyPressed) steering--;
         if (this.upButtonPressed || this.upKeyPressed) throttle++;
         if (this.downButtonPressed || this.downKeyPressed) throttle--;
+
+        // Gamepad / touch from game-loop; single writer avoids script-order overwrites.
+        var ext = window.cityNightsExternalDrive;
+        if (ext) {
+            if (steering === 0 && ext.steering) steering = ext.steering;
+            if (throttle === 0 && ext.throttle) throttle = ext.throttle;
+        }
 
         if (targetVehicle.script.vehicle) {
             targetVehicle.script.vehicle.fire('vehicle:controls', steering, throttle);

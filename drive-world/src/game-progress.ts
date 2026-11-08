@@ -232,6 +232,13 @@ function migrateRaw(parsed: Record<string, unknown>): SavedProgress | null {
   return null;
 }
 
+/** Normalize a save object from cloud / import before it touches localStorage. */
+export function normalizeProgress(raw: unknown): SavedProgress | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const migrated = migrateRaw(raw as Record<string, unknown>);
+  return migrated ? seedGhostTapes(migrated) : null;
+}
+
 export function loadProgress(): SavedProgress {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);

@@ -9,9 +9,11 @@ export type GamepadMenuAction =
   | 'camera-prev'
   | 'photo'
   | 'autopilot'
-  | 'skip-waymo'
-  | 'hud-tab'
-  | 'confirm';
+  | 'confirm'
+  | 'back'
+  | 'start'
+  | 'view'
+  | 'tokyo-flight';
 
 const BTN = {
   A: 0,
@@ -21,15 +23,20 @@ const BTN = {
   LB: 4,
   RB: 5,
   BACK: 8,
-  START: 9
+  START: 9,
+  DPAD_UP: 12,
+  DPAD_DOWN: 13,
+  DPAD_LEFT: 14,
+  DPAD_RIGHT: 15
 } as const;
 
-const prevPressed: boolean[] = [];
+const menuPrev: boolean[] = [];
+const bootPrev = new Map<number, boolean>();
 
 function edge(gp: Gamepad, i: number): boolean {
   const now = !!gp.buttons[i]?.pressed;
-  const was = prevPressed[i] ?? false;
-  prevPressed[i] = now;
+  const was = menuPrev[i] ?? false;
+  menuPrev[i] = now;
   return now && !was;
 }
 
@@ -42,66 +49,51 @@ export function isGamepadConnected(): boolean {
   return false;
 }
 
-let pendingTab: HudTabId | null = null;
-
-export function consumeHudTabRequest(): HudTabId | null {
-  const t = pendingTab;
-  pendingTab = null;
-  return t;
-}
-
-export function queueHudTab(tab: HudTabId): void {
-  pendingTab = tab;
-}
-
-/** Rising-edge menu actions for pad 0 (excludes sticks/triggers — those stay in game-input). */
-export function pollGamepadMenuActions(): { action: GamepadMenuAction; tab?: HudTabId }[] {
+/** Rising-edge menu actions for pad 0 (sticks/triggers stay in game-input). */
+export function pollGamepadMenuActions(): GamepadMenuAction[] {
   const gp = navigator.getGamepads?.()[0];
   if (!gp?.connected) return [];
-  const out: { action: GamepadMenuAction; tab?: HudTabId }[] = [];
-
-  if (edge(gp, BTN.RB)) out.push({ action: 'camera-next' });
-  if (edge(gp, BTN.LB)) out.push({ action: 'camera-prev' });
-  if (edge(gp, BTN.Y)) out.push({ action: 'photo' });
-  if (edge(gp, BTN.X)) out.push({ action: 'autopilot' });
-  if (edge(gp, BTN.A)) out.push({ action: 'confirm' });
-  if (edge(gp, BTN.START)) {
-    pendingTab = 'map';
-    out.push({ action: 'hud-tab', tab: 'map' });
-  }
-  if (edge(gp, BTN.BACK)) {
-    pendingTab = 'settings';
-    out.push({ action: 'hud-tab', tab: 'settings' });
-  }
-
+  const out: GamepadMenuAction[] = [];
+  if (edge(gp, BTN.RB) || edge(gp, BTN.DPAD_RIGHT)) out.push('camera-next');
+  if (edge(gp, BTN.LB) || edge(gp, BTN.DPAD_LEFT)) out.push('camera-prev');
+  if (edge(gp, BTN.Y)) out.push('photo');
+  if (edge(gp, BTN.X)) out.push('autopilot');
+  if (edge(gp, BTN.A)) out.push('confirm');
+  if (edge(gp, BTN.B)) out.push('back');
+  if (edge(gp, BTN.START)) out.push('start');
+  if (edge(gp, BTN.BACK)) out.push('view');
+  if (edge(gp, BTN.DPAD_UP)) out.push('tokyo-flight');
   return out;
 }
 
-/** Poll A on any connected pad (boot / Waymo skip). */
+/** Poll A / Start on any connected pad (title overlay only). */
 export function pollGamepadConfirmEdge(): boolean {
   const list = navigator.getGamepads?.();
   if (!list) return false;
+  let hit = false;
   for (let pad = 0; pad < list.length; pad++) {
     const gp = list[pad];
     if (!gp?.connected) continue;
     for (const i of [BTN.A, BTN.START]) {
-      const key = pad * 20 + i;
+      const key = pad * 32 + i;
       const now = !!gp.buttons[i]?.pressed;
-      const was = prevPressed[key] ?? false;
-      prevPressed[key] = now;
-      if (now && !was) return true;
+      const was = bootPrev.get(key) ?? false;
+      bootPrev.set(key, now);
+      if (now && !was) hit = true;
     }
   }
-  return false;
+  return hit;
 }
 
 export const GAMEPAD_GLYPHS = {
   camera: 'LB / RB',
   photo: 'Y',
-  nitro: 'RT',
+  nitro: 'A',
   autopilot: 'X',
   map: 'Menu',
   settings: 'View',
+  resume: 'B',
   skip: 'A',
-  drive: 'L stick · RT gas · LT brake'
+  flight: 'D-pad ↑',
+  drive: 'L stick steer · RT gas · LT brake · A nitro'
 } as const;

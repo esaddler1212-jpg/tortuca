@@ -11,13 +11,18 @@ function audVol(sting = 1): number {
   return masterVolume * sfxVolume * sting;
 }
 
+/** Non-finite gains make AudioParam.setTargetAtTime throw inside the frame loop. */
+function unitVolume(v: number, fallback: number): number {
+  return Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : fallback;
+}
+
 export function setMasterVolume(v: number): void {
-  masterVolume = Math.max(0, Math.min(1, v));
+  masterVolume = unitVolume(v, masterVolume);
   void import('./game-music').then((m) => m.onMasterVolumeChanged(masterVolume));
 }
 
 export function setSfxVolume(v: number): void {
-  sfxVolume = Math.max(0, Math.min(1, v));
+  sfxVolume = unitVolume(v, sfxVolume);
 }
 
 function ensureContext(): AudioContext | null {
@@ -38,8 +43,9 @@ function ensureContext(): AudioContext | null {
 
 export function unlockAudio(): void {
   const c = ensureContext();
-  if (!c || unlocked) return;
-  if (c.state === 'suspended') void c.resume();
+  if (!c) return;
+  if (c.state !== 'running') void c.resume().catch(() => {});
+  if (unlocked) return;
   if (!engineOsc) {
     engineGain = c.createGain();
     engineGain.gain.value = 0;

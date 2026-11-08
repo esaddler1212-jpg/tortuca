@@ -42,9 +42,15 @@ export function installMobileShell(): void {
     onFirstGesture();
     window.removeEventListener('pointerdown', engage);
     tap?.removeEventListener('click', engage);
-    window.removeEventListener('gamepadconnected', engage);
     cancelAnimationFrame(gamepadBootRaf);
   };
+  // Gamepad buttons are not a user activation in most browsers, so keep retrying audio on real gestures.
+  const retryAudio = () => {
+    unlockAudio();
+    void unlockMusic();
+  };
+  window.addEventListener('keydown', retryAudio, { passive: true });
+  window.addEventListener('pointerdown', retryAudio, { passive: true });
   const pollGamepadBoot = () => {
     if (pollGamepadConfirmEdge()) {
       engage();
@@ -55,7 +61,6 @@ export function installMobileShell(): void {
   gamepadBootRaf = requestAnimationFrame(pollGamepadBoot);
   window.addEventListener('pointerdown', engage, { once: true, passive: true });
   tap?.addEventListener('click', engage, { once: true });
-  window.addEventListener('gamepadconnected', engage, { once: true });
 
   document.addEventListener(
     'touchmove',
