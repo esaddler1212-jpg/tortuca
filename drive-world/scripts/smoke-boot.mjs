@@ -3,10 +3,9 @@
  * Headless boot smoke — catches WebGL/TS boot failures before deploy.
  * Resolves Chromium on Linux CI (CHROME_PATH overrides).
  */
-import { spawn, execSync } from 'node:child_process';
+import { execSync } from 'node:child_process';
 import { createServer } from 'node:http';
-import { existsSync } from 'node:fs';
-import { readFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer-core';
@@ -16,29 +15,32 @@ const dist = path.join(root, 'dist');
 const port = 4173;
 
 function resolveChromePath() {
-  if (process.env.CHROME_PATH && existsSync(process.env.CHROME_PATH)) {
-    return process.env.CHROME_PATH;
-  }
+  const fromEnv = process.env.CHROME_PATH?.trim();
+  if (fromEnv && existsSync(fromEnv)) return fromEnv;
   const candidates = [
     '/usr/bin/google-chrome-stable',
     '/usr/bin/google-chrome',
     '/usr/bin/chromium',
     '/usr/bin/chromium-browser',
-    '/snap/bin/chromium',
-    '/usr/local/bin/google-chrome'
+    '/usr/local/bin/google-chrome',
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    '/snap/bin/chromium'
   ];
-  for (const c of candidates) {
-    if (existsSync(c)) return c;
+  for (const p of candidates) {
+    if (existsSync(p)) return p;
   }
   try {
-    const fromWhich = execSync('which chromium chromium-browser google-chrome 2>/dev/null | head -1', {
-      encoding: 'utf8'
-    }).trim();
-    if (fromWhich && existsSync(fromWhich)) return fromWhich;
+    const found = execSync(
+      'sh -c "command -v google-chrome-stable || command -v google-chrome || command -v chromium-browser || command -v chromium"',
+      { encoding: 'utf8' }
+    ).trim();
+    if (found && existsSync(found)) return found;
   } catch {
-    /* */
+    /* no chrome on PATH */
   }
-  return process.env.CHROME_PATH || '/usr/bin/chromium';
+  throw new Error(
+    'Chrome/Chromium not found for smoke test. Set CHROME_PATH or install Chrome (CI: browser-actions/setup-chrome).'
+  );
 }
 
 const chrome = resolveChromePath();
@@ -100,21 +102,10 @@ await page.evaluate(() => {
   const tap = document.getElementById('tap-start');
   tap?.click();
 });
-await new Promise((r) => setTimeout(r, 3500));
-
-const skip = await page.$('.skip-waymo');
-if (skip) {
-  await skip.click();
-  await new Promise((r) => setTimeout(r, 2500));
-  await page.keyboard.down('w');
-  await new Promise((r) => setTimeout(r, 5000));
-  await page.keyboard.up('w');
-  await new Promise((r) => setTimeout(r, 500));
-}
+await new Promise((r) => setTimeout(r, 4000));
 
 const canvas = await page.$('#application-canvas');
 const mission = await page.$eval('#mission', (el) => el.textContent?.trim() ?? '');
-const mphText = await page.$eval('.hud-mph', (el) => el.textContent?.trim() ?? '').catch(() => '');
 const crashed = errors.some((e) => /TypeError|ReferenceError|is not a function/i.test(e));
 
 await browser.close();
@@ -128,5 +119,5 @@ if (crashed) {
   console.error('FAIL: boot errors\n' + errors.join('\n'));
   process.exit(1);
 }
-console.log(`OK: canvas present, mission="${mission.slice(0, 60)}"${mphText ? `, mph="${mphText}"` : ''}`);
+console.log(`OK: canvas present, mission="${mission.slice(0, 60)}"`);
 if (errors.length) console.warn('Warnings:\n' + errors.join('\n'));

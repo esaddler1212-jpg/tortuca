@@ -82,6 +82,20 @@
 
     <div id="toast" class="toast" hidden></div>
 
+    <script>
+      (function () {
+        if (!/\/city-nights(\/|$)/.test(location.pathname)) return;
+        var a = document.createElement('a');
+        a.href = '../';
+        a.textContent = '◯ Console';
+        a.setAttribute('aria-label', 'Back to Tortuca Console');
+        a.style.cssText =
+          'position:fixed;z-index:20000;top:max(10px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));' +
+          'font:600 11px/1 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;color:#e8eef8;' +
+          'padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.22);background:rgba(8,12,20,.55);backdrop-filter:blur(8px)';
+        document.body.appendChild(a);
+      })();
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
