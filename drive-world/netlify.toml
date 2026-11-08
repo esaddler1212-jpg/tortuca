@@ -1,4 +1,4 @@
-# Standalone Netlify site: set "Base directory" to `drive-world` in the Netlify UI.
+# City Nights — standalone Netlify site (base directory: drive-world)
 
 [build]
   command = "npm ci && npm run build"

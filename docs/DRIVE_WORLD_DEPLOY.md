@@ -1,5 +1,7 @@
 # Deploy Drive World (Netlify)
 
+> **Renamed for players:** **City Nights**. Use [`CITY_NIGHTS_DEPLOY.md`](./CITY_NIGHTS_DEPLOY.md) for the current deploy checklist.
+
 [`drive-world/`](../drive-world/) is a **standalone Vite** app (PlayCanvas + React HUD).
 
 ## New Netlify site (recommended)

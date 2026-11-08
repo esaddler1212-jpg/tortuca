@@ -85,7 +85,7 @@ export const VEHICLE_CATALOG: Record<string, VehicleSpec> = {
   'garage-sport': spec(
     'garage-sport',
     'Safehouse Sport',
-    'Your keys — loud Bay Night exhaust',
+    'Your keys — loud City Nights exhaust',
     'Vallejo',
     { mass: 980, maxEngineForce: 6800, maxSteering: 0.39, chassis: { x: 0.9, y: 0.32, z: 1.75 } },
     { diffuse: [0.12, 0.05, 0.06], emissive: [0.9, 0.22, 0.15], emissiveIntensity: 0.38 },

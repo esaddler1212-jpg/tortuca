@@ -1,12 +1,19 @@
-# Drive World (prototype)
+# City Nights
 
-PlayCanvas + Ammo **raycast vehicle** on **I-80 from mini San Francisco to mini Vallejo** — drivable freeway + Bay Bridge deck, East Bay in between; low-poly night fog.
+Open-world **Bay Area night driving** prototype (PlayCanvas + Ammo + React HUD).
+
+Folder name remains `drive-world/` for Netlify base-directory wiring; the product name is **City Nights**.
+
+## Local dev
 
 ```bash
-npm install
+cd drive-world
+npm ci
 npm run dev
 ```
 
-Controls: **WASD** or arrow keys (throttle / steer).
+Chrome / Chromebook: use a normal desktop-class Chrome tab with WebGL. Touch driving pads appear on coarse pointers; flight needs keyboard **Space / Ctrl** or a gamepad.
 
-Design roadmap: [`../docs/OPEN_WORLD_DRIVING.md`](../docs/OPEN_WORLD_DRIVING.md).
+## Deploy
+
+See [`docs/CITY_NIGHTS_DEPLOY.md`](../docs/CITY_NIGHTS_DEPLOY.md).
