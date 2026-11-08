@@ -9,6 +9,7 @@ import {
 import { getVehicleSpec } from './vehicle-catalog';
 import { appliedTuning, DEFAULT_CUSTOMIZATION, type VehicleCustomization } from './vehicle-customization';
 import { attachVehicleLights, type VehicleLights } from './vehicle-lights';
+import { attachVehicleGltf, hasGltfForVehicle } from './vehicle-gltf';
 
 const wheelDefs = [
   { name: 'FL', pos: new Vec3(0.95, 0.35, 1.35), front: true },
@@ -56,13 +57,14 @@ export function createPlayerVehicle(
   rimMat.emissiveIntensity = tuning.rimGlow;
   rimMat.update();
 
+  const useGltfBody = hasGltfForVehicle(vehicleId);
   const scaleWheel = spec.chassis.x / 0.95;
   const wheels = wheelDefs.map((def) => {
     const wheel = new Entity(def.name);
     wheel.addComponent('script');
     wheel.script!.create('vehicleWheel', {
       attributes: {
-        debugRender: true,
+        debugRender: !useGltfBody,
         isFront: def.front,
         radius: 0.38 * Math.sqrt(scaleWheel) * tuning.wheelScale,
         width: 0.32,
@@ -104,12 +106,20 @@ export function createPlayerVehicle(
   const chassis = new Entity('chassis');
   chassis.addComponent('collision', { type: 'box', halfExtents: new Vec3(cx, cy, cz) });
   chassis.setLocalPosition(0, bodyY, 0);
-  chassis.addComponent('render', { type: 'box', material: paint });
+  if (!useGltfBody) {
+    chassis.addComponent('render', { type: 'box', material: paint });
+  }
 
   const cabin = new Entity('cabin');
   cabin.addComponent('collision', { type: 'box', halfExtents: new Vec3(cx * 0.88, cy * 0.85, cz * 0.55) });
   cabin.setLocalPosition(0, cy * 2 + 0.15 - tuning.rideDrop, -cz * 0.12);
-  cabin.addComponent('render', { type: 'box', material: glass });
+  if (!useGltfBody) {
+    cabin.addComponent('render', { type: 'box', material: glass });
+  }
+
+  if (useGltfBody) {
+    attachVehicleGltf(vehicle, vehicleId);
+  }
 
   if (tuning.underglowIntensity > 0.05) {
     const glow = new Entity('underglow');
@@ -131,33 +141,37 @@ export function createPlayerVehicle(
     vehicle.addChild(glow);
   }
 
-  if (vehicleId.startsWith('region-south-bay')) {
-    const wing = new Entity('ev-wing');
-    wing.setLocalScale(0.15, 0.08, 1.6);
-    wing.setLocalPosition(0, 0.75 - tuning.rideDrop, 0);
-    wing.addComponent('render', { type: 'box', material: paint });
-    vehicle.addChild(wing);
-  } else if (vehicleId.startsWith('region-vallejo') || vehicleId.includes('ute')) {
-    const rack = new Entity('bed-rack');
-    rack.setLocalScale(0.9, 0.12, 0.55);
-    rack.setLocalPosition(0, 1.05 - tuning.rideDrop, -cz * 0.45);
-    rack.addComponent('render', { type: 'box', material: paint });
-    vehicle.addChild(rack);
-  } else if (vehicleId.startsWith('region-')) {
-    const spoiler = new Entity('spoiler');
-    spoiler.setLocalScale(cx * 1.1, 0.06, 0.35);
-    spoiler.setLocalPosition(0, cy * 2.2 - tuning.rideDrop, -cz * 0.72);
-    spoiler.addComponent('render', { type: 'box', material: paint });
-    vehicle.addChild(spoiler);
+  if (!useGltfBody) {
+    if (vehicleId.startsWith('region-south-bay')) {
+      const wing = new Entity('ev-wing');
+      wing.setLocalScale(0.15, 0.08, 1.6);
+      wing.setLocalPosition(0, 0.75 - tuning.rideDrop, 0);
+      wing.addComponent('render', { type: 'box', material: paint });
+      vehicle.addChild(wing);
+    } else if (vehicleId.startsWith('region-vallejo') || vehicleId.includes('ute')) {
+      const rack = new Entity('bed-rack');
+      rack.setLocalScale(0.9, 0.12, 0.55);
+      rack.setLocalPosition(0, 1.05 - tuning.rideDrop, -cz * 0.45);
+      rack.addComponent('render', { type: 'box', material: paint });
+      vehicle.addChild(rack);
+    } else if (vehicleId.startsWith('region-')) {
+      const spoiler = new Entity('spoiler');
+      spoiler.setLocalScale(cx * 1.1, 0.06, 0.35);
+      spoiler.setLocalPosition(0, cy * 2.2 - tuning.rideDrop, -cz * 0.72);
+      spoiler.addComponent('render', { type: 'box', material: paint });
+      vehicle.addChild(spoiler);
+    }
   }
 
   wheels.forEach((w) => {
     vehicle.addChild(w);
-    const rim = new Entity(`${w.name}-rim`);
-    rim.setLocalScale(0.55, 0.2, 0.55);
-    rim.setLocalPosition(0, 0, 0);
-    rim.addComponent('render', { type: 'cylinder', material: rimMat });
-    w.addChild(rim);
+    if (!useGltfBody) {
+      const rim = new Entity(`${w.name}-rim`);
+      rim.setLocalScale(0.55, 0.2, 0.55);
+      rim.setLocalPosition(0, 0, 0);
+      rim.addComponent('render', { type: 'cylinder', material: rimMat });
+      w.addChild(rim);
+    }
   });
   vehicle.addChild(chassis);
   vehicle.addChild(cabin);

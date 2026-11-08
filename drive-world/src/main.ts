@@ -15,13 +15,20 @@ import {
   RenderComponentSystem,
   RigidBodyComponentSystem,
   ScriptComponentSystem,
+  BinaryHandler,
+  ContainerHandler,
+  JsonHandler,
+  MaterialHandler,
+  RenderHandler,
   ScriptHandler,
+  TextureHandler,
   WasmModule,
   createGraphicsDevice
 } from 'playcanvas';
 
 import { buildDrivingWorld } from './build-world';
 import { startGameSession } from './game-loop';
+import { preloadVehicleModels } from './vehicle-gltf';
 import { mountReactHud } from './hud/mount';
 import { NIGHT_AMBIENT, NIGHT_SKY } from './night-palette';
 import { WORLD_HALF_M } from './world-config';
@@ -58,7 +65,15 @@ options.componentSystems = [
   CollisionComponentSystem,
   RigidBodyComponentSystem
 ];
-options.resourceHandlers = [ScriptHandler];
+options.resourceHandlers = [
+  ScriptHandler,
+  RenderHandler,
+  MaterialHandler,
+  TextureHandler,
+  JsonHandler,
+  BinaryHandler,
+  ContainerHandler
+];
 
 const app = new AppBase(canvas);
 app.init(options);
@@ -80,6 +95,12 @@ app.scene.fogStart = 60;
 app.scene.fogEnd = Math.min(2200, WORLD_HALF_M * 0.85);
 
 buildDrivingWorld(app);
+
+try {
+  await preloadVehicleModels(app);
+} catch (err) {
+  console.warn('[drive-world] Kenney car models failed to preload; block fallback only.', err);
+}
 
 const moon = new Entity('moon');
 moon.addComponent('light', {
