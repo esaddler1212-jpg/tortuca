@@ -32,6 +32,7 @@ This repo runs **Iris** (voice chief of staff), **eleven module specialists** (`
 
 ## Cursor / Cloud agents working on this repo
 
+- **City Nights browser research:** [`docs/CITY_NIGHTS_CRAFT_ANYTHING.md`](docs/CITY_NIGHTS_CRAFT_ANYTHING.md). Install `bash tools/craft-anything/install.sh --cursor`, use MCP toolset `craft-anything` (enable `browser` / `javascript`). Write outcomes to `drive-world/research/findings/*.md` — do not commit Craft `capture/` blobs.
 - Minimize scope; match existing patterns in `netlify/functions/` and `shared/`.
 - Never commit `.env`, tokens, or real student/parent PII in fixtures.
 - Do not weaken `safeFact`, duplicate-delegate checks, or session gates without explicit product approval.

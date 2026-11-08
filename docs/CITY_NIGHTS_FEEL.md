@@ -39,6 +39,10 @@ City Nights is built as a **solo** mashup of three reference games. Features map
 
 Mission board summary: **Missions · CPM · Horizon · MC** — three genres, one Bay night loop.
 
+## Research loop (browser excellence)
+
+Use **[Craft Anything](https://github.com/storytold/craft-anything)** via Tortuca’s pinned CLI + Cursor MCP to study **legal** targets (our deploy, local dev, PlayCanvas/MDN docs, OSS web demos) and record recommendations in `drive-world/research/findings/`. Setup: [`CITY_NIGHTS_CRAFT_ANYTHING.md`](CITY_NIGHTS_CRAFT_ANYTHING.md).
+
 ## Next feel upgrades (backlog)
 
 - Cop chaser box at heat 5 (no multiplayer required)

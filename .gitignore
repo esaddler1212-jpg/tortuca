@@ -20,5 +20,8 @@ herald-os/herald-upstream/
 
 # Futurist Lantern (cloned GLB/WAV; CC BY-NC)
 public/lantern/
+
+# Craft Anything local project (evidence captures; keep findings/*.md only)
+drive-world/research/city-nights-browser/
 __pycache__/
 *.pyc

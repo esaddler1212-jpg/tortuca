@@ -24,6 +24,8 @@
     "jarvis-os-v2:bootstrap": "bash jarvis-os-v2/bootstrap.sh",
     "jarvis-os-v2:self-test": "bash jarvis-os-v2/verify-self-test.sh",
     "lantern:bootstrap": "bash futurist-lantern/bootstrap.sh",
+    "craft:install": "bash tools/craft-anything/install.sh --cursor",
+    "craft:doctor": "bash tools/craft-anything/install.sh --doctor",
     "test:os": "npm run build && npm run test:time && npm run test:speech && npm run test:herald && npm run test:iris && npm run test:research && npm run test:audit && npm run test:devices && npm run test:guardrails && npm run test:thin && npm run test:weekly"
   },
   "dependencies": {
