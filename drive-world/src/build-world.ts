@@ -50,7 +50,7 @@ export function buildDrivingWorld(app: AppBase): void {
   buildLombardStreet(app);
   buildCollectibles(app);
   buildCruiseVistas(app);
-  spawnAmbientTraffic(app);
+  spawnAmbientTraffic(app, loadSettings().bayQualityPreset);
   buildSideshowMeets(app);
   buildAllDistricts(app);
   initHubStreaming(app, loadSettings().hubStreamingEnabled);

@@ -59,6 +59,7 @@ export type HudSnapshot = {
   timeAttackElapsedMs?: number | null;
   timeAttackProgress?: string | null;
   heatHunted?: boolean;
+  ghostRivalLabel?: string | null;
 };
 
 export type TouchDrive = {

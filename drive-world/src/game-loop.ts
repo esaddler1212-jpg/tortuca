@@ -86,7 +86,16 @@ import { nearestStreetLabel } from './street-name-registry';
 import { COLLECTIBLES, FAST_TRAVEL, SCENIC_ROUTES, SPEED_TRAPS } from './world-extras';
 import { createPhotoCamera } from './photo-mode';
 import { updateAmbientTraffic } from './build-world-extras';
-import { TIME_ATTACKS } from './cpm-challenges';
+import { DRAG_STRIPS, TIME_ATTACKS } from './cpm-challenges';
+import {
+  clearGhostRun,
+  dragProgress01,
+  ghostHudLabel,
+  resetGhostRun,
+  sampleGhostRun,
+  storeGhostTapeIfPb
+} from './cpm-ghost';
+import { tickHeatChaser } from './heat-chaser';
 import {
   applyCpmHit,
   flushDriftBest,
@@ -880,6 +889,17 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     }
 
     const yaw = ent.getEulerAngles().y;
+    tickHeatChaser(
+      app,
+      progress.phase === 'home',
+      progress.heatLevel ?? 0,
+      pos.x,
+      pos.z,
+      pos.y,
+      yaw,
+      mph,
+      dt
+    );
     const nextLm =
       progress.phase === 'home' ? nextUnvisitedLandmark(progress.visitedLandmarkIds, pos.x, pos.z) : null;
 
@@ -998,12 +1018,16 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       }
       if (dragOut.hit?.kind === 'drag-go') {
         playRaceTreeBeep(true);
+        resetGhostRun('drag', dragOut.hit.strip.id);
         ui.showToast('GO!', `${dragOut.hit.strip.name} — nail the finish beam`);
       }
       if (dragOut.hit?.kind === 'drag-finish') {
         const prevEt = progress.cpmDragBestET;
         const pb = prevEt == null || dragOut.hit.etSec < prevEt;
         progress = applyCpmHit(progress, dragOut.hit);
+        progress = storeGhostTapeIfPb(progress, 'drag', dragOut.hit.strip.id, dragOut.hit.etSec * 1000, pb);
+        clearGhostRun();
+        if (pb) saveProgress(progress);
         ui.showToast(
           pb ? 'Personal best!' : 'Quarter mile',
           `${dragOut.hit.etSec.toFixed(2)}s · ${dragOut.hit.strip.name}`,
@@ -1017,15 +1041,28 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         });
       }
 
+      if (cpmRuntime.dragStripId && cpmRuntime.dragLaunchT != null) {
+        const strip = DRAG_STRIPS.find((s) => s.id === cpmRuntime.dragStripId);
+        if (strip) {
+          const elapsed = nowMs - cpmRuntime.dragLaunchT;
+          const prog = dragProgress01(pos.x, strip);
+          sampleGhostRun(prog, elapsed);
+        }
+      }
+
       const timeOut = tickTimeAttack(cpmRuntime, pos.x, pos.z, nowMs);
       cpmRuntime = timeOut.rt;
       if (timeOut.hit?.kind === 'time-gate') {
+        if (timeOut.hit.gateIndex === 0) resetGhostRun('time', timeOut.hit.attack.id);
         ui.showToast('Gate', `Split ${timeOut.hit.gateIndex + 1}`);
       }
       if (timeOut.hit?.kind === 'time-finish') {
         const prevMs = progress.cpmTimeAttackMs[timeOut.hit.attack.id];
         const pb = prevMs == null || timeOut.hit.ms < prevMs;
         progress = applyCpmHit(progress, timeOut.hit);
+        progress = storeGhostTapeIfPb(progress, 'time', timeOut.hit.attack.id, timeOut.hit.ms, pb);
+        clearGhostRun();
+        if (pb) saveProgress(progress);
         const sec = (timeOut.hit.ms / 1000).toFixed(2);
         ui.showToast(
           pb ? 'Horizon split PB!' : 'Time attack',
@@ -1038,6 +1075,15 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
           id: timeOut.hit.attack.id,
           label: `${sec}s`
         });
+      }
+
+      const activeTa = cpmRuntime.timeAttackId
+        ? TIME_ATTACKS.find((t) => t.id === cpmRuntime.timeAttackId)
+        : null;
+      if (activeTa && cpmRuntime.timeLapStartMs != null) {
+        const elapsed = nowMs - cpmRuntime.timeLapStartMs;
+        const prog = Math.min(0.99, cpmRuntime.timeGateIndex / activeTa.gates.length);
+        sampleGhostRun(prog, elapsed);
       }
 
       if (progress.activeTaxiId && !taxiRuntime.activeId) {
@@ -1079,6 +1125,24 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     const taElapsed =
       cpmRuntime.timeLapStartMs != null && taId ? frameMs - cpmRuntime.timeLapStartMs : null;
     const heatHunted = (progress.heatLevel ?? 0) >= 4.1;
+
+    let ghostRivalLabel: string | null = null;
+    if (cpmRuntime.dragStripId && cpmRuntime.dragLaunchT != null) {
+      const strip = DRAG_STRIPS.find((s) => s.id === cpmRuntime.dragStripId);
+      if (strip) {
+        const elapsed = frameMs - cpmRuntime.dragLaunchT;
+        ghostRivalLabel = ghostHudLabel(
+          progress,
+          'drag',
+          strip.id,
+          dragProgress01(pos.x, strip),
+          elapsed
+        );
+      }
+    } else if (taDef && taElapsed != null && taElapsed > 0) {
+      const prog = Math.min(0.99, cpmRuntime.timeGateIndex / taDef.gates.length);
+      ghostRivalLabel = ghostHudLabel(progress, 'time', taDef.id, prog, taElapsed);
+    }
     publishHud({
       playerX: pos.x,
       playerZ: pos.z,
@@ -1129,7 +1193,8 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       timeAttackProgress: taDef
         ? `gate ${Math.min(cpmRuntime.timeGateIndex, taDef.gates.length)}/${taDef.gates.length}`
         : null,
-      heatHunted
+      heatHunted,
+      ghostRivalLabel
     });
 
     statsT += dt;

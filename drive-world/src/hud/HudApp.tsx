@@ -173,13 +173,16 @@ function RacingHud({ snap }: { snap: HudSnapshot }) {
   const showTree = Boolean(tree);
   const time = snap.timeAttackElapsedMs;
   const showTime = time != null && time > 0;
-  if (!showDrift && !showNitro && !showTree && !showTime) return null;
+  const ghost = snap.ghostRivalLabel;
+  const showGhost = Boolean(ghost);
+  if (!showDrift && !showNitro && !showTree && !showTime && !showGhost) return null;
   const driftPct = snap.driftGoal ? Math.min(100, (drift / snap.driftGoal) * 100) : Math.min(100, drift / 10);
   return (
     <div className="racing-hud" aria-live="polite">
       {showTree ? (
         <div className="race-strip drag-tree">{tree === 'GO' ? 'GO!' : tree}</div>
       ) : null}
+      {showGhost ? <div className="race-strip ghost-rival">{ghost}</div> : null}
       {showDrift ? (
         <div className="race-strip drift">
           Drift {Math.round(drift)}

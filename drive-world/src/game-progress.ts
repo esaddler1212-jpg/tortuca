@@ -18,6 +18,7 @@ import {
   mergeCustomization,
   type VehicleCustomization
 } from './vehicle-customization';
+import { seedGhostTapes } from './cpm-ghost';
 
 export type GamePhase = 'waymo_ride' | 'pick_car' | 'home';
 
@@ -69,8 +70,15 @@ export type CustomSafehouse = {
   createdAt: number;
 };
 
+export type CpmGhostTape = {
+  kind: 'drag' | 'time';
+  id: string;
+  valueMs: number;
+  splits: number[];
+};
+
 export type SavedProgress = {
-  version: 8;
+  version: 9;
   phase: GamePhase;
   activeVehicleId: string | null;
   unlockedVehicleIds: string[];
@@ -103,6 +111,8 @@ export type SavedProgress = {
   cpmDriftBests: Record<string, number>;
   cpmTimeAttackMs: Record<string, number>;
   cpmDragBestET: number | null;
+  /** Personal-best ghost tapes for drag/time rivalry HUD */
+  cpmGhostTapes: Record<string, CpmGhostTape>;
   taxiCompletedIds: string[];
   dynoRunCount: number;
   meetBadges: string[];
@@ -113,7 +123,7 @@ const STORAGE_KEY = 'drive-world-progress-v5';
 
 function defaultProgress(): SavedProgress {
   return {
-    version: 8,
+    version: 9,
     phase: 'waymo_ride',
     activeVehicleId: null,
     unlockedVehicleIds: [],
@@ -142,6 +152,7 @@ function defaultProgress(): SavedProgress {
     cpmDriftBests: {},
     cpmTimeAttackMs: {},
     cpmDragBestET: null,
+    cpmGhostTapes: {},
     taxiCompletedIds: [],
     dynoRunCount: 0,
     meetBadges: [],
@@ -149,11 +160,11 @@ function defaultProgress(): SavedProgress {
   };
 }
 
-function withV8Defaults(p: Partial<Omit<SavedProgress, 'version'>> & { version: number }): SavedProgress {
+function withV9Defaults(p: Partial<Omit<SavedProgress, 'version'>> & { version: number }): SavedProgress {
   return {
     ...defaultProgress(),
     ...p,
-    version: 8,
+    version: 9,
     tacoTrucksFound: p.tacoTrucksFound ?? [],
     collectedIds: p.collectedIds ?? [],
     unlockedPaintIds:
@@ -174,6 +185,7 @@ function withV8Defaults(p: Partial<Omit<SavedProgress, 'version'>> & { version: 
     cpmDriftBests: p.cpmDriftBests ?? {},
     cpmTimeAttackMs: p.cpmTimeAttackMs ?? {},
     cpmDragBestET: p.cpmDragBestET ?? null,
+    cpmGhostTapes: p.cpmGhostTapes ?? {},
     taxiCompletedIds: p.taxiCompletedIds ?? [],
     dynoRunCount: p.dynoRunCount ?? 0,
     meetBadges: p.meetBadges ?? [],
@@ -183,14 +195,15 @@ function withV8Defaults(p: Partial<Omit<SavedProgress, 'version'>> & { version: 
 }
 
 function migrateRaw(parsed: Record<string, unknown>): SavedProgress | null {
-  if (parsed.version === 8) return withV8Defaults(parsed as SavedProgress);
-  if (parsed.version === 7) return withV8Defaults(parsed as SavedProgress & { version: 7 });
-  if (parsed.version === 6) return withV8Defaults(parsed as SavedProgress & { version: 6 });
-  if (parsed.version === 5) return withV8Defaults(parsed as SavedProgress & { version: 5 });
-  if (parsed.version === 4) return withV8Defaults(parsed as SavedProgress & { version: 4 });
+  if (parsed.version === 9) return withV9Defaults(parsed as SavedProgress);
+  if (parsed.version === 8) return withV9Defaults(parsed as SavedProgress & { version: 8 });
+  if (parsed.version === 7) return withV9Defaults(parsed as SavedProgress & { version: 7 });
+  if (parsed.version === 6) return withV9Defaults(parsed as SavedProgress & { version: 6 });
+  if (parsed.version === 5) return withV9Defaults(parsed as SavedProgress & { version: 5 });
+  if (parsed.version === 4) return withV9Defaults(parsed as SavedProgress & { version: 4 });
   if (parsed.version === 3) {
     const p = parsed as unknown as Omit<SavedProgress, 'version'>;
-    return withV8Defaults({ ...p, version: 3, lastPose: null, cameraMode: 'chase' });
+    return withV9Defaults({ ...p, version: 3, lastPose: null, cameraMode: 'chase' });
   }
   if (parsed.version === 2) {
     const p = parsed as unknown as Omit<SavedProgress, 'version' | 'customizations'> & {
@@ -198,7 +211,7 @@ function migrateRaw(parsed: Record<string, unknown>): SavedProgress | null {
       customizations?: Record<string, VehicleCustomization>;
     };
     const { version: _v, ...rest } = p;
-    return withV8Defaults({
+    return withV9Defaults({
       ...rest,
       version: 2,
       customizations: p.customizations ?? {},
@@ -215,7 +228,7 @@ export function loadProgress(): SavedProgress {
     if (!raw) return defaultProgress();
     const parsed = JSON.parse(raw) as Record<string, unknown>;
     const migrated = migrateRaw(parsed);
-    if (migrated) return migrated;
+    if (migrated) return seedGhostTapes(migrated);
     return defaultProgress();
   } catch {
     return defaultProgress();

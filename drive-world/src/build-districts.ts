@@ -37,6 +37,10 @@ function districtMaterials(): StandardMaterial[] {
   return sharedDistrictMaterials;
 }
 
+export function getDistrictMaterials(): StandardMaterial[] {
+  return districtMaterials();
+}
+
 /** Full block/collision fill for one city hub (used by hub streaming). */
 export function buildCityHubBlocks(app: AppBase, hub: CityHub): void {
   buildHubDistrict(app, hub, DISTRICTS[hub.district], districtMaterials());

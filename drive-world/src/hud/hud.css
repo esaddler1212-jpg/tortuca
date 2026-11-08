@@ -282,6 +282,12 @@
   border-color: rgba(255, 230, 80, 0.55);
 }
 
+.race-strip.ghost-rival {
+  border-color: rgba(160, 255, 200, 0.45);
+  color: #b8ffe0;
+  font-variant-numeric: tabular-nums;
+}
+
 .race-bar {
   height: 7px;
   background: rgba(255, 255, 255, 0.1);

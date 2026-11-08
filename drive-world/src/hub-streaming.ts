@@ -1,13 +1,16 @@
 import { Color, Entity, StandardMaterial, type AppBase } from 'playcanvas';
 
 import { CITY_HUBS, pointInCityHub, type CityHub } from './city-map-registry';
-import { buildCityHubBlocks } from './build-districts';
+import { getDistrictMaterials } from './build-districts';
+import { startHubChunkBuild, tickHubChunkBuild, hubChunkBuildActive } from './build-hub-chunked';
 import { hillOffsetM } from './bay-terrain';
+import { DISTRICTS } from './world-config';
 
 /** Hubs along the opening Waymo path + home base. */
 const BOOTSTRAP_HUB_IDS = new Set(['peninsula-sfo', 'peninsula-mid', 'sf-downtown', 'vallejo-harbor']);
 
 const builtHubIds = new Set<string>();
+const pendingBuildIds = new Set<string>();
 const shellRoots = new Map<string, Entity>();
 
 const SHELL_MAT = (() => {
@@ -31,7 +34,7 @@ function nearestHubs(from: CityHub, count: number): CityHub[] {
 }
 
 function ensureHubShell(app: AppBase, hub: CityHub): void {
-  if (builtHubIds.has(hub.id) || shellRoots.has(hub.id)) return;
+  if (builtHubIds.has(hub.id) || shellRoots.has(hub.id) || hubChunkBuildActive(hub.id)) return;
   const y = hillOffsetM(hub.centerX, hub.centerZ);
   const root = new Entity(`hub-shell-${hub.id}`);
   root.setPosition(hub.centerX, y, hub.centerZ);
@@ -54,20 +57,48 @@ function destroyHubShell(hubId: string): void {
   shellRoots.delete(hubId);
 }
 
+function queueHubBuild(hub: CityHub): void {
+  if (builtHubIds.has(hub.id) || pendingBuildIds.has(hub.id) || hubChunkBuildActive(hub.id)) return;
+  destroyHubShell(hub.id);
+  startHubChunkBuild(hub, DISTRICTS[hub.district], getDistrictMaterials());
+  pendingBuildIds.add(hub.id);
+}
+
+function finishHubBuild(hubId: string): void {
+  builtHubIds.add(hubId);
+  pendingBuildIds.delete(hubId);
+  destroyHubShell(hubId);
+}
+
+function drainHubBuild(app: AppBase, hub: CityHub): void {
+  queueHubBuild(hub);
+  while (hubChunkBuildActive(hub.id)) {
+    tickHubChunkBuild(app, hub.id, 48);
+  }
+  finishHubBuild(hub.id);
+}
+
 export function isHubBuilt(hubId: string): boolean {
   return builtHubIds.has(hubId);
 }
 
 export function ensureHubBuilt(app: AppBase, hub: CityHub): void {
   if (builtHubIds.has(hub.id)) return;
-  destroyHubShell(hub.id);
-  buildCityHubBlocks(app, hub);
-  builtHubIds.add(hub.id);
+  drainHubBuild(app, hub);
+}
+
+/** Time-sliced hub builds while driving (see `updateHubStreaming`). */
+export function tickPendingHubBuilds(app: AppBase, cellsPerFrame = 12): void {
+  for (const hubId of [...pendingBuildIds]) {
+    const done = tickHubChunkBuild(app, hubId, cellsPerFrame);
+    if (done) finishHubBuild(hubId);
+  }
 }
 
 /** Deferred hub blocks + distant skyline shells (EarthNG tile illusion). */
 export function initHubStreaming(app: AppBase, streamingEnabled: boolean): void {
   builtHubIds.clear();
+  pendingBuildIds.clear();
   for (const ent of shellRoots.values()) ent.destroy();
   shellRoots.clear();
 
@@ -77,7 +108,7 @@ export function initHubStreaming(app: AppBase, streamingEnabled: boolean): void 
   }
 
   for (const hub of CITY_HUBS) {
-    if (BOOTSTRAP_HUB_IDS.has(hub.id)) ensureHubBuilt(app, hub);
+    if (BOOTSTRAP_HUB_IDS.has(hub.id)) drainHubBuild(app, hub);
     else ensureHubShell(app, hub);
   }
 }
@@ -89,7 +120,7 @@ export function updateHubStreaming(app: AppBase, px: number, pz: number, streami
 
   for (const hub of CITY_HUBS) {
     const d = hubDistance(px, pz, hub);
-    if (d < hub.radiusM + buildRadiusExtra) ensureHubBuilt(app, hub);
+    if (d < hub.radiusM + buildRadiusExtra) queueHubBuild(hub);
   }
 
   let inside: CityHub | null = null;
@@ -102,10 +133,12 @@ export function updateHubStreaming(app: AppBase, px: number, pz: number, streami
   if (inside) {
     for (const neighbor of nearestHubs(inside, 2)) {
       const d = hubDistance(px, pz, neighbor);
-      if (d < neighbor.radiusM + buildRadiusExtra * 1.4) ensureHubBuilt(app, neighbor);
+      if (d < neighbor.radiusM + buildRadiusExtra * 1.4) queueHubBuild(neighbor);
       else if (!builtHubIds.has(neighbor.id)) ensureHubShell(app, neighbor);
     }
   }
+
+  tickPendingHubBuilds(app, 12);
 
   for (const [id, root] of shellRoots) {
     const hub = CITY_HUBS.find((h) => h.id === id);
