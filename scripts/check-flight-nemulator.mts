@@ -23,6 +23,9 @@ const required = [
   'src/roster-mutations.ts',
   'src/hero-customization.ts',
   'src/hero-pair-boss.ts',
+  'src/hero-alignment.ts',
+  'src/hero-absorption.ts',
+  'src/hero-symbiote.ts',
   'src/hero-rivals.ts',
   'src/world-fate.ts',
   'src/world-persist.ts',
@@ -43,6 +46,12 @@ const loadouts = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-hero-lo
   stdio: 'inherit'
 });
 if (loadouts.status !== 0) process.exit(loadouts.status ?? 1);
+
+const story = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-story-mechanics.mts')], {
+  cwd: root,
+  stdio: 'inherit'
+});
+if (story.status !== 0) process.exit(story.status ?? 1);
 
 const pairBoss = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-pair-boss.mts')], {
   cwd: root,

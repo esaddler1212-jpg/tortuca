@@ -1,6 +1,7 @@
 /** Homage codenames only — not affiliated with rights holders. */
 
 import type { AerialMobility } from './aerial-mobility';
+import { wallCrawlerForms } from './hero-symbiote';
 
 export type PowerKind =
   | 'beam'
@@ -73,6 +74,11 @@ export interface HeroSpec {
   aerial: AerialMobility;
 }
 
+export function heroFormsForPlay(spec: HeroSpec): HeroForm[] {
+  if (spec.id === 'wall-crawler') return wallCrawlerForms(spec.forms);
+  return spec.forms;
+}
+
 export const HERO_ROSTER: HeroSpec[] = [
   {
     id: 'solar-apex',
@@ -86,7 +92,31 @@ export const HERO_ROSTER: HeroSpec[] = [
     smashRadius: 4.2,
     forms: [
       { id: 'cape', label: 'Classic cape', speedMul: 1, powerMul: 1, color: [0.12, 0.22, 0.75] },
-      { id: 'godmode', label: 'Solar flare', speedMul: 1.35, powerMul: 1.5, color: [0.95, 0.82, 0.2] }
+      { id: 'godmode', label: 'Solar flare', speedMul: 1.35, powerMul: 1.5, color: [0.95, 0.82, 0.2] },
+      {
+        id: 'green-ring',
+        label: 'Emerald ring — will loan',
+        suitRole: 'balanced',
+        abilities: ['Emerald construct', 'Ring flight lattice'],
+        kitPrimary: 'ring',
+        rangeMul: 1.1,
+        dmgMul: 1.05,
+        speedMul: 1.02,
+        powerMul: 1.08,
+        color: [0.06, 0.55, 0.25]
+      },
+      {
+        id: 'yellow-ring',
+        label: 'Yellow ring — fear echo',
+        suitRole: 'siege',
+        abilities: ['Fear constructs', 'Parallax flare'],
+        kitPrimary: 'ring',
+        coneMul: 1.25,
+        dmgMul: 1.18,
+        speedMul: 0.96,
+        powerMul: 1.15,
+        color: [0.92, 0.78, 0.12]
+      }
     ],
     defaultFormId: 'cape',
     aerial: 'native'
@@ -949,6 +979,117 @@ export const HERO_ROSTER: HeroSpec[] = [
     ],
     defaultFormId: 'helmet',
     aerial: 'magnet'
+  },
+  {
+    id: 'latverian-sovereign',
+    codename: 'Latverian Sovereign',
+    tagline: 'Only dual-role legend — hero or villain',
+    districtId: 'watchtower-annex',
+    homeLabel: 'Castle Latveria Aerie',
+    powers: ['repulsor', 'thunder'],
+    flight: { cruiseKmh: 340, boostKmh: 1900, agility: 0.88, mass: 115 },
+    energy: { staminaMax: 125, regenPerSec: 22, superCooldownSec: 18, primaryCooldownSec: 0.28 },
+    smashRadius: 3.6,
+    forms: [
+      {
+        id: 'doom-hero',
+        label: 'Sovereign — protector',
+        suitRole: 'balanced',
+        abilities: ['Latverian panel', 'Repulsor scepter'],
+        kitPrimary: 'repulsor',
+        speedMul: 1,
+        powerMul: 1.08,
+        color: [0.45, 0.48, 0.52]
+      },
+      {
+        id: 'doom-villain',
+        label: 'Monarch — iron fist',
+        suitRole: 'siege',
+        abilities: ['Arcane bolt', 'Orbital strike'],
+        kitPrimary: 'thunder',
+        dmgMul: 1.22,
+        superRadiusMul: 1.2,
+        speedMul: 0.94,
+        powerMul: 1.22,
+        color: [0.38, 0.12, 0.15]
+      }
+    ],
+    defaultFormId: 'doom-hero',
+    aerial: 'tech'
+  },
+  {
+    id: 'cell-mimic',
+    codename: 'Cell Mimic',
+    tagline: 'Absorb foes — villain runway only',
+    districtId: 'ki-plateau',
+    homeLabel: 'Genetics Crater',
+    powers: ['ki', 'beam'],
+    flight: { cruiseKmh: 450, boostKmh: 2600, agility: 1.05, mass: 92 },
+    energy: { staminaMax: 140, regenPerSec: 24, superCooldownSec: 17, primaryCooldownSec: 0.24 },
+    smashRadius: 3.9,
+    forms: [
+      {
+        id: 'imperfect',
+        label: 'Imperfect form',
+        suitRole: 'balanced',
+        abilities: ['Tail stinger', 'Absorption cells'],
+        kitPrimary: 'ki',
+        speedMul: 1,
+        powerMul: 1.05,
+        color: [0.35, 0.72, 0.28]
+      },
+      {
+        id: 'perfect',
+        label: 'Perfect absorption',
+        suitRole: 'siege',
+        abilities: ['Solar kamehamecho', 'Genetic copy'],
+        kitPrimary: 'beam',
+        dmgMul: 1.2,
+        speedMul: 0.98,
+        powerMul: 1.25,
+        color: [0.92, 0.55, 0.22]
+      }
+    ],
+    defaultFormId: 'imperfect',
+    aerial: 'ki'
+  },
+  {
+    id: 'spirit-buu',
+    codename: 'Spirit Buu',
+    tagline: 'Pink catastrophe — absorb anyone',
+    districtId: 'ki-plateau',
+    homeLabel: 'Candy Spire',
+    powers: ['ki'],
+    flight: { cruiseKmh: 380, boostKmh: 2100, agility: 0.92, mass: 105 },
+    energy: { staminaMax: 150, regenPerSec: 26, superCooldownSec: 16, primaryCooldownSec: 0.2 },
+    smashRadius: 4.1,
+    forms: [
+      {
+        id: 'fat',
+        label: 'Playful pink',
+        suitRole: 'bulwark',
+        abilities: ['Candy beam', 'Stretch slap'],
+        kitPrimary: 'ki',
+        resilienceMul: 1.15,
+        speedMul: 0.95,
+        powerMul: 1.08,
+        color: [0.95, 0.45, 0.82]
+      },
+      {
+        id: 'evil',
+        label: 'Pure malice',
+        suitRole: 'siege',
+        abilities: ['Absorption mist', 'Planet ball'],
+        kitPrimary: 'ki',
+        dmgMul: 1.25,
+        coneMul: 1.3,
+        speedMul: 1.02,
+        powerMul: 1.22,
+        color: [0.85, 0.18, 0.55]
+      }
+    ],
+    defaultFormId: 'fat',
+    aerial: 'ki'
   }
 ];
 

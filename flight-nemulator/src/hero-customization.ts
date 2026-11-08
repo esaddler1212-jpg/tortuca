@@ -1,4 +1,5 @@
 import type { HeroForm, HeroSpec, SuitRole } from './hero-roster';
+import { heroFormsForPlay } from './hero-roster';
 
 /** Heroes with combined suit + ability loadouts. */
 export const ABILITY_KIT_HERO_IDS = new Set(['tin-aviator', 'red-codriver', 'shade-knight']);
@@ -31,7 +32,7 @@ export function isAbilityKitHero(heroId: string): boolean {
 export const isFullLoadoutHero = isAbilityKitHero;
 
 export function listHeroLoadouts(spec: HeroSpec): LoadoutOption[] {
-  return spec.forms.map((f) => ({
+  return heroFormsForPlay(spec).map((f) => ({
     id: f.id,
     label: f.label,
     group: (f.suitRole ?? (isAbilityKitHero(spec.id) ? 'kit' : 'form')) as LoadoutGroup,

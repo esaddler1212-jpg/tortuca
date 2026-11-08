@@ -1,5 +1,6 @@
 import type { AerialMobility } from './aerial-mobility';
 import type { HeroForm, HeroSpec } from './hero-roster';
+import { heroFormsForPlay } from './hero-roster';
 
 const BAT_JETPACK_LOADOUTS = new Set(['tactical-jet', 'beyond-burn', 'hellbat-burn', 'grapple-lift']);
 
@@ -9,12 +10,13 @@ export function effectiveHeroAerial(spec: HeroSpec, form: HeroForm): AerialMobil
 }
 
 export function resolveHeroForm(spec: HeroSpec, formId: string): HeroForm {
-  const fromForm = spec.forms.find((f) => f.id === formId);
+  const forms = heroFormsForPlay(spec);
+  const fromForm = forms.find((f) => f.id === formId);
   if (fromForm) return fromForm;
 
   const suit = spec.suitVariants?.find((s) => s.id === formId);
   if (suit) {
-    const base = spec.forms[0] ?? {
+    const base = forms[0] ?? {
       id: suit.id,
       label: suit.label,
       speedMul: 1,
@@ -36,7 +38,7 @@ export function resolveHeroForm(spec: HeroSpec, formId: string): HeroForm {
       color: suit.color
     };
   }
-  return spec.forms.find((f) => f.id === spec.defaultFormId) ?? spec.forms[0];
+  return forms.find((f) => f.id === spec.defaultFormId) ?? forms[0];
 }
 
 export function storedFormId(spec: HeroSpec): string {

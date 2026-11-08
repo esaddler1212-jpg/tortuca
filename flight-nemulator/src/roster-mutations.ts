@@ -40,7 +40,10 @@ export const HERO_MUTATIONS: Record<string, MutationMeta> = {
   'phoenix-ember': { mutatesFrom: 'Jean Grey / Phoenix', universe: 'marvel' },
   'wing-archon': { mutatesFrom: 'Angel / Archangel', universe: 'marvel' },
   'golden-sentry': { mutatesFrom: 'Sentry', universe: 'marvel' },
-  'magnet-sovereign': { mutatesFrom: 'Magneto', universe: 'marvel' }
+  'magnet-sovereign': { mutatesFrom: 'Magneto', universe: 'marvel' },
+  'latverian-sovereign': { mutatesFrom: 'Doctor Doom', universe: 'marvel' },
+  'cell-mimic': { mutatesFrom: 'Cell (playable)', universe: 'dbz' },
+  'spirit-buu': { mutatesFrom: 'Majin Buu (playable)', universe: 'dbz' }
 };
 
 export const VILLAIN_MUTATIONS: Record<string, MutationMeta> = {
@@ -59,6 +62,7 @@ export const VILLAIN_MUTATIONS: Record<string, MutationMeta> = {
   'titan-snap-echo': { mutatesFrom: 'Thanos', universe: 'marvel' },
   'brute-abom': { mutatesFrom: 'Abomination', universe: 'marvel' },
   'venom-echo': { mutatesFrom: 'Venom', universe: 'marvel' },
+  'carnage-echo': { mutatesFrom: 'Carnage', universe: 'marvel' },
   'cinder-phoenix': { mutatesFrom: 'Dark Phoenix', universe: 'marvel' },
   'laughing-harlequin': { mutatesFrom: 'Joker & Harley Quinn', universe: 'dc' },
   'krypton-eclipse': { mutatesFrom: 'General Zod', universe: 'dc' },

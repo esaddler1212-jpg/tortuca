@@ -28,6 +28,15 @@ HUD: **Suits & abilities** — grouped by role, color swatch, ability list, SPD/
 - Boss pressure drains stamina when close — **bulwark** suits help.
 - Defeating the pair rival resumes normal waves.
 
+## Story mechanics
+
+| Feature | How |
+|---------|-----|
+| **Solar Apex rings** | Loadouts **Emerald ring** (green will) and **Yellow ring** (fear echo) — ring primary + constructs |
+| **Latverian Sovereign** | Playable **Doctor Doom** — **only** character with Hero/Villain alignment toggle |
+| **Wall Crawler symbiote** | Defeat **Venom Echo** or **Carnage Echo** → unlock **Symbiote — merged suit** loadout |
+| **Cell / Buu absorb** | Playable **Cell Mimic** & **Spirit Buu** (villain-only) stack up to 6 absorbed foes; copiers borrow primary power + dmg/speed |
+
 ## Standard tier
 
 Dual-form heroes, Lantern corps, custom heroes — unchanged (two forms or create-time color).

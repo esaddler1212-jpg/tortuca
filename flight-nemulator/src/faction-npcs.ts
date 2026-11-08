@@ -158,8 +158,9 @@ export function tickFactionNpcs(
   tier: QualityTier,
   city: CityIntegrityState,
   app: AppBase
-): number {
+): { kills: number; defeated: { profileId: string; codename: string }[] } {
   let kills = 0;
+  const defeated: { profileId: string; codename: string }[] = [];
   for (let i = npcs.length - 1; i >= 0; i--) {
     const n = npcs[i]!;
     const p = n.entity.getPosition();
@@ -202,13 +203,14 @@ export function tickFactionNpcs(
     }
 
     if (n.hp <= 0) {
+      defeated.push({ profileId: n.profileId, codename: n.codename });
       root.removeChild(n.entity);
       n.entity.destroy();
       npcs.splice(i, 1);
       kills++;
     }
   }
-  return kills;
+  return { kills, defeated };
 }
 
 export function damageNpcsInCone(

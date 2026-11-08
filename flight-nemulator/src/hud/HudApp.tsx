@@ -9,6 +9,7 @@ import {
   suitRoleLabel
 } from '../hero-customization';
 import type { HeroForm, SuitRole } from '../hero-roster';
+import { canPickAlignment, isVillainOnlyHero } from '../hero-alignment';
 import { confirmVillainWorldRemake, continueDyingRoam, selectHero, selectPlayerRole } from '../game-loop';
 import { storedFormId } from '../hero-forms';
 import { ANNIHILATE_HAVOC_USD } from '../villain-annihilate';
@@ -63,6 +64,9 @@ export type GameHudSnapshot = {
   heroWorldSaved?: boolean;
   aerialMobility?: string;
   loadoutLabel?: string;
+  symbioteUnlocked?: boolean;
+  absorptionLabel?: string | null;
+  alignmentNote?: string | null;
 };
 
 function formatUsd(n: number): string {
@@ -123,7 +127,7 @@ export function HudApp() {
       <Minimap heroX={snap.heroX ?? 0} heroZ={snap.heroZ ?? 0} />
 
       <QualitySettings quality={snap.quality} photoMode={!!snap.photoMode} />
-      <RolePicker role={snap.playerRole ?? getPlayerRole()} />
+      <RolePicker role={snap.playerRole ?? getPlayerRole()} heroId={heroId} />
       <WorldFatePanel snap={snap} />
 
       <div className="hero-picker hud-panel">
@@ -160,6 +164,9 @@ export function HudApp() {
         {snap.pairBossStatus === 'defeated' && snap.pairBossName && (
           <p className="hud-tag">Pair rival down: {snap.pairBossName}</p>
         )}
+        {snap.alignmentNote && <p className="hud-tag">{snap.alignmentNote}</p>}
+        {snap.symbioteUnlocked && <p className="hud-tag">Symbiote suit unlocked — pick merged loadout</p>}
+        {snap.absorptionLabel && <p className="hud-tag">{snap.absorptionLabel}</p>}
         <LoadoutPicker heroId={heroId} />
         <CreateHeroPanel
           onCreated={(id) => {
@@ -240,17 +247,31 @@ function WorldFatePanel({ snap }: { snap: GameHudSnapshot }) {
   return null;
 }
 
-function RolePicker({ role }: { role: PlayerRole }) {
+function RolePicker({ role, heroId }: { role: PlayerRole; heroId: string }) {
+  if (isVillainOnlyHero(heroId)) {
+    return (
+      <p className="hud-tag settings-bar hud-panel">
+        Alignment: Villain — defeat foes to absorb powers
+      </p>
+    );
+  }
+  if (!canPickAlignment(heroId)) {
+    return (
+      <p className="hud-tag settings-bar hud-panel">
+        Alignment: Hero (only Latverian Sovereign can switch roles)
+      </p>
+    );
+  }
   return (
     <div className="settings-bar hud-panel">
       <label>
-        Role{' '}
+        Doom alignment{' '}
         <select
           value={role}
           onChange={(e) => selectPlayerRole(e.target.value as PlayerRole)}
         >
-          <option value="hero">Hero — stop raiders</option>
-          <option value="villain">Villain — heroes chase you</option>
+          <option value="hero">Hero — sovereign protector</option>
+          <option value="villain">Villain — monarch wrecking</option>
         </select>
       </label>
     </div>

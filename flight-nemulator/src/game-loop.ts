@@ -81,6 +81,14 @@ import {
 } from './faction-npcs';
 import { villainRivalsForHero } from './villain-roster';
 import { getPlayerRole, setPlayerRole, type PlayerRole } from './player-role';
+import { canPickAlignment, DUAL_ROLE_HERO_ID, enforceAlignmentForHero } from './hero-alignment';
+import {
+  absorbDefeatedFoe,
+  absorptionHudLine,
+  ABSORBER_HERO_IDS,
+  loadAbsorption
+} from './hero-absorption';
+import { isSymbioteUnlocked, symbiotePreyProfile, unlockSymbioteSuit } from './hero-symbiote';
 import { isPhotoMode, togglePhotoMode } from './photo-mode';
 import { fetchManifestIfOnline, getManifestSuggestions } from './updates';
 import { attachHeroGltf } from './hero-gltf';
@@ -139,6 +147,7 @@ export async function startGame(app: AppBase): Promise<void> {
 
   const tier = detectQualityTier();
   const heroSpec = pickHero();
+  enforceAlignmentForHero(heroSpec.id);
   const heroForm = resolveHeroForm(heroSpec, storedFormId(heroSpec));
   const spawn = spawnAtHome(heroSpec.districtId);
 
@@ -216,6 +225,18 @@ export async function startGame(app: AppBase): Promise<void> {
 }
 
 
+function combatForm(s: GameSession): HeroForm {
+  const base = s.heroForm;
+  if (!ABSORBER_HERO_IDS.has(s.heroSpec.id)) return base;
+  const a = loadAbsorption(s.heroSpec.id);
+  return {
+    ...base,
+    speedMul: base.speedMul * a.speedMul,
+    dmgMul: (base.dmgMul ?? 1) * a.dmgMul,
+    kitPrimary: a.kitPrimary ?? base.kitPrimary
+  };
+}
+
 function tickFrame(s: GameSession, dt: number): void {
   const input = pollFlightInput();
   if (input.photo) togglePhotoMode();
@@ -226,7 +247,8 @@ function tickFrame(s: GameSession, dt: number): void {
   const chrono = tickEarthOrbit(pos, s.hero.speedKmh(), dt);
   const simDt = dt * chrono.timeScale;
   const solarCharge = tickSolarSpaceCharge(s.heroSpec.id, pos, s.hero.speedKmh(), dt);
-  const powerMul = s.heroForm.powerMul * solarPowerMultiplier(s.heroSpec.id);
+  const activeForm = combatForm(s);
+  const powerMul = activeForm.powerMul * solarPowerMultiplier(s.heroSpec.id);
   const tags = getDestructibles();
 
   if (s.heroSpec.id === 'solar-apex') {
@@ -297,7 +319,7 @@ function tickFrame(s: GameSession, dt: number): void {
   if (input.primary && s.hero.canPrimary()) {
     s.hero.triggerPrimary();
     const aim = s.hero.aimPoint();
-    const strike = primaryStrikeParams(s.heroSpec, powerMul, s.heroForm);
+    const strike = primaryStrikeParams(s.heroSpec, powerMul, activeForm);
     const hits = damageNpcsInCone(pos, aim, s.factionNpcs, s.playerRole, strike.range, strike.cone, strike.dmg);
     if (hits > 0) {
       const blast =
@@ -430,7 +452,7 @@ function tickFrame(s: GameSession, dt: number): void {
       s.hero.stamina = Math.max(0, s.hero.stamina - (10 * simDt) / res);
     }
   }
-  const kills = tickFactionNpcs(
+  const npcTick = tickFactionNpcs(
     s.factionNpcs,
     pos,
     chrono.chronoFrozen ? simDt : dt,
@@ -441,6 +463,13 @@ function tickFrame(s: GameSession, dt: number): void {
     s.city,
     s.app
   );
+  const kills = npcTick.kills;
+  for (const d of npcTick.defeated) {
+    if (s.heroSpec.id === 'wall-crawler' && symbiotePreyProfile(d.profileId)) {
+      unlockSymbioteSuit();
+    }
+    absorbDefeatedFoe(s.heroSpec.id, d.profileId, d.codename);
+  }
   if (kills > 0) {
     s.foesStopped += kills;
     s.stats = saveSessionStats({ dronesDestroyed: s.stats.dronesDestroyed + kills });
@@ -522,7 +551,14 @@ function tickFrame(s: GameSession, dt: number): void {
     worldFatePhase: s.worldFate.phase,
     heroWorldSaved: s.worldFate.heroSaved,
     aerialMobility: aerialHudLabel(effectiveHeroAerial(s.heroSpec, s.heroForm)),
-    loadoutLabel: kitHudLabel(s.heroForm)
+    loadoutLabel: kitHudLabel(s.heroForm),
+    symbioteUnlocked: s.heroSpec.id === 'wall-crawler' ? isSymbioteUnlocked() : undefined,
+    absorptionLabel: absorptionHudLine(loadAbsorption(s.heroSpec.id)),
+    alignmentNote: canPickAlignment(s.heroSpec.id)
+      ? 'Doom: toggle Hero or Villain below'
+      : ABSORBER_HERO_IDS.has(s.heroSpec.id)
+        ? 'Absorb fallen foes to copy powers'
+        : null
   });
 }
 
@@ -554,13 +590,32 @@ export function continueDyingRoam(): void {
 }
 
 export function selectPlayerRole(role: PlayerRole): void {
+  const heroId = localStorage.getItem('flight-nemulator-hero-id') ?? '';
+  if (!canPickAlignment(heroId)) {
+    setPlayerRole('hero');
+    window.location.reload();
+    return;
+  }
   setPlayerRole(role);
+  if (heroId === DUAL_ROLE_HERO_ID) {
+    localStorage.setItem(
+      `flight-nemulator-form-${heroId}`,
+      role === 'villain' ? 'doom-villain' : 'doom-hero'
+    );
+  }
   window.location.reload();
 }
 
 export function selectHero(heroId: string, formId?: string): void {
   const prev = localStorage.getItem('flight-nemulator-hero-id');
   localStorage.setItem('flight-nemulator-hero-id', heroId);
+  const role = enforceAlignmentForHero(heroId);
+  if (heroId === DUAL_ROLE_HERO_ID && role === 'villain' && !formId) {
+    formId = 'doom-villain';
+  }
+  if (heroId === DUAL_ROLE_HERO_ID && role === 'hero' && !formId) {
+    formId = 'doom-hero';
+  }
   if (formId) localStorage.setItem(`flight-nemulator-form-${heroId}`, formId);
 
   if (session && prev === heroId && formId) {

@@ -177,6 +177,19 @@ export const VILLAIN_CLONES: VillainCloneSpec[] = [
     scale: [3.4, 4, 2.6]
   },
   {
+    id: 'carnage-echo',
+    codename: 'Carnage Echo',
+    tagline: 'Crimson symbiote shred',
+    universe: 'marvel',
+    aerial: 'glide',
+    rivalHeroIds: ['wall-crawler'],
+    color: [0.78, 0.08, 0.1],
+    hpMul: 1.22,
+    speedMul: 1.2,
+    siegeMul: 1.18,
+    scale: [3, 3.4, 2.3]
+  },
+  {
     id: 'venom-echo',
     codename: 'Venom Echo',
     tagline: 'Symbiote wing-glide shred',
