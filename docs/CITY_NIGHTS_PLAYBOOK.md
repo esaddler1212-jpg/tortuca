@@ -8,7 +8,7 @@ You can **play for hours** without boot failures, without missing core loops (dr
 
 ## Devices
 
-iPhone Safari, iPad, Chromebook, desktop Chrome — same full game; presets only change **load** (fog, car counts), not which systems exist.
+iPhone Safari, iPad, Chromebook, desktop Chrome — same full game; presets only change **load** (fog, car counts), not which systems exist. Couch / Xbox Edge + controller: see [`CITY_NIGHTS_CONSOLE_FEEL.md`](./CITY_NIGHTS_CONSOLE_FEEL.md).
 
 ## Feedback
 

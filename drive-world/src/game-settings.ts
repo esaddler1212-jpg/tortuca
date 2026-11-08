@@ -24,6 +24,14 @@ export type GameSettings = {
   coastalWeatherEnabled: boolean;
   /** Anonymous session length rollups (no PII) */
   shareSessionStats: boolean;
+  /** SFX stings + engine gain (music has musicVolume) */
+  sfxVolume: number;
+  /** 0 = uncapped; 30 / 60 caps sim step via maxDeltaTime */
+  frameCapFps: 0 | 30 | 60;
+  /** Multiplier on device pixel ratio (performance / TV) */
+  resolutionScale: number;
+  /** Larger HUD type for TV / couch */
+  tvHudMode: boolean;
 };
 
 const KEY = 'drive-world-settings-v1';
@@ -43,7 +51,11 @@ const defaults: GameSettings = {
   musicUsePlaylist: false,
   autopilotPreset: 'tour',
   coastalWeatherEnabled: true,
-  shareSessionStats: true
+  shareSessionStats: true,
+  sfxVolume: 0.9,
+  frameCapFps: 0,
+  resolutionScale: 1,
+  tvHudMode: false
 };
 
 export function loadSettings(): GameSettings {
