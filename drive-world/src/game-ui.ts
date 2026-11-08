@@ -1,9 +1,15 @@
 import { DISTRICT_LABELS, LANDMARKS } from './landmark-registry';
-import type { GamePhase, SavedProgress } from './game-progress';
+import { missionBannerText } from './game-missions';
 import { GARAGE_STARTER_IDS, VEHICLE_CATALOG } from './vehicle-catalog';
 import { COLLECTIBLES } from './world-extras';
 import { districtTacoFound } from './city-checkpoints';
-import { TOTAL_LANDMARKS, countRegionsComplete, TOTAL_REGIONS } from './game-progress';
+import {
+  TOTAL_LANDMARKS,
+  countRegionsComplete,
+  TOTAL_REGIONS,
+  type GamePhase,
+  type SavedProgress
+} from './game-progress';
 import type { HomeServiceMode } from './safehouse-registry';
 import type { DistrictId } from './world-config';
 import { PAINT_PRESETS, type VehicleCustomization } from './vehicle-customization';
@@ -31,6 +37,7 @@ export type GameUi = {
     unlockedPaintIds?: string[]
   ): void;
   bindReset(onReset: () => void): void;
+  bindDynoPull(onPull: () => void): void;
 };
 
 function el<T extends HTMLElement>(id: string): T {
@@ -211,12 +218,17 @@ export function wireGameUi(): GameUi {
     },
     bindReset(onReset) {
       resetBtn.addEventListener('click', onReset);
+    },
+    bindDynoPull(onPull) {
+      const btn = document.getElementById('dyno-pull');
+      btn?.addEventListener('click', onPull);
     }
   };
 }
 
-export function missionTextForPhase(phase: GamePhase): string {
-  if (phase === 'waymo_ride') return 'Waymo rider — autonomous run to Vallejo Safehouse';
-  if (phase === 'pick_car') return 'Safehouse — pick up your car';
-  return 'Find each region’s taco truck + any landmark to unlock its ride';
+export function missionTextForPhase(phase: GamePhase, progress?: SavedProgress | null): string {
+  if (progress) return missionBannerText(progress);
+  if (phase === 'waymo_ride') return 'Prologue: Waymo to Vallejo estate';
+  if (phase === 'pick_car') return 'Chapter 1: Vallejo — pick your starter';
+  return 'Chapter 1: Vallejo training grounds';
 }

@@ -34,7 +34,9 @@ import {
   registerClaimSafehouse,
   registerSetHomeSafehouse,
   registerVistaCam,
-  registerWaymoReplay
+  registerWaymoReplay,
+  registerStartTaxi,
+  registerDynoPull
 } from './game-bridge';
 import {
   loadProgress,
@@ -58,6 +60,8 @@ import {
   tickScenicRoute,
   completeScenicRoute,
   bumpVehicleStats,
+  recordDynoRun,
+  startTaxiContract,
   type SavedProgress
 } from './game-progress';
 import { bindDriveKeys, pollDriveInput } from './game-input';
@@ -81,6 +85,17 @@ import { nearestStreetLabel } from './street-name-registry';
 import { COLLECTIBLES, FAST_TRAVEL, SCENIC_ROUTES, SPEED_TRAPS } from './world-extras';
 import { createPhotoCamera } from './photo-mode';
 import { updateAmbientTraffic } from './build-world-extras';
+import {
+  applyCpmHit,
+  flushDriftBest,
+  freshCpmRuntime,
+  tickDriftScore,
+  tickDragStrip,
+  tickTimeAttack
+} from './cpm-scoring';
+import { freshTaxiRuntime, tickTaxiContract } from './cpm-taxi';
+import { dynoSheet } from './vehicle-dyno';
+import { bayRegionsGated, syncVallejoMissionSteps, VALLEJO_CHAPTER_STEPS } from './mission-chapters';
 import { missionTextForPhase, wireGameUi } from './game-ui';
 import { DISTRICT_LABELS, LANDMARKS } from './landmark-registry';
 import {
@@ -153,6 +168,11 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   let playerBaseEngineForce = 5200;
   let exhaustGain = 1;
   let worldTime = 0;
+  let cpmRuntime = freshCpmRuntime();
+  let taxiRuntime = freshTaxiRuntime();
+  let meetHoldT = 0;
+  let lastYawDeg = 0;
+  let yawSampleReady = false;
   const photoKeys = { fwd: false, back: false, left: false, right: false, up: false, down: false };
   const CALDECOTT = { x: 392, z: 265 };
   let autopilotActive = false;
@@ -295,6 +315,40 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     ui.showToast('Applied', 'Paint and tuning updated for this car.');
   };
 
+  const syncMissionProgress = () => {
+    const prev = progress.missionStepsCompleted;
+    progress = syncVallejoMissionSteps(progress);
+    if (progress.missionStepsCompleted.length <= prev.length) return;
+    const id = progress.missionStepsCompleted.find((s) => !prev.includes(s));
+    const step = VALLEJO_CHAPTER_STEPS.find((s) => s.id === id);
+    ui.showToast('Objective', step?.label ?? 'Complete');
+    ui.setMission(missionTextForPhase(progress.phase, progress));
+    ui.setProgressSummary(progress);
+    saveProgress(progress);
+    publishHud({ progress });
+  };
+
+  const doDynoPull = () => {
+    if (!progress.activeVehicleId) return;
+    if (!nearGarage && progress.phase === 'home') {
+      ui.showToast('Dyno', 'Pull into garage service bay first');
+      return;
+    }
+    const spec = getVehicleSpec(progress.activeVehicleId);
+    const custom = getVehicleCustomization(progress, progress.activeVehicleId);
+    const sheet = dynoSheet(spec, custom);
+    progress = recordDynoRun(progress);
+    const readout = document.getElementById('dyno-readout');
+    if (readout) {
+      readout.hidden = false;
+      readout.textContent = `${sheet.crankHp} crank / ${sheet.wheelHp} WHP · ${sheet.torqueLbFt} lb-ft · 0–60 ${sheet.zeroToSixtySec.toFixed(1)}s · ${sheet.quarterMiHint}`;
+    }
+    ui.showToast('Dyno pull', `${sheet.wheelHp} WHP logged`);
+    syncMissionProgress();
+    saveProgress(progress);
+    publishHud({ progress });
+  };
+
   const refreshGarageUi = () => {
     if (!nearGarage || !progress.activeVehicleId) return;
     void ensureVehicleModelsLoaded(app, progress.unlockedVehicleIds);
@@ -325,9 +379,9 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     progress = chooseGarageCar(progress, vehicleId);
     ui.hideCarPicker();
     ui.setAutonomousMode(false);
-    ui.setMission(missionTextForPhase('home'));
+    ui.setMission(missionTextForPhase('home', progress));
     swapVehicle(vehicleId, safehouseSpawn(), 195);
-    ui.showToast('You’re driving', 'Find a region’s taco truck plus any landmark to unlock its car and safehouse.');
+    ui.showToast('Chapter 1', 'Vallejo training — finish the CPM board to unlock the Bay.');
     ui.setProgressSummary(progress);
     unlockAudio();
     void unlockMusic();
@@ -339,7 +393,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     ridingWaymo = false;
     progress = finishWaymoRide(progress);
     ui.setAutonomousMode(false);
-    ui.setMission(missionTextForPhase('pick_car'));
+    ui.setMission(missionTextForPhase('pick_car', progress));
     ui.setVehicleName('');
     playWaymoArrival();
     ui.showToast('Arrived at Safehouse', 'Pick up your car — then tour the Bay for regional unlocks.');
@@ -352,7 +406,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     player = null;
     ridingWaymo = true;
     ui.setAutonomousMode(true);
-    ui.setMission(missionTextForPhase('waymo_ride'));
+    ui.setMission(missionTextForPhase('waymo_ride', progress));
     ui.setVehicleName('Waymo — autonomous');
     ui.setGarageVisible(false, progress, () => {});
     const path = buildWaymoRidePath();
@@ -487,7 +541,23 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     publishHud({ progress });
   });
 
+  registerStartTaxi((contractId) => {
+    if (progress.phase !== 'home') return;
+    progress = startTaxiContract(progress, contractId);
+    taxiRuntime = { activeId: contractId, pickedUp: false };
+    saveProgress(progress);
+    ui.showToast('Courier', 'Pickup beacon marked — roll slow to load');
+    publishHud({ progress });
+  });
+
+  registerDynoPull(doDynoPull);
+  ui.bindDynoPull(doDynoPull);
+
   registerFastTravel((district: DistrictId) => {
+    if (bayRegionsGated(progress) && district !== 'vallejo') {
+      ui.showToast('Chapter 1', 'Complete Vallejo objectives before Bay fast travel');
+      return;
+    }
     if (!progress.unlockedRegionIds.includes(district) || !vehicle() || progress.phase !== 'home') return;
     const spot = FAST_TRAVEL.find((f) => f.district === district);
     if (!spot) return;
@@ -526,11 +596,11 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       return;
     }
     if (progress.phase === 'pick_car') {
-      ui.setMission(missionTextForPhase('pick_car'));
+      ui.setMission(missionTextForPhase('pick_car', progress));
       ui.showCarPicker(beginAfterGaragePick);
       return;
     }
-    ui.setMission(missionTextForPhase('home'));
+    ui.setMission(missionTextForPhase('home', progress));
     ui.setProgressSummary(progress);
     if (progress.activeVehicleId) {
       const yaw = progress.lastPose?.yaw ?? 15;
@@ -871,6 +941,97 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
           }
         } else parkingHoldT = 0;
       } else parkingHoldT = 0;
+
+      const padBefore = cpmRuntime.driftPadId;
+      const driftScoreBefore = cpmRuntime.driftScore;
+      if (!yawSampleReady) {
+        lastYawDeg = yaw;
+        yawSampleReady = true;
+      }
+      const yawDelta = ((yaw - lastYawDeg + 540) % 360) - 180;
+      const yawRate = Math.abs(yawDelta) / Math.max(dt, 0.001);
+      lastYawDeg = yaw;
+
+      cpmRuntime = tickDriftScore(cpmRuntime, pos.x, pos.z, mph, yawRate, dt);
+      if (padBefore && cpmRuntime.driftPadId !== padBefore) {
+        const prevBest = progress.cpmDriftBests[padBefore] ?? 0;
+        progress = flushDriftBest(progress, padBefore, driftScoreBefore);
+        const nextBest = progress.cpmDriftBests[padBefore] ?? 0;
+        if (nextBest > prevBest) {
+          ui.showToast('Drift PB', `${padBefore} · ${nextBest}`);
+          progress = appendJournal(progress, { kind: 'cpm', id: padBefore, label: `Drift ${nextBest}` });
+        }
+      }
+
+      const nowMs = performance.now();
+      const dragOut = tickDragStrip(cpmRuntime, pos.x, pos.z, mph, nowMs);
+      cpmRuntime = dragOut.rt;
+      if (dragOut.hit?.kind === 'drag-start') {
+        ui.showToast('Drag tree', 'Launch — stay straight');
+      }
+      if (dragOut.hit?.kind === 'drag-finish') {
+        const prevEt = progress.cpmDragBestET;
+        progress = applyCpmHit(progress, dragOut.hit);
+        ui.showToast(
+          'Quarter mile',
+          `${dragOut.hit.etSec.toFixed(2)}s${prevEt == null || dragOut.hit.etSec < prevEt ? ' · PB' : ''}`
+        );
+        progress = appendJournal(progress, {
+          kind: 'cpm',
+          id: dragOut.hit.strip.id,
+          label: `ET ${dragOut.hit.etSec.toFixed(2)}s`
+        });
+      }
+
+      const timeOut = tickTimeAttack(cpmRuntime, pos.x, pos.z, nowMs);
+      cpmRuntime = timeOut.rt;
+      if (timeOut.hit?.kind === 'time-gate') {
+        ui.showToast('Gate', `Split ${timeOut.hit.gateIndex + 1}`);
+      }
+      if (timeOut.hit?.kind === 'time-finish') {
+        const prevMs = progress.cpmTimeAttackMs[timeOut.hit.attack.id];
+        progress = applyCpmHit(progress, timeOut.hit);
+        const sec = (timeOut.hit.ms / 1000).toFixed(2);
+        ui.showToast(
+          'Time attack',
+          `${timeOut.hit.attack.name} ${sec}s${prevMs == null || timeOut.hit.ms < prevMs ? ' · PB' : ''}`
+        );
+        progress = appendJournal(progress, {
+          kind: 'cpm',
+          id: timeOut.hit.attack.id,
+          label: `${sec}s`
+        });
+      }
+
+      if (progress.activeTaxiId && !taxiRuntime.activeId) {
+        taxiRuntime = { activeId: progress.activeTaxiId, pickedUp: false };
+      }
+      const taxiOut = tickTaxiContract(taxiRuntime, progress, pos.x, pos.z, mph);
+      taxiRuntime = taxiOut.rt;
+      if (taxiOut.progress !== progress) {
+        progress = taxiOut.progress;
+        if (taxiOut.toast) ui.showToast(taxiOut.toast.title, taxiOut.toast.body);
+        progress = appendJournal(progress, {
+          kind: 'taxi',
+          id: taxiOut.progress.taxiCompletedIds.at(-1) ?? 'courier',
+          label: taxiOut.toast?.body ?? 'Courier'
+        });
+        saveProgress(progress);
+      } else if (taxiOut.toast) {
+        ui.showToast(taxiOut.toast.title, taxiOut.toast.body);
+      }
+
+      const nearMeet = Math.hypot(pos.x - 465, pos.z - 955) < 48;
+      if (nearMeet && mph < 12) {
+        meetHoldT += dt;
+        if (meetHoldT > 2.2 && !progress.meetBadges.includes('vallejo-meet')) {
+          progress = { ...progress, meetBadges: [...progress.meetBadges, 'vallejo-meet'] };
+          ui.showToast('Meet badge', 'Vallejo yard — welcome to the lot');
+          meetHoldT = 0;
+        }
+      } else meetHoldT = 0;
+
+      syncMissionProgress();
     }
 
     publishHud({

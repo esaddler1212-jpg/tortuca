@@ -44,6 +44,7 @@ function spot(
 
 /** Pull-in bays beside iconic landmarks — slow roll, line up heading, earn stars. */
 export const LANDMARK_PARKING: LandmarkParkingSpot[] = [
+  spot('park-vallejo-estate', 'mare-island', 'Vallejo estate valet', 56, -120, 15, 8, 4),
   spot('park-chase', 'chase-center', 'Chase Center garage', -12, 8, 195),
   spot('park-pixar', 'pixar-campus', 'Pixar visitor lot', 14, 12, 90),
   spot('park-oracle', 'oracle-park', 'Oracle Park lot', -10, 14, 180),

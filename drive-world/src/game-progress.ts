@@ -55,7 +55,7 @@ export type VehicleStats = { miles: number; topMph: number };
 
 export type JournalEntry = {
   t: number;
-  kind: 'landmark' | 'vista' | 'scenic' | 'taco' | 'parking' | 'fuel';
+  kind: 'landmark' | 'vista' | 'scenic' | 'taco' | 'parking' | 'fuel' | 'taxi' | 'cpm';
   id: string;
   label: string;
 };
@@ -70,7 +70,7 @@ export type CustomSafehouse = {
 };
 
 export type SavedProgress = {
-  version: 7;
+  version: 8;
   phase: GamePhase;
   activeVehicleId: string | null;
   unlockedVehicleIds: string[];
@@ -98,13 +98,22 @@ export type SavedProgress = {
   fuelLevel: number;
   /** Best star count per landmark parking spot id */
   parkingStars: Record<string, number>;
+  /** CPM chapter checklist (Vallejo first mission) */
+  missionStepsCompleted: string[];
+  cpmDriftBests: Record<string, number>;
+  cpmTimeAttackMs: Record<string, number>;
+  cpmDragBestET: number | null;
+  taxiCompletedIds: string[];
+  dynoRunCount: number;
+  meetBadges: string[];
+  activeTaxiId: string | null;
 };
 
 const STORAGE_KEY = 'drive-world-progress-v5';
 
 function defaultProgress(): SavedProgress {
   return {
-    version: 7,
+    version: 8,
     phase: 'waymo_ride',
     activeVehicleId: null,
     unlockedVehicleIds: [],
@@ -128,15 +137,23 @@ function defaultProgress(): SavedProgress {
     unlockedSafehouseIds: [defaultHomeSafehouseId()],
     customSafehouses: [],
     fuelLevel: 1,
-    parkingStars: {}
+    parkingStars: {},
+    missionStepsCompleted: [],
+    cpmDriftBests: {},
+    cpmTimeAttackMs: {},
+    cpmDragBestET: null,
+    taxiCompletedIds: [],
+    dynoRunCount: 0,
+    meetBadges: [],
+    activeTaxiId: null
   };
 }
 
-function withV7Defaults(p: Partial<Omit<SavedProgress, 'version'>> & { version: number }): SavedProgress {
+function withV8Defaults(p: Partial<Omit<SavedProgress, 'version'>> & { version: number }): SavedProgress {
   return {
     ...defaultProgress(),
     ...p,
-    version: 7,
+    version: 8,
     tacoTrucksFound: p.tacoTrucksFound ?? [],
     collectedIds: p.collectedIds ?? [],
     unlockedPaintIds:
@@ -153,18 +170,27 @@ function withV7Defaults(p: Partial<Omit<SavedProgress, 'version'>> & { version: 
     customSafehouses: p.customSafehouses ?? [],
     fuelLevel: typeof p.fuelLevel === 'number' ? Math.max(0, Math.min(1, p.fuelLevel)) : 1,
     parkingStars: p.parkingStars ?? {},
+    missionStepsCompleted: p.missionStepsCompleted ?? [],
+    cpmDriftBests: p.cpmDriftBests ?? {},
+    cpmTimeAttackMs: p.cpmTimeAttackMs ?? {},
+    cpmDragBestET: p.cpmDragBestET ?? null,
+    taxiCompletedIds: p.taxiCompletedIds ?? [],
+    dynoRunCount: p.dynoRunCount ?? 0,
+    meetBadges: p.meetBadges ?? [],
+    activeTaxiId: p.activeTaxiId ?? null,
     cameraMode: normalizeCameraMode(p.cameraMode)
   };
 }
 
 function migrateRaw(parsed: Record<string, unknown>): SavedProgress | null {
-  if (parsed.version === 7) return withV7Defaults(parsed as SavedProgress);
-  if (parsed.version === 6) return withV7Defaults(parsed as SavedProgress & { version: 6 });
-  if (parsed.version === 5) return withV7Defaults(parsed as SavedProgress & { version: 5 });
-  if (parsed.version === 4) return withV7Defaults(parsed as SavedProgress & { version: 4 });
+  if (parsed.version === 8) return withV8Defaults(parsed as SavedProgress);
+  if (parsed.version === 7) return withV8Defaults(parsed as SavedProgress & { version: 7 });
+  if (parsed.version === 6) return withV8Defaults(parsed as SavedProgress & { version: 6 });
+  if (parsed.version === 5) return withV8Defaults(parsed as SavedProgress & { version: 5 });
+  if (parsed.version === 4) return withV8Defaults(parsed as SavedProgress & { version: 4 });
   if (parsed.version === 3) {
     const p = parsed as unknown as Omit<SavedProgress, 'version'>;
-    return withV7Defaults({ ...p, version: 3, lastPose: null, cameraMode: 'chase' });
+    return withV8Defaults({ ...p, version: 3, lastPose: null, cameraMode: 'chase' });
   }
   if (parsed.version === 2) {
     const p = parsed as unknown as Omit<SavedProgress, 'version' | 'customizations'> & {
@@ -172,7 +198,7 @@ function migrateRaw(parsed: Record<string, unknown>): SavedProgress | null {
       customizations?: Record<string, VehicleCustomization>;
     };
     const { version: _v, ...rest } = p;
-    return withV7Defaults({
+    return withV8Defaults({
       ...rest,
       version: 2,
       customizations: p.customizations ?? {},
@@ -194,6 +220,14 @@ export function loadProgress(): SavedProgress {
   } catch {
     return defaultProgress();
   }
+}
+
+export function recordDynoRun(progress: SavedProgress): SavedProgress {
+  return { ...progress, dynoRunCount: progress.dynoRunCount + 1 };
+}
+
+export function startTaxiContract(progress: SavedProgress, contractId: string): SavedProgress {
+  return { ...progress, activeTaxiId: contractId };
 }
 
 export function saveProgress(progress: SavedProgress): void {

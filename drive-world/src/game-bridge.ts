@@ -95,6 +95,8 @@ let waymoReplayHandler: (() => void) | null = null;
 let vistaCamHandler: (() => void) | null = null;
 let setHomeSafehouseHandler: ((id: string) => void) | null = null;
 let claimSafehouseHandler: ((name: string) => void) | null = null;
+let startTaxiHandler: ((contractId: string) => void) | null = null;
+let dynoPullHandler: (() => void) | null = null;
 
 let touchDrive: TouchDrive = {
   up: false,
@@ -208,6 +210,22 @@ export function registerClaimSafehouse(fn: (name: string) => void): void {
 
 export function requestClaimSafehouse(name: string): void {
   claimSafehouseHandler?.(name);
+}
+
+export function registerStartTaxi(fn: (contractId: string) => void): void {
+  startTaxiHandler = fn;
+}
+
+export function requestStartTaxi(contractId: string): void {
+  startTaxiHandler?.(contractId);
+}
+
+export function registerDynoPull(fn: () => void): void {
+  dynoPullHandler = fn;
+}
+
+export function requestDynoPull(): void {
+  dynoPullHandler?.();
 }
 
 export function requestSkipWaymo(): void {

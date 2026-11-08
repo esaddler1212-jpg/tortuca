@@ -4,6 +4,7 @@ import { buildBayWater } from './build-bay';
 import { buildCityStreets } from './build-city-streets';
 import { buildAllDistricts, buildFreewayLamps } from './build-districts';
 import { initHubStreaming } from './hub-streaming';
+import { buildCpmChallengePads } from './build-cpm-pads';
 import { loadSettings } from './game-settings';
 import { buildAllFreeways } from './build-freeway';
 import { buildFreewayRamps } from './build-freeway-ramps';
@@ -56,6 +57,7 @@ export function buildDrivingWorld(app: AppBase): void {
   buildBayAreaLandmarks(app);
   buildTacoTrucks(app);
   buildParkingSpots(app);
+  buildCpmChallengePads(app);
   buildGasStations(app);
   buildMissionSites(app);
   buildFreewayLamps(app, 120, 140);

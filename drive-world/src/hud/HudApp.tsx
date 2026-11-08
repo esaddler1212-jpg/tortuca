@@ -25,6 +25,9 @@ import { searchLandTargets } from '../city-land-search';
 import { loadSettings, saveSettings, type GameSettings } from '../game-settings';
 import { FAST_TRAVEL } from '../world-extras';
 import { buildMissionBoard } from '../game-missions';
+import { bayRegionsGated } from '../mission-chapters';
+import { nextTaxiContract } from '../cpm-taxi';
+import { requestStartTaxi } from '../game-bridge';
 import { heatLabel } from '../game-heat';
 import {
   exportProgressJson,
@@ -168,14 +171,29 @@ function MissionBoard({ snap }: { snap: HudSnapshot }) {
     snap.playerZ,
     snap.settings.fuelSimEnabled ? snap.fuelPercent : undefined
   );
+  const taxiOffer = snap.progress ? nextTaxiContract(snap.progress, 'vallejo') : null;
   return (
     <details className="mission-panel" open>
-      <summary>Missions</summary>
+      <summary>Missions (CPM board)</summary>
+      {taxiOffer && !snap.progress?.activeTaxiId ? (
+        <button
+          type="button"
+          className="link-btn mission-taxi-start"
+          onClick={() => requestStartTaxi(taxiOffer.id)}
+        >
+          Start courier: {taxiOffer.label}
+        </button>
+      ) : null}
       <ul>
-        {lines.slice(0, 10).map((m) => (
+        {lines.map((m) => (
           <li key={m.id} className={m.done ? 'mission-done' : ''}>
             {m.label}
             {m.hint ? <span className="mission-hint"> — {m.hint}</span> : null}
+            {m.action === 'taxi' && !m.done && taxiOffer ? (
+              <button type="button" className="link-btn" onClick={() => requestStartTaxi(taxiOffer.id)}>
+                Start
+              </button>
+            ) : null}
           </li>
         ))}
       </ul>
@@ -320,10 +338,11 @@ function SettingsPanel() {
 function FastTravel({ snap }: { snap: HudSnapshot }) {
   if (!snap.nearGarage || !snap.progress) return null;
   const unlocked = new Set(snap.progress.unlockedRegionIds);
+  const gated = bayRegionsGated(snap.progress);
   return (
     <div className="fast-travel">
       <div className="fast-travel-title">Waymo fast travel</div>
-      {FAST_TRAVEL.map((f) => (
+      {FAST_TRAVEL.filter((f) => !gated || f.district === 'vallejo').map((f) => (
         <button
           key={f.district}
           type="button"
