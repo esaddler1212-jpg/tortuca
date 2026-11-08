@@ -6,12 +6,16 @@ import {
   VEHICLE_CATALOG,
   REGION_VEHICLE_IDS
 } from './vehicle-catalog';
+import { defaultHomeSafehouseId, ensureSafehouseUnlocks } from './safehouse-registry';
+import { tryUnlockCultureVehicles } from './bay-culture-unlocks';
 import { SCENIC_ROUTES } from './world-extras';
-import { isDistrictComplete, regionUnlockVehicleId, LANDMARKS } from './landmark-registry';
+import { isDistrictCheckpointSatisfied } from './city-checkpoints';
+import { regionUnlockVehicleId, LANDMARKS } from './landmark-registry';
 import type { DistrictId } from './world-config';
 import {
   DEFAULT_CUSTOMIZATION,
   defaultCustomizationFor,
+  mergeCustomization,
   type VehicleCustomization
 } from './vehicle-customization';
 
@@ -51,17 +55,27 @@ export type VehicleStats = { miles: number; topMph: number };
 
 export type JournalEntry = {
   t: number;
-  kind: 'landmark' | 'vista' | 'scenic';
+  kind: 'landmark' | 'vista' | 'scenic' | 'taco' | 'parking' | 'fuel';
   id: string;
   label: string;
 };
 
+export type CustomSafehouse = {
+  id: string;
+  name: string;
+  x: number;
+  z: number;
+  district: DistrictId;
+  createdAt: number;
+};
+
 export type SavedProgress = {
-  version: 5;
+  version: 7;
   phase: GamePhase;
   activeVehicleId: string | null;
   unlockedVehicleIds: string[];
   visitedLandmarkIds: string[];
+  tacoTrucksFound: DistrictId[];
   unlockedRegionIds: DistrictId[];
   safehouseReached: boolean;
   customizations: Record<string, VehicleCustomization>;
@@ -77,17 +91,25 @@ export type SavedProgress = {
   heatLevel: number;
   visitedVistaIds: string[];
   journal: JournalEntry[];
+  homeSafehouseId: string;
+  unlockedSafehouseIds: string[];
+  customSafehouses: CustomSafehouse[];
+  /** 0–1 tank for optional fuel sim */
+  fuelLevel: number;
+  /** Best star count per landmark parking spot id */
+  parkingStars: Record<string, number>;
 };
 
 const STORAGE_KEY = 'drive-world-progress-v5';
 
 function defaultProgress(): SavedProgress {
   return {
-    version: 5,
+    version: 7,
     phase: 'waymo_ride',
     activeVehicleId: null,
     unlockedVehicleIds: [],
     visitedLandmarkIds: [],
+    tacoTrucksFound: [],
     unlockedRegionIds: [],
     safehouseReached: false,
     customizations: {},
@@ -101,15 +123,21 @@ function defaultProgress(): SavedProgress {
     vehicleStats: {},
     heatLevel: 0,
     visitedVistaIds: [],
-    journal: []
+    journal: [],
+    homeSafehouseId: defaultHomeSafehouseId(),
+    unlockedSafehouseIds: [defaultHomeSafehouseId()],
+    customSafehouses: [],
+    fuelLevel: 1,
+    parkingStars: {}
   };
 }
 
-function withV5Defaults(p: Partial<SavedProgress> & { version: number }): SavedProgress {
+function withV7Defaults(p: Partial<Omit<SavedProgress, 'version'>> & { version: number }): SavedProgress {
   return {
     ...defaultProgress(),
     ...p,
-    version: 5,
+    version: 7,
+    tacoTrucksFound: p.tacoTrucksFound ?? [],
     collectedIds: p.collectedIds ?? [],
     unlockedPaintIds:
       p.unlockedPaintIds ?? ['bay-blue', 'fog-white', 'bridge-orange', 'neon-cyan', 'cherry-red', 'stealth'],
@@ -120,22 +148,33 @@ function withV5Defaults(p: Partial<SavedProgress> & { version: number }): SavedP
     heatLevel: typeof p.heatLevel === 'number' ? p.heatLevel : 0,
     visitedVistaIds: p.visitedVistaIds ?? [],
     journal: p.journal ?? [],
+    homeSafehouseId: p.homeSafehouseId ?? defaultHomeSafehouseId(),
+    unlockedSafehouseIds: p.unlockedSafehouseIds ?? [defaultHomeSafehouseId()],
+    customSafehouses: p.customSafehouses ?? [],
+    fuelLevel: typeof p.fuelLevel === 'number' ? Math.max(0, Math.min(1, p.fuelLevel)) : 1,
+    parkingStars: p.parkingStars ?? {},
     cameraMode: normalizeCameraMode(p.cameraMode)
   };
 }
 
 function migrateRaw(parsed: Record<string, unknown>): SavedProgress | null {
-  if (parsed.version === 5) return withV5Defaults(parsed as SavedProgress);
-  if (parsed.version === 4) return withV5Defaults(parsed as SavedProgress & { version: 4 });
+  if (parsed.version === 7) return withV7Defaults(parsed as SavedProgress);
+  if (parsed.version === 6) return withV7Defaults(parsed as SavedProgress & { version: 6 });
+  if (parsed.version === 5) return withV7Defaults(parsed as SavedProgress & { version: 5 });
+  if (parsed.version === 4) return withV7Defaults(parsed as SavedProgress & { version: 4 });
   if (parsed.version === 3) {
-    const p = parsed as SavedProgress & { version: 3 };
-    return withV5Defaults({ ...p, lastPose: null, cameraMode: 'chase' });
+    const p = parsed as unknown as Omit<SavedProgress, 'version'>;
+    return withV7Defaults({ ...p, version: 3, lastPose: null, cameraMode: 'chase' });
   }
   if (parsed.version === 2) {
-    const p = parsed as SavedProgress & { version: 2; customizations?: Record<string, VehicleCustomization> };
+    const p = parsed as unknown as Omit<SavedProgress, 'version' | 'customizations'> & {
+      version: 2;
+      customizations?: Record<string, VehicleCustomization>;
+    };
     const { version: _v, ...rest } = p;
-    return withV5Defaults({
+    return withV7Defaults({
       ...rest,
+      version: 2,
       customizations: p.customizations ?? {},
       lastPose: null,
       cameraMode: 'chase'
@@ -171,10 +210,13 @@ export function finishWaymoRide(progress: SavedProgress): SavedProgress {
   const next: SavedProgress = {
     ...progress,
     phase: 'pick_car',
-    safehouseReached: true
+    safehouseReached: true,
+    unlockedSafehouseIds: progress.unlockedSafehouseIds.includes(defaultHomeSafehouseId())
+      ? progress.unlockedSafehouseIds
+      : [...progress.unlockedSafehouseIds, defaultHomeSafehouseId()]
   };
   saveProgress(next);
-  return next;
+  return ensureSafehouseUnlocks(next);
 }
 
 export function chooseGarageCar(progress: SavedProgress, vehicleId: string): SavedProgress {
@@ -214,6 +256,16 @@ export function visitLandmark(progress: SavedProgress, landmarkId: string): Save
   return next;
 }
 
+export function findTacoTruck(progress: SavedProgress, district: DistrictId): SavedProgress {
+  if (progress.tacoTrucksFound.includes(district)) return progress;
+  const next: SavedProgress = {
+    ...progress,
+    tacoTrucksFound: [...progress.tacoTrucksFound, district]
+  };
+  saveProgress(next);
+  return next;
+}
+
 export function visitCruiseVista(progress: SavedProgress, vistaId: string): SavedProgress {
   if (progress.visitedVistaIds.includes(vistaId)) return progress;
   const next: SavedProgress = {
@@ -234,7 +286,7 @@ export function tryUnlockCompletedRegions(progress: SavedProgress): {
 
   for (const district of districts) {
     if (current.unlockedRegionIds.includes(district)) continue;
-    if (!isDistrictComplete(current.visitedLandmarkIds, district)) continue;
+    if (!isDistrictCheckpointSatisfied(current, district)) continue;
     const vehicleId = regionUnlockVehicleId(district);
     current = {
       ...current,
@@ -269,7 +321,7 @@ export function setCameraMode(progress: SavedProgress, cameraMode: CameraMode): 
 
 export function getVehicleCustomization(progress: SavedProgress, vehicleId: string): VehicleCustomization {
   const saved = progress.customizations[vehicleId];
-  const base = saved ? { ...DEFAULT_CUSTOMIZATION, ...saved } : undefined;
+  const base = saved ? mergeCustomization(saved) : undefined;
   if (base) return base;
   const spec = VEHICLE_CATALOG[vehicleId];
   return spec ? defaultCustomizationFor(spec) : { ...DEFAULT_CUSTOMIZATION };
@@ -287,6 +339,7 @@ export function collectItem(progress: SavedProgress, id: string, paintId: string
   };
   next = tryUnlockCoastHeli(next);
   next = tryUnlockLegendVehicles(next);
+  next = tryUnlockCultureVehicles(next);
   next = tryUnlockNightCoil(next);
   saveProgress(next);
   return next;

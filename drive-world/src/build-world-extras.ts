@@ -3,8 +3,7 @@ import { Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas'
 import { hillOffsetM } from './bay-terrain';
 import { CRUISE_VISTAS } from './cruise-vistas';
 import { COLLECTIBLES } from './world-extras';
-import { FREEWAY_I80, FREEWAY_280 } from './world-config';
-import { buildFreewayPath, freewayMaterials } from './build-freeway';
+import { FREEWAY_I80 } from './world-config';
 
 /** Switchback blocks — Lombard-inspired. */
 export function buildLombardStreet(app: AppBase): void {
@@ -92,11 +91,6 @@ export function updateAmbientTraffic(dt: number, enabled: boolean): void {
     const dz = b.z - a.z;
     car.root.setEulerAngles(0, (Math.atan2(dx, dz) * 180) / Math.PI, 0);
   }
-}
-
-export function buildExtraFreeways(app: AppBase): void {
-  const mats = freewayMaterials();
-  buildFreewayPath(app, FREEWAY_280, mats, 'i280');
 }
 
 export function buildCruiseVistas(app: AppBase): void {

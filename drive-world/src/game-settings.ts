@@ -1,11 +1,19 @@
 import type { AutopilotPreset } from './autopilot-cruise';
+import type { BayQualityPreset } from './bay-quality';
 import type { MusicStationId } from './game-music';
 import { isTouchPrimary } from './mobile-platform';
 
 export type GameSettings = {
   masterVolume: number;
+  /** Quick preset — fog, traffic, sideshow, fuel */
+  bayQualityPreset: BayQualityPreset;
   fogQuality: 'low' | 'med' | 'high';
+  /** Gentle tank drain + free pumps; off = always full power */
+  fuelSimEnabled: boolean;
   showTraffic: boolean;
+  showSideshow: boolean;
+  /** Defer distant hub blocks; show skyline shells until you approach */
+  hubStreamingEnabled: boolean;
   photoSensitivity: number;
   musicVolume: number;
   musicStation: MusicStationId;
@@ -18,8 +26,12 @@ const KEY = 'drive-world-settings-v1';
 
 const defaults: GameSettings = {
   masterVolume: 0.85,
+  bayQualityPreset: 'balanced',
   fogQuality: 'med',
+  fuelSimEnabled: true,
   showTraffic: true,
+  showSideshow: true,
+  hubStreamingEnabled: true,
   photoSensitivity: 1,
   musicVolume: 0.55,
   musicStation: 'ambient',

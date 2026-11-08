@@ -7,7 +7,7 @@ import {
 } from 'playcanvas';
 
 import { getVehicleSpec } from './vehicle-catalog';
-import { appliedTuning, DEFAULT_CUSTOMIZATION, type VehicleCustomization } from './vehicle-customization';
+import { appliedTuning, mergeCustomization, type VehicleCustomization } from './vehicle-customization';
 import { attachVehicleLights, type VehicleLights } from './vehicle-lights';
 import { attachVehicleGltf, hasGltfForVehicle } from './vehicle-gltf';
 
@@ -80,6 +80,65 @@ function attachLegendAccents(
     bar.setLocalPosition(0, 0.72 - rideDrop, cz * 0.35);
     bar.addComponent('render', { type: 'box', material: barMat });
     vehicle.addChild(bar);
+  }
+  if (vehicleId === 'legend-time-warp') {
+    const flux = new StandardMaterial();
+    flux.emissive = new Color(0.15, 0.55, 0.95);
+    flux.emissiveIntensity = 0.75;
+    flux.update();
+    for (const zOff of [-0.35, 0.35]) {
+      const band = new Entity('flux-band');
+      band.setLocalScale(cx * 0.92, 0.08, 0.12);
+      band.setLocalPosition(0, 0.35 - rideDrop, zOff * cz * 0.55);
+      band.addComponent('render', { type: 'box', material: flux });
+      vehicle.addChild(band);
+    }
+  }
+  if (vehicleId === 'legend-hyphy-shortbus') {
+    const sub = new StandardMaterial();
+    sub.emissive = new Color(0.95, 0.85, 0.1);
+    sub.emissiveIntensity = 0.8;
+    sub.update();
+    const stack = new Entity('hyphy-sub');
+    stack.setLocalScale(0.85, 0.5, 0.75);
+    stack.setLocalPosition(0, 1.05 - rideDrop, 0);
+    stack.addComponent('render', { type: 'box', material: sub });
+    vehicle.addChild(stack);
+  }
+  if (vehicleId === 'legend-cookie-bus') {
+    const logo = new StandardMaterial();
+    logo.emissive = new Color(0.4, 0.25, 0.12);
+    logo.emissiveIntensity = 0.55;
+    logo.update();
+    const sign = new Entity('cookie-sign');
+    sign.setLocalScale(0.9, 0.45, 0.08);
+    sign.setLocalPosition(0, 1.15 - rideDrop, cz * 0.52);
+    sign.addComponent('render', { type: 'box', material: logo });
+    vehicle.addChild(sign);
+  }
+  if (vehicleId === 'legend-say-hey-cadillac') {
+    const pink = new StandardMaterial();
+    pink.emissive = new Color(0.92, 0.35, 0.6);
+    pink.emissiveIntensity = 0.45;
+    pink.update();
+    for (const side of [-1, 1]) {
+      const fin = new Entity('caddy-fin');
+      fin.setLocalScale(0.08, 0.32, 0.55);
+      fin.setLocalPosition(side * cx * 0.55, 0.65 - rideDrop, -cz * 0.35);
+      fin.addComponent('render', { type: 'box', material: pink });
+      vehicle.addChild(fin);
+    }
+  }
+  if (vehicleId === 'legend-beast-cart') {
+    const bar = new StandardMaterial();
+    bar.emissive = new Color(0.35, 0.4, 0.45);
+    bar.emissiveIntensity = 0.5;
+    bar.update();
+    const cage = new Entity('cart-cage');
+    cage.setLocalScale(cx * 1.1, 0.55, cz * 0.85);
+    cage.setLocalPosition(0, 0.85 - rideDrop, 0);
+    cage.addComponent('render', { type: 'box', material: bar });
+    vehicle.addChild(cage);
   }
   if (vehicleId === 'bonus-scarlet-five') {
     const red = new StandardMaterial();
@@ -172,7 +231,7 @@ export function createPlayerVehicle(
   customization?: VehicleCustomization
 ): PlayerVehicle {
   const spec = getVehicleSpec(vehicleId);
-  const custom = { ...DEFAULT_CUSTOMIZATION, ...customization };
+  const custom = mergeCustomization(customization);
   const tuning = appliedTuning(spec, custom);
   const paint = chassisMaterial(tuning);
 
@@ -211,6 +270,7 @@ export function createPlayerVehicle(
     });
     const wy = def.pos.y - tuning.rideDrop;
     wheel.setLocalPosition(def.pos.x * scaleWheel, wy, def.pos.z * (spec.chassis.z / 1.9));
+    wheel.setLocalEulerAngles(0, 0, def.front ? tuning.camberDeg : tuning.camberDeg * 0.85);
     return wheel;
   });
 
@@ -278,6 +338,29 @@ export function createPlayerVehicle(
     vehicle.addChild(glow);
   }
 
+  if (tuning.spoilerScale > 0.42) {
+    const spoiler = new Entity('tune-spoiler');
+    spoiler.setLocalScale(cx * tuning.spoilerScale, 0.05 + tuning.spoilerScale * 0.04, 0.28 + tuning.spoilerScale * 0.2);
+    spoiler.setLocalPosition(0, cy * 2.05 - tuning.rideDrop, -cz * 0.78);
+    spoiler.addComponent('render', { type: 'box', material: paint });
+    vehicle.addChild(spoiler);
+  }
+  if (tuning.stripeIntensity > 0.08) {
+    const stripeMat = paint.clone() as StandardMaterial;
+    stripeMat.emissive = new Color(
+      Math.min(1, tuning.emissive[0] + 0.35),
+      Math.min(1, tuning.emissive[1] + 0.35),
+      Math.min(1, tuning.emissive[2] + 0.35)
+    );
+    stripeMat.emissiveIntensity = tuning.emissiveIntensity * (0.5 + tuning.stripeIntensity);
+    stripeMat.update();
+    const stripe = new Entity('livery-stripe');
+    stripe.setLocalScale(cx * 1.02, 0.035, 0.05);
+    stripe.setLocalPosition(0, cy * 1.6 - tuning.rideDrop, cz * 0.05);
+    stripe.addComponent('render', { type: 'box', material: stripeMat });
+    vehicle.addChild(stripe);
+  }
+
   if (!useGltfBody) {
     if (vehicleId.startsWith('region-south-bay')) {
       const wing = new Entity('ev-wing');
@@ -312,7 +395,11 @@ export function createPlayerVehicle(
   });
   vehicle.addChild(chassis);
   vehicle.addChild(cabin);
-  if (vehicleId === 'bonus-gotham-knight' || vehicleId === 'bonus-scarlet-five') {
+  if (
+    vehicleId === 'bonus-gotham-knight' ||
+    vehicleId === 'bonus-scarlet-five' ||
+    vehicleId.startsWith('legend-')
+  ) {
     attachLegendAccents(vehicle, vehicleId, paint, cx, cz, tuning.rideDrop);
   }
   const lights = attachVehicleLights(vehicle, app);

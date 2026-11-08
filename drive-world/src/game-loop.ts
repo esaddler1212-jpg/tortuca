@@ -2,10 +2,28 @@ import { Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
 
 import { hillOffsetM } from './bay-terrain';
 import {
+  navTurnHint,
+  routeWaypointsForScenic,
+  routeWaypointsToLandmark,
+  routeWaypointsToPoint
+} from './bay-navigation';
+import { CITY_HUBS } from './city-map-registry';
+import { ensureHubBuilt, updateHubStreaming } from './hub-streaming';
+import { nearestStorefrontStrip } from './storefront-strips';
+import { nearestTacoTruck } from './city-checkpoints';
+import { nearestGasStation } from './gas-stations';
+import { fuelMultiplier, fuelPercent, refillFuel, tickFuel } from './fuel-system';
+import { nearestParkingSpot, scoreParking } from './landmark-parking';
+import { recordParkingStars } from './parking-rewards';
+import { shouldNotifySideshow, updateSideshowMeets } from './sideshow-meets';
+import { appliedTuning } from './vehicle-customization';
+import {
   computeTouchControls,
   isTouchDriveActive,
   publishHud,
   registerFastTravel,
+  registerLandHere,
+  getNavTarget,
   registerSkipWaymo,
   registerCycleAutopilotPreset,
   getHudSnapshot,
@@ -13,6 +31,8 @@ import {
   registerToggleAutopilot,
   registerToggleCamera,
   registerTogglePhoto,
+  registerClaimSafehouse,
+  registerSetHomeSafehouse,
   registerVistaCam,
   registerWaymoReplay
 } from './game-bridge';
@@ -27,6 +47,8 @@ import {
   getVehicleCustomization,
   setVehicleCustomization,
   tryUnlockCompletedRegions,
+  findTacoTruck,
+  saveProgress,
   tryUnlockNightCoil,
   tryUnlockSkywayHover,
   saveLastPose,
@@ -55,11 +77,22 @@ import { loadSettings, saveSettings } from './game-settings';
 import { setMusicDistrict, unlockMusic } from './game-music';
 import { saveCruisePhotoCard } from './photo-share';
 import { districtAt, fogDistances, regionalFogStrength } from './regional-weather';
+import { nearestStreetLabel } from './street-name-registry';
 import { COLLECTIBLES, FAST_TRAVEL, SCENIC_ROUTES, SPEED_TRAPS } from './world-extras';
 import { createPhotoCamera } from './photo-mode';
 import { updateAmbientTraffic } from './build-world-extras';
 import { missionTextForPhase, wireGameUi } from './game-ui';
-import { DISTRICT_LABELS, LANDMARKS, VALLEJO_SAFEHOUSE } from './landmark-registry';
+import { DISTRICT_LABELS, LANDMARKS } from './landmark-registry';
+import {
+  claimCustomSafehouse,
+  ensureSafehouseUnlocks,
+  homeSpawn,
+  nearUnlockedSafehouse,
+  homeServicePoint,
+  resolveHomeSafehouse,
+  setHomeSafehouse,
+  type ResolvedSafehouse
+} from './safehouse-registry';
 import { nextUnvisitedLandmark } from './landmark-navigation';
 import {
   createAutopilotCruisePreset,
@@ -70,6 +103,7 @@ import {
 } from './autopilot-cruise';
 import {
   AUTOPILOT_VEHICLE_ID,
+  BONUS_CULTURE_IDS,
   getVehicleSpec,
   isAerialVehicle,
   supportsAutopilot
@@ -89,6 +123,10 @@ export type GameSession = {
   progress: SavedProgress;
 };
 
+function scriptInstance(ent: Entity, name: string): unknown {
+  return (ent.script as unknown as Record<string, unknown> | undefined)?.[name];
+}
+
 export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSession {
   const ui = wireGameUi();
   let progress = loadProgress();
@@ -96,6 +134,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   const vehicle = () => player?.entity ?? null;
   let waymo: WaymoRide | null = null;
   let nearGarage = false;
+  let serviceSafehouse: ResolvedSafehouse | null = null;
   let ridingWaymo = progress.phase === 'waymo_ride';
   let draftCustom: VehicleCustomization | null = null;
   let cameraMode: CameraMode = progress.cameraMode ?? 'chase';
@@ -108,6 +147,12 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   let lastPos = new Vec3();
   let statsT = 0;
   let cloudSaveT = 0;
+  let hubStreamT = 0;
+  let parkingHoldT = 0;
+  let fuelRefillT = 0;
+  let playerBaseEngineForce = 5200;
+  let exhaustGain = 1;
+  let worldTime = 0;
   const photoKeys = { fwd: false, back: false, left: false, right: false, up: false, down: false };
   const CALDECOTT = { x: 392, z: 265 };
   let autopilotActive = false;
@@ -197,12 +242,10 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     if (e.key === 'e' || e.key === 'E') photoKeys.up = false;
   });
 
-  const safehouseSpawn = () =>
-    new Vec3(
-      VALLEJO_SAFEHOUSE.x,
-      hillOffsetM(VALLEJO_SAFEHOUSE.x, VALLEJO_SAFEHOUSE.z) + 0.8,
-      VALLEJO_SAFEHOUSE.z + 18
-    );
+  const safehouseSpawn = () => {
+    const s = homeSpawn(progress);
+    return new Vec3(s.x, s.y, s.z);
+  };
 
   const spawnFromProgress = (): Vec3 => {
     const pose = progress.lastPose;
@@ -229,6 +272,9 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     const custom = getVehicleCustomization(progress, vehicleId);
     draftCustom = { ...custom };
     player = createPlayerVehicle(app, vehicleId, p, yaw ?? oldRot?.y ?? progress.lastPose?.yaw ?? 15, custom);
+    const tune = appliedTuning(getVehicleSpec(vehicleId), custom);
+    playerBaseEngineForce = tune.maxEngineForce;
+    exhaustGain = tune.exhaustGain;
     progress = setActiveVehicle(progress, vehicleId);
     lastPos.copy(p);
     ui.setVehicleName(getVehicleSpec(vehicleId).name);
@@ -240,8 +286,12 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     if (!progress.activeVehicleId || !draftCustom) return;
     const pos = vehicle()?.getPosition().clone();
     const yaw = vehicle()?.getEulerAngles().y ?? 15;
-    progress = setVehicleCustomization(progress, progress.activeVehicleId, draftCustom);
-    swapVehicle(progress.activeVehicleId, pos, yaw);
+    const activeId = progress.activeVehicleId;
+    progress = setVehicleCustomization(progress, activeId, draftCustom);
+    const tune = appliedTuning(getVehicleSpec(activeId), draftCustom);
+    playerBaseEngineForce = tune.maxEngineForce;
+    exhaustGain = tune.exhaustGain;
+    swapVehicle(activeId, pos, yaw);
     ui.showToast('Applied', 'Paint and tuning updated for this car.');
   };
 
@@ -249,7 +299,10 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     if (!nearGarage || !progress.activeVehicleId) return;
     void ensureVehicleModelsLoaded(app, progress.unlockedVehicleIds);
     draftCustom = { ...getVehicleCustomization(progress, progress.activeVehicleId) };
-    ui.setGarageVisible(true, progress, onGarageSelect);
+    exhaustGain = appliedTuning(getVehicleSpec(progress.activeVehicleId), draftCustom).exhaustGain;
+    const house = serviceSafehouse ?? resolveHomeSafehouse(progress);
+    const svc = homeServicePoint(house);
+    ui.setGarageVisible(true, progress, onGarageSelect, svc.mode, house.name);
     ui.bindCustomize(
       progress.activeVehicleId,
       draftCustom,
@@ -274,7 +327,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     ui.setAutonomousMode(false);
     ui.setMission(missionTextForPhase('home'));
     swapVehicle(vehicleId, safehouseSpawn(), 195);
-    ui.showToast('You’re driving', 'Hit every beacon in a region to unlock that region’s car.');
+    ui.showToast('You’re driving', 'Find a region’s taco truck plus any landmark to unlock its car and safehouse.');
     ui.setProgressSummary(progress);
     unlockAudio();
     void unlockMusic();
@@ -377,7 +430,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     const place =
       near?.vista.name ??
       nextUnvisitedLandmark(progress.visitedLandmarkIds, pos.x, pos.z)?.name ??
-      DISTRICT_LABELS[dist];
+      (dist ? DISTRICT_LABELS[dist] : 'Bay Area');
     const vid = progress.activeVehicleId;
     void saveCruisePhotoCard({
       vehicleName: vid ? getVehicleSpec(vid).name : 'Cruiser',
@@ -411,6 +464,29 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
 
   registerWaymoReplay(startWaymoSightseeing);
 
+  registerSetHomeSafehouse((id) => {
+    progress = setHomeSafehouse(progress, id);
+    ui.setProgressSummary(progress);
+    ui.showToast('Home safehouse', resolveHomeSafehouse(progress).name);
+    publishHud({ progress });
+  });
+
+  registerClaimSafehouse((name) => {
+    const ent = vehicle();
+    if (!ent || progress.phase !== 'home') return;
+    const mph = getHudSnapshot().mph;
+    if (mph > 12) {
+      ui.showToast('Park first', 'Slow below 12 mph to claim a custom safehouse.');
+      return;
+    }
+    const p = ent.getPosition();
+    progress = claimCustomSafehouse(progress, name, p.x, p.z);
+    progress = ensureSafehouseUnlocks(progress);
+    ui.setProgressSummary(progress);
+    ui.showToast('Custom safehouse', resolveHomeSafehouse(progress).name);
+    publishHud({ progress });
+  });
+
   registerFastTravel((district: DistrictId) => {
     if (!progress.unlockedRegionIds.includes(district) || !vehicle() || progress.phase !== 'home') return;
     const spot = FAST_TRAVEL.find((f) => f.district === district);
@@ -422,8 +498,28 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     ui.showToast('Waymo drop', spot.label);
   });
 
+  registerLandHere((x, z, label) => {
+    const ent = vehicle();
+    if (!ent || progress.phase !== 'home') return;
+    const mphNow = getHudSnapshot().mph;
+    if (mphNow > 22) {
+      ui.showToast('Slow down', 'Under ~22 mph to land here.');
+      return;
+    }
+    if (settings.hubStreamingEnabled) {
+      for (const hub of CITY_HUBS) {
+        const d = Math.hypot(x - hub.centerX, z - hub.centerZ);
+        if (d < hub.radiusM + 420) ensureHubBuilt(app, hub);
+      }
+    }
+    ent.setPosition(x, hillOffsetM(x, z) + 0.8, z);
+    ent.rigidbody?.applyImpulse(0, 0, 0);
+    ui.showToast('Landed', label);
+  });
+
   const resumeFromSave = () => {
     progress = tryUnlockNightCoil(progress);
+    progress = ensureSafehouseUnlocks(progress);
     cameraMode = progress.cameraMode ?? 'chase';
     if (progress.phase === 'waymo_ride') {
       startWaymoRide();
@@ -502,6 +598,11 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         waterPhase: waterT
       });
       updateEngineAudio(waymo.currentMph, false);
+      hubStreamT += dt;
+      if (hubStreamT > 0.35) {
+        hubStreamT = 0;
+        updateHubStreaming(app, pos.x, pos.z, settings.hubStreamingEnabled);
+      }
       if (!still) endWaymoRide();
       return;
     }
@@ -545,7 +646,15 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     const ent = vehicle();
     if (!ent) return;
 
+    worldTime += dt;
     updateAmbientTraffic(dt, settings.showTraffic);
+    const sideshowSite = updateSideshowMeets(dt, worldTime, settings.showSideshow);
+    const posEarly = ent.getPosition();
+    hubStreamT += dt;
+    if (hubStreamT > 0.35) {
+      hubStreamT = 0;
+      updateHubStreaming(app, posEarly.x, posEarly.z, settings.hubStreamingEnabled);
+    }
 
     const posTrack = ent.getPosition();
     const district = districtAt(posTrack.x, posTrack.z);
@@ -574,10 +683,10 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     if (onAutopilot) {
       mph = stepAutopilotCruise(autopilot, ent, dt);
       speedEl.textContent = `${mph.toFixed(0)} mph · Autopilot`;
-      updateEngineAudio(mph, true);
+      updateEngineAudio(mph, true, exhaustGain);
       player?.lights.setBrake(false);
     } else if (aerial) {
-      const fs = ent.script?.flightVehicle as
+      const fs = scriptInstance(ent, 'flightVehicle') as
         | { fire?: (e: string, ...args: number[]) => void }
         | undefined;
       fs?.fire?.('flight:controls', drive.steering, drive.throttle, drive.vertical);
@@ -591,7 +700,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         steering = t.steering;
         throttle = t.throttle;
       }
-      const vs = ent.script?.vehicle as { fire?: (e: string, ...args: number[]) => void } | undefined;
+      const vs = scriptInstance(ent, 'vehicle') as { fire?: (e: string, ...args: number[]) => void } | undefined;
       if (steering !== 0 || throttle !== 0) {
         vs?.fire?.('vehicle:controls', steering, throttle);
       }
@@ -621,6 +730,9 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   }
 
     const pos = ent.getPosition();
+    if (sideshowSite && shouldNotifySideshow(pos.x, pos.z, sideshowSite)) {
+      ui.showToast('Sideshow meet', `${sideshowSite.name} — respect the lot`);
+    }
     const vistaNear = nearestCruiseVista(pos.x, pos.z);
     let activeCam = cameraMode;
     if (
@@ -645,18 +757,25 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     applyDriveCamera(camera, ent, activeCam, dt, vistaLook);
 
     if (!onAutopilot) {
-      const vehScript = ent.script?.vehicle as { speed?: number; brakingVisual?: boolean } | undefined;
-      const flightScript = ent.script?.flightVehicle as { speed?: number } | undefined;
+      const vehScript = scriptInstance(ent, 'vehicle') as { speed?: number; brakingVisual?: boolean } | undefined;
+      const flightScript = scriptInstance(ent, 'flightVehicle') as { speed?: number } | undefined;
       const speedKmh = aerial ? Math.abs(flightScript?.speed ?? 0) : Math.abs(vehScript?.speed ?? 0);
       mph = speedKmh * 0.621371;
       speedEl.textContent = aerial
         ? `${mph.toFixed(0)} mph · ${getVehicleSpec(progress.activeVehicleId!).locomotion === 'helicopter' ? 'Heli' : 'Hover'}`
         : `${mph.toFixed(0)} mph`;
-      updateEngineAudio(mph, true);
+      updateEngineAudio(mph, true, exhaustGain);
     }
 
     progress = heatDecay(progress, mph, dt);
     progress = heatFromSpeedTrap(progress, mph, pos.x, pos.z);
+    progress = tickFuel(progress, settings, mph, progress.activeVehicleId, dt);
+    if (!aerial && progress.activeVehicleId) {
+      const veh = scriptInstance(ent, 'vehicle') as { maxEngineForce?: number } | undefined;
+      if (veh && typeof veh.maxEngineForce === 'number') {
+        veh.maxEngineForce = playerBaseEngineForce * fuelMultiplier(progress, settings, progress.activeVehicleId);
+      }
+    }
     tickHeatSiren(progress.heatLevel ?? 0, dt);
     cloudSaveT += dt;
     if (cloudSaveT > 50 && progress.phase === 'home') {
@@ -667,6 +786,92 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     const yaw = ent.getEulerAngles().y;
     const nextLm =
       progress.phase === 'home' ? nextUnvisitedLandmark(progress.visitedLandmarkIds, pos.x, pos.z) : null;
+
+    const manualNav = getNavTarget();
+    let navRoutePoints: { x: number; z: number }[] = [];
+    let navTurnLabel = '';
+    const navPin =
+      manualNav ??
+      (nextLm ? { label: nextLm.name, x: nextLm.x, z: nextLm.z } : null);
+    if (navPin && progress.phase === 'home') {
+      if (manualNav?.scenicId) {
+        const scenic = SCENIC_ROUTES.find((r) => r.id === manualNav.scenicId);
+        navRoutePoints = scenic
+          ? routeWaypointsForScenic(pos.x, pos.z, scenic)
+          : routeWaypointsToPoint(pos.x, pos.z, navPin.x, navPin.z);
+      } else if (manualNav || !nextLm) {
+        navRoutePoints = routeWaypointsToPoint(pos.x, pos.z, navPin.x, navPin.z);
+      } else {
+        navRoutePoints = routeWaypointsToLandmark(pos.x, pos.z, nextLm);
+      }
+      navTurnLabel = navTurnHint(pos.x, pos.z, yaw, navRoutePoints);
+    }
+    const strip = nearestStorefrontStrip(pos.x, pos.z);
+
+    if (progress.phase === 'home') {
+      progress = ensureSafehouseUnlocks(progress);
+      const near = nearUnlockedSafehouse(progress, pos.x, pos.z);
+      const inGarage = near?.atService === true;
+      if (inGarage) serviceSafehouse = near.house;
+      else if (!inGarage) serviceSafehouse = null;
+      if (inGarage !== nearGarage) {
+        nearGarage = inGarage;
+        if (inGarage && near) {
+          const svc = homeServicePoint(near.house);
+          ui.showToast(
+            svc.mode === 'valet' ? 'Valet stand' : 'Garage door',
+            `${near.house.name} — full fleet & paints`
+          );
+          refreshGarageUi();
+        } else ui.setGarageVisible(false, progress, onGarageSelect);
+      }
+    }
+
+    const nearSh =
+      progress.phase === 'home' ? nearUnlockedSafehouse(progress, pos.x, pos.z) : null;
+    const serviceHouse = serviceSafehouse ?? (nearSh?.atService ? nearSh.house : null);
+
+    let parkingSpot: ReturnType<typeof nearestParkingSpot> = null;
+    let nearGas = false;
+    if (progress.phase === 'home' && !aerial) {
+      parkingSpot = nearestParkingSpot(pos.x, pos.z);
+      const gasNear = nearestGasStation(pos.x, pos.z);
+      nearGas = Boolean(gasNear);
+      if (gasNear && mph < 5 && settings.fuelSimEnabled) {
+        fuelRefillT += dt;
+        if (fuelRefillT > 0.6) {
+          const refill = refillFuel(progress);
+          if (refill.fresh) {
+            progress = refill.progress;
+            saveProgress(progress);
+            progress = appendJournal(progress, { kind: 'fuel', id: gasNear.id, label: gasNear.name });
+            ui.showToast('Tank full', `${gasNear.name} — free fill`);
+            if (nearGarage) refreshGarageUi();
+          }
+          fuelRefillT = 0;
+        }
+      } else fuelRefillT = 0;
+
+      if (parkingSpot && mph < 5) {
+        const stars = scoreParking(mph, pos.x, pos.z, yaw, parkingSpot);
+        const best = progress.parkingStars[parkingSpot.id] ?? 0;
+        if (stars > best) {
+          parkingHoldT += dt;
+          if (parkingHoldT > 0.85) {
+            const outcome = recordParkingStars(progress, parkingSpot.id, stars as 1 | 2 | 3);
+            progress = outcome.progress;
+            progress = appendJournal(progress, { kind: 'parking', id: parkingSpot.id, label: parkingSpot.name });
+            ui.showToast('Parked', `${parkingSpot.name} · ${stars}★`);
+            for (const vid of outcome.newlyUnlockedVehicles) {
+              ui.showToast('Parking reward', getVehicleSpec(vid).name);
+            }
+            if (nearGarage) refreshGarageUi();
+            ui.setProgressSummary(progress);
+            parkingHoldT = 0;
+          }
+        } else parkingHoldT = 0;
+      } else parkingHoldT = 0;
+    }
 
     publishHud({
       playerX: pos.x,
@@ -689,7 +894,25 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       atVista: Boolean(vistaNear && mph < 14),
       vistaName: vistaNear?.vista.name ?? null,
       vistaPulse: waterT,
-      district: district ?? undefined
+      district: district ?? undefined,
+      atSafehouse: Boolean(nearSh),
+      homeSafehouseName: resolveHomeSafehouse(progress).name,
+      serviceSafehouseName: serviceHouse?.name,
+      homeServiceMode: serviceHouse
+        ? homeServicePoint(serviceHouse).mode
+        : homeServicePoint(resolveHomeSafehouse(progress)).mode,
+      streetName: nearestStreetLabel(pos.x, pos.z),
+      fuelPercent: settings.fuelSimEnabled ? fuelPercent(progress) : 100,
+      nearGas,
+      parkingSpotName:
+        parkingSpot && mph < 8
+          ? `${parkingSpot.name}${(progress.parkingStars[parkingSpot.id] ?? 0) > 0 ? ` · ${progress.parkingStars[parkingSpot.id]}★` : ''}`
+          : undefined,
+      activeSideshowName: sideshowSite?.name,
+      navTarget: manualNav,
+      navTurnLabel,
+      navRoutePoints,
+      storefrontStripLabel: strip ? `${strip.label} — ${strip.shops[0] ?? 'shops'}` : null
     });
 
     statsT += dt;
@@ -707,15 +930,6 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     }
 
     if (progress.phase === 'home') {
-      const gdx = pos.x - VALLEJO_SAFEHOUSE.x;
-      const gdz = pos.z - VALLEJO_SAFEHOUSE.z;
-      const inGarage = Math.hypot(gdx, gdz) < VALLEJO_SAFEHOUSE.radius + 12;
-      if (inGarage !== nearGarage) {
-        nearGarage = inGarage;
-        if (inGarage) refreshGarageUi();
-        else ui.setGarageVisible(false, progress, onGarageSelect);
-      }
-
       for (const lm of LANDMARKS) {
         if (progress.visitedLandmarkIds.includes(lm.id)) continue;
         const d = Math.hypot(pos.x - lm.x, pos.z - lm.z);
@@ -730,8 +944,26 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         progress = unlocks.progress;
         for (const u of unlocks.newlyUnlocked) {
           const car = getVehicleSpec(u.vehicleId);
-          ui.showToast(`${DISTRICT_LABELS[u.district]} complete`, `Unlocked ${car.name}`);
+          ui.showToast(`${DISTRICT_LABELS[u.district]} unlocked`, `${car.name} + regional safehouse`);
         }
+        progress = ensureSafehouseUnlocks(progress);
+        ui.setProgressSummary(progress);
+        if (nearGarage) refreshGarageUi();
+      }
+
+      const tacoNear = nearestTacoTruck(pos.x, pos.z);
+      if (tacoNear && mph < 22 && !progress.tacoTrucksFound.includes(tacoNear.district)) {
+        progress = findTacoTruck(progress, tacoNear.district);
+        progress = appendJournal(progress, { kind: 'taco', id: tacoNear.district, label: tacoNear.name });
+        ui.showToast('Taco truck found', `${DISTRICT_LABELS[tacoNear.district]} — log any landmark to unlock the region`);
+        ui.setProgressSummary(progress);
+        const unlocks = tryUnlockCompletedRegions(progress);
+        progress = unlocks.progress;
+        for (const u of unlocks.newlyUnlocked) {
+          const car = getVehicleSpec(u.vehicleId);
+          ui.showToast(`${DISTRICT_LABELS[u.district]} unlocked`, `${car.name} + regional safehouse`);
+        }
+        progress = ensureSafehouseUnlocks(progress);
         ui.setProgressSummary(progress);
         if (nearGarage) refreshGarageUi();
       }
@@ -756,6 +988,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         const hadGotham = progress.unlockedVehicleIds.includes('bonus-gotham-knight');
         const hadScarlet = progress.unlockedVehicleIds.includes('bonus-scarlet-five');
         const hadCoil = progress.unlockedVehicleIds.includes(AUTOPILOT_VEHICLE_ID);
+        const hadCulture = new Set(BONUS_CULTURE_IDS.filter((id) => progress.unlockedVehicleIds.includes(id)));
         progress = collectItem(progress, c.id, c.unlockPaintId);
         ui.showToast('Collectible', c.name);
         if (!hadHeli && progress.unlockedVehicleIds.includes('bonus-coast-heli')) {
@@ -769,6 +1002,11 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         }
         if (!hadCoil && progress.unlockedVehicleIds.includes(AUTOPILOT_VEHICLE_ID)) {
           ui.showToast('Autopilot unlocked', `${getVehicleSpec(AUTOPILOT_VEHICLE_ID).name} — press T at the wheel`);
+        }
+        for (const id of BONUS_CULTURE_IDS) {
+          if (!hadCulture.has(id) && progress.unlockedVehicleIds.includes(id)) {
+            ui.showToast('Bay homage unlocked', getVehicleSpec(id).name);
+          }
         }
         if (nearGarage) refreshGarageUi();
       }

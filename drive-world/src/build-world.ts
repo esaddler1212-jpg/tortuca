@@ -1,23 +1,30 @@
-import { Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
+import { Color, Entity, FOG_LINEAR, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
 
 import { buildBayWater } from './build-bay';
+import { buildCityStreets } from './build-city-streets';
 import { buildAllDistricts, buildFreewayLamps } from './build-districts';
+import { initHubStreaming } from './hub-streaming';
+import { loadSettings } from './game-settings';
 import { buildAllFreeways } from './build-freeway';
 import { buildFreewayRamps } from './build-freeway-ramps';
 import { buildBayAreaLandmarks } from './build-landmarks';
+import { buildHubParkingLots, buildStorefrontSigns } from './build-hub-world';
+import { buildParkingSpots, buildGasStations } from './build-parking-gas';
+import { buildTacoTrucks } from './build-taco-trucks';
 import { buildMissionSites } from './build-mission-sites';
 import {
   buildCollectibles,
   buildCruiseVistas,
-  buildExtraFreeways,
   buildLombardStreet,
   spawnAmbientTraffic
 } from './build-world-extras';
+import { buildSideshowMeets } from './sideshow-meets';
 import { NIGHT_FOG } from './night-palette';
 import { WORLD_HALF_M } from './world-config';
 
 export function buildDrivingWorld(app: AppBase): void {
-  app.scene.fog = NIGHT_FOG.clone();
+  app.scene.fog.type = FOG_LINEAR;
+  app.scene.fog.color = NIGHT_FOG.clone();
 
   const groundMat = new StandardMaterial();
   groundMat.diffuse = new Color(0.04, 0.045, 0.05);
@@ -35,14 +42,21 @@ export function buildDrivingWorld(app: AppBase): void {
 
   buildBayWater(app);
   buildAllFreeways(app);
-  buildExtraFreeways(app);
   buildFreewayRamps(app);
+  buildCityStreets(app);
+  buildHubParkingLots(app);
+  buildStorefrontSigns(app);
   buildLombardStreet(app);
   buildCollectibles(app);
   buildCruiseVistas(app);
   spawnAmbientTraffic(app);
+  buildSideshowMeets(app);
   buildAllDistricts(app);
+  initHubStreaming(app, loadSettings().hubStreamingEnabled);
   buildBayAreaLandmarks(app);
+  buildTacoTrucks(app);
+  buildParkingSpots(app);
+  buildGasStations(app);
   buildMissionSites(app);
   buildFreewayLamps(app, 120, 140);
 }

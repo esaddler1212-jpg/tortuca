@@ -1,6 +1,11 @@
 import type { HudSnapshot } from '../game-bridge';
 import { CRUISE_VISTAS } from '../cruise-vistas';
-import { LANDMARKS, VALLEJO_SAFEHOUSE } from '../landmark-registry';
+import { TACO_TRUCKS } from '../city-taco-trucks';
+import { LANDMARKS } from '../landmark-registry';
+import { CITY_HUBS } from '../city-map-registry';
+import { NAMED_STREETS } from '../street-registry';
+import { homeServicePoint, resolveHomeSafehouse } from '../safehouse-registry';
+import { GAS_STATIONS } from '../gas-stations';
 import { WORLD_HALF_M } from '../world-config';
 
 const SIZE = 168;
@@ -14,7 +19,10 @@ function mapY(wz: number): number {
 }
 
 export function Minimap({ snap }: { snap: HudSnapshot }) {
+  const home = snap.progress ? resolveHomeSafehouse(snap.progress) : null;
+  const svc = home ? homeServicePoint(home) : null;
   const visited = new Set(snap.progress?.visitedLandmarkIds ?? []);
+  const tacosFound = new Set(snap.progress?.tacoTrucksFound ?? []);
   const vistas = new Set(snap.progress?.visitedVistaIds ?? []);
   const next = snap.nextLandmark;
   const pulse = snap.atVista ? 4 + Math.sin((snap.vistaPulse ?? 0) * 4) * 2 : 0;
@@ -24,6 +32,30 @@ export function Minimap({ snap }: { snap: HudSnapshot }) {
       <div className="minimap-title">City Nights map</div>
       <svg width={SIZE} height={SIZE} className="minimap" aria-hidden>
         <rect x={0} y={0} width={SIZE} height={SIZE} className="minimap-bg" />
+        {CITY_HUBS.map((hub) => (
+          <circle
+            key={hub.id}
+            cx={mapX(hub.centerX)}
+            cy={mapY(hub.centerZ)}
+            r={(hub.radiusM / (HALF * 2)) * SIZE}
+            className="minimap-city-hub"
+          />
+        ))}
+        {NAMED_STREETS.map((st) =>
+          st.points.slice(0, -1).map((a, i) => {
+            const b = st.points[i + 1]!;
+            return (
+              <line
+                key={`${st.id}-${i}`}
+                x1={mapX(a.x)}
+                y1={mapY(a.z)}
+                x2={mapX(b.x)}
+                y2={mapY(b.z)}
+                className="minimap-arterial"
+              />
+            );
+          })
+        )}
         {CRUISE_VISTAS.map((v) => (
           <circle
             key={v.id}
@@ -31,6 +63,16 @@ export function Minimap({ snap }: { snap: HudSnapshot }) {
             cy={mapY(v.z)}
             r={vistas.has(v.id) ? 2 : 2.8}
             className={vistas.has(v.id) ? 'minimap-vista done' : 'minimap-vista'}
+          />
+        ))}
+        {TACO_TRUCKS.map((t) => (
+          <rect
+            key={`taco-${t.district}`}
+            x={mapX(t.x) - (tacosFound.has(t.district) ? 2.5 : 3.5)}
+            y={mapY(t.z) - (tacosFound.has(t.district) ? 2.5 : 3.5)}
+            width={tacosFound.has(t.district) ? 5 : 7}
+            height={tacosFound.has(t.district) ? 5 : 7}
+            className={tacosFound.has(t.district) ? 'minimap-taco done' : 'minimap-taco'}
           />
         ))}
         {LANDMARKS.map((lm) => (
@@ -42,22 +84,56 @@ export function Minimap({ snap }: { snap: HudSnapshot }) {
             className={visited.has(lm.id) ? 'minimap-dot done' : 'minimap-dot'}
           />
         ))}
-        <rect
-          x={mapX(VALLEJO_SAFEHOUSE.x) - 4}
-          y={mapY(VALLEJO_SAFEHOUSE.z) - 4}
-          width={8}
-          height={8}
-          className="minimap-safehouse"
-        />
-        {next && (
-          <line
-            x1={mapX(snap.playerX)}
-            y1={mapY(snap.playerZ)}
-            x2={mapX(next.x)}
-            y2={mapY(next.z)}
-            className="minimap-route"
+        {home ? (
+          <rect
+            x={mapX(home.x) - 4}
+            y={mapY(home.z) - 4}
+            width={8}
+            height={8}
+            className="minimap-safehouse"
           />
-        )}
+        ) : null}
+        {svc ? (
+          <circle
+            cx={mapX(svc.x)}
+            cy={mapY(svc.z)}
+            r={4}
+            className={svc.mode === 'valet' ? 'minimap-valet' : 'minimap-garage-door'}
+          />
+        ) : null}
+        {GAS_STATIONS.map((g) => (
+          <circle
+            key={g.id}
+            cx={mapX(g.x)}
+            cy={mapY(g.z)}
+            r={2.2}
+            className="minimap-gas"
+          />
+        ))}
+        {(() => {
+          const routePts =
+            snap.navRoutePoints && snap.navRoutePoints.length > 1
+              ? snap.navRoutePoints
+              : next
+                ? [
+                    { x: snap.playerX, z: snap.playerZ },
+                    { x: next.x, z: next.z }
+                  ]
+                : [];
+          return routePts.slice(0, -1).map((a, i) => {
+            const b = routePts[i + 1]!;
+            return (
+              <line
+                key={`route-${i}`}
+                x1={mapX(a.x)}
+                y1={mapY(a.z)}
+                x2={mapX(b.x)}
+                y2={mapY(b.z)}
+                className="minimap-route"
+              />
+            );
+          });
+        })()}
         {pulse > 0 ? (
           <circle
             cx={mapX(snap.playerX)}

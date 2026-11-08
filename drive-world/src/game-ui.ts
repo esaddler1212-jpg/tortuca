@@ -1,12 +1,10 @@
-import {
-  DISTRICT_LABELS,
-  districtLandmarkTotal,
-  districtLandmarksVisited,
-  LANDMARKS
-} from './landmark-registry';
+import { DISTRICT_LABELS, LANDMARKS } from './landmark-registry';
 import type { GamePhase, SavedProgress } from './game-progress';
 import { GARAGE_STARTER_IDS, VEHICLE_CATALOG } from './vehicle-catalog';
+import { COLLECTIBLES } from './world-extras';
+import { districtTacoFound } from './city-checkpoints';
 import { TOTAL_LANDMARKS, countRegionsComplete, TOTAL_REGIONS } from './game-progress';
+import type { HomeServiceMode } from './safehouse-registry';
 import type { DistrictId } from './world-config';
 import { PAINT_PRESETS, type VehicleCustomization } from './vehicle-customization';
 
@@ -18,7 +16,13 @@ export type GameUi = {
   setProgressSummary(progress: SavedProgress): void;
   setAutonomousMode(active: boolean): void;
   showToast(title: string, body: string): void;
-  setGarageVisible(visible: boolean, progress: SavedProgress, onSelect: (id: string) => void): void;
+  setGarageVisible(
+    visible: boolean,
+    progress: SavedProgress,
+    onSelect: (id: string) => void,
+    serviceMode?: HomeServiceMode,
+    siteName?: string
+  ): void;
   bindCustomize(
     vehicleId: string | null,
     custom: VehicleCustomization,
@@ -74,15 +78,9 @@ export function wireGameUi(): GameUi {
     setProgressSummary(progress) {
       const done = progress.visitedLandmarkIds.length;
       const regions = countRegionsComplete(progress);
-      const regionLines = (Object.keys(DISTRICT_LABELS) as DistrictId[])
-        .map((d) => {
-          const v = districtLandmarksVisited(progress.visitedLandmarkIds, d);
-          const t = districtLandmarkTotal(d);
-          const mark = progress.unlockedRegionIds.includes(d) ? '✓' : '·';
-          return `${mark} ${DISTRICT_LABELS[d]} ${v}/${t}`;
-        })
-        .join(' · ');
-      progressEl.textContent = `Landmarks ${done}/${TOTAL_LANDMARKS} · Regions ${regions}/${TOTAL_REGIONS} — ${regionLines}`;
+      const districts = Object.keys(DISTRICT_LABELS) as DistrictId[];
+      const tacos = districts.filter((d) => districtTacoFound(progress, d)).length;
+      progressEl.textContent = `Landmarks ${done}/${TOTAL_LANDMARKS} · Regions ${regions}/${TOTAL_REGIONS} · Taco trucks ${tacos}/${districts.length}`;
     },
     setAutonomousMode(active: boolean) {
       hudEl.classList.toggle('autonomous', active);
@@ -95,8 +93,17 @@ export function wireGameUi(): GameUi {
         toastEl.hidden = true;
       }, 4200);
     },
-    setGarageVisible(visible, progress, onSelect) {
+    setGarageVisible(visible, progress, onSelect, serviceMode = 'garage', siteName) {
       garageEl.hidden = !visible;
+      const title = document.getElementById('garage-title');
+      if (title) {
+        const base = serviceMode === 'valet' ? 'Valet — full inventory' : 'Garage — full inventory';
+        title.textContent = siteName ? `${base} · ${siteName}` : base;
+      }
+      const inv = document.getElementById('garage-inventory');
+      if (inv) {
+        inv.textContent = `${progress.unlockedVehicleIds.length} vehicles · ${progress.unlockedPaintIds.length} paints · ${progress.collectedIds.length}/${COLLECTIBLES.length} collectibles`;
+      }
       if (!visible) return;
       const list = el<HTMLDivElement>('garage-list');
       list.innerHTML = '';
@@ -106,7 +113,7 @@ export function wireGameUi(): GameUi {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = id === progress.activeVehicleId ? 'garage-card active' : 'garage-card';
-        const prefix = spec.aerialBonus || spec.legendBonus ? '✦ ' : '';
+        const prefix = spec.aerialBonus || spec.legendBonus || spec.cultureBonus ? '✦ ' : '';
         btn.textContent = spec.region ? `${prefix}${spec.name} (${spec.city})` : `${prefix}${spec.name}`;
         btn.addEventListener('click', () => onSelect(id));
         list.appendChild(btn);
@@ -128,6 +135,10 @@ export function wireGameUi(): GameUi {
       const underglow = el<HTMLInputElement>('slider-underglow');
       const tint = el<HTMLInputElement>('slider-tint');
       const rims = el<HTMLInputElement>('slider-rims');
+      const camber = el<HTMLInputElement>('slider-camber');
+      const spoiler = el<HTMLInputElement>('slider-spoiler');
+      const livery = el<HTMLInputElement>('slider-livery');
+      const exhaust = el<HTMLSelectElement>('exhaust-note');
       const handling = el<HTMLSelectElement>('handling-preset');
 
       const emit = () => {
@@ -141,6 +152,10 @@ export function wireGameUi(): GameUi {
           underglow: Number(underglow.value) / 100,
           tint: Number(tint.value) / 100,
           rims: Number(rims.value) / 100,
+          camber: Number(camber.value) / 100,
+          spoiler: Number(spoiler.value) / 100,
+          liveryStripe: Number(livery.value) / 100,
+          exhaustNote: (exhaust.value as VehicleCustomization['exhaustNote']) || 'stock',
           handling: (handling.value as VehicleCustomization['handling']) || 'grip'
         });
       };
@@ -174,6 +189,10 @@ export function wireGameUi(): GameUi {
       underglow.value = String(Math.round((custom.underglow ?? 0.35) * 100));
       tint.value = String(Math.round((custom.tint ?? 0.4) * 100));
       rims.value = String(Math.round((custom.rims ?? 0.45) * 100));
+      camber.value = String(Math.round((custom.camber ?? 0.25) * 100));
+      spoiler.value = String(Math.round((custom.spoiler ?? 0.35) * 100));
+      livery.value = String(Math.round((custom.liveryStripe ?? 0.2) * 100));
+      exhaust.value = custom.exhaustNote ?? 'stock';
       handling.value = custom.handling ?? 'grip';
       glow.oninput = emit;
       power.oninput = emit;
@@ -183,6 +202,10 @@ export function wireGameUi(): GameUi {
       underglow.oninput = emit;
       tint.oninput = emit;
       rims.oninput = emit;
+      camber.oninput = emit;
+      spoiler.oninput = emit;
+      livery.oninput = emit;
+      exhaust.onchange = emit;
       handling.onchange = emit;
       el<HTMLButtonElement>('apply-custom').onclick = onApply;
     },
@@ -195,5 +218,5 @@ export function wireGameUi(): GameUi {
 export function missionTextForPhase(phase: GamePhase): string {
   if (phase === 'waymo_ride') return 'Waymo rider — autonomous run to Vallejo Safehouse';
   if (phase === 'pick_car') return 'Safehouse — pick up your car';
-  return 'Clear every landmark in a region to unlock that region’s ride';
+  return 'Find each region’s taco truck + any landmark to unlock its ride';
 }

@@ -2,7 +2,16 @@ import { Vec3, type Entity } from 'playcanvas';
 
 import { hillOffsetM } from './bay-terrain';
 import { CRUISE_VISTAS } from './cruise-vistas';
-import { FREEWAY_101, FREEWAY_24, FREEWAY_280, FREEWAY_880, FREEWAY_I80 } from './world-config';
+import {
+  FREEWAY_101,
+  FREEWAY_24,
+  FREEWAY_280,
+  FREEWAY_580,
+  FREEWAY_680,
+  FREEWAY_780,
+  FREEWAY_880,
+  FREEWAY_I80
+} from './world-config';
 
 export type AutopilotPreset = 'tour' | 'chill' | 'scenic';
 
@@ -30,18 +39,22 @@ function pushRoute(out: CruisePathPoint[], pts: { x: number; z: number; y?: numb
 /** Overnight loop — freeways around the full compressed bay. */
 export function buildAutopilotBayLoop(): CruisePathPoint[] {
   const path: CruisePathPoint[] = [];
-  path.push({ x: 560, z: 920 });
+  const home = { x: 500, z: 1020 };
+  path.push(home);
   pushRoute(
     path,
     [...FREEWAY_I80].reverse().map((p) => ({ x: p.x, z: p.z, y: p.y }))
   );
-  pushRoute(path, FREEWAY_101.slice(1, 6));
+  pushRoute(path, FREEWAY_101.slice(1, 7));
   pushRoute(path, FREEWAY_280.slice(1));
-  pushRoute(path, FREEWAY_880.slice(0, 6));
-  pushRoute(path, FREEWAY_I80.slice(5, 11));
+  pushRoute(path, FREEWAY_880);
+  pushRoute(path, [...FREEWAY_I80].slice(5, 13));
   pushRoute(path, FREEWAY_24);
-  pushRoute(path, FREEWAY_I80.slice(10));
-  path.push({ x: 560, z: 920 });
+  pushRoute(path, FREEWAY_680.slice(1));
+  pushRoute(path, [...FREEWAY_580].reverse());
+  pushRoute(path, FREEWAY_780);
+  pushRoute(path, FREEWAY_I80.slice(12));
+  path.push(home);
   return path;
 }
 

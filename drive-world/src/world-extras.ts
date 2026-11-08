@@ -69,7 +69,12 @@ export const COLLECTIBLES: CollectibleDef[] = [
     x: 98,
     z: -1305,
     radius: 24
-  }
+  },
+  { id: 'flux-trail', name: 'Flux trail marker', unlockPaintId: 'fog-white', x: -1035, z: -175, radius: 26 },
+  { id: 'hyphy-whistle', name: 'Hyphy whistle', unlockPaintId: 'parking-yellow', x: 598, z: -358, radius: 24 },
+  { id: 'cookie-case', name: 'Cookie tour case', unlockPaintId: 'fuel-green', x: 1030, z: 98, radius: 26 },
+  { id: 'willie-glove', name: 'Say hey glove', unlockPaintId: 'cherry-red', x: -872, z: -605, radius: 26 },
+  { id: 'beast-bell', name: 'Beast mode bell', unlockPaintId: 'stealth', x: 775, z: -195, radius: 26 }
 ];
 
 export const SPEED_TRAPS: SpeedTrapDef[] = [

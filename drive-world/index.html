@@ -34,13 +34,14 @@
     <div id="car-picker" class="overlay" hidden>
       <div class="panel">
         <h2>Safehouse — pick up your car</h2>
-        <p class="panel-hint">Waymo dropped you off. Choose your ride, then clear landmarks in each region.</p>
+        <p class="panel-hint">Waymo dropped you off. Choose your ride, then find each region’s taco truck plus any landmark.</p>
         <div id="picker-grid" class="picker-grid"></div>
       </div>
     </div>
 
     <div id="garage" class="garage" hidden>
-      <h3>Safehouse garage</h3>
+      <h3 id="garage-title">Garage door — fleet & tuning</h3>
+      <p id="garage-inventory" class="garage-inventory"></p>
       <div id="garage-list" class="garage-list"></div>
       <div id="customize" class="customize" hidden>
         <h4>Customize</h4>
@@ -55,6 +56,16 @@
         <label class="slider-row">Underglow <input id="slider-underglow" type="range" min="0" max="100" /></label>
         <label class="slider-row">Tint <input id="slider-tint" type="range" min="0" max="100" /></label>
         <label class="slider-row">Rims <input id="slider-rims" type="range" min="0" max="100" /></label>
+        <label class="slider-row">Camber <input id="slider-camber" type="range" min="0" max="100" /></label>
+        <label class="slider-row">Spoiler <input id="slider-spoiler" type="range" min="0" max="100" /></label>
+        <label class="slider-row">Livery stripe <input id="slider-livery" type="range" min="0" max="100" /></label>
+        <label class="slider-row">Exhaust
+          <select id="exhaust-note">
+            <option value="stock">Stock</option>
+            <option value="sport">Sport</option>
+            <option value="loud">Loud</option>
+          </select>
+        </label>
         <label class="slider-row">Handling
           <select id="handling-preset">
             <option value="grip">Grip</option>

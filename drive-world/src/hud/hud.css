@@ -77,8 +77,51 @@
   fill: rgba(80, 120, 80, 0.7);
 }
 
+.minimap-taco {
+  fill: rgba(255, 170, 50, 0.95);
+}
+
+.minimap-taco.done {
+  fill: rgba(200, 140, 60, 0.75);
+}
+
+.fuel-meter,
+.parking-hint {
+  font-size: 0.78rem;
+  color: #b8e8ff;
+  margin: 0.25rem 0;
+}
+
+.parking-hint {
+  color: #9dffb8;
+}
+
 .minimap-safehouse {
   fill: rgba(255, 140, 60, 0.9);
+}
+
+.minimap-valet {
+  fill: rgba(255, 228, 150, 0.95);
+  stroke: rgba(255, 255, 255, 0.7);
+  stroke-width: 1;
+}
+
+.minimap-garage-door {
+  fill: rgba(255, 120, 40, 0.95);
+  stroke: rgba(255, 200, 120, 0.8);
+  stroke-width: 1;
+}
+
+.minimap-city-hub {
+  fill: none;
+  stroke: rgba(90, 140, 200, 0.35);
+  stroke-width: 1;
+  stroke-dasharray: 3 2;
+}
+
+.minimap-arterial {
+  stroke: rgba(140, 150, 165, 0.45);
+  stroke-width: 1.2;
 }
 
 .minimap-route {
@@ -98,6 +141,68 @@
   max-width: 200px;
   opacity: 0.9;
   text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+  pointer-events: auto;
+}
+
+.nav-turn {
+  display: block;
+  font-size: 0.68rem;
+  opacity: 0.85;
+}
+
+.nav-clear {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.65rem;
+}
+
+.minimap-gas {
+  fill: rgba(80, 220, 140, 0.75);
+}
+
+.land-search-panel {
+  pointer-events: auto;
+  max-width: 220px;
+  padding: 0.35rem 0.45rem;
+  border-radius: 8px;
+  background: rgba(6, 10, 18, 0.88);
+  border: 1px solid rgba(100, 160, 220, 0.25);
+}
+
+.land-search-input {
+  width: 100%;
+  margin: 0.35rem 0;
+  padding: 0.25rem 0.4rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.35);
+  color: inherit;
+  font-size: 0.72rem;
+}
+
+.land-search-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 8rem;
+  overflow-y: auto;
+}
+
+.land-search-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-bottom: 0.35rem;
+  font-size: 0.68rem;
+}
+
+.land-search-kind {
+  opacity: 0.55;
+}
+
+.land-search-actions {
+  display: flex;
+  gap: 0.5rem;
 }
 
 .heat-meter {
@@ -207,6 +312,71 @@
   text-decoration: underline;
   font: inherit;
   padding: 0;
+}
+
+.street-blade {
+  position: absolute;
+  left: 50%;
+  top: 3.5rem;
+  transform: translateX(-50%);
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  background: rgba(12, 40, 28, 0.88);
+  border: 1px solid rgba(80, 180, 120, 0.45);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  text-transform: none;
+}
+
+.dwelling-tag {
+  opacity: 0.85;
+  font-weight: 500;
+}
+
+.safehouse-panel {
+  pointer-events: auto;
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  background: rgba(20, 12, 8, 0.88);
+  border: 1px solid rgba(255, 140, 60, 0.35);
+  font-size: 0.82rem;
+}
+
+.safehouse-list {
+  margin: 0.35rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.safehouse-pick {
+  width: 100%;
+  text-align: left;
+  margin: 0.2rem 0;
+  padding: 0.3rem 0.4rem;
+  font-size: 0.75rem;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.25);
+  color: inherit;
+  cursor: pointer;
+}
+
+.safehouse-pick.active {
+  border-color: rgba(255, 160, 80, 0.75);
+  background: rgba(255, 120, 40, 0.12);
+}
+
+.safehouse-claim input[type='text'] {
+  flex: 1;
+  font-size: 0.75rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: inherit;
+  border-radius: 4px;
+  padding: 0.2rem 0.35rem;
 }
 
 .music-panel,
