@@ -2,6 +2,7 @@ import { Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas'
 import type { FactionNpc } from './faction-npcs';
 import { attachUnitBox } from './primitive-mesh';
 import { syncFlightAssistVisuals } from './aerial-mobility';
+import { primaryVillainIdForHero } from './roster-expansion';
 import { getVillainClone, VILLAIN_CLONES, type VillainCloneSpec } from './villain-roster';
 
 /** Wave when the hero's scripted pair rival arrives (hero role only). */
@@ -10,22 +11,30 @@ export const PAIR_BOSS_WAVE = 10;
 /** Boss HP multiplier on top of villain clone tuning. */
 const PAIR_BOSS_HP_SCALE = 14;
 
-/** Scripted wave-10 finales — all other heroes use first `rivalHeroIds` match. */
+/**
+ * Wave-10 finale overrides — only when product wants a different boss than the 1:1 nemesis map.
+ * All other heroes use `primaryVillainIdForHero`.
+ */
 export const PAIR_VILLAIN_PINNED: Record<string, string> = {
-  'solar-apex': 'titan-snap-echo',
   'tin-aviator': 'doctor-doom',
-  'red-codriver': 'brute-abom',
-  'shade-knight': 'laughing-harlequin',
   'latverian-sovereign': 'doctor-doom'
 };
 
 export function pairVillainForHero(heroId: string): VillainCloneSpec {
+  const scripted = primaryVillainIdForHero(heroId);
   const pinned = PAIR_VILLAIN_PINNED[heroId];
-  if (pinned) {
-    const v = getVillainClone(pinned);
+  const bossId = pinned ?? scripted;
+  if (bossId) {
+    const v = getVillainClone(bossId);
     if (v) return v;
   }
-  const rivals = VILLAIN_CLONES.filter((v) => v.rivalHeroIds.includes(heroId));
+  const canonical = VILLAIN_CLONES.find((v) => v.primaryRivalHeroId === heroId);
+  if (canonical) return canonical;
+  const rivals = VILLAIN_CLONES.filter((v) => v.rivalHeroIds.includes(heroId)).sort((a, b) => {
+    const aPrimary = a.primaryRivalHeroId === heroId ? 0 : 1;
+    const bPrimary = b.primaryRivalHeroId === heroId ? 0 : 1;
+    return aPrimary - bPrimary;
+  });
   return rivals[0] ?? VILLAIN_CLONES[0]!;
 }
 

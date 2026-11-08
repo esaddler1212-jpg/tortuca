@@ -2,13 +2,49 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#1a2744" />
-    <title>BOYS — With Purpose</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="description" content="Battleworld — homage crossover planet (Flight Nemulator)." />
+    <meta name="theme-color" content="#120a28" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>Battleworld</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <div class="bw-bg" aria-hidden="true"></div>
+    <div class="bw-ring" aria-hidden="true"></div>
+
+    <header class="bw-header">
+      <p class="bw-eyebrow">Flight Nemulator</p>
+      <h1 class="bw-title">Battleworld</h1>
+      <p class="bw-tagline">One patchwork planet · territories · pair rivals · safe houses</p>
+    </header>
+
+    <main class="bw-main">
+      <div class="bw-poster" aria-hidden="true">
+        <span class="bw-poster-glow"></span>
+        <span class="bw-poster-label">Play</span>
+      </div>
+      <section class="bw-actions" aria-label="Launch">
+        <p class="bw-meta" id="last-played">Not played yet on this device</p>
+        <button type="button" class="bw-play" id="play-btn">Enter Battleworld</button>
+        <p class="bw-hint">Desktop: <kbd>WASD</kbd> move · <kbd>Space</kbd> boost · gamepad supported in-game</p>
+      </section>
+    </main>
+
+    <footer class="bw-foot">
+      <span>Fan tribute · homage codenames only</span>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

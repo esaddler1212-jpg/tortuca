@@ -1,6 +1,7 @@
 /** Homage codenames only — not affiliated with rights holders. */
 
 import type { AerialMobility } from './aerial-mobility';
+import { buildExpansionHeroes } from './roster-expansion';
 import { wallCrawlerForms } from './hero-symbiote';
 import { venomEchoForms, VENOM_PLAYABLE_ID } from './hero-venom-bond';
 
@@ -1022,6 +1023,57 @@ export const HERO_ROSTER: HeroSpec[] = [
     aerial: 'magnet'
   },
   {
+    id: 'frost-monarch',
+    codename: 'Frost Monarch',
+    tagline: 'Diamond queen — telekinetic hover',
+    districtId: 'watchtower-annex',
+    homeLabel: 'Ice Spire Annex',
+    powers: ['telekinesis', 'beam'],
+    flight: { cruiseKmh: 360, boostKmh: 2050, agility: 1.02, mass: 88 },
+    energy: { staminaMax: 132, regenPerSec: 23, superCooldownSec: 17, primaryCooldownSec: 0.27 },
+    smashRadius: 3.4,
+    forms: [
+      { id: 'diamond', label: 'Diamond form', speedMul: 0.96, powerMul: 1.28, color: [0.82, 0.92, 0.98] },
+      { id: 'queen', label: 'White queen', speedMul: 1.08, powerMul: 1.12, color: [0.95, 0.95, 0.98] }
+    ],
+    defaultFormId: 'diamond',
+    aerial: 'native'
+  },
+  {
+    id: 'cable-echo',
+    codename: 'Cable Echo',
+    tagline: 'TK bubble hover — future soldier',
+    districtId: 'sokovia-memorial',
+    homeLabel: 'Chrono Bunker',
+    powers: ['beam', 'telekinesis'],
+    flight: { cruiseKmh: 340, boostKmh: 1980, agility: 0.92, mass: 108 },
+    energy: { staminaMax: 138, regenPerSec: 21, superCooldownSec: 19, primaryCooldownSec: 0.3 },
+    smashRadius: 3.6,
+    forms: [
+      { id: 'field', label: 'TK field', speedMul: 1, powerMul: 1.15, color: [0.22, 0.35, 0.55] },
+      { id: 'soldier', label: 'Future rig', speedMul: 0.94, powerMul: 1.25, color: [0.35, 0.28, 0.22] }
+    ],
+    defaultFormId: 'field',
+    aerial: 'native'
+  },
+  {
+    id: 'banshee-wail',
+    codename: 'Banshee Wail',
+    tagline: 'Sonic scream glide — classic X-flight',
+    districtId: 'gotham-nights',
+    homeLabel: 'Pipe Loft',
+    powers: ['thunder', 'beam'],
+    flight: { cruiseKmh: 380, boostKmh: 2200, agility: 1.1, mass: 84 },
+    energy: { staminaMax: 128, regenPerSec: 24, superCooldownSec: 16, primaryCooldownSec: 0.25 },
+    smashRadius: 3.2,
+    forms: [
+      { id: 'scream', label: 'Sonic glide', speedMul: 1.1, powerMul: 1.05, color: [0.18, 0.55, 0.42] },
+      { id: 'echo', label: 'Resonance burst', speedMul: 1.02, powerMul: 1.22, color: [0.12, 0.38, 0.32] }
+    ],
+    defaultFormId: 'scream',
+    aerial: 'native'
+  },
+  {
     id: 'latverian-sovereign',
     codename: 'Latverian Sovereign',
     tagline: 'Only dual-role legend — hero or villain',
@@ -1143,7 +1195,8 @@ export const HERO_ROSTER: HeroSpec[] = [
     ],
     defaultFormId: 'fat',
     aerial: 'ki'
-  }
+  },
+  ...buildExpansionHeroes()
 ];
 
 export function getHero(id: string): HeroSpec | undefined {

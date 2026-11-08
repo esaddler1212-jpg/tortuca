@@ -1,12 +1,26 @@
+# Battleworld portal — Flight Nemulator bundle (replaces legacy BOYS student site)
+
 [build]
-  command = "npm run build"
+  command = "npm ci && npm run build:all"
   publish = "dist"
 
 [build.environment]
   NODE_VERSION = "22"
 
-# API lives on the Family Purpose Netlify site — set in Netlify env:
-# VITE_BOYS_API_URL = https://your-family-purpose-site.netlify.app
+[[headers]]
+  for = "/flight-nemulator/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[redirects]]
+  from = "/flight-nemulator/*"
+  to = "/flight-nemulator/index.html"
+  status = 200
 
 [[redirects]]
   from = "/*"

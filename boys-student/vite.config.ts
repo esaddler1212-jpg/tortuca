@@ -1,17 +1,10 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-
-const apiTarget = process.env.BOYS_API_PROXY ?? "http://127.0.0.1:8888";
+import { defineConfig } from 'vite';
 
 export default defineConfig({
-  plugins: [react()],
-  server: {
-    host: true,
-    proxy: {
-      "/api": {
-        target: apiTarget,
-        changeOrigin: true,
-      },
-    },
-  },
+  base: './',
+  build: {
+    target: 'es2022',
+    outDir: 'dist',
+    emptyOutDir: true
+  }
 });

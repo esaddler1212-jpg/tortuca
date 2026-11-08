@@ -1,6 +1,12 @@
 import { HERO_ROSTER } from './hero-roster';
 import { pairVillainCodename } from './hero-pair-boss';
-import { arcBeatsForHero, hasArcBeat, type ArcBeat } from './arc-progress';
+import {
+  arcBeatsForHero,
+  hasArcBeat,
+  hasDistrictSignatureBeat,
+  type ArcBeat
+} from './arc-progress';
+import { isVillainOnlyHero } from './hero-alignment';
 import { HERO_MUTATIONS, type MutationUniverse } from './roster-mutations';
 
 export type ArcContext = {
@@ -238,6 +244,31 @@ register(
 );
 
 // Speed / cosmic / misc — compact defaults
+register(
+  'frost-monarch',
+  buildArc('frost-monarch', {
+    title: 'White queen siege',
+    thread: 'Sentinel raids vs X-flight school — Mind Stone hunters watch',
+    links: ['nimrod-sentinel', 'cinder-phoenix', 'storm-caller']
+  })
+);
+register(
+  'cable-echo',
+  buildArc('cable-echo', {
+    title: 'Future solder',
+    thread: 'Chrono bunker ↔ Sokovia memorial — stones fracture timelines',
+    links: ['trickster-prince', 'brain-colossus', 'tin-aviator']
+  })
+);
+register(
+  'banshee-wail',
+  buildArc('banshee-wail', {
+    title: 'Sonic glide',
+    thread: 'Gotham pipe loft — pair vs Sabretooth echoes',
+    links: ['sabretooth-echo', 'night-gargoyle', 'shade-knight']
+  })
+);
+
 const DEFAULT_LINKS: Record<string, string[]> = {
   'martian-strider': ['trickster-prince', 'brain-colossus'],
   'velocity-streak': ['mirror-streak', 'android-phalanx'],
@@ -253,7 +284,16 @@ const DEFAULT_LINKS: Record<string, string[]> = {
   'phoenix-ember': ['cinder-phoenix', 'magnet-warden', 'storm-caller'],
   'wing-archon': ['sky-tyrant', 'shade-knight'],
   'golden-sentry': ['void-colossus', 'harbinger-titan'],
-  'magnet-sovereign': ['magnet-warden', 'chrome-sage']
+  'magnet-sovereign': ['magnet-warden', 'chrome-sage'],
+  'cosmic-envoy': ['annihilus-gate', 'titan-snap-echo'],
+  'crimson-ace': ['deceit-winger', 'megaton-forge'],
+  'undefeated-youth': ['throne-viltrum', 'azure-patriarch'],
+  'nth-wing': ['night-gargoyle', 'sky-tyrant'],
+  'scarab-pilot': ['brain-colossus', 'vulture-scavenger'],
+  'magnetic-ace': ['iron-sentinel', 'nimrod-sentinel'],
+  'patriot-apex': ['lex-frame', 'titan-snap-echo'],
+  'chrome-convoy': ['megaton-forge', 'deceit-winger'],
+  'condor-warden': ['sky-tyrant', 'night-gargoyle']
 };
 
 for (const h of HERO_ROSTER) {
@@ -279,6 +319,22 @@ export function arcPickerLine(heroId: string): string | null {
   return `${arc.title} — ${thread}`;
 }
 
+export function arcPickerLinks(heroId: string): string | null {
+  const arc = BATTLEWORLD_ARCS[heroId];
+  if (!arc?.links.length) return null;
+  return `Linked: ${arc.links.slice(0, 4).join(', ')}`;
+}
+
+export function villainRunwayHudLine(heroId: string, wave: number): string | null {
+  if (!isVillainOnlyHero(heroId)) return null;
+  const arc = BATTLEWORLD_ARCS[heroId];
+  const title = arc?.title ?? 'Villain runway';
+  if (wave >= 10) {
+    return `${title}: apex lattice — annihilate, remake Earth, or absorb the grid`;
+  }
+  return `${title}: villain runway · wave ${wave} — raid districts before lattice apex`;
+}
+
 export function latticeHudLine(lattice: number): string {
   return `Battleworld lattice ${lattice} — arcs link when you clear takeovers, stones, and pair rivals`;
 }
@@ -294,6 +350,13 @@ export function characterArcHudLine(heroId: string, ctx: ArcContext): string | n
   }
   if (ctx.pairBossBlocked && ctx.role === 'hero') {
     return `${arc.title}: finish territory & God Emperor stone hunt before facing ${rival}`;
+  }
+  if (
+    ctx.role === 'hero' &&
+    ctx.districtId === arc.districtId &&
+    !hasDistrictSignatureBeat(heroId)
+  ) {
+    return `${arc.title}: press H at home turf (${arc.districtId}) — ${arc.signatureLabel ?? arc.thread}`;
   }
   if (!beats.has('stone-linked') && ctx.role === 'hero' && ctx.stonesSealed < 3) {
     return `${arc.title}: seal Infinity Stones (H) — ${arc.signatureLabel ?? arc.thread}`;
@@ -338,6 +401,14 @@ export function tryArcDistrictInteract(
     return {
       beat: 'stone-linked',
       line: 'Stark Nexus lattice — Power Stone board linked to Iron trial'
+    };
+  }
+
+  const arc = BATTLEWORLD_ARCS[heroId];
+  if (arc && districtId === arc.districtId && !hasArcBeat(heroId, 'home-mark')) {
+    return {
+      beat: 'home-mark',
+      line: `${arc.title}: home turf marked — ${arc.homage} thread locked on Battleworld`
     };
   }
   return null;

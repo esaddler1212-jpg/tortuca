@@ -32,7 +32,14 @@ const required = [
   'src/territory-invasion.ts',
   'src/territory-tick.ts',
   'src/battleworld.ts',
+  'src/battleworld-districts.ts',
+  'src/battleworld-chapters.ts',
+  'src/battleworld-lattice-cloud.ts',
+  'src/hero-villain-apex.ts',
   'src/battleworld-arcs.ts',
+  'src/battleworld-dialogue.ts',
+  'src/battleworld-autosave.ts',
+  'src/cutscene-queue.ts',
   'src/arc-progress.ts',
   'src/infinity-stones-arc.ts',
   'src/infinity-stones-tick.ts',
@@ -68,6 +75,24 @@ const pairBoss = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-pair-bo
   stdio: 'inherit'
 });
 if (pairBoss.status !== 0) process.exit(pairBoss.status ?? 1);
+
+const parity = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-hero-villain-parity.mts')], {
+  cwd: root,
+  stdio: 'inherit'
+});
+if (parity.status !== 0) process.exit(parity.status ?? 1);
+
+const dialogue = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-battleworld-dialogue.mts')], {
+  cwd: root,
+  stdio: 'inherit'
+});
+if (dialogue.status !== 0) process.exit(dialogue.status ?? 1);
+
+const lattice = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-battleworld-lattice.mts')], {
+  cwd: root,
+  stdio: 'inherit'
+});
+if (lattice.status !== 0) process.exit(lattice.status ?? 1);
 
 const arcs = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-battleworld-arcs.mts')], {
   cwd: root,
