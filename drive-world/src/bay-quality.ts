@@ -8,8 +8,8 @@ export function applyBayQualityPreset(base: GameSettings, preset: BayQualityPres
       ...base,
       bayQualityPreset: preset,
       fogQuality: 'low',
-      showTraffic: false,
-      showSideshow: false,
+      showTraffic: true,
+      showSideshow: true,
       hubStreamingEnabled: true,
       fuelSimEnabled: base.fuelSimEnabled
     };

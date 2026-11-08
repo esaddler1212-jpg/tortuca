@@ -4,6 +4,8 @@ Open-world **Bay Area night driving** prototype (PlayCanvas + Ammo + React HUD).
 
 Folder name remains `drive-world/` for Netlify base-directory wiring; the product name is **City Nights**.
 
+**Standalone:** no Family Purpose login — optional cloud save + feedback links in Settings. Personal playbook: [`docs/CITY_NIGHTS_PLAYBOOK.md`](../docs/CITY_NIGHTS_PLAYBOOK.md).
+
 **Feel target:** CPM2 skill loops + Forza festival polish + Midnight Club Bay-night boost & heat. See [`docs/CITY_NIGHTS_FEEL.md`](../docs/CITY_NIGHTS_FEEL.md).
 
 **Browser research (Craft Anything):** install [`tools/craft-anything/`](../tools/craft-anything/) and follow [`docs/CITY_NIGHTS_CRAFT_ANYTHING.md`](../docs/CITY_NIGHTS_CRAFT_ANYTHING.md). Findings land in [`research/findings/`](research/findings/).

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
  * Headless boot smoke — catches WebGL/TS boot failures before deploy.
- * Needs Google Chrome/Chromium (CHROME_PATH overrides; auto-detect on Linux/macOS).
+ * Resolves Chromium on Linux CI (CHROME_PATH overrides).
  */
-import { execSync, spawn } from 'node:child_process';
+import { execSync } from 'node:child_process';
 import { createServer } from 'node:http';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
@@ -20,6 +20,8 @@ function resolveChromePath() {
   const candidates = [
     '/usr/bin/google-chrome-stable',
     '/usr/bin/google-chrome',
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser',
     '/usr/local/bin/google-chrome',
     '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     '/snap/bin/chromium'
@@ -28,9 +30,10 @@ function resolveChromePath() {
     if (existsSync(p)) return p;
   }
   try {
-    const found = execSync('sh -c "command -v google-chrome-stable || command -v google-chrome || command -v chromium"', {
-      encoding: 'utf8'
-    }).trim();
+    const found = execSync(
+      'sh -c "command -v google-chrome-stable || command -v google-chrome || command -v chromium-browser || command -v chromium"',
+      { encoding: 'utf8' }
+    ).trim();
     if (found && existsSync(found)) return found;
   } catch {
     /* no chrome on PATH */
@@ -56,6 +59,7 @@ function serveStatic(req, res) {
       '.wasm': 'application/wasm',
       '.json': 'application/json',
       '.png': 'image/png',
+      '.ogg': 'audio/ogg',
       '.glb': 'model/gltf-binary'
     };
     res.writeHead(200, { 'Content-Type': types[ext] ?? 'application/octet-stream' });
@@ -68,6 +72,11 @@ function serveStatic(req, res) {
 
 if (!statSync(dist).isDirectory()) {
   console.error('Run npm run build first (missing dist/)');
+  process.exit(1);
+}
+
+if (!existsSync(chrome)) {
+  console.error(`FAIL: no Chromium/Chrome at ${chrome} — set CHROME_PATH or install chromium`);
   process.exit(1);
 }
 

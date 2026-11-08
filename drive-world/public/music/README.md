@@ -11,3 +11,5 @@ Drop **CC0 or tracks you own** here (`.mp3`, `.ogg`, `.wav`), then list them in 
 ```
 
 In-game: **Settings → Music → Use my playlist**. Procedural radio stays available when the playlist is empty.
+
+Generate candidates locally with [ACE-Step](../../../tools/ace-step/) (instrumental, no vocals) — see `CHERRY_PICK.md` there.
