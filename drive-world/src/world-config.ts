@@ -70,9 +70,9 @@ export const DISTRICTS: Record<DistrictId, DistrictSpec> = {
     label: 'Oakland / East Bay',
     mapRegion: 'East Bay',
     minX: 320,
-    maxX: 1180,
+    maxX: 1220,
     minZ: -520,
-    maxZ: 480,
+    maxZ: 520,
     blockM: 76,
     heightMin: 10,
     heightMax: 40,
@@ -172,6 +172,16 @@ export const FREEWAY_880: FreewayWaypoint[] = [
   { x: 740, z: -320, y: 0 }
 ];
 
+/** Hwy 24: Caldecott → Lafayette / Concord corridor (compressed). */
+export const FREEWAY_24: FreewayWaypoint[] = [
+  { x: 392, z: 262, y: 4 },
+  { x: 480, z: 228, y: 2 },
+  { x: 620, z: 178, y: 0 },
+  { x: 820, z: 128, y: 0 },
+  { x: 1000, z: 98, y: 0 },
+  { x: 1100, z: 72, y: 0 }
+];
+
 /** I-280: SF ↔ Peninsula interior. */
 export const FREEWAY_280: FreewayWaypoint[] = [
   { x: -750, z: -580, y: 0 },
@@ -183,7 +193,13 @@ export const FREEWAY_280: FreewayWaypoint[] = [
 ];
 
 /** All drivable freeway spines for the bay loop. */
-export const FREEWAY_ROUTES: FreewayWaypoint[][] = [FREEWAY_I80, FREEWAY_101, FREEWAY_880, FREEWAY_280];
+export const FREEWAY_ROUTES: FreewayWaypoint[][] = [
+  FREEWAY_I80,
+  FREEWAY_101,
+  FREEWAY_880,
+  FREEWAY_280,
+  FREEWAY_24
+];
 
 /** @deprecated use FREEWAY_I80 */
 export const FREEWAY_ROUTE = FREEWAY_I80;

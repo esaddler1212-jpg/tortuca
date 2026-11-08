@@ -41,7 +41,13 @@ export const LANDMARKS: LandmarkDef[] = [
   { id: 'sap-center', name: 'SAP Center', district: 'southBay', x: 400, z: -1220, visitRadius: 52 },
   { id: 'sfo-skypad', name: 'SFO Skypad', district: 'peninsula', x: -180, z: -1180, visitRadius: 58 },
   { id: 'vallejo-helipad', name: 'Vallejo Helipad', district: 'vallejo', x: 540, z: 920, visitRadius: 48 },
-  { id: 'oakland-hill-radio', name: 'Oakland Hill radio', district: 'eastBay', x: 360, z: 160, visitRadius: 55 }
+  { id: 'oakland-hill-radio', name: 'Oakland Hill radio', district: 'eastBay', x: 360, z: 160, visitRadius: 55 },
+  { id: 'telegraph-ave', name: 'Telegraph Ave', district: 'eastBay', x: 538, z: 28, visitRadius: 52 },
+  { id: 'caldecott-tunnel', name: 'Caldecott Tunnel', district: 'eastBay', x: 392, z: 265, visitRadius: 62 },
+  { id: 'orinda', name: 'Orinda hillside', district: 'eastBay', x: 458, z: 332, visitRadius: 50 },
+  { id: 'concord', name: 'Concord plaza', district: 'eastBay', x: 1035, z: 102, visitRadius: 55 },
+  { id: 'walnut-creek', name: 'Walnut Creek', district: 'eastBay', x: 1105, z: 48, visitRadius: 52 },
+  { id: 'martinez', name: 'Martinez shoreline', district: 'eastBay', x: 1110, z: 415, visitRadius: 58 }
 ];
 
 export function landmarksInDistrict(district: DistrictId): LandmarkDef[] {

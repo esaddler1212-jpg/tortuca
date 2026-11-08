@@ -113,10 +113,10 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     const oldRot = vehicle()?.getEulerAngles();
     destroyPlayerVehicle(player?.entity ?? null);
     player = null;
-    const p = pos ?? old ?? spawnFromProgress();
+    const p = (pos ?? old ?? spawnFromProgress()).clone();
     if (isAerialVehicle(vehicleId)) {
       const floor = hillOffsetM(p.x, p.z) + 0.8;
-      p.y = Math.max(p.y, floor + 38);
+      p.set(p.x, Math.max(p.y, floor + 38), p.z);
     }
     const custom = getVehicleCustomization(progress, vehicleId);
     draftCustom = { ...custom };

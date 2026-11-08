@@ -1,5 +1,6 @@
 import { Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
 
+import { hillOffsetM } from './bay-terrain';
 import { matConcrete, matGlass, matOrange, matStone, matWarmWindow } from './landmark-materials';
 
 function box(
@@ -67,6 +68,28 @@ function ringBuilding(app: AppBase, name: string, x: number, z: number, radius: 
   box(app, `${name}-core`, x, 3, z, radius * 1.2, 2, radius * 1.2, matGlass());
 }
 
+/** Telegraph Ave — Berkeley campus south toward downtown Oakland (compressed strip). */
+function telegraphCorridor(app: AppBase, warm: StandardMaterial, stone: StandardMaterial) {
+  for (let i = 0; i < 14; i++) {
+    const t = i / 13;
+    const z = 115 - t * 310;
+    const x = 524 + (i % 3) * 7;
+    const y = hillOffsetM(x, z) + 7;
+    box(app, `telegraph-shop-${i}`, x, y, z, 13, 9, 7, warm, i === 7);
+  }
+  box(app, 'telegraph-sign', 534, hillOffsetM(534, 30) + 11, 30, 20, 7, 1.1, matOrange());
+  box(app, 'telegraph-awning', 530, hillOffsetM(530, 28) + 9.5, 28, 22, 1.2, 10, stone);
+}
+
+function caldecottPortal(app: AppBase, x: number, z: number) {
+  const concrete = matConcrete();
+  const y = hillOffsetM(x, z) + 6;
+  box(app, 'caldecott-hill', x, y + 18, z, 70, 32, 24, concrete, true);
+  box(app, 'caldecott-bore-l', x - 9, y + 5, z, 11, 11, 8, matStone());
+  box(app, 'caldecott-bore-r', x + 9, y + 5, z, 11, 11, 8, matStone());
+  box(app, 'caldecott-arch', x, y + 14, z, 32, 3, 4, matOrange());
+}
+
 function bridgeSpan(app: AppBase, name: string, x: number, z0: number, z1: number, deckY: number) {
   const orange = matOrange();
   const len = Math.abs(z1 - z0);
@@ -115,6 +138,16 @@ export function buildBayAreaLandmarks(app: AppBase): void {
   box(app, 'grizzly-bear-silhouette', 400, 38, 218.8, 8, 5, 0.4, stone);
   box(app, 'oakland-radio-mast', 360, 48, 160, 4, 88, 4, matOrange(), true);
   box(app, 'oakland-radio-dish', 360, 92, 160, 12, 1.2, 12, matConcrete());
+  telegraphCorridor(app, warm, stone);
+  caldecottPortal(app, 392, 265);
+  box(app, 'orinda-theatre', 458, 22, 332, 28, 14, 16, warm, true);
+  box(app, 'orinda-marquee', 458, 31, 338, 22, 3, 10, matOrange());
+  box(app, 'concord-plaza', 1035, 10, 102, 40, 8, 40, matConcrete(), true);
+  box(app, 'concord-flag', 1035, 18, 102, 6, 10, 6, matOrange());
+  box(app, 'walnut-broadway', 1105, 14, 48, 36, 20, 22, warm, true);
+  box(app, 'walnut-plaza-trees', 1105, 6, 58, 28, 4, 18, matGlass());
+  box(app, 'martinez-pier', 1110, 5, 415, 48, 6, 22, stone, true);
+  box(app, 'martinez-tank-farm', 1140, 16, 430, 18, 28, 18, matConcrete());
 
   // —— Vallejo ——
   box(app, 'mare-island-crane-leg-a', 430, 28, 1020, 4, 56, 4, matOrange());

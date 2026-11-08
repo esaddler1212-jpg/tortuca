@@ -14,10 +14,16 @@ Low-poly **stand-ins** for well-known places. Not to scale; positions follow the
 | | Napa silo | `napa-silo` |
 | | Carquinez strait tower | `carquinez-tower` |
 | **East Bay** | Sather Campanile (Berkeley) | `sather-campanile-*` |
+| | Telegraph Ave strip | `telegraph-*` |
+| | Caldecott Tunnel portal | `caldecott-*` |
+| | Orinda theatre block | `orinda-*` |
 | | Grizzly Peak overlook | `grizzly-*` |
 | | Fox Theater (Oakland) | `fox-*` |
 | | Oakland Arena ring | `oakland-arena-*` |
 | | Lake Merritt | `lake-merritt` |
+| | Concord plaza | `concord-*` |
+| | Walnut Creek block | `walnut-*` |
+| | Martinez shoreline | `martinez-*` |
 | **Vallejo** | Mare Island crane | `mare-island-crane-*` |
 | **Peninsula** | Hoover Tower | `hoover-tower` |
 | | Dumbarton Bridge | `dumbarton-*` |

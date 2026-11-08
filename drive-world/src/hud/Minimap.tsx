@@ -18,7 +18,7 @@ export function Minimap({ snap }: { snap: HudSnapshot }) {
 
   return (
     <div className="minimap-wrap">
-      <div className="minimap-title">Bay map</div>
+      <div className="minimap-title">City Nights map</div>
       <svg width={SIZE} height={SIZE} className="minimap" aria-hidden>
         <rect x={0} y={0} width={SIZE} height={SIZE} className="minimap-bg" />
         {LANDMARKS.map((lm) => (

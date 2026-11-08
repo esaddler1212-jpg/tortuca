@@ -1,4 +1,4 @@
-import { Color, Entity, StandardMaterial, type AppBase } from 'playcanvas';
+import { Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
 
 import { hillOffsetM } from './bay-terrain';
 import { BAY_WINDOW_LIGHTS, hash2 } from './night-palette';

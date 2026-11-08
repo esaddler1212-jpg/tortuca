@@ -1,0 +1,78 @@
+# City Nights — audit (Nov 2026)
+
+Compressed **Bay Area night sandbox** in `drive-world/`. Not a AAA open world; a single-player browser prototype with progression, collectibles, and bonus vehicles.
+
+## What you have today
+
+| Layer | Shipped |
+|-------|---------|
+| **World** | ~5.2 km half-extent, 6 districts, procedural blocks, freeways (80/101/880/280/24), bay water, ramps, Lombard, traffic toggle |
+| **Progression** | Waymo intro → garage starter → visit all landmarks per region → regional car |
+| **Extra vehicles** | Aerial (scenic + rotor token), legend homages (collectibles), Kenney + CC0 glTF |
+| **Systems** | Nitro, gamepad, touch pad (ground), scenic routes, speed traps, fast travel, photo mode, drone/chase/cockpit cam, fog, garage tuning |
+| **Persistence** | `localStorage` v5 (pose, stats, unlocks) |
+| **Deploy** | Separate Netlify site, folder `drive-world`, product name **City Nights** |
+
+## Geography you asked about
+
+| Place | In game? |
+|-------|----------|
+| **Telegraph Ave** (Berkeley → Oakland) | Yes — landmark + shop strip meshes |
+| **Caldecott / tunnel side** | Yes — portal landmark + **Hwy 24** spine to Concord |
+| **Orinda** | Yes — hillside / theatre beacon |
+| **Concord** | Yes — plaza landmark (east along 24) |
+| **Walnut Creek** | Yes — Broadway-style block |
+| **Martinez** | Yes — shoreline pier + tank-farm hint |
+
+East Bay district bounds were nudged east/north (`eastBay` in `world-config.ts`) so Concord / Martinez sit inside the same region bucket for unlocks.
+
+**Still abstract:** Richmond, Antioch, Pleasant Hill strip malls, real BART geometry, tunnel interiors (portals only).
+
+## Vs typical open-world driving games
+
+Compared to *Forza Horizon*, *TDU*, *Need for Speed*, *Cruis’n* / arcade roamers:
+
+| Common feature | City Nights |
+|----------------|-------------|
+| Large authored world | Procedural + landmark art |
+| Story missions | Waymo + landmark / scenic goals only |
+| AI traffic / police | Ambient freeway traffic (simple); no chases |
+| Damage / repair | None |
+| Day/night cycle | Night-only |
+| Weather | Regional fog slider |
+| Interiors | None |
+| Multiplayer | None |
+| Map / GPS voice | React minimap + nav hint |
+| Photo / social | Photo mode (local) |
+| Licensed cars | CC0 + homages |
+| Cloud save | No |
+| Controller remap | Partial (gamepad + defaults) |
+| Mobile flight | Touch drive only on ground |
+
+**Reasonable next bets** (if you want “more game” without scope explosion): mission board text, one police “heat” meter on speed traps, lazy GLB load, tunnel camera fade, touch altitude buttons, cloud save via Tortuca auth.
+
+## Cleanup backlog (engineering)
+
+| Item | Severity | Notes |
+|------|----------|-------|
+| `npm run typecheck` | Medium | ~15 errors (`ScriptComponent` typing, `Vec3` import in `build-districts`, `GameSettings` in listener, progress migrate types) |
+| Bundle size ~1.55 MB JS | Medium | Lazy-load vehicle GLBs; code-split HUD |
+| Event namespace `drive-world:*` | Low | Rename to `city-nights:*` only if you accept breaking bookmarks/docs |
+| Duplicate deploy docs | Low | `DRIVE_WORLD_DEPLOY.md` → pointer; prefer `CITY_NIGHTS_DEPLOY.md` |
+| `main.ts` `options.mouse = undefined` | Low | Type error; use proper Mouse or omit |
+| No CI gate for `drive-world/` | Low | Optional `npm run build` job on path filter |
+| Internal package name `drive-world` | OK | Keeps Netlify base dir stable |
+
+## Content balance note
+
+East Bay now has **12** landmarks (was 6). Clearing the region takes longer — intentional for “inner East Bay + 24 corridor” fantasy. If it feels grindy, split a **`lamorinda`** district later or lower `visitRadius` on suburban pins.
+
+## Player-facing gaps to watch on Chromebook
+
+- First load heavy (WebGL + assets).
+- Flight needs keyboard / gamepad for altitude.
+- Saves are per-browser, not Google account.
+
+---
+
+_Last updated with Telegraph / Caldecott / Orinda / Concord / Walnut Creek / Martinez pass._
