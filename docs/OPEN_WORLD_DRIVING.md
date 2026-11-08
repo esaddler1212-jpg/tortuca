@@ -1,15 +1,16 @@
 # Open-world driving — big map, no speed limit
 
-Browser sandbox: **one large map**, **drive as fast as you want**, no races or events. Runnable prototype: [`drive-world/`](../drive-world/).
+Browser open world (**City Nights**): one large Bay map, drive as fast as you want, plus optional CPM-style loops. Runnable: [`drive-world/`](../drive-world/). Current scope and priorities: [`CITY_NIGHTS_PLAYBOOK.md`](./CITY_NIGHTS_PLAYBOOK.md).
 
 ## Product focus
 
-| In | Out |
+| In | Out (for now) |
 |----|-----|
-| Huge continuous world you can roam | Checkpoints, festivals, race queues |
-| Arcade raycast car that keeps pulling | Police heat, pink slips, unlock trees |
-| Speed HUD, chase cam, open throttle | NPC traffic (unless you add it later for atmosphere) |
-| Later: terrain, biomes, loops, tunnels | Multiplayer requirements at v1 |
+| Huge continuous world you can roam | Multiplayer, pink slips |
+| Arcade raycast car that keeps pulling | Day/night cycle (night-only art direction) |
+| Optional loops: parking, drag, drift, time attack, landmark sprints, sideshow meets, courier | Mandatory race queues |
+| Speed-trap heat + light chaser at heat ≥ 4 | Full police pursuit AI |
+| Freeway + hub street traffic, coastal rain | Account-linked saves (Iris) |
 
 ## Bay Area layout (reference map)
 
@@ -32,10 +33,12 @@ The world follows the usual **Bay Area macro regions** (same mental model as the
 
 ## Progression loop
 
-1. **SFO airport** — **Waymo** autonomous ride (no driving); it follows **101 → I-80** to the **Vallejo Safehouse**.
-2. **Safehouse** — choose 1 of 3 **garage starters** (`Safehouse Cruiser`, `Sport`, `Ute`); you drive from here.
-3. **Regions** — visit **every landmark** in a macro region (SF, Marin, East Bay, Vallejo, Peninsula, South Bay) to unlock that **region’s signature car** (6 unlocks).
-4. **Garage** — swap rides; **customize** paint / glow / power / grip / wheels. **React HUD**: minimap, next landmark, region checklist, touch pedals, cockpit cam (C), skip Waymo. Progress: `drive-world-progress-v4` (saves **last parking pose**). Deploy: [`DRIVE_WORLD_DEPLOY.md`](./DRIVE_WORLD_DEPLOY.md).
+1. **SFO airport** — cinematic **Waymo** prologue (drone → passenger camera, skippable) along **101 → I-80** to the **Vallejo estate**.
+2. **Estate** — choose 1 of 4 **garage starters** (Cruiser, Sport, Ute, Drifter).
+3. **Chapter 1** — one pinned objective: find the **Vallejo taco truck + any Vallejo landmark**. That opens Bay fast travel, city search, and Land here.
+4. **Regions** — in each macro region, **taco truck + any landmark** unlocks that region’s signature car and safehouse.
+5. **More cars** — parking stars, activity goals, district sideshow meets, homage tokens, and craft shards (see `vehicle-catalog.ts`).
+6. **Garage** — swap rides and tune paint, handling, camber, spoiler, exhaust, dyno. Save data is v9 under the `drive-world-progress-v5` storage key. Deploy: [`CITY_NIGHTS_DEPLOY.md`](./CITY_NIGHTS_DEPLOY.md).
 
 Gap checklist: [`DRIVE_WORLD_STATUS.md`](./DRIVE_WORLD_STATUS.md).
 

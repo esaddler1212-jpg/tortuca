@@ -33,23 +33,23 @@ Compressed **Bay Area night sandbox** in `drive-world/` (PlayCanvas 2.23 + Ammo 
 
 | Need | Why | Scope |
 |------|-----|-------|
-| ~~**Browser smoke test in CI**~~ | **Done:** `drive-world/scripts/smoke-boot.mjs` + `npm run test:smoke` in `.github/workflows/city-nights.yml` | Extend smoke: skip Waymo → drive 5 s (future) |
-| **Chase camera collision** | Camera clips inside buildings/garage walls at spawn and in dense hubs (visible in smoke screenshots) | Raycast from car to camera target in `camera-profiles.ts`, pull camera in on hit |
-| **HUD density** | Right column stacks ~10 panels (missions, stats, settings, fast travel, landmarks, search, music, journal…). Crowded at 1280×720, worse on phones | Collapse into one tabbed "Map / Missions / Garage / Settings" drawer; keep minimap + speed always on |
-| **First-session clarity** | Player lands at Vallejo with 37 landmarks, 6 taco trucks, 14 parking bays, 10 vistas, 5 homage tokens, scenic routes — no "do this first" | Single pinned objective that advances (first taco truck → first unlock), rest behind the mission tab |
-| **Nav hint polish** | Shows `Bear right · 0.0 mi` when the next leg point is close | Skip legs < ~80 m; show street name of next leg when available |
-| **Hub streaming hitch** | Building a hub's blocks + static colliders happens in one frame when you approach | Spread `buildCityHubBlocks` over several frames (chunk per update) |
+| ~~**Browser smoke test in CI**~~ | **Done:** `drive-world/scripts/smoke-boot.mjs` + `npm run test:smoke` in `.github/workflows/city-nights.yml` | **Done:** smoke skips Waymo and holds W for 5 s |
+| ~~**Chase camera collision**~~ | **Done (partial):** physics raycast in `camera-profiles.ts`; tight garages can still clip. Was: camera clips inside buildings/garage walls at spawn and in dense hubs (visible in smoke screenshots) | Raycast from car to camera target in `camera-profiles.ts`, pull camera in on hit |
+| ~~**HUD density**~~ | **Done:** tabbed Map / Missions / Garage / Settings drawer. Was: right column stacks ~10 panels (missions, stats, settings, fast travel, landmarks, search, music, journal…). Crowded at 1280×720, worse on phones | Collapse into one tabbed "Map / Missions / Garage / Settings" drawer; keep minimap + speed always on |
+| ~~**First-session clarity**~~ | **Done:** one pinned Chapter 1 objective (Vallejo taco + landmark opens the Bay). Was: player lands at Vallejo with 37 landmarks, 6 taco trucks, 14 parking bays, 10 vistas, 5 homage tokens, scenic routes — no "do this first" | Single pinned objective that advances (first taco truck → first unlock), rest behind the mission tab |
+| ~~**Nav hint polish**~~ | **Done:** legs < 80 m skipped. Was: shows `Bear right · 0.0 mi` when the next leg point is close | Skip legs < ~80 m; show street name of next leg when available |
+| ~~**Hub streaming hitch**~~ | **Done:** chunked build across frames in `hub-streaming.ts`. Was: building a hub's blocks + static colliders happens in one frame when you approach | Spread `buildCityHubBlocks` over several frames (chunk per update) |
 
 ## P2 — quality and robustness
 
 | Item | Notes |
 |------|-------|
-| Lighting cost | Up to 140 freeway point lights + taco/gas/safehouse/vehicle point lights. Fine on desktop clustered lighting; measure on Chromebook / iPhone, cap via Bay quality preset |
+| Lighting cost | **Capped:** freeway lamp budget per Bay quality preset (`build-world.ts`). Was: up to 140 freeway point lights + taco/gas/safehouse/vehicle point lights. Fine on desktop clustered lighting; measure on Chromebook / iPhone, cap via Bay quality preset |
 | Bundle | 1.26 MB PlayCanvas chunk (336 KB gzip) + 223 KB React. Acceptable; Ammo WASM on top |
-| Cloud save endpoint | `city-nights-progress` is unauthenticated by design (random sync key), CORS `*`, 120 KB cap, **no rate limit**. Add a simple per-key write throttle |
-| Save key naming | Storage key is still `drive-world-progress-v5` while data is v7. Works; rename only with a migration |
+| Cloud save endpoint | `city-nights-progress` is unauthenticated by design (random sync key), CORS `*`, 120 KB cap, **no rate limit**. **Done:** per-key write throttle (`MIN_WRITE_GAP_MS`) |
+| Save key naming | Storage key is still `drive-world-progress-v5` while data is v9. Works; rename only with a migration |
 | Geography overlap | Oracle Park (−880, −610) and Chase Center (−878, −598) are **12 m apart** — beacons/meshes overlap. Real-world they're ~1 km apart; nudge Chase Center south |
-| `game-loop.ts` size | 1,060+ lines; nav, fuel, parking, streaming, HUD publish all inline. Split per system before adding more |
+| `game-loop.ts` size | 1,450+ lines; nav, fuel, parking, streaming, HUD publish all inline. Split per system before adding more |
 | No unit tests in `drive-world/` | Pure modules (`bay-navigation`, `fuel-system`, `parking-rewards`, save migration) are easy Vitest targets |
 | Accessibility | 4 `aria-*` usages across HUD; no reduced-motion option for vista pulse / sideshow spin |
 

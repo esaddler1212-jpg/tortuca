@@ -4,7 +4,7 @@
 
 1. Ran `tools/craft-anything/bin/craft-anything-cli doctor` — MCP + Chromium OK on agent VM.
 2. Constraint: **no** ripping commercial game meshes; originals only for this pass.
-3. Shipped **procedural block bodies** in `craft-vehicle-mesh.ts` (PlayCanvas boxes) — same spirit as Craft rebuild loops but hand-authored for Tortuca.
+3. Craft cars now load **Kenney CC0 GLBs** (`craft-bay-wedge` → sedan-sports, `craft-night-lift` → suv, `craft-street-spike` → race) with tuned visuals in `vehicle-gltf.ts`. The procedural block bodies in `craft-vehicle-mesh.ts` remain as the fallback when a GLB fails to load.
 
 ## Deliverables
 
@@ -16,4 +16,4 @@
 
 ## Follow-up (Craft CLI)
 
-Use `drive-world/research/city-nights-browser` project + `web_site_capture` on Netlify preview to validate silhouette readability at 390px width before replacing block bodies with exported GLB from a future Craft rebuild.
+Use `drive-world/research/city-nights-browser` project + `web_site_capture` on Netlify preview to validate silhouette readability at 390px width before swapping the Kenney stand-ins for exported GLBs from a future Craft rebuild.
