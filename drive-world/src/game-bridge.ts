@@ -31,6 +31,7 @@ export type HudSnapshot = {
   district?: DistrictId;
   atSafehouse?: boolean;
   homeSafehouseName?: string;
+  serviceSafehouseName?: string;
   homeServiceMode?: 'valet' | 'garage';
   streetName?: string | null;
 };

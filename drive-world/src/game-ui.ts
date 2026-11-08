@@ -1,6 +1,7 @@
 import { DISTRICT_LABELS, LANDMARKS } from './landmark-registry';
 import type { GamePhase, SavedProgress } from './game-progress';
 import { GARAGE_STARTER_IDS, VEHICLE_CATALOG } from './vehicle-catalog';
+import { COLLECTIBLES } from './world-extras';
 import { districtHasLandmarkVisit, districtTacoFound } from './city-checkpoints';
 import { TOTAL_LANDMARKS, countRegionsComplete, TOTAL_REGIONS } from './game-progress';
 import type { HomeServiceMode } from './safehouse-registry';
@@ -19,7 +20,8 @@ export type GameUi = {
     visible: boolean,
     progress: SavedProgress,
     onSelect: (id: string) => void,
-    serviceMode?: HomeServiceMode
+    serviceMode?: HomeServiceMode,
+    siteName?: string
   ): void;
   bindCustomize(
     vehicleId: string | null,
@@ -97,12 +99,16 @@ export function wireGameUi(): GameUi {
         toastEl.hidden = true;
       }, 4200);
     },
-    setGarageVisible(visible, progress, onSelect, serviceMode = 'garage') {
+    setGarageVisible(visible, progress, onSelect, serviceMode = 'garage', siteName) {
       garageEl.hidden = !visible;
       const title = document.getElementById('garage-title');
       if (title) {
-        title.textContent =
-          serviceMode === 'valet' ? 'Penthouse valet — fleet & tuning' : 'Garage door — fleet & tuning';
+        const base = serviceMode === 'valet' ? 'Valet — full inventory' : 'Garage — full inventory';
+        title.textContent = siteName ? `${base} · ${siteName}` : base;
+      }
+      const inv = document.getElementById('garage-inventory');
+      if (inv) {
+        inv.textContent = `${progress.unlockedVehicleIds.length} vehicles · ${progress.unlockedPaintIds.length} paints · ${progress.collectedIds.length}/${COLLECTIBLES.length} collectibles`;
       }
       if (!visible) return;
       const list = el<HTMLDivElement>('garage-list');

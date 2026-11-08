@@ -25,7 +25,7 @@ export type SafehousePreset = {
   z: number;
   radius: number;
   kind: DwellingKind;
-  /** Unlock after clearing this region's landmarks */
+  /** Unlock after regional taco truck + landmark checkpoint */
   unlockDistrict?: DistrictId;
 };
 
@@ -332,25 +332,25 @@ export function nearUnlockedSafehouse(
   progress: SavedProgress,
   px: number,
   pz: number
-): { house: ResolvedSafehouse; atHome: boolean } | null {
-  let best: { house: ResolvedSafehouse; d: number } | null = null;
-  const home = resolveHomeSafehouse(progress);
-  for (const id of progress.unlockedSafehouseIds) {
-    const resolvedId = PRESET_ID_ALIASES[id] ?? id;
-    const h = resolveSafehouseById(progress, resolvedId);
-    const d = Math.hypot(px - h.x, pz - h.z);
-    if (d > h.radius + 14) continue;
-    if (!best || d < best.d) best = { house: h, d };
+): { house: ResolvedSafehouse; atService: boolean } | null {
+  const houses = listSelectableSafehouses(progress);
+  let serviceHit: { house: ResolvedSafehouse; d: number } | null = null;
+  for (const h of houses) {
+    if (!isAtHomeService(h, px, pz)) continue;
+    const svc = homeServicePoint(h);
+    const d = Math.hypot(px - svc.x, pz - svc.z);
+    if (!serviceHit || d < serviceHit.d) serviceHit = { house: h, d };
   }
-  for (const c of progress.customSafehouses) {
-    const h = resolveSafehouseById(progress, c.id);
+  if (serviceHit) return { house: serviceHit.house, atService: true };
+
+  let best: { house: ResolvedSafehouse; d: number } | null = null;
+  for (const h of houses) {
+    if (!isNearSafehouse(px, pz, h)) continue;
     const d = Math.hypot(px - h.x, pz - h.z);
-    if (d > h.radius + 14) continue;
     if (!best || d < best.d) best = { house: h, d };
   }
   if (!best) return null;
-  const atHome = best.house.id === home.id && isAtHomeService(home, px, pz);
-  return { house: best.house, atHome };
+  return { house: best.house, atService: false };
 }
 
 export function setHomeSafehouse(progress: SavedProgress, id: string): SavedProgress {

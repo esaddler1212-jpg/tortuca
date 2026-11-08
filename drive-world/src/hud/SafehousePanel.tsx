@@ -33,7 +33,12 @@ export function SafehousePanel({ snap }: { snap: HudSnapshot }) {
         <span className="dwelling-tag"> · {dwellingKindLabel(home.kind)}</span>
         {snap.atSafehouse && !snap.nearGarage ? ' · nearby' : ''}
       </summary>
-      <p className="sync-msg">{homeServiceHint(svc.mode)} · orange dot on map</p>
+      <p className="sync-msg">
+        {homeServiceHint(svc.mode)} · orange dot on map
+        {snap.nearGarage && snap.serviceSafehouseName
+          ? ` · Inventory open at ${snap.serviceSafehouseName}`
+          : ' · Fleet & paints at any unlocked safehouse valet/garage'}
+      </p>
       {choices.length > 0 ? (
         <ul className="safehouse-list">
           {choices.map((h) => (

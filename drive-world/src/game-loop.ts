@@ -72,7 +72,8 @@ import {
   nearUnlockedSafehouse,
   homeServicePoint,
   resolveHomeSafehouse,
-  setHomeSafehouse
+  setHomeSafehouse,
+  type ResolvedSafehouse
 } from './safehouse-registry';
 import { nextUnvisitedLandmark } from './landmark-navigation';
 import {
@@ -110,6 +111,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   const vehicle = () => player?.entity ?? null;
   let waymo: WaymoRide | null = null;
   let nearGarage = false;
+  let serviceSafehouse: ResolvedSafehouse | null = null;
   let ridingWaymo = progress.phase === 'waymo_ride';
   let draftCustom: VehicleCustomization | null = null;
   let cameraMode: CameraMode = progress.cameraMode ?? 'chase';
@@ -261,8 +263,9 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     if (!nearGarage || !progress.activeVehicleId) return;
     void ensureVehicleModelsLoaded(app, progress.unlockedVehicleIds);
     draftCustom = { ...getVehicleCustomization(progress, progress.activeVehicleId) };
-    const svc = homeServicePoint(resolveHomeSafehouse(progress));
-    ui.setGarageVisible(true, progress, onGarageSelect, svc.mode);
+    const house = serviceSafehouse ?? resolveHomeSafehouse(progress);
+    const svc = homeServicePoint(house);
+    ui.setGarageVisible(true, progress, onGarageSelect, svc.mode, house.name);
     ui.bindCustomize(
       progress.activeVehicleId,
       draftCustom,
@@ -708,21 +711,25 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     if (progress.phase === 'home') {
       progress = ensureSafehouseUnlocks(progress);
       const near = nearUnlockedSafehouse(progress, pos.x, pos.z);
-      const inGarage = near?.atHome === true;
+      const inGarage = near?.atService === true;
+      if (inGarage) serviceSafehouse = near.house;
+      else if (!inGarage) serviceSafehouse = null;
       if (inGarage !== nearGarage) {
         nearGarage = inGarage;
-        if (inGarage) {
-          const svc = homeServicePoint(resolveHomeSafehouse(progress));
+        if (inGarage && near) {
+          const svc = homeServicePoint(near.house);
           ui.showToast(
             svc.mode === 'valet' ? 'Valet stand' : 'Garage door',
-            svc.mode === 'valet'
-              ? 'Pull up under the canopy for your fleet.'
-              : 'Pull up to the lit door for your fleet.'
+            `${near.house.name} — full fleet & paints`
           );
           refreshGarageUi();
         } else ui.setGarageVisible(false, progress, onGarageSelect);
       }
     }
+
+    const nearSh =
+      progress.phase === 'home' ? nearUnlockedSafehouse(progress, pos.x, pos.z) : null;
+    const serviceHouse = serviceSafehouse ?? (nearSh?.atService ? nearSh.house : null);
 
     publishHud({
       playerX: pos.x,
@@ -746,9 +753,12 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       vistaName: vistaNear?.vista.name ?? null,
       vistaPulse: waterT,
       district: district ?? undefined,
-      atSafehouse: Boolean(nearUnlockedSafehouse(progress, pos.x, pos.z)),
+      atSafehouse: Boolean(nearSh),
       homeSafehouseName: resolveHomeSafehouse(progress).name,
-      homeServiceMode: homeServicePoint(resolveHomeSafehouse(progress)).mode,
+      serviceSafehouseName: serviceHouse?.name,
+      homeServiceMode: serviceHouse
+        ? homeServicePoint(serviceHouse).mode
+        : homeServicePoint(resolveHomeSafehouse(progress)).mode,
       streetName: nearestStreetLabel(pos.x, pos.z)
     });
 
