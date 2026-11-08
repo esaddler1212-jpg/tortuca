@@ -2,7 +2,13 @@ const JOKE_URL = 'https://v2.jokeapi.dev/joke/Programming?blacklistFlags=nsfw,re
 
 const OPEN5E_SPELL = 'https://api.open5e.com/spells/?limit=1';
 
-let cachedTip = 'Boost into the skyline — Shift';
+const LOCAL_TIPS = [
+  'Boost into the skyline — Shift',
+  'Roll a town at World Gacha → export GLB → public/models/worldgacha/ (see docs)',
+  'Photo mode: P — save PNG from HUD'
+];
+
+let cachedTip = LOCAL_TIPS[0]!;
 
 export function currentLoadingTip(): string {
   return cachedTip;
@@ -34,5 +40,9 @@ export async function refreshLoadingTips(): Promise<void> {
       }
     })()
   ]);
-  if (parts.length) cachedTip = parts.join(' · ');
+  if (parts.length) {
+    cachedTip = parts.join(' · ');
+  } else {
+    cachedTip = LOCAL_TIPS[1 + Math.floor(Math.random() * (LOCAL_TIPS.length - 1))]!;
+  }
 }

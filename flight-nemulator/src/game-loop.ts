@@ -37,6 +37,7 @@ import { isPhotoMode, togglePhotoMode } from './photo-mode';
 import { fetchManifestIfOnline, getManifestSuggestions } from './updates';
 import { attachHeroGltf } from './hero-gltf';
 import { placeKenneyLandmarks } from './build-city-kenney';
+import { placeWorldGachaTowns } from './build-city-worldgacha';
 import { applySkyEnvironment, applyWeatherMood, fetchBayWeatherMood } from './sky-env';
 import { currentLoadingTip } from './loading-tips';
 import { loadCustomHeroes, customHeroToSpec } from './custom-hero';
@@ -98,6 +99,7 @@ export async function startGame(app: AppBase, canvas: HTMLCanvasElement): Promis
 
   buildMetropolis(app, root, { tier });
   void placeKenneyLandmarks(app, root, tier === 'low' ? 8 : tier === 'high' ? 28 : 16);
+  void placeWorldGachaTowns(app, root, tier === 'low' ? 0 : tier === 'high' ? 3 : 1);
   spawnSimpleCars(app, root, tier === 'low' ? 32 : tier === 'high' ? 160 : 90);
 
   const flight = new HeroFlightController(heroSpec, heroForm, spawn);

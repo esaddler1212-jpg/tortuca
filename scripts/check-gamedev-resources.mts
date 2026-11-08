@@ -8,7 +8,8 @@ const files = [
   'gamedev-resources/tortuca-game-engines.json',
   'gamedev-resources/upstream-pin.json',
   'tools/gamedev-resources/install-free-packs.sh',
-  'docs/BLOCKBENCH_WORKFLOW.md'
+  'docs/BLOCKBENCH_WORKFLOW.md',
+  'docs/WORLDGACHA_WORKFLOW.md'
 ];
 
 for (const rel of files) {

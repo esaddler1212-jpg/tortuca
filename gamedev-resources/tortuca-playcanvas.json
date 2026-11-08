@@ -131,6 +131,15 @@
       "url": "https://github.com/Kavex/GlueIT",
       "licenseNote": "Spritesheet tool from same author as resource list",
       "use": ["2d-atlas"]
+    },
+    {
+      "id": "oyasumi-world-gacha",
+      "kavexTier": "free",
+      "title": "World Gacha (Oyasumi)",
+      "url": "https://tools.oyasumi-gamedev.com/worldgacha/",
+      "licenseNote": "In-game use OK; no redistributing GLB packs — see oyasumi tools terms",
+      "use": ["3d-city", "manga-backdrop", "flight-nemulator-import"],
+      "install": "docs/WORLDGACHA_WORKFLOW.md"
     }
   ]
 }

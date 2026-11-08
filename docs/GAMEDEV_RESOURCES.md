@@ -8,6 +8,7 @@ We comb multiple **free resource indexes**:
 | [public-apis/public-apis](https://github.com/public-apis/public-apis) | [`tortuca-public-apis.json`](../gamedev-resources/tortuca-public-apis.json) — browser-safe APIs |
 | [GitHub **game-engines** collection](https://github.com/collections/game-engines) | [`tortuca-game-engines.json`](../gamedev-resources/tortuca-game-engines.json) |
 | [JannisX11/blockbench](https://github.com/JannisX11/blockbench) | [`BLOCKBENCH_WORKFLOW.md`](./BLOCKBENCH_WORKFLOW.md) — hero GLB pipeline |
+| [Oyasumi World Gacha](https://tools.oyasumi-gamedev.com/worldgacha/) | [`WORLDGACHA_WORKFLOW.md`](./WORLDGACHA_WORKFLOW.md) — town GLB import |
 
 ## Quick commands
 
@@ -27,6 +28,7 @@ We comb multiple **free resource indexes**:
 | 3DTexel public API | Research panel CC0 texture hits |
 | Blockbench GLB | `public/models/heroes/<hero-id>.glb` via `hero-gltf.ts` |
 | Kenney City Kit | `kenney-city/*.glb` + `index.json` landmarks |
+| Oyasumi World Gacha | `worldgacha/` GLB centerpiece + optional satellites |
 
 ## Already in repo
 
