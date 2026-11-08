@@ -1,14 +1,24 @@
-# Battleworld portal — Flight Nemulator bundle (replaces legacy BOYS student site)
+# VantageGames — title-card launcher + games-hub bundle (folder name: boys-student)
 
 [build]
-  command = "npm ci && npm run build:all"
+  command = "npm ci && npm run build:with-console"
   publish = "dist"
 
 [build.environment]
   NODE_VERSION = "22"
 
 [[headers]]
-  for = "/flight-nemulator/assets/*"
+  for = "/console/city-nights/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/console/flight-nemulator/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/console/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
@@ -18,8 +28,18 @@
     Cache-Control = "public, max-age=31536000, immutable"
 
 [[redirects]]
-  from = "/flight-nemulator/*"
-  to = "/flight-nemulator/index.html"
+  from = "/console/city-nights/*"
+  to = "/console/city-nights/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/console/flight-nemulator/*"
+  to = "/console/flight-nemulator/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/console/*"
+  to = "/console/index.html"
   status = 200
 
 [[redirects]]

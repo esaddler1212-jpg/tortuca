@@ -1,30 +1,33 @@
-# Battleworld portal
+# VantageGames
 
-Static **Netlify site** that ships the Flight Nemulator build under `/flight-nemulator/`. Use this instead of the Alfred (`alfred2`) preview when you only want the game.
+**Title-card launcher** for Tortuca browser games — no sign-in. Scroll **City Nights** and **Battleworld**, tap a card, and the game loads.
 
-This package path is still `boys-student/` so an existing Netlify site (e.g. `boys-with-purpose`) can keep **Base directory** = `boys-student` after you change the build command in the UI.
+Netlify **base directory** is still `boys-student/` (legacy path). This replaces the earlier **Battleworld portal** on `main` (single-game landing) and the legacy BOYS curriculum student app.
 
-## Deploy on Netlify
+## Bundled games
 
-1. **Base directory:** `boys-student`
-2. **Build command:** `npm ci && npm run build:all` (also set in `netlify.toml`)
-3. **Publish:** `dist`
-4. No Family Purpose or Alfred env vars required.
+`npm run build:with-console` packages [`games-hub`](../games-hub/) into `public/console/`:
 
-Production URL example: re-point `boys-with-purpose.netlify.app` or create `battleworld.netlify.app`.
+| Card | Game |
+|------|------|
+| **City Nights** | `/console/city-nights/` |
+| **Battleworld** | `/console/flight-nemulator/` (Flight Nemulator) |
 
-## Local dev
+Optional env: `VITE_VANTAGE_CONSOLE_URL`, `VITE_CITY_NIGHTS_URL`, `VITE_FLIGHT_NEMULATOR_URL`.
+
+From a game, **◯ VantageGames** on the console returns to this launcher at `/`.
+
+## Deploy
+
+1. Base directory **`boys-student`**
+2. Build: `npm ci && npm run build:with-console` (`netlify.toml`)
+3. Publish: `dist`
+
+## Local
 
 ```bash
-# Launcher only (links to /flight-nemulator/ — run build:all first for a full local bundle)
 cd boys-student
 npm install
-npm run build:all
+npm run build:with-console
 npm run preview
 ```
-
-For game-only iteration: `cd ../flight-nemulator && npm run dev`.
-
-## What changed
-
-The former **BOYS student** curriculum app (class code login) was removed from this folder. BOYS APIs remain on the **Family Purpose** site if you still use the Group tab there; this deploy is **game-only**.
