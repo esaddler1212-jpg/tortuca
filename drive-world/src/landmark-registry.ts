@@ -38,7 +38,10 @@ export const LANDMARKS: LandmarkDef[] = [
   { id: 'sj-city-hall', name: 'San José City Hall', district: 'southBay', x: 220, z: -1580, visitRadius: 50 },
   { id: 'winchester', name: 'Winchester steps', district: 'southBay', x: 100, z: -1320, visitRadius: 55 },
   { id: 'apple-park', name: 'Apple Park ring', district: 'southBay', x: 480, z: -1420, visitRadius: 65 },
-  { id: 'sap-center', name: 'SAP Center', district: 'southBay', x: 400, z: -1220, visitRadius: 52 }
+  { id: 'sap-center', name: 'SAP Center', district: 'southBay', x: 400, z: -1220, visitRadius: 52 },
+  { id: 'sfo-skypad', name: 'SFO Skypad', district: 'peninsula', x: -180, z: -1180, visitRadius: 58 },
+  { id: 'vallejo-helipad', name: 'Vallejo Helipad', district: 'vallejo', x: 540, z: 920, visitRadius: 48 },
+  { id: 'oakland-hill-radio', name: 'Oakland Hill radio', district: 'eastBay', x: 360, z: 160, visitRadius: 55 }
 ];
 
 export function landmarksInDistrict(district: DistrictId): LandmarkDef[] {

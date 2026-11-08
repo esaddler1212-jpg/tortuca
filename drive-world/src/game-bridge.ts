@@ -19,6 +19,7 @@ export type HudSnapshot = {
   photoMode: boolean;
   nearGarage: boolean;
   settings: GameSettings;
+  flightMode?: boolean;
 };
 
 export type TouchDrive = {
@@ -50,7 +51,8 @@ let snapshot: HudSnapshot = {
   waterPhase: 0,
   photoMode: false,
   nearGarage: false,
-  settings: defaultSettings
+  settings: defaultSettings,
+  flightMode: false
 };
 
 const listeners = new Set<HudListener>();

@@ -154,6 +154,9 @@ export function HudApp() {
       </div>
       {!snap.photoMode && <Minimap snap={snap} />}
       <NavHint snap={snap} />
+      {snap.flightMode && !snap.photoMode && (
+        <p className="flight-hint">Space climb · Ctrl sink · WASD steer · Shift boost</p>
+      )}
       <StatsPanel snap={snap} />
       <SettingsPanel />
       <FastTravel snap={snap} />

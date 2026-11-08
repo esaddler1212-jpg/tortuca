@@ -113,14 +113,20 @@ export function buildBayAreaLandmarks(app: AppBase): void {
   box(app, 'grizzly-ridge-b', 412, 20, 232, 10, 14, 10, stone);
   box(app, 'grizzly-sign', 400, 34, 218, 14, 7, 1.2, matOrange());
   box(app, 'grizzly-bear-silhouette', 400, 38, 218.8, 8, 5, 0.4, stone);
+  box(app, 'oakland-radio-mast', 360, 48, 160, 4, 88, 4, matOrange(), true);
+  box(app, 'oakland-radio-dish', 360, 92, 160, 12, 1.2, 12, matConcrete());
 
   // —— Vallejo ——
   box(app, 'mare-island-crane-leg-a', 430, 28, 1020, 4, 56, 4, matOrange());
   box(app, 'mare-island-crane-leg-b', 458, 28, 1020, 4, 56, 4, matOrange());
   box(app, 'mare-island-crane-beam', 444, 58, 1020, 36, 3, 3, matOrange());
+  box(app, 'vallejo-helipad', 540, 12, 920, 22, 0.5, 22, matOrange(), true);
+  box(app, 'vallejo-helipad-h', 540, 12.6, 920, 14, 0.3, 2, matConcrete());
 
   // —— Peninsula ——
   box(app, 'hoover-tower', -540, 58, -1180, 16, 116, 16, warm, true);
+  box(app, 'sfo-skypad-base', -180, 10, -1180, 36, 4, 36, matConcrete(), true);
+  box(app, 'sfo-skypad-mark', -180, 12, -1180, 28, 0.4, 28, matOrange());
 
   bridgeSpan(app, 'dumbarton', -40, -820, -520, 8);
 

@@ -7,6 +7,10 @@ export type CollectibleDef = {
   x: number;
   z: number;
   radius: number;
+  /** Extra height above terrain (m). */
+  yOffset?: number;
+  /** Require player altitude within band of marker height. */
+  requireAir?: boolean;
 };
 
 export type SpeedTrapDef = {
@@ -30,7 +34,26 @@ export const COLLECTIBLES: CollectibleDef[] = [
   { id: 'cable-token', name: 'Cable car token', unlockPaintId: 'cherry-red', x: -700, z: -650, radius: 22 },
   { id: 'tech-chip', name: 'Silicon wafer', unlockPaintId: 'neon-cyan', x: 500, z: -1450, radius: 24 },
   { id: 'anchor', name: 'Mare Island anchor', unlockPaintId: 'bridge-orange', x: 460, z: 1040, radius: 22 },
-  { id: 'wine-cork', name: 'Napa cork', unlockPaintId: 'warriors-blue', x: -1100, z: 280, radius: 24 }
+  { id: 'wine-cork', name: 'Napa cork', unlockPaintId: 'warriors-blue', x: -1100, z: 280, radius: 24 },
+  {
+    id: 'rotor-token',
+    name: 'Rotor service token',
+    unlockPaintId: 'neon-cyan',
+    x: 545,
+    z: 935,
+    radius: 28,
+    yOffset: 6
+  },
+  {
+    id: 'sky-chip',
+    name: 'Skyway nav chip',
+    unlockPaintId: 'stealth',
+    x: -40,
+    z: -680,
+    radius: 32,
+    yOffset: 45,
+    requireAir: true
+  }
 ];
 
 export const SPEED_TRAPS: SpeedTrapDef[] = [
@@ -60,6 +83,17 @@ export const SCENIC_ROUTES: ScenicRouteDef[] = [
       { x: -600, z: -1100 },
       { x: -320, z: -1250 },
       { x: -80, z: -1450 }
+    ]
+  },
+  {
+    id: 'bay-skylane',
+    name: 'Bay skylane (aerial)',
+    district: 'eastBay',
+    checkpointRadius: 120,
+    points: [
+      { x: 120, z: -448 },
+      { x: -200, z: 200 },
+      { x: 520, z: 900 }
     ]
   }
 ];

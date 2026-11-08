@@ -1,4 +1,5 @@
-import { GARAGE_STARTER_IDS, VEHICLE_CATALOG, REGION_VEHICLE_IDS } from './vehicle-catalog';
+import { BONUS_AERIAL_IDS, GARAGE_STARTER_IDS, VEHICLE_CATALOG, REGION_VEHICLE_IDS } from './vehicle-catalog';
+import { SCENIC_ROUTES } from './world-extras';
 import { isDistrictComplete, regionUnlockVehicleId, LANDMARKS } from './landmark-registry';
 import type { DistrictId } from './world-config';
 import {
@@ -218,13 +219,28 @@ export function collectItem(progress: SavedProgress, id: string, paintId: string
   const paints = progress.unlockedPaintIds.includes(paintId)
     ? progress.unlockedPaintIds
     : [...progress.unlockedPaintIds, paintId];
-  const next = {
+  let next = {
     ...progress,
     collectedIds: [...progress.collectedIds, id],
     unlockedPaintIds: paints
   };
+  next = tryUnlockCoastHeli(next);
   saveProgress(next);
   return next;
+}
+
+export function tryUnlockSkywayHover(progress: SavedProgress): SavedProgress {
+  const id = BONUS_AERIAL_IDS[0];
+  if (progress.unlockedVehicleIds.includes(id)) return progress;
+  if (progress.scenicCompleted.length < SCENIC_ROUTES.length) return progress;
+  return unlockVehicle(progress, id);
+}
+
+export function tryUnlockCoastHeli(progress: SavedProgress): SavedProgress {
+  const id = BONUS_AERIAL_IDS[1];
+  if (progress.unlockedVehicleIds.includes(id)) return progress;
+  if (!progress.collectedIds.includes('rotor-token')) return progress;
+  return unlockVehicle(progress, id);
 }
 
 export function recordSpeedTrap(progress: SavedProgress, trapId: string, mph: number): SavedProgress {

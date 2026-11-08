@@ -31,6 +31,70 @@ function chassisMaterial(tuning: ReturnType<typeof appliedTuning>): StandardMate
 
 export type PlayerVehicle = { entity: Entity; lights: VehicleLights };
 
+function createAerialVehicle(
+  app: AppBase,
+  vehicleId: string,
+  position: Vec3,
+  yawDeg: number,
+  spec: ReturnType<typeof getVehicleSpec>,
+  tuning: ReturnType<typeof appliedTuning>,
+  paint: StandardMaterial
+): PlayerVehicle {
+  const cx = spec.chassis.x;
+  const cy = spec.chassis.y;
+  const cz = spec.chassis.z;
+  const flightMode = spec.locomotion === 'helicopter' ? 'helicopter' : 'hover';
+
+  const vehicle = new Entity(`vehicle-${vehicleId}`);
+  vehicle.addComponent('rigidbody', {
+    type: 'dynamic',
+    mass: spec.mass,
+    linearDamping: 0.48,
+    angularDamping: 1.05
+  });
+  vehicle.addComponent('collision', { type: 'box', halfExtents: new Vec3(cx, cy, cz) });
+  vehicle.addComponent('script');
+  vehicle.script!.create('flightVehicle', {
+    attributes: {
+      mode: flightMode,
+      thrust: spec.locomotion === 'helicopter' ? 32000 : 26000,
+      lift: spec.locomotion === 'helicopter' ? 34000 : 30000,
+      yawRate: spec.locomotion === 'helicopter' ? 1.35 : 1.1,
+      pitchRate: spec.locomotion === 'helicopter' ? 0.95 : 0.8
+    }
+  });
+  vehicle.setLocalPosition(position.x, position.y, position.z);
+  vehicle.setEulerAngles(0, yawDeg, 0);
+
+  const body = new Entity('hull');
+  body.addComponent('collision', { type: 'box', halfExtents: new Vec3(cx * 0.92, cy * 0.85, cz * 0.48) });
+  body.setLocalPosition(0, cy + 0.1 - tuning.rideDrop, 0);
+  if (!hasGltfForVehicle(vehicleId)) {
+    body.addComponent('render', { type: 'box', material: paint });
+  }
+  vehicle.addChild(body);
+
+  if (hasGltfForVehicle(vehicleId)) {
+    attachVehicleGltf(vehicle, vehicleId, tuning);
+  }
+
+  if (spec.locomotion === 'hover') {
+    const rotor = new Entity('hover-emitter');
+    rotor.setLocalScale(0.35, 0.06, 0.35);
+    rotor.setLocalPosition(0, -0.2 - tuning.rideDrop, 0);
+    const em = new StandardMaterial();
+    em.emissive = new Color(tuning.emissive[0], tuning.emissive[1], tuning.emissive[2]);
+    em.emissiveIntensity = tuning.emissiveIntensity * 1.4;
+    em.update();
+    rotor.addComponent('render', { type: 'cylinder', material: em });
+    vehicle.addChild(rotor);
+  }
+
+  const lights = attachVehicleLights(vehicle, app);
+  app.root.addChild(vehicle);
+  return { entity: vehicle, lights };
+}
+
 export function createPlayerVehicle(
   app: AppBase,
   vehicleId: string,
@@ -42,6 +106,10 @@ export function createPlayerVehicle(
   const custom = { ...DEFAULT_CUSTOMIZATION, ...customization };
   const tuning = appliedTuning(spec, custom);
   const paint = chassisMaterial(tuning);
+
+  if (spec.locomotion !== 'ground') {
+    return createAerialVehicle(app, vehicleId, position, yawDeg, spec, tuning, paint);
+  }
 
   const glass = new StandardMaterial();
   glass.diffuse = new Color(0.05, 0.08, 0.12);
@@ -118,7 +186,7 @@ export function createPlayerVehicle(
   }
 
   if (useGltfBody) {
-    attachVehicleGltf(vehicle, vehicleId);
+    attachVehicleGltf(vehicle, vehicleId, tuning);
   }
 
   if (tuning.underglowIntensity > 0.05) {

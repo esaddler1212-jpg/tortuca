@@ -28,7 +28,7 @@ Stack: **PlayCanvas** + **React HUD** · `drive-world-progress-v5`
 
 | Item | Notes |
 |------|--------|
-| **glTF hero cars** | Drop models in `drive-world/public/models/` |
+| **Kenney + CC0 glTF cars / heli** | Ground fleet + **Skyway Hover** + **Coast Guard Heli** |
 | **Cloud save** | Local only; tie to Tortuca Google session later |
 | Full **day/night cycle** | Night-only art direction kept |
 | World streaming / LOD | |

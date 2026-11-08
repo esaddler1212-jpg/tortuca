@@ -36,7 +36,7 @@ export function buildCollectibles(app: AppBase): void {
   mat.update();
 
   for (const c of COLLECTIBLES) {
-    const y = hillOffsetM(c.x, c.z) + 3;
+    const y = hillOffsetM(c.x, c.z) + (c.yOffset ?? 3);
     const e = new Entity(`collectible-${c.id}`);
     e.setLocalScale(3.5, 3.5, 3.5);
     e.setPosition(c.x, y, c.z);

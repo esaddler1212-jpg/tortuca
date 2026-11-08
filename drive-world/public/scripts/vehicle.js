@@ -368,6 +368,99 @@ VehicleControls.prototype.update = function (dt) {
         if (this.upButtonPressed || this.upKeyPressed) throttle++;
         if (this.downButtonPressed || this.downKeyPressed) throttle--;
 
-        targetVehicle.script.vehicle.fire('vehicle:controls', steering, throttle);
+        if (targetVehicle.script.vehicle) {
+            targetVehicle.script.vehicle.fire('vehicle:controls', steering, throttle);
+        }
     }
+};
+
+var FlightVehicle = pc.createScript('flightVehicle');
+
+FlightVehicle.attributes.add('mode', {
+    type: 'string',
+    default: 'hover',
+    title: 'Mode (hover | helicopter)'
+});
+FlightVehicle.attributes.add('thrust', {
+    type: 'number',
+    default: 22000
+});
+FlightVehicle.attributes.add('lift', {
+    type: 'number',
+    default: 28000
+});
+FlightVehicle.attributes.add('yawRate', {
+    type: 'number',
+    default: 1.2
+});
+FlightVehicle.attributes.add('pitchRate', {
+    type: 'number',
+    default: 0.75
+});
+
+Object.defineProperty(FlightVehicle.prototype, 'speed', {
+    get: function () {
+        return this._kmh || 0;
+    }
+});
+
+FlightVehicle.prototype.initialize = function () {
+    this.steering = 0;
+    this.throttle = 0;
+    this.vertical = 0;
+    this.nitroMul = 1;
+    this._kmh = 0;
+    this.brakingVisual = false;
+
+    var body = this.entity.rigidbody.body;
+    if (body) {
+        var DISABLE_DEACTIVATION = 4;
+        body.setActivationState(DISABLE_DEACTIVATION);
+    }
+
+    this.on('flight:controls', function (steer, thr, vert) {
+        this.steering = steer;
+        this.throttle = thr;
+        this.vertical = vert;
+    });
+
+    this.on('flight:nitro', function (mul) {
+        this.nitroMul = Math.max(1, Math.min(2.1, mul));
+    });
+};
+
+FlightVehicle.prototype.update = function (dt) {
+    var rb = this.entity.rigidbody;
+    if (!rb) return;
+
+    var mul = this.nitroMul;
+    var steer = this.steering;
+    var thr = this.throttle;
+    var vert = this.vertical;
+
+    if (this.mode === 'helicopter') {
+        this.entity.rotateLocal(0, -steer * this.yawRate * 55 * dt, 0);
+        this.entity.rotateLocal(thr * this.pitchRate * 40 * dt, 0, 0);
+    } else {
+        this.entity.rotateLocal(0, -steer * this.yawRate * 48 * dt, 0);
+        this.entity.rotateLocal(-thr * this.pitchRate * 32 * dt, 0, 0);
+    }
+
+    var forward = this.entity.forward;
+    var thrust = this.thrust * mul * dt;
+    var lift = this.lift * mul * dt;
+
+    var fx = forward.x * thr * thrust;
+    var fy = forward.y * thr * thrust;
+    var fz = forward.z * thr * thrust;
+
+    var autoHover = this.mode === 'hover' ? 0.25 : 0.08;
+    var vy = (vert + autoHover) * lift;
+
+    var mass = rb.mass || this.entity.rigidbody.mass || 1000;
+    rb.applyForce(fx, fy + vy + mass * 9.81, fz);
+
+    var v = rb.linearVelocity;
+    this._kmh = Math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z) * 3.6;
+    this.brakingVisual = thr === 0 && vert === 0 && steer === 0;
 };

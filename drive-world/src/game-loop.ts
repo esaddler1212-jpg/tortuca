@@ -20,6 +20,7 @@ import {
   getVehicleCustomization,
   setVehicleCustomization,
   tryUnlockCompletedRegions,
+  tryUnlockSkywayHover,
   saveLastPose,
   setCameraMode,
   collectItem,
@@ -29,7 +30,7 @@ import {
   bumpVehicleStats,
   type SavedProgress
 } from './game-progress';
-import { bindDriveKeys, pollGamepadInput } from './game-input';
+import { bindDriveKeys, pollDriveInput } from './game-input';
 import { playLandmarkChime, playWaymoArrival, setMasterVolume, unlockAudio, updateEngineAudio } from './game-audio';
 import { loadSettings } from './game-settings';
 import { districtAt, fogDistances, regionalFogStrength } from './regional-weather';
@@ -39,7 +40,7 @@ import { updateAmbientTraffic } from './build-world-extras';
 import { missionTextForPhase, wireGameUi } from './game-ui';
 import { DISTRICT_LABELS, LANDMARKS, VALLEJO_SAFEHOUSE } from './landmark-registry';
 import { nextUnvisitedLandmark } from './landmark-navigation';
-import { getVehicleSpec } from './vehicle-catalog';
+import { getVehicleSpec, isAerialVehicle } from './vehicle-catalog';
 import type { VehicleCustomization } from './vehicle-customization';
 import { createPlayerVehicle, destroyPlayerVehicle, type PlayerVehicle } from './vehicle-factory';
 import type { DistrictId } from './world-config';
@@ -113,6 +114,10 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     destroyPlayerVehicle(player?.entity ?? null);
     player = null;
     const p = pos ?? old ?? spawnFromProgress();
+    if (isAerialVehicle(vehicleId)) {
+      const floor = hillOffsetM(p.x, p.z) + 0.8;
+      p.y = Math.max(p.y, floor + 38);
+    }
     const custom = getVehicleCustomization(progress, vehicleId);
     draftCustom = { ...custom };
     player = createPlayerVehicle(app, vehicleId, p, yaw ?? oldRot?.y ?? progress.lastPose?.yaw ?? 15, custom);
@@ -331,20 +336,30 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     app.scene.fogStart = fog.start;
     app.scene.fogEnd = fog.end;
 
-    const gp = pollGamepadInput();
-  let steering = gp.steering;
-  let throttle = gp.throttle;
-  if (isTouchDriveActive()) {
-    const t = computeTouchControls();
-    steering = t.steering;
-    throttle = t.throttle;
-  }
-  const vs = ent.script?.vehicle as { fire?: (e: string, ...args: number[]) => void } | undefined;
-  if (steering !== 0 || throttle !== 0) {
-    vs?.fire?.('vehicle:controls', steering, throttle);
-  }
-  vs?.fire?.('vehicle:nitro', gp.nitro ? 1.65 : 1);
-  player?.lights.setBrake(throttle === 0 && steering === 0);
+    const drive = pollDriveInput();
+    const aerial = progress.activeVehicleId ? isAerialVehicle(progress.activeVehicleId) : false;
+    if (aerial) {
+      const fs = ent.script?.flightVehicle as
+        | { fire?: (e: string, ...args: number[]) => void }
+        | undefined;
+      fs?.fire?.('flight:controls', drive.steering, drive.throttle, drive.vertical);
+      fs?.fire?.('flight:nitro', drive.nitro ? 1.65 : 1);
+      player?.lights.setBrake(drive.throttle === 0 && drive.steering === 0 && drive.vertical === 0);
+    } else {
+      let steering = drive.steering;
+      let throttle = drive.throttle;
+      if (isTouchDriveActive()) {
+        const t = computeTouchControls();
+        steering = t.steering;
+        throttle = t.throttle;
+      }
+      const vs = ent.script?.vehicle as { fire?: (e: string, ...args: number[]) => void } | undefined;
+      if (steering !== 0 || throttle !== 0) {
+        vs?.fire?.('vehicle:controls', steering, throttle);
+      }
+      vs?.fire?.('vehicle:nitro', drive.nitro ? 1.65 : 1);
+      player?.lights.setBrake(throttle === 0 && steering === 0);
+    }
 
   if (photoMode) {
     photo.move(dt * (settings.photoSensitivity ?? 1), photoKeys);
@@ -396,8 +411,12 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     }
 
     const vehScript = ent.script?.vehicle as { speed?: number; brakingVisual?: boolean } | undefined;
-    const mph = Math.abs(vehScript?.speed ?? 0) * 0.621371;
-    speedEl.textContent = `${mph.toFixed(0)} mph`;
+    const flightScript = ent.script?.flightVehicle as { speed?: number } | undefined;
+  const speedKmh = aerial ? Math.abs(flightScript?.speed ?? 0) : Math.abs(vehScript?.speed ?? 0);
+  const mph = speedKmh * 0.621371;
+    speedEl.textContent = aerial
+      ? `${mph.toFixed(0)} mph · ${getVehicleSpec(progress.activeVehicleId!).locomotion === 'helicopter' ? 'Heli' : 'Hover'}`
+      : `${mph.toFixed(0)} mph`;
     updateEngineAudio(mph, true);
 
     const yaw = ent.getEulerAngles().y;
@@ -417,7 +436,8 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       waterPhase: waterT,
       photoMode: false,
       nearGarage,
-      settings
+      settings,
+      flightMode: aerial
     });
 
     statsT += dt;
@@ -466,8 +486,14 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       for (const c of COLLECTIBLES) {
         if (progress.collectedIds.includes(c.id)) continue;
         if (Math.hypot(pos.x - c.x, pos.z - c.z) > c.radius) continue;
+        const markerY = hillOffsetM(c.x, c.z) + (c.yOffset ?? 1.2);
+        if (c.requireAir && Math.abs(pos.y - markerY) > 30) continue;
+        const hadHeli = progress.unlockedVehicleIds.includes('bonus-coast-heli');
         progress = collectItem(progress, c.id, c.unlockPaintId);
         ui.showToast('Collectible', c.name);
+        if (!hadHeli && progress.unlockedVehicleIds.includes('bonus-coast-heli')) {
+          ui.showToast('Aerial unlocked', getVehicleSpec('bonus-coast-heli').name);
+        }
         if (nearGarage) refreshGarageUi();
       }
 
@@ -486,15 +512,25 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         const idx = progress.scenicProgress[route.id] ?? 0;
         const pt = route.points[idx];
         if (!pt) {
+          const hadSky = progress.unlockedVehicleIds.includes('bonus-skyway-hover');
           progress = completeScenicRoute(progress, route.id);
+          progress = tryUnlockSkywayHover(progress);
           ui.showToast('Scenic route', route.name);
+          if (!hadSky && progress.unlockedVehicleIds.includes('bonus-skyway-hover')) {
+            ui.showToast('Aerial unlocked', getVehicleSpec('bonus-skyway-hover').name);
+          }
           continue;
         }
         if (Math.hypot(pos.x - pt.x, pos.z - pt.z) < route.checkpointRadius) {
           progress = tickScenicRoute(progress, route.id, idx);
           if ((progress.scenicProgress[route.id] ?? 0) >= route.points.length) {
+            const hadSky = progress.unlockedVehicleIds.includes('bonus-skyway-hover');
             progress = completeScenicRoute(progress, route.id);
+            progress = tryUnlockSkywayHover(progress);
             ui.showToast('Scenic complete', route.name);
+            if (!hadSky && progress.unlockedVehicleIds.includes('bonus-skyway-hover')) {
+              ui.showToast('Aerial unlocked', getVehicleSpec('bonus-skyway-hover').name);
+            }
           }
         }
       }

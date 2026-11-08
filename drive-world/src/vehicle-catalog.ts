@@ -1,11 +1,14 @@
 import type { DistrictId } from './world-config';
 
+export type VehicleLocomotion = 'ground' | 'hover' | 'helicopter';
+
 export type VehicleSpec = {
   id: string;
   name: string;
   tagline: string;
   city: string;
   region?: DistrictId;
+  locomotion: VehicleLocomotion;
   mass: number;
   maxEngineForce: number;
   maxBrakingForce: number;
@@ -13,6 +16,7 @@ export type VehicleSpec = {
   chassis: { x: number; y: number; z: number };
   paint: { diffuse: [number, number, number]; emissive: [number, number, number]; emissiveIntensity: number };
   garageStarter?: boolean;
+  aerialBonus?: boolean;
 };
 
 function spec(
@@ -20,15 +24,26 @@ function spec(
   name: string,
   tagline: string,
   city: string,
-  tuning: Partial<Pick<VehicleSpec, 'mass' | 'maxEngineForce' | 'maxBrakingForce' | 'maxSteering' | 'chassis'>>,
+  tuning: Partial<
+    Pick<
+      VehicleSpec,
+      | 'mass'
+      | 'maxEngineForce'
+      | 'maxBrakingForce'
+      | 'maxSteering'
+      | 'chassis'
+      | 'locomotion'
+    >
+  >,
   paint: VehicleSpec['paint'],
-  extras?: Partial<Pick<VehicleSpec, 'region' | 'garageStarter'>>
+  extras?: Partial<Pick<VehicleSpec, 'region' | 'garageStarter' | 'aerialBonus'>>
 ): VehicleSpec {
   return {
     id,
     name,
     tagline,
     city,
+    locomotion: tuning.locomotion ?? 'ground',
     mass: tuning.mass ?? 1050,
     maxEngineForce: tuning.maxEngineForce ?? 5200,
     maxBrakingForce: tuning.maxBrakingForce ?? 140,
@@ -41,6 +56,8 @@ function spec(
 
 /** Pick one at the Vallejo safehouse after the Waymo drop-off. */
 export const GARAGE_STARTER_IDS = ['garage-cruiser', 'garage-sport', 'garage-ute'] as const;
+
+export const BONUS_AERIAL_IDS = ['bonus-skyway-hover', 'bonus-coast-heli'] as const;
 
 export const REGION_VEHICLE_IDS: Record<DistrictId, string> = {
   sf: 'region-sf-night',
@@ -133,6 +150,25 @@ export const VEHICLE_CATALOG: Record<string, VehicleSpec> = {
     { mass: 1020, maxEngineForce: 6100 },
     { diffuse: [0.06, 0.06, 0.07], emissive: [0.85, 0.92, 0.95], emissiveIntensity: 0.35 },
     { region: 'southBay' }
+  ),
+
+  'bonus-skyway-hover': spec(
+    'bonus-skyway-hover',
+    'Skyway Hover',
+    'Bonus — finish every scenic cruise route',
+    'Bay Sky',
+    { locomotion: 'hover', mass: 720, chassis: { x: 1.1, y: 0.28, z: 2.2 } },
+    { diffuse: [0.08, 0.12, 0.18], emissive: [0.25, 0.85, 0.95], emissiveIntensity: 0.55 },
+    { aerialBonus: true }
+  ),
+  'bonus-coast-heli': spec(
+    'bonus-coast-heli',
+    'Coast Guard Heli',
+    'Bonus — rotor token at Vallejo Helipad',
+    'North Bay',
+    { locomotion: 'helicopter', mass: 1480, chassis: { x: 2.4, y: 0.55, z: 5.2 } },
+    { diffuse: [0.12, 0.14, 0.16], emissive: [0.35, 0.7, 0.95], emissiveIntensity: 0.32 },
+    { aerialBonus: true }
   )
 };
 
@@ -140,4 +176,9 @@ export function getVehicleSpec(id: string): VehicleSpec {
   const v = VEHICLE_CATALOG[id];
   if (!v) throw new Error(`Unknown vehicle: ${id}`);
   return v;
+}
+
+export function isAerialVehicle(id: string): boolean {
+  const loc = VEHICLE_CATALOG[id]?.locomotion;
+  return loc === 'hover' || loc === 'helicopter';
 }
