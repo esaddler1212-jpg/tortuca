@@ -112,13 +112,15 @@ import {
 } from './doom-story-arc';
 import {
   battleworldLatticeStrength,
+  latticeBeatChip,
   maybeRecordTerritoryClear,
   recordArcBeat
 } from './arc-progress';
 import {
   characterArcHudLine,
   latticeHudLine,
-  tryArcDistrictInteract
+  tryArcDistrictInteract,
+  villainRunwayHudLine
 } from './battleworld-arcs';
 import { battleworldRoleBlurb } from './battleworld';
 import {
@@ -154,7 +156,13 @@ import { fetchManifestIfOnline, getManifestSuggestions } from './updates';
 import { attachHeroGltf } from './hero-gltf';
 import { placeKenneyLandmarks } from './build-city-kenney';
 import { placeWorldGachaTowns } from './build-city-worldgacha';
-import { applySkyEnvironment, applyWeatherMood, fetchBayWeatherMood } from './sky-env';
+import { universeForDistrict } from './battleworld-districts';
+import {
+  applyBattleworldUniverseFog,
+  applySkyEnvironment,
+  applyWeatherMood,
+  fetchBayWeatherMood
+} from './sky-env';
 import { currentLoadingTip } from './loading-tips';
 import { loadCustomHeroes, customHeroToSpec } from './custom-hero';
 import { addScreenShake, consumeShake, spawnBoostTrail, spawnCraterMarker, tickTrails } from './vfx';
@@ -408,6 +416,7 @@ function tickFrame(s: GameSession, dt: number): void {
   }
 
   const districtHere = districtIdAtPosition(pos.x, pos.z);
+  applyBattleworldUniverseFog(s.app, universeForDistrict(districtHere));
   if (input.interact && tryInteractInfinityStone(s.infinity, pos, s.playerRole, s.heroSpec.id)) {
     recordArcBeat(s.heroSpec.id, 'stone-linked');
     if (playerInfinityStoneCount() >= 6) recordArcBeat(s.heroSpec.id, 'hunt-ascended');
@@ -819,6 +828,8 @@ function tickFrame(s: GameSession, dt: number): void {
       battleworldLatticeStrength() > 0
         ? latticeHudLine(battleworldLatticeStrength())
         : null,
+    latticeBeatChip: latticeBeatChip(s.heroSpec.id, s.playerRole),
+    villainRunwayHint: villainRunwayHudLine(s.heroSpec.id, s.wave),
     alignmentNote: canPickAlignment(s.heroSpec.id)
       ? 'Doom: toggle Hero or Villain below'
       : s.heroSpec.id === VENOM_PLAYABLE_ID

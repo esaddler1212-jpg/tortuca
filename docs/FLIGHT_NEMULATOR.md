@@ -46,7 +46,8 @@ Production build: `npm run build` → `dist/` (static deploy like `drive-world`)
 | Planet shell + nine districts + orbit chrono-freeze | Shipped |
 | Territory takeovers, advisors, raze/henchmen, **territory-clear** arc beat | Shipped |
 | Infinity Stone hunt vs Thanos/Loki/Ultron homages | Shipped |
-| 37 hero arcs + lattice (`battleworld-arcs.ts`, HUD + picker one-liner) | Shipped |
+| 37 hero arcs + lattice (`battleworld-arcs.ts`, HUD chip, picker arc + links) | Shipped |
+| **`home-mark`** H at every hero home district + villain runway HUD | Shipped |
 | Wave-10 pair rivals (5 pinned finales + rival fallback) | Shipped — see [`FLIGHT_NEMULATOR_BATTLEWORLD_ARCS.md`](./FLIGHT_NEMULATOR_BATTLEWORLD_ARCS.md) |
 | Doom timeline / God Emperor, Solar Lantern rings, symbiote, absorb heroes | Shipped |
 | Home spires, quality override, boost trails, super crater, screen shake | Shipped |
@@ -62,8 +63,8 @@ Production build: `npm run build` → `dist/` (static deploy like `drive-world`)
 | Multiplayer | Not started |
 | Mission chapters / checkpoint races | Not started |
 | Blockbench hero GLBs for full roster | `public/models/heroes/` pipeline only — **0** bundled GLBs |
-| Universe-colored district rims / sky rings | Polish |
-| Per-hero district **H** signature beat (beyond Lantern / Ki / Stark) | Content pass |
+| Universe-colored district rims / sky rings | **Shipped** — rim + fog tint (`battleworld-districts.ts`) |
+| Per-hero district **H** at home turf (`home-mark` beat) | **Shipped** — Lantern/Ki/Iron specials unchanged |
 | X-Men tier A roster (`FLIGHT_NEMULATOR_XMEN_RESEARCH.md`) | Research only |
 | `manifest-updates.json` stub IDs → playable characters | OTA placeholder |
 

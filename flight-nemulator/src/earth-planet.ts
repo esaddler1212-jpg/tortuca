@@ -1,5 +1,6 @@
 import { Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
 import { battleworldDistrictLabel } from './battleworld';
+import { DISTRICT_UNIVERSE, UNIVERSE_RIM_RGB } from './battleworld-districts';
 import { DISTRICTS, WORLD_HALF_M } from './districts';
 import { attachUnitBox } from './primitive-mesh';
 
@@ -53,13 +54,17 @@ export function buildPlanetShell(app: AppBase, root: Entity): void {
     const z0 = Math.sin(a0) * EARTH_RING_RADIUS_M;
     const x1 = Math.cos(a1) * EARTH_RING_RADIUS_M;
     const z1 = Math.sin(a1) * EARTH_RING_RADIUS_M;
+    const districtIdx = Math.floor((i / segs) * DISTRICTS.length) % DISTRICTS.length;
+    const district = DISTRICTS[districtIdx]!;
+    const universe = DISTRICT_UNIVERSE[district.id] ?? 'marvel';
+    const [r, g, b] = UNIVERSE_RIM_RGB[universe];
     const seg = new Entity(`ring-seg-${i}`);
     seg.setLocalPosition((x0 + x1) / 2, y, (z0 + z1) / 2);
     const len = Math.hypot(x1 - x0, z1 - z0);
     seg.setLocalScale(len, 6, 24);
     seg.setLocalEulerAngles(0, (-a0 - a1) * (180 / Math.PI) * 0.5 + 90, 0);
     seg.addComponent('render', {
-      meshInstances: [attachUnitBox(app, 0.12, 0.35, 0.55)]
+      meshInstances: [attachUnitBox(app, r, g, b)]
     });
     ring.addChild(seg);
   }

@@ -32,6 +32,7 @@ const required = [
   'src/territory-invasion.ts',
   'src/territory-tick.ts',
   'src/battleworld.ts',
+  'src/battleworld-districts.ts',
   'src/battleworld-arcs.ts',
   'src/arc-progress.ts',
   'src/infinity-stones-arc.ts',

@@ -25,7 +25,7 @@ import { ANNIHILATE_HAVOC_USD } from '../villain-annihilate';
 import { getPlayerRole, type PlayerRole } from '../player-role';
 import { loadCustomHeroes, saveCustomHero, type CustomHeroDraft } from '../custom-hero';
 import { researchHeroBundle } from '../character-research';
-import { arcPickerLine } from '../battleworld-arcs';
+import { arcPickerLine, arcPickerLinks } from '../battleworld-arcs';
 import { Minimap } from './Minimap';
 import { setQualityOverride } from '../game-settings';
 import { downloadPhoto } from '../photo-mode';
@@ -90,6 +90,8 @@ export type GameHudSnapshot = {
   infinityStoneHint?: string | null;
   characterArcHint?: string | null;
   latticeHint?: string | null;
+  latticeBeatChip?: string | null;
+  villainRunwayHint?: string | null;
 };
 
 function formatUsd(n: number): string {
@@ -112,6 +114,7 @@ export function HudApp() {
   const stars = '★'.repeat(snap.wantedStars) + '☆'.repeat(5 - snap.wantedStars);
   const custom = loadCustomHeroes();
   const arcLine = arcPickerLine(heroId);
+  const arcLinks = arcPickerLinks(heroId);
 
   return (
     <div className="hud-root">
@@ -182,6 +185,7 @@ export function HudApp() {
             {arcLine}
           </p>
         )}
+        {arcLinks && <p className="hud-tag hud-hint">{arcLinks}</p>}
         {snap.playerRole === 'hero' && snap.villainRivals && snap.villainRivals.length > 0 && (
           <p className="hud-tag">Rivals: {snap.villainRivals.join(', ')}</p>
         )}
@@ -216,6 +220,12 @@ export function HudApp() {
         )}
         {snap.infinityStoneHint && <p className="hud-tag">{snap.infinityStoneHint}</p>}
         {snap.characterArcHint && <p className="hud-tag hud-hint">{snap.characterArcHint}</p>}
+        {snap.latticeBeatChip && (
+          <p className="hud-tag hud-lattice-chip" title="Territory · Stones · Home H · Pair · Save">
+            Lattice {snap.latticeBeatChip}
+          </p>
+        )}
+        {snap.villainRunwayHint && <p className="hud-tag hud-hint">{snap.villainRunwayHint}</p>}
         {snap.latticeHint && <p className="hud-tag">{snap.latticeHint}</p>}
         {snap.territoryHint?.includes('H: henchmen') && (
           <div className="fate-actions">

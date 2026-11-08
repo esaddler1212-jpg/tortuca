@@ -32,5 +32,6 @@ CI: `tsx scripts/check-pair-boss.mts` asserts every non-exempt hero has at least
 | `territory-clear` | Hero clears the last takeover district (reclaim **H** or auto henchmen clear) |
 | `stone-linked` / `hunt-ascended` | Infinity Stone interact / sixth stone |
 | `corps-oath` / `squad-clash` | District **H** at Coast City / Ki Plateau |
+| `home-mark` | District **H** at hero home turf (all roster; signature beats for Lantern/Ki/Iron still apply) |
 | `pair-down` | Wave-10 pair boss defeated |
 | `world-saved` | Hero save fate at ≥52% integrity |
