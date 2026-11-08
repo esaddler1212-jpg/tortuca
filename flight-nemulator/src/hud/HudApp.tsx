@@ -86,6 +86,7 @@ export type GameHudSnapshot = {
   takeoverDistricts?: number;
   villainScoutHint?: string | null;
   battleworldTagline?: string | null;
+  infinityStoneHint?: string | null;
 };
 
 function formatUsd(n: number): string {
@@ -197,10 +198,14 @@ export function HudApp() {
         {snap.villainScoutHint && <p className="hud-tag">{snap.villainScoutHint}</p>}
         {snap.pairBossBlocked && (
           <p className="hud-tag">
-            Final pair boss locked — reclaim {snap.takeoverDistricts ?? 0} villain district
-            {snap.takeoverDistricts === 1 ? '' : 's'} first
+            Final pair boss locked — clear takeovers
+            {(snap.takeoverDistricts ?? 0) > 0
+              ? ` (${snap.takeoverDistricts} district${snap.takeoverDistricts === 1 ? '' : 's'})`
+              : ''}{' '}
+            and defeat any God Emperor stone hunter
           </p>
         )}
+        {snap.infinityStoneHint && <p className="hud-tag">{snap.infinityStoneHint}</p>}
         {snap.territoryHint?.includes('H: henchmen') && (
           <div className="fate-actions">
             <button type="button" className="hud-roam" onClick={() => confirmTerritoryHenchmen()}>

@@ -112,6 +112,15 @@ import {
 } from './doom-story-arc';
 import { battleworldRoleBlurb } from './battleworld';
 import {
+  createInfinityStoneState,
+  infinityBossBlocksFinale,
+  infinityPowerMultiplier,
+  infinityStonesHudLine,
+  resetInfinityHunt,
+  type InfinityStoneState
+} from './infinity-stones-arc';
+import { tickInfinityStonePhase, tryInteractInfinityStone } from './infinity-stones-tick';
+import {
   addDistrictDestruction,
   canHeroFacePairBoss,
   createTerritoryState,
@@ -162,6 +171,7 @@ export type GameSession = {
   pairBoss: { spawned: boolean; defeated: boolean; warned: boolean };
   lanternKeeper: import('./solar-lantern-arc').LanternKeeper | null;
   territory: TerritoryState;
+  infinity: InfinityStoneState;
 };
 
 let session: GameSession | null = null;
@@ -267,7 +277,8 @@ export async function startGame(app: AppBase): Promise<void> {
       !lanternAidForFinalBoss()
         ? spawnLanternKeeper(app, root)
         : null,
-    territory
+    territory,
+    infinity: createInfinityStoneState(app, root)
   };
 
   app.on('update', (dt: number) => {
@@ -304,7 +315,8 @@ function tickFrame(s: GameSession, dt: number): void {
   const simDt = dt * chrono.timeScale;
   const solarCharge = tickSolarSpaceCharge(s.heroSpec.id, pos, s.hero.speedKmh(), dt);
   const activeForm = combatForm(s);
-  const powerMul = activeForm.powerMul * solarPowerMultiplier(s.heroSpec.id);
+  const powerMul =
+    activeForm.powerMul * solarPowerMultiplier(s.heroSpec.id) * infinityPowerMultiplier(s.heroSpec.id);
   const tags = getDestructibles();
 
   if (s.heroSpec.id === 'solar-apex') {
@@ -385,7 +397,18 @@ function tickFrame(s: GameSession, dt: number): void {
   }
 
   const districtHere = districtIdAtPosition(pos.x, pos.z);
-  if (input.interact && s.heroSpec.id === SOLAR_HERO_ID && nearLanternSafeHouse(pos) && !lanternAidForFinalBoss() && !isSolarCorrupted() && !s.pairBoss.spawned) {
+  if (input.interact && tryInteractInfinityStone(s.infinity, pos, s.playerRole, s.heroSpec.id)) {
+    playWaveAlert();
+    if (
+      s.playerRole === 'villain' &&
+      s.heroSpec.id === DUAL_ROLE_HERO_ID &&
+      isDoomGodEmperor()
+    ) {
+      s.heroForm = resolveHeroForm(s.heroSpec, DOOM_GOD_EMPEROR_FORM);
+      s.hero.form = s.heroForm;
+      paintHero(s.hero.entity, s.heroForm.color);
+    }
+  } else if (input.interact && s.heroSpec.id === SOLAR_HERO_ID && nearLanternSafeHouse(pos) && !lanternAidForFinalBoss() && !isSolarCorrupted() && !s.pairBoss.spawned) {
     markLanternAid();
     playWaveAlert();
   }
@@ -543,7 +566,8 @@ function tickFrame(s: GameSession, dt: number): void {
     !s.pairBoss.spawned &&
     !s.pairBoss.defeated &&
     s.wave + 1 >= PAIR_BOSS_WAVE &&
-    canHeroFacePairBoss(s.territory)
+    canHeroFacePairBoss(s.territory) &&
+    !infinityBossBlocksFinale(s.factionNpcs)
   ) {
     s.wave += 1;
     for (const n of [...s.factionNpcs]) {
@@ -581,6 +605,8 @@ function tickFrame(s: GameSession, dt: number): void {
       s.hero.stamina = Math.max(0, s.hero.stamina - (10 * simDt) / res);
     }
   }
+  tickInfinityStonePhase(s.infinity, dt, s.factionNpcs, s.app, s.root);
+
   tickTerritoryInvasion(
     s.territory,
     s.factionNpcs,
@@ -614,6 +640,10 @@ function tickFrame(s: GameSession, dt: number): void {
       bondVenomToHero(d.profileId, d.codename);
     }
     absorbDefeatedFoe(s.heroSpec.id, d.profileId, d.codename);
+    if (d.codename.startsWith('God Emperor')) {
+      resetInfinityHunt(s.infinity, s.app, s.root);
+      playSuper();
+    }
   }
   if (kills > 0) {
     s.foesStopped += kills;
@@ -732,11 +762,14 @@ function tickFrame(s: GameSession, dt: number): void {
       s.heroSpec.districtId
     ),
     villainAdvisorHint: s.territory.lastHint,
-    pairBossBlocked: s.playerRole === 'hero' && !canHeroFacePairBoss(s.territory),
     takeoverDistricts: territoryTakeoverCount(s.territory),
     villainScoutHint:
       s.playerRole === 'villain' ? pairHeroHintForPlayerVillain(s.heroSpec.id) : null,
     battleworldTagline: battleworldRoleBlurb(s.playerRole),
+    infinityStoneHint: infinityStonesHudLine(s.infinity, s.playerRole, s.heroSpec.id),
+    pairBossBlocked:
+      s.playerRole === 'hero' &&
+      (!canHeroFacePairBoss(s.territory) || infinityBossBlocksFinale(s.factionNpcs)),
     alignmentNote: canPickAlignment(s.heroSpec.id)
       ? 'Doom: toggle Hero or Villain below'
       : s.heroSpec.id === VENOM_PLAYABLE_ID

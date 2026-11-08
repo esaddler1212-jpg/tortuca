@@ -39,6 +39,7 @@ HUD: **Suits & abilities** — grouped by role, color swatch, ability list, SPD/
 | **Latverian Sovereign** | Playable **Doctor Doom** — **only** character with Hero/Villain alignment toggle |
 | **Doom endings** | **Hero:** beat wave-10 pair rival → **new timeline** (fresh Earth generation). **Villain:** **Remake in my image** on dying Earth or **Annihilate** → **God Emperor** loadout + locked villain alignment |
 | **Territory invasion** | **Villain:** raid another hero’s **district** (destruction heat) → defenders spawn → beat them → **H** henchmen / **G** raze. **Villain advisors** (other rogues) give **pair-hero** tips on **H**. **Hero:** stop **henchmen takeovers** before wave-10 **pair boss** unlocks |
+| **Infinity Stones** | **Titan Snap Echo**, **Trickster Prince**, and **Chrome Overmind** race six stones on Battleworld. **Hero:** **H** at a stone to seal it. **Villain:** collect **6** for **God Emperor** power (Doom → Battleworld throne loadout). First hunter to **6** becomes a **God Emperor** boss like Doom |
 | **Wall Crawler symbiote** | Defeat **Venom Echo** or **Carnage Echo** → unlock **Symbiote — merged suit** loadout |
 | **Venom bonds** | Play **Venom Echo** (villain) — each **hero** you drop adds a **Bonded — &lt;hero&gt;** loadout (color + power mimic, up to 8) |
 | **Cell / Buu absorb** | Playable **Cell Mimic** & **Spirit Buu** (villain-only) stack up to 6 absorbed foes; copiers borrow primary power + dmg/speed |

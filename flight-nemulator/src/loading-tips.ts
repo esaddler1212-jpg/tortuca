@@ -9,7 +9,8 @@ const LOCAL_TIPS = [
   'Nine districts share one Battleworld — orbit past 400 km/h to freeze time, then E to shatter',
   'Roll a town at World Gacha → export GLB → public/models/worldgacha/ (see docs)',
   'Photo mode: P — save PNG from HUD',
-  'Villain advisors on the map trade pair-hero locations — fly near and press H'
+  'Villain advisors on the map trade pair-hero locations — fly near and press H',
+  'Thanos, Loki, and Ultron hunt Infinity Stones — seal or collect before they reach six'
 ];
 
 let cachedTip = LOCAL_TIPS[0]!;
