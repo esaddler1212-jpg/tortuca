@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { fetchCurriculum, joinSession, submitResponses } from "./api";
-import { IrisPlayDock } from "./IrisPlayDock";
+import { GamesDock } from "./GamesDock";
 import {
   clearSession,
   loadProfile,
@@ -246,12 +246,12 @@ function LessonScreen({
           className={`student-tab ${tab === "play" ? "is-active" : ""}`}
           onClick={() => setTab("play")}
         >
-          Play · Iris
+          Games
         </button>
       </nav>
 
       {tab === "play" ? (
-        <IrisPlayDock studentName={student.name} />
+        <GamesDock />
       ) : beforeCurriculum ? (
         <div className="card">
           <h2>Starts in September</h2>

@@ -29,9 +29,9 @@ Curriculum themes start **September 2026**.
 | May | Decision Making |
 | June | Purpose — I Move With Purpose |
 
-## Play · Iris (Tortuca Console)
+## Games (Tortuca Console)
 
-Signed-in students get a **Play · Iris** tab. **Iris** introduces Tortuca games bundled on the same site:
+Signed-in students get a **Games** tab with Tortuca titles bundled on the same site:
 
 | Game | What |
 |------|------|
