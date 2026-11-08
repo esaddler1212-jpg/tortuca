@@ -22,7 +22,8 @@ Production build: `npm run build` → `dist/` (static deploy like `drive-world`)
 | Flight | Third-person **realistic arcade** 6DOF — cruise and absurd boost bands |
 | Destruction | Ram **destructibles** only; chunk debris on capable hardware, instant vanish on low tier |
 | Ruins | Buildings **stay ruined** for the session |
-| Role | **Hero** — stop raiders. **Villain** — havoc + wanted; at **$12M havoc** unlock **Annihilate all (X)**. **Solar Apex** — charge in space (~950m+, fast) for +power |
+| Role | **Hero** — stop **villain clones** (DBZ / Marvel / DC homage roster paired to your hero). **Villain** — hero interceptors chase you |
+| Clones | 15 in `villain-roster.ts` (e.g. Emperor Frieze, Chrome Doom, Krypton Eclipse) with rival pairings |
 | Combat | Primary / throw / super; wave spawns depend on role |
 | Economy | **Destruction cost** score + **wanted** heat when wrecking too much |
 | Roster | Full launch roster + Iron suits / form toggles; **custom hero** in local storage |

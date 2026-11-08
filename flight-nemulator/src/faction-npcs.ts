@@ -6,6 +6,8 @@ import type { PlayerRole } from './player-role';
 import { applyRaiderSiege } from './city-integrity';
 import type { CityIntegrityState } from './city-integrity';
 import { attachUnitBox } from './primitive-mesh';
+import { pickHeroInterceptor } from './hero-rivals';
+import { pickVillainClone, type VillainCloneSpec } from './villain-roster';
 
 export type FactionNpc = {
   entity: Entity;
@@ -15,6 +17,9 @@ export type FactionNpc = {
   allegiance: 'villain' | 'hero';
   siegeCd: number;
   targetTag?: DestructibleTag;
+  profileId: string;
+  codename: string;
+  siegeMul: number;
 };
 
 export function waveNpcCount(wave: number, wantedStars: number, role: PlayerRole): number {
@@ -23,16 +28,15 @@ export function waveNpcCount(wave: number, wantedStars: number, role: PlayerRole
   return base + wantedStars * 2;
 }
 
-function paintNpc(ent: Entity, allegiance: 'villain' | 'hero'): void {
+function paintNpc(ent: Entity, allegiance: 'villain' | 'hero', rgb: [number, number, number]): void {
   const mi = ent.render?.meshInstances?.[0];
   const mat = mi?.material as StandardMaterial | undefined;
   if (!mat) return;
-  if (allegiance === 'villain') {
-    mat.diffuse = new Color(0.55, 0.12, 0.65);
-    mat.emissive = new Color(0.35, 0.05, 0.4);
-  } else {
-    mat.diffuse = new Color(0.15, 0.35, 0.85);
-    mat.emissive = new Color(0.2, 0.45, 0.95);
+  const [r, g, b] = rgb;
+  mat.diffuse = new Color(r, g, b);
+  mat.emissive = new Color(r * 0.45, g * 0.45, b * 0.45);
+  if (allegiance === 'hero') {
+    mat.emissive = new Color(r * 0.55 + 0.05, g * 0.55 + 0.1, b * 0.55 + 0.15);
   }
   mat.update();
 }
@@ -42,38 +46,84 @@ export function spawnFactionWave(
   root: Entity,
   origin: Vec3,
   count: number,
-  role: PlayerRole
+  role: PlayerRole,
+  playerHeroId: string,
+  wave: number
 ): FactionNpc[] {
   const allegiance = role === 'hero' ? 'villain' : 'hero';
   const out: FactionNpc[] = [];
   for (let i = 0; i < count; i++) {
-    const ent = new Entity(`npc-${allegiance}-${Date.now()}-${i}`);
+    let profileId = 'generic';
+    let codename = allegiance === 'villain' ? 'Raider' : 'Responder';
+    let color: [number, number, number] =
+      allegiance === 'villain' ? [0.55, 0.12, 0.65] : [0.15, 0.35, 0.85];
+    let hpMul = 1;
+    let speedMul = 1;
+    let siegeMul = 1;
+    let scale: [number, number, number] =
+      allegiance === 'villain' ? [2.8, 3.6, 2.2] : [3.5, 3.2, 2.2];
+
+    let clone: VillainCloneSpec | undefined;
+    if (allegiance === 'villain') {
+      clone = pickVillainClone(playerHeroId, wave, i);
+      profileId = clone.id;
+      codename = clone.codename;
+      color = clone.color;
+      hpMul = clone.hpMul;
+      speedMul = clone.speedMul;
+      siegeMul = clone.siegeMul;
+      scale = clone.scale;
+    } else {
+      const hero = pickHeroInterceptor(playerHeroId, wave, i);
+      profileId = hero.id;
+      codename = hero.codename;
+      color = hero.forms[0]?.color ?? [0.15, 0.35, 0.85];
+      hpMul = 1.05;
+      speedMul = 1.1;
+      scale = [2.8, 3.4, 2.2];
+    }
+
+    const ent = new Entity(`npc-${profileId}-${Date.now()}-${i}`);
     const angle = (i / count) * Math.PI * 2;
     const dist = role === 'hero' ? 140 + i * 8 : 80;
     ent.setLocalPosition(origin.x + Math.cos(angle) * dist, origin.y + 35 + i * 2, origin.z + Math.sin(angle) * dist);
-    const scale = allegiance === 'villain' ? [2.8, 3.6, 2.2] : [3.5, 1.2, 3.5];
     ent.setLocalScale(scale[0], scale[1], scale[2]);
     ent.addComponent('render', {
-      meshInstances: [
-        attachUnitBox(
-          app,
-          allegiance === 'villain' ? 0.55 : 0.15,
-          allegiance === 'villain' ? 0.12 : 0.35,
-          allegiance === 'villain' ? 0.65 : 0.85
-        )
-      ]
+      meshInstances: [attachUnitBox(app, color[0], color[1], color[2])]
     });
-    paintNpc(ent, allegiance);
+    paintNpc(ent, allegiance, color);
     root.addChild(ent);
+    const baseHp = allegiance === 'villain' ? 4 + Math.floor(count / 3) : 3 + Math.floor(count / 4);
+    const baseSpeed =
+      allegiance === 'villain' ? 22 + Math.random() * 10 : 28 + Math.random() * 12 + count * 0.3;
     out.push({
       entity: ent,
-      hp: allegiance === 'villain' ? 4 + Math.floor(count / 3) : 3 + Math.floor(count / 4),
-      speed: allegiance === 'villain' ? 22 + Math.random() * 10 : 28 + Math.random() * 12 + count * 0.3,
+      hp: baseHp * hpMul,
+      speed: baseSpeed * speedMul,
       allegiance,
-      siegeCd: 0.4 + Math.random() * 0.6
+      siegeCd: 0.4 + Math.random() * 0.6,
+      profileId,
+      codename,
+      siegeMul
     });
   }
   return out;
+}
+
+export function nearestFoeCodename(npcs: FactionNpc[], role: PlayerRole, pos: Vec3): string | null {
+  const foe = role === 'hero' ? 'villain' : 'hero';
+  let best: FactionNpc | null = null;
+  let bd = Infinity;
+  for (const n of npcs) {
+    if (n.allegiance !== foe) continue;
+    const p = n.entity.getPosition();
+    const d = (p.x - pos.x) ** 2 + (p.z - pos.z) ** 2;
+    if (d < bd) {
+      bd = d;
+      best = n;
+    }
+  }
+  return best?.codename ?? null;
 }
 
 function nearestSiegeTarget(tags: DestructibleTag[], from: Vec3): DestructibleTag | null {
@@ -125,7 +175,7 @@ export function tickFactionNpcs(
             n.siegeCd = 0.9 + Math.random() * 0.4;
             const hit = smashDestructible(app, root, target, tier, tp);
             if (hit) {
-              applyRaiderSiege(city, hit.costUsd);
+              applyRaiderSiege(city, hit.costUsd * n.siegeMul);
               n.targetTag = undefined;
             }
           }

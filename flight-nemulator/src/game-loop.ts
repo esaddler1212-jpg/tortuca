@@ -50,12 +50,14 @@ import {
 } from './city-integrity';
 import {
   damageNpcsInCone,
+  nearestFoeCodename,
   spawnFactionWave,
   tickFactionNpcs,
   throwHitsNpcs,
   waveNpcCount,
   type FactionNpc
 } from './faction-npcs';
+import { villainRivalsForHero } from './villain-roster';
 import { getPlayerRole, setPlayerRole, type PlayerRole } from './player-role';
 import { isPhotoMode, togglePhotoMode } from './photo-mode';
 import { fetchManifestIfOnline, getManifestSuggestions } from './updates';
@@ -295,7 +297,7 @@ function tickFrame(s: GameSession, dt: number): void {
     const cd = s.playerRole === 'hero' ? 14 : Math.max(4, 12 - s.wave * 0.4 - s.wanted.stars);
     s.waveCooldown = cd;
     const count = waveNpcCount(s.wave, s.wanted.stars, s.playerRole);
-    const batch = spawnFactionWave(s.app, s.root, pos, count, s.playerRole);
+    const batch = spawnFactionWave(s.app, s.root, pos, count, s.playerRole, s.heroSpec.id, s.wave);
     s.factionNpcs.push(...batch);
     playWaveAlert();
   }
@@ -363,7 +365,10 @@ function tickFrame(s: GameSession, dt: number): void {
     worldGeneration: worldGeneration(),
     annihilateUnlocked: annihilateUnlocked(s.playerRole, s.city),
     annihilateProgress: s.playerRole === 'villain' ? annihilateProgress(s.city) : 0,
-    solarCharge: s.heroSpec.id === 'solar-apex' ? solarCharge : 0
+    solarCharge: s.heroSpec.id === 'solar-apex' ? solarCharge : 0,
+    nearestFoe: nearestFoeCodename(s.factionNpcs, s.playerRole, pos),
+    villainRivals:
+      s.playerRole === 'hero' ? villainRivalsForHero(s.heroSpec.id).slice(0, 4) : undefined
   });
 }
 

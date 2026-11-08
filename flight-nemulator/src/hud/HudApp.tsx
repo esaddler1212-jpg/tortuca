@@ -43,6 +43,8 @@ export type GameHudSnapshot = {
   annihilateUnlocked?: boolean;
   annihilateProgress?: number;
   solarCharge?: number;
+  nearestFoe?: string | null;
+  villainRivals?: string[];
 };
 
 function formatUsd(n: number): string {
@@ -71,6 +73,11 @@ export function HudApp() {
         <div className="hud-panel">
           <div className="hud-hero">{snap.heroName}</div>
           <div className="hud-tag">{snap.codename}</div>
+          {snap.nearestFoe && (
+            <div className="hud-tag">
+              vs {snap.nearestFoe}
+            </div>
+          )}
           <div className="hud-tag">{snap.district}</div>
         </div>
         <div className="hud-panel">
@@ -118,6 +125,9 @@ export function HudApp() {
             </option>
           ))}
         </select>
+        {snap.playerRole === 'hero' && snap.villainRivals && snap.villainRivals.length > 0 && (
+          <p className="hud-tag">Rivals: {snap.villainRivals.join(', ')}</p>
+        )}
         <SuitPicker heroId={heroId} />
         <CreateHeroPanel
           onCreated={(id) => {

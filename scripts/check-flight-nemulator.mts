@@ -18,6 +18,8 @@ const required = [
   'src/city-integrity.ts',
   'src/villain-annihilate.ts',
   'src/solar-space-charge.ts',
+  'src/villain-roster.ts',
+  'src/hero-rivals.ts',
   'public/manifest-updates.json'
 ];
 
