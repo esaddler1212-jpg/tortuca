@@ -93,6 +93,11 @@
   stroke-width: 1;
 }
 
+.minimap-arterial {
+  stroke: rgba(140, 150, 165, 0.45);
+  stroke-width: 1.2;
+}
+
 .minimap-route {
   stroke: rgba(255, 220, 120, 0.55);
   stroke-width: 1;

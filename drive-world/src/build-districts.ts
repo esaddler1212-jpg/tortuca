@@ -2,7 +2,8 @@ import { Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas'
 
 import { hillOffsetM } from './bay-terrain';
 import { BAY_WINDOW_LIGHTS, hash2 } from './night-palette';
-import { DISTRICTS, FREEWAY_ROUTES, FREEWAY_WIDTH_M, type DistrictId, type DistrictSpec } from './world-config';
+import { nearDistrictStreetGrid, tooCloseToFreeway } from './street-utils';
+import { DISTRICTS, type DistrictId, type DistrictSpec } from './world-config';
 
 const BUILDING_BASE = new Color(0.07, 0.075, 0.1);
 
@@ -26,36 +27,13 @@ function buildingMaterial(index: number): StandardMaterial {
   return mat;
 }
 
-function distToSegment(px: number, pz: number, ax: number, az: number, bx: number, bz: number): number {
-  const vx = bx - ax;
-  const vz = bz - az;
-  const len2 = vx * vx + vz * vz;
-  if (len2 < 1e-6) return Math.hypot(px - ax, pz - az);
-  let t = ((px - ax) * vx + (pz - az) * vz) / len2;
-  t = Math.max(0, Math.min(1, t));
-  const nx = ax + t * vx;
-  const nz = az + t * vz;
-  return Math.hypot(px - nx, pz - nz);
-}
-
-function tooCloseToFreeway(x: number, z: number): boolean {
-  const clearance = FREEWAY_WIDTH_M * 0.55 + 20;
-  for (const route of FREEWAY_ROUTES) {
-    for (let i = 0; i < route.length - 1; i++) {
-      const a = route[i];
-      const b = route[i + 1];
-      if (distToSegment(x, z, a.x, a.z, b.x, b.z) < clearance) return true;
-    }
-  }
-  return false;
-}
-
 function buildDistrict(app: AppBase, spec: DistrictSpec, materials: StandardMaterial[]): void {
   for (let bx = spec.minX; bx < spec.maxX; bx += spec.blockM) {
     for (let bz = spec.minZ; bz < spec.maxZ; bz += spec.blockM) {
       const cx = bx + spec.blockM * 0.5;
       const cz = bz + spec.blockM * 0.5;
       if (tooCloseToFreeway(cx, cz)) continue;
+      if (nearDistrictStreetGrid(cx, cz, spec)) continue;
 
       const roll = hash2(cx, cz);
       if (roll < 0.14) continue;
@@ -66,6 +44,7 @@ function buildDistrict(app: AppBase, spec: DistrictSpec, materials: StandardMate
         const oz = (hash2(cz + t, cx) - 0.5) * (spec.blockM * 0.35);
         const x = cx + ox;
         const z = cz + oz;
+        if (nearDistrictStreetGrid(x, z, spec)) continue;
 
         const groundY = spec.flat ? hash2(x, z) * 1.2 : hillOffsetM(x, z);
         const footprint =

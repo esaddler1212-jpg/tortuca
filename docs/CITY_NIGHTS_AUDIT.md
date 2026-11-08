@@ -6,7 +6,7 @@ Compressed **Bay Area night sandbox** in `drive-world/`. Not a AAA open world; a
 
 | Layer | Shipped |
 |-------|---------|
-| **World** | ~5.2 km half-extent, 6 districts, procedural blocks, freeways (80/101/880/280/24/680/580/780 — topology from regional maps), bay water, ramps, Lombard, traffic toggle |
+| **World** | ~5.2 km half-extent, 6 districts, **city street grid + named arterials** (Market, Telegraph, Broadway, El Camino, etc.), procedural blocks, freeways (80/101/880/280/24/680/580/780), bay water, ramps, Lombard, traffic toggle |
 | **Progression** | Waymo intro → garage starter → visit all landmarks per region → regional car |
 | **Extra vehicles** | Aerial (scenic + rotor token), legend homages (collectibles), Kenney + CC0 glTF |
 | **Systems** | Nitro, gamepad, touch pad (ground), scenic routes, speed traps, fast travel, photo mode, drone/chase/cockpit cam, fog, garage tuning |
@@ -26,7 +26,7 @@ Compressed **Bay Area night sandbox** in `drive-world/`. Not a AAA open world; a
 
 East Bay district bounds were nudged east/north (`eastBay` in `world-config.ts`) so Concord / Martinez sit inside the same region bucket for unlocks.
 
-**Still abstract:** Richmond, Antioch, Pleasant Hill strip malls, real BART geometry, tunnel interiors (portals only).
+**Still abstract:** Richmond, Antioch, Pleasant Hill strip malls, real BART geometry, tunnel interiors (portals only). Local grids are Manhattan-style between blocks, not surveyed OSM geometry.
 
 ## Vs typical open-world driving games
 

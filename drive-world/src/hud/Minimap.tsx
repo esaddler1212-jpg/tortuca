@@ -1,6 +1,7 @@
 import type { HudSnapshot } from '../game-bridge';
 import { CRUISE_VISTAS } from '../cruise-vistas';
 import { LANDMARKS } from '../landmark-registry';
+import { NAMED_STREETS } from '../street-registry';
 import { homeServicePoint, resolveHomeSafehouse } from '../safehouse-registry';
 import { WORLD_HALF_M } from '../world-config';
 
@@ -27,6 +28,21 @@ export function Minimap({ snap }: { snap: HudSnapshot }) {
       <div className="minimap-title">City Nights map</div>
       <svg width={SIZE} height={SIZE} className="minimap" aria-hidden>
         <rect x={0} y={0} width={SIZE} height={SIZE} className="minimap-bg" />
+        {NAMED_STREETS.map((st) =>
+          st.points.slice(0, -1).map((a, i) => {
+            const b = st.points[i + 1]!;
+            return (
+              <line
+                key={`${st.id}-${i}`}
+                x1={mapX(a.x)}
+                y1={mapY(a.z)}
+                x2={mapX(b.x)}
+                y2={mapY(b.z)}
+                className="minimap-arterial"
+              />
+            );
+          })
+        )}
         {CRUISE_VISTAS.map((v) => (
           <circle
             key={v.id}
