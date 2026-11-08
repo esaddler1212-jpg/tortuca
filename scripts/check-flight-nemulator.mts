@@ -16,6 +16,8 @@ const required = [
   'src/player-role.ts',
   'src/faction-npcs.ts',
   'src/city-integrity.ts',
+  'src/villain-annihilate.ts',
+  'src/solar-space-charge.ts',
   'public/manifest-updates.json'
 ];
 

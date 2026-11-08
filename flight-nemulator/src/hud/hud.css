@@ -5,6 +5,18 @@
   font-size: 14px;
 }
 
+.hud-annihilate {
+  pointer-events: auto;
+  margin: 8px 12px;
+  padding: 10px 16px;
+  background: linear-gradient(180deg, #6a1020, #2a0508);
+  border: 1px solid #ff4466;
+  color: #ffe0e8;
+  font-weight: 700;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
 .hud-top {
   position: absolute;
   top: env(safe-area-inset-top, 12px);

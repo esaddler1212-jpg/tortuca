@@ -10,7 +10,20 @@ import {
 import { buildMetropolis, getDestructibles, spawnSimpleCars } from './build-city';
 import { buildPlanetShell, earthLabel, initEarthDistrictRing } from './earth-planet';
 import { getChronoState, tickEarthOrbit } from './earth-orbit';
-import { freshWantedAfterShatter, shatterAndRebuildEarth, worldGeneration } from './world-reset';
+import {
+  freshWantedAfterShatter,
+  shatterAndRebuildEarth,
+  villainAnnihilatePlanet,
+  worldGeneration
+} from './world-reset';
+import { annihilateUnlocked, annihilateProgress } from './villain-annihilate';
+import {
+  isSolarFullyCharged,
+  resetSolarCharge,
+  solarPowerMultiplier,
+  solarSmashMultiplier,
+  tickSolarSpaceCharge
+} from './solar-space-charge';
 import { attachUnitBox } from './primitive-mesh';
 import {
   DEFAULT_HERO_ID,
@@ -177,7 +190,22 @@ function tickFrame(s: GameSession, dt: number): void {
   const pos = s.hero.entity.getPosition();
   const chrono = tickEarthOrbit(pos, s.hero.speedKmh(), dt);
   const simDt = dt * chrono.timeScale;
+  const solarCharge = tickSolarSpaceCharge(s.heroSpec.id, pos, s.hero.speedKmh(), dt);
+  const powerMul = s.heroForm.powerMul * solarPowerMultiplier(s.heroSpec.id);
   const tags = getDestructibles();
+
+  if (s.heroSpec.id === 'solar-apex') {
+    const [r, g, b] = s.heroForm.color;
+    if (solarCharge >= 0.45) {
+      paintHero(s.hero.entity, [
+        Math.min(1, r + solarCharge * 0.4),
+        Math.min(1, g + solarCharge * 0.3),
+        Math.min(1, b + solarCharge * 0.12)
+      ]);
+    } else {
+      paintHero(s.hero.entity, [r, g, b]);
+    }
+  }
 
   if (input.super && chrono.chronoArmed) {
     const blast = shatterAndRebuildEarth(s.app, s.root, s.tier, s.factionNpcs);
@@ -191,9 +219,29 @@ function tickFrame(s: GameSession, dt: number): void {
     addScreenShake(1.6);
     playSuper();
     s.stats = saveSessionStats({ supersUsed: s.stats.supersUsed + 1 });
+    resetSolarCharge();
   }
 
-  const smashRadius = s.heroSpec.smashRadius * s.heroForm.powerMul;
+  if (
+    input.annihilate &&
+    s.playerRole === 'villain' &&
+    annihilateUnlocked(s.playerRole, s.city)
+  ) {
+    const blast = villainAnnihilatePlanet(s.app, s.root, s.tier, s.factionNpcs);
+    addVillainHavoc(s.city, blast.costUsd);
+    s.destructionUsd += blast.costUsd;
+    s.wanted = freshWantedAfterShatter();
+    s.wave = 0;
+    s.waveCooldown = 12;
+    const home = spawnAtHome(s.heroSpec.districtId);
+    s.hero.entity.setPosition(home);
+    s.hero.velocity.set(0, 0, 0);
+    addScreenShake(2);
+    playSuper();
+    resetSolarCharge();
+  }
+
+  const smashRadius = s.heroSpec.smashRadius * powerMul * solarSmashMultiplier(s.heroSpec.id);
   const smash = checkHeroSmash(s.app, s.root, pos, s.hero.speedKmh(), smashRadius, tags, s.tier);
   if (smash.costUsd > 0) {
     s.destructionUsd += smash.costUsd;
@@ -214,7 +262,7 @@ function tickFrame(s: GameSession, dt: number): void {
   if (input.primary && s.hero.canPrimary()) {
     s.hero.triggerPrimary();
     const aim = s.hero.aimPoint();
-    const strike = primaryStrikeParams(s.heroSpec, s.heroForm.powerMul);
+    const strike = primaryStrikeParams(s.heroSpec, powerMul);
     const hits = damageNpcsInCone(pos, aim, s.factionNpcs, s.playerRole, strike.range, strike.cone, strike.dmg);
     if (hits > 0) playBlast(powerKind(s.heroSpec) as 'beam' | 'repulsor' | 'thunder' | 'ki' | 'default');
   }
@@ -225,7 +273,7 @@ function tickFrame(s: GameSession, dt: number): void {
   if (input.super && s.hero.canSuper() && !chrono.chronoArmed) {
     s.hero.triggerSuper();
     const aim = s.hero.aimPoint(120);
-    const blastRadius = 45 * s.heroForm.powerMul;
+    const blastRadius = 45 * powerMul * (isSolarFullyCharged(s.heroSpec.id) ? 1.35 : 1);
     const blast = superCrater(s.app, s.root, aim, tags, s.tier, blastRadius);
     s.destructionUsd += blast.costUsd;
     if (s.playerRole === 'villain') {
@@ -312,7 +360,10 @@ function tickFrame(s: GameSession, dt: number): void {
     orbitProgress: chron.orbitProgress,
     chronoArmed: chron.chronoArmed,
     chronoFrozen: chron.chronoFrozen,
-    worldGeneration: worldGeneration()
+    worldGeneration: worldGeneration(),
+    annihilateUnlocked: annihilateUnlocked(s.playerRole, s.city),
+    annihilateProgress: s.playerRole === 'villain' ? annihilateProgress(s.city) : 0,
+    solarCharge: s.heroSpec.id === 'solar-apex' ? solarCharge : 0
   });
 }
 

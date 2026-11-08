@@ -78,3 +78,15 @@ export function shatterAndRebuildEarth(
 export function freshWantedAfterShatter(): WantedState {
   return createWanted();
 }
+
+/** Villain-only: global wipe after enough havoc (no chrono required). */
+export function villainAnnihilatePlanet(
+  app: AppBase,
+  root: Entity,
+  tier: QualityTier,
+  npcs: FactionNpc[]
+): ShatterResult {
+  const result = shatterAndRebuildEarth(app, root, tier, npcs);
+  result.costUsd = 5_000_000_000;
+  return result;
+}

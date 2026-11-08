@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { getHudSnapshot, setTouchFlight } from '../game-bridge';
 import { HERO_ROSTER } from '../hero-roster';
 import { selectHero, selectPlayerRole } from '../game-loop';
+import { ANNIHILATE_HAVOC_USD } from '../villain-annihilate';
 import { getPlayerRole, type PlayerRole } from '../player-role';
 import { loadCustomHeroes, saveCustomHero, type CustomHeroDraft } from '../custom-hero';
 import { researchHeroBundle } from '../character-research';
@@ -39,6 +40,9 @@ export type GameHudSnapshot = {
   playerRole?: PlayerRole;
   cityStatus?: string;
   foesStopped?: number;
+  annihilateUnlocked?: boolean;
+  annihilateProgress?: number;
+  solarCharge?: number;
 };
 
 function formatUsd(n: number): string {
@@ -123,6 +127,23 @@ export function HudApp() {
         />
       </div>
 
+      {snap.playerRole === 'villain' && !snap.annihilateUnlocked && (snap.annihilateProgress ?? 0) > 0.05 && (
+        <p className="hud-hint">
+          Annihilate unlock {Math.round((snap.annihilateProgress ?? 0) * 100)}% (
+          {`$${(ANNIHILATE_HAVOC_USD / 1_000_000).toFixed(0)}M havoc`})
+        </p>
+      )}
+      {snap.playerRole === 'villain' && snap.annihilateUnlocked && (
+        <button type="button" className="hud-annihilate" onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'x' }))}>
+          Annihilate all Earth (X)
+        </button>
+      )}
+      {(snap.solarCharge ?? 0) > 0.08 && (
+        <p className="hud-hint hud-chrono">
+          Solar charge {Math.round((snap.solarCharge ?? 0) * 100)}%
+          {(snap.solarCharge ?? 0) >= 0.92 ? ' — space-charged blast' : ' — climb to space & fly fast'}
+        </p>
+      )}
       {snap.manifestHints && snap.manifestHints.length > 0 && (
         <p className="hud-hint">Free games: {snap.manifestHints.join(' · ')}</p>
       )}
