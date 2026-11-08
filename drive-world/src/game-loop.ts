@@ -67,6 +67,7 @@ import {
   ensureSafehouseUnlocks,
   homeSpawn,
   nearUnlockedSafehouse,
+  homeServicePoint,
   resolveHomeSafehouse,
   setHomeSafehouse
 } from './safehouse-registry';
@@ -257,7 +258,8 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     if (!nearGarage || !progress.activeVehicleId) return;
     void ensureVehicleModelsLoaded(app, progress.unlockedVehicleIds);
     draftCustom = { ...getVehicleCustomization(progress, progress.activeVehicleId) };
-    ui.setGarageVisible(true, progress, onGarageSelect);
+    const svc = homeServicePoint(resolveHomeSafehouse(progress));
+    ui.setGarageVisible(true, progress, onGarageSelect, svc.mode);
     ui.bindCustomize(
       progress.activeVehicleId,
       draftCustom,
@@ -706,8 +708,16 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       const inGarage = near?.atHome === true;
       if (inGarage !== nearGarage) {
         nearGarage = inGarage;
-        if (inGarage) refreshGarageUi();
-        else ui.setGarageVisible(false, progress, onGarageSelect);
+        if (inGarage) {
+          const svc = homeServicePoint(resolveHomeSafehouse(progress));
+          ui.showToast(
+            svc.mode === 'valet' ? 'Valet stand' : 'Garage door',
+            svc.mode === 'valet'
+              ? 'Pull up under the canopy for your fleet.'
+              : 'Pull up to the lit door for your fleet.'
+          );
+          refreshGarageUi();
+        } else ui.setGarageVisible(false, progress, onGarageSelect);
       }
     }
 
@@ -734,7 +744,8 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       vistaPulse: waterT,
       district: district ?? undefined,
       atSafehouse: Boolean(nearUnlockedSafehouse(progress, pos.x, pos.z)),
-      homeSafehouseName: resolveHomeSafehouse(progress).name
+      homeSafehouseName: resolveHomeSafehouse(progress).name,
+      homeServiceMode: homeServicePoint(resolveHomeSafehouse(progress)).mode
     });
 
     statsT += dt;

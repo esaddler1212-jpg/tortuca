@@ -7,6 +7,7 @@ import {
 import type { GamePhase, SavedProgress } from './game-progress';
 import { GARAGE_STARTER_IDS, VEHICLE_CATALOG } from './vehicle-catalog';
 import { TOTAL_LANDMARKS, countRegionsComplete, TOTAL_REGIONS } from './game-progress';
+import type { HomeServiceMode } from './safehouse-registry';
 import type { DistrictId } from './world-config';
 import { PAINT_PRESETS, type VehicleCustomization } from './vehicle-customization';
 
@@ -18,7 +19,12 @@ export type GameUi = {
   setProgressSummary(progress: SavedProgress): void;
   setAutonomousMode(active: boolean): void;
   showToast(title: string, body: string): void;
-  setGarageVisible(visible: boolean, progress: SavedProgress, onSelect: (id: string) => void): void;
+  setGarageVisible(
+    visible: boolean,
+    progress: SavedProgress,
+    onSelect: (id: string) => void,
+    serviceMode?: HomeServiceMode
+  ): void;
   bindCustomize(
     vehicleId: string | null,
     custom: VehicleCustomization,
@@ -95,8 +101,13 @@ export function wireGameUi(): GameUi {
         toastEl.hidden = true;
       }, 4200);
     },
-    setGarageVisible(visible, progress, onSelect) {
+    setGarageVisible(visible, progress, onSelect, serviceMode = 'garage') {
       garageEl.hidden = !visible;
+      const title = document.getElementById('garage-title');
+      if (title) {
+        title.textContent =
+          serviceMode === 'valet' ? 'Penthouse valet — fleet & tuning' : 'Garage door — fleet & tuning';
+      }
       if (!visible) return;
       const list = el<HTMLDivElement>('garage-list');
       list.innerHTML = '';

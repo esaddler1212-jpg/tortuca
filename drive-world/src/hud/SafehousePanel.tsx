@@ -5,6 +5,8 @@ import { requestClaimSafehouse, requestSetHomeSafehouse } from '../game-bridge';
 import { DISTRICT_LABELS } from '../landmark-registry';
 import {
   dwellingKindLabel,
+  homeServiceHint,
+  homeServicePoint,
   listSelectableSafehouses,
   resolveHomeSafehouse,
   suggestCustomCondoName
@@ -21,6 +23,7 @@ export function SafehousePanel({ snap }: { snap: HudSnapshot }) {
 
   const progress = snap.progress;
   const home = resolveHomeSafehouse(progress);
+  const svc = homeServicePoint(home);
   const choices = listSelectableSafehouses(progress);
 
   return (
@@ -30,6 +33,7 @@ export function SafehousePanel({ snap }: { snap: HudSnapshot }) {
         <span className="dwelling-tag"> · {dwellingKindLabel(home.kind)}</span>
         {snap.atSafehouse && !snap.nearGarage ? ' · nearby' : ''}
       </summary>
+      <p className="sync-msg">{homeServiceHint(svc.mode)} · orange dot on map</p>
       {choices.length > 0 ? (
         <ul className="safehouse-list">
           {choices.map((h) => (

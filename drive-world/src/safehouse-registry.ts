@@ -7,6 +7,16 @@ import type { DistrictId } from './world-config';
 
 export type DwellingKind = 'estate' | 'penthouse' | 'condo';
 
+export type HomeServiceMode = 'valet' | 'garage';
+
+export type HomeServicePoint = {
+  x: number;
+  z: number;
+  y: number;
+  mode: HomeServiceMode;
+  pullRadius: number;
+};
+
 export type SafehousePreset = {
   id: string;
   name: string;
@@ -137,6 +147,37 @@ const PENTHOUSE_CITY_HINTS: { label: string; x: number; z: number; r: number }[]
   { label: 'Napa', x: 720, z: 1380, r: 280 },
   { label: 'San José', x: 220, z: -1580, r: 320 }
 ];
+
+/** Where you stop to open fleet / tuning — valet for penthouses, garage door for everything else. */
+export function homeServicePoint(sh: ResolvedSafehouse): HomeServicePoint {
+  const baseY = hillOffsetM(sh.x, sh.z);
+  if (sh.kind === 'penthouse') {
+    return {
+      x: sh.x + 18,
+      z: sh.z + 28,
+      y: baseY + 0.35,
+      mode: 'valet',
+      pullRadius: 26
+    };
+  }
+  const doorInset = sh.kind === 'estate' ? 26 : 20;
+  return {
+    x: sh.x,
+    z: sh.z + doorInset,
+    y: baseY + 0.35,
+    mode: 'garage',
+    pullRadius: 24
+  };
+}
+
+export function isAtHomeService(sh: ResolvedSafehouse, px: number, pz: number): boolean {
+  const svc = homeServicePoint(sh);
+  return Math.hypot(px - svc.x, pz - svc.z) <= svc.pullRadius;
+}
+
+export function homeServiceHint(mode: HomeServiceMode): string {
+  return mode === 'valet' ? 'Pull up to the valet stand' : 'Pull up to the garage door';
+}
 
 export function dwellingKindLabel(kind: DwellingKind): string {
   switch (kind) {
@@ -273,11 +314,12 @@ export function resolveSafehouseById(progress: SavedProgress, id: string): Resol
 
 export function homeSpawn(progress: SavedProgress): { x: number; y: number; z: number } {
   const home = resolveHomeSafehouse(progress);
-  const offset = home.kind === 'estate' ? 18 : home.kind === 'penthouse' ? 10 : 14;
+  const svc = homeServicePoint(home);
+  const pullBack = home.kind === 'penthouse' ? 14 : 12;
   return {
-    x: home.x,
-    y: hillOffsetM(home.x, home.z) + 0.8,
-    z: home.z + offset
+    x: svc.x,
+    y: svc.y + 0.55,
+    z: svc.z + pullBack
   };
 }
 
@@ -307,7 +349,7 @@ export function nearUnlockedSafehouse(
     if (!best || d < best.d) best = { house: h, d };
   }
   if (!best) return null;
-  const atHome = best.house.id === home.id;
+  const atHome = best.house.id === home.id && isAtHomeService(home, px, pz);
   return { house: best.house, atHome };
 }
 
