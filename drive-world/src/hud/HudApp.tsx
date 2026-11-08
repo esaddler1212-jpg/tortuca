@@ -38,7 +38,7 @@ import {
   pullCloudProgress,
   pushCloudProgress
 } from '../game-cloud-save';
-import { loadProgress, saveProgress } from '../game-progress';
+import { loadProgress, normalizeProgress, saveProgress } from '../game-progress';
 import { isTouchPrimary } from '../mobile-platform';
 import { cameraModeLabel } from '../camera-profiles';
 import { JournalPanel } from './JournalPanel';
@@ -61,7 +61,7 @@ function HudDrawerTabs({ snap }: { snap: HudSnapshot }) {
   useEffect(() => {
     const onTab = (ev: Event) => {
       const id = (ev as CustomEvent<'map' | 'missions' | 'garage' | 'settings'>).detail;
-      setTab(id);
+      setTab((cur) => (id !== 'missions' && cur === id ? 'missions' : id));
     };
     window.addEventListener('drive-world:hud-tab', onTab);
     return () => window.removeEventListener('drive-world:hud-tab', onTab);
@@ -75,6 +75,11 @@ function HudDrawerTabs({ snap }: { snap: HudSnapshot }) {
   if (snap.photoMode || snap.ridingWaymo) return null;
   return (
     <div className="hud-drawer-stack">
+      {tab !== 'missions' && snap.phase === 'home' ? (
+        <button type="button" className="paused-banner" onClick={() => setTab('missions')}>
+          Paused — {snap.gamepadConnected ? `${GAMEPAD_GLYPHS.resume} to resume` : 'tap Missions or here to resume'}
+        </button>
+      ) : null}
       <div className="hud-tabs" role="tablist" aria-label="HUD panels">
         {(['map', 'missions', 'garage', 'settings'] as const).map((id) => (
           <button
@@ -394,7 +399,7 @@ function SettingsPanel() {
           type="button"
           className="sync-btn"
           onClick={async () => {
-            const remote = await pullCloudProgress();
+            const remote = normalizeProgress(await pullCloudProgress());
             if (remote) {
               saveProgress(remote);
               setSyncMsg('Pulled cloud save — reload to apply');

@@ -25,6 +25,7 @@ import {
   registerLandHere,
   getNavTarget,
   registerSkipWaymo,
+  requestSkipWaymo,
   registerCycleAutopilotPreset,
   getHudSnapshot,
   registerSavePhotoCard,
@@ -540,8 +541,8 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   const toggleCamera = () => cycleCamera(1);
 
   registerSkipWaymo(() => {
-    if (!ridingWaymo) return;
-    endWaymoRide();
+    if (ridingWaymo) endWaymoRide();
+    else if (sightseeing) endWaymoSightseeing();
   });
 
   registerToggleCamera(toggleCamera);
@@ -552,7 +553,6 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       const p = vehicle()!.getPosition();
       photo.pos.set(p.x, p.y + 8, p.z);
     }
-    app.timeScale = photoMode ? 0.38 : 1;
     publishHud({ photoMode });
     document.body.classList.toggle('photo-mode', photoMode);
   };
@@ -716,26 +716,43 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
 
   resumeFromSave();
 
+  const externalDrive = { steering: 0, throttle: 0 };
+  (window as unknown as { cityNightsExternalDrive?: typeof externalDrive }).cityNightsExternalDrive = externalDrive;
+
   const camera = app.root.findByName('camera') as Entity | null;
   const bay = app.root.findByName('sf-bay') as Entity | null;
 
   app.on('update', (dt: number) => {
     if (!camera) return;
+    externalDrive.steering = 0;
+    externalDrive.throttle = 0;
 
-    for (const { action, tab } of pollGamepadMenuActions()) {
-      if (action === 'camera-next') cycleCamera(1);
+    const paused = isSimulationPaused() && progress.phase === 'home' && !ridingWaymo && !photoMode;
+    const hudTab = (tab: string) => {
+      window.dispatchEvent(new CustomEvent('drive-world:hud-tab', { detail: tab }));
+      hapticMenu();
+    };
+    for (const action of pollGamepadMenuActions()) {
+      if (action === 'start') hudTab('map');
+      else if (action === 'view') hudTab('settings');
+      else if (action === 'back') {
+        if (photoMode) togglePhoto();
+        else if (sightseeing) endWaymoSightseeing();
+        else hudTab('missions');
+      } else if (paused) continue;
+      else if (action === 'confirm' && (ridingWaymo || sightseeing)) requestSkipWaymo();
+      else if (action === 'camera-next') cycleCamera(1);
       else if (action === 'camera-prev') cycleCamera(-1);
       else if (action === 'photo') togglePhoto();
       else if (action === 'autopilot') toggleAutopilot();
-      else if (action === 'confirm' && ridingWaymo) endWaymoRide();
-      else if (action === 'hud-tab' && tab) {
-        window.dispatchEvent(new CustomEvent('drive-world:hud-tab', { detail: tab }));
-        hapticMenu();
-      }
     }
 
-    if (isSimulationPaused() && progress.phase === 'home' && !ridingWaymo && !photoMode) {
-      publishHud({ gamepadConnected: isGamepadConnected() });
+    const wantScale = paused ? 0 : photoMode ? 0.38 : 1;
+    if (app.timeScale !== wantScale) app.timeScale = wantScale;
+    (window as unknown as { cityNightsDriveLocked?: boolean }).cityNightsDriveLocked = paused || photoMode;
+
+    if (paused) {
+      publishHud({ gamepadConnected: isGamepadConnected(), simPaused: true });
       return;
     }
 
@@ -879,9 +896,8 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         throttle = t.throttle;
       }
       const vs = scriptInstance(ent, 'vehicle') as { fire?: (e: string, ...args: number[]) => void } | undefined;
-      if (steering !== 0 || throttle !== 0) {
-        vs?.fire?.('vehicle:controls', steering, throttle);
-      }
+      externalDrive.steering = steering;
+      externalDrive.throttle = throttle;
       vs?.fire?.('vehicle:nitro', 1);
       player?.lights.setBrake(throttle === 0 && steering === 0);
     }
@@ -1337,6 +1353,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         : null,
       heatHunted,
       gamepadConnected: isGamepadConnected(),
+      simPaused: false,
       ghostRivalLabel,
       pinnedChapterLabel: chapterPin?.label ?? null,
       pinnedChapterHint: chapterPin?.hint ?? null,

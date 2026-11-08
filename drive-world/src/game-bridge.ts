@@ -66,6 +66,7 @@ export type HudSnapshot = {
   landmarkSprintLabel?: string | null;
   garageInteriorCam?: boolean;
   gamepadConnected?: boolean;
+  simPaused?: boolean;
 };
 
 export type TouchDrive = {

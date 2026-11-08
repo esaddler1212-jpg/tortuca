@@ -3,6 +3,9 @@ import type { AppBase } from 'playcanvas';
 import type { GameSettings } from './game-settings';
 
 let simPauseDepth = 0;
+let renderCap = 0;
+let renderAccum = 0;
+let lastFrameMs = 0;
 
 export function readFrameCap(settings: GameSettings): number {
   const cap = settings.frameCapFps ?? 0;
@@ -20,15 +23,30 @@ export function applyResolutionScale(
 }
 
 export function applyFrameCap(app: AppBase, settings: GameSettings): void {
-  const cap = readFrameCap(settings);
-  if (cap === 30) app.maxDeltaTime = 1 / 30;
-  else if (cap === 60) app.maxDeltaTime = 1 / 60;
-  else app.maxDeltaTime = 0;
+  renderCap = readFrameCap(settings);
+  renderAccum = 0;
+  app.autoRender = renderCap === 0;
+  if (renderCap === 0) app.renderNextFrame = true;
+}
+
+/** Render pacing: simulation still ticks every rAF; GPU only draws at the capped rate. */
+export function installRenderCap(app: AppBase): void {
+  app.on('update', () => {
+    if (renderCap === 0) return;
+    const now = performance.now();
+    const realDt = lastFrameMs ? (now - lastFrameMs) / 1000 : 0;
+    lastFrameMs = now;
+    renderAccum += realDt;
+    const step = 1 / renderCap;
+    if (renderAccum >= step * 0.98) {
+      renderAccum = Math.min(renderAccum - step, step);
+      app.renderNextFrame = true;
+    }
+  });
 }
 
 export function setSimulationPaused(paused: boolean): void {
-  simPauseDepth += paused ? 1 : -1;
-  if (simPauseDepth < 0) simPauseDepth = 0;
+  simPauseDepth = paused ? 1 : 0;
 }
 
 export function isSimulationPaused(): boolean {
