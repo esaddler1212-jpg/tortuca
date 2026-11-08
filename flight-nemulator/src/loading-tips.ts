@@ -4,6 +4,7 @@ const OPEN5E_SPELL = 'https://api.open5e.com/spells/?limit=1';
 
 const LOCAL_TIPS = [
   'Boost into the skyline — Shift',
+  'Hero: purple raiders siege buildings — stop them. Villain: blue heroes chase your havoc',
   'Nine cities share one Earth — orbit past 400 km/h to freeze time, then E to shatter',
   'Roll a town at World Gacha → export GLB → public/models/worldgacha/ (see docs)',
   'Photo mode: P — save PNG from HUD'

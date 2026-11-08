@@ -22,7 +22,8 @@ Production build: `npm run build` → `dist/` (static deploy like `drive-world`)
 | Flight | Third-person **realistic arcade** 6DOF — cruise and absurd boost bands |
 | Destruction | Ram **destructibles** only; chunk debris on capable hardware, instant vanish on low tier |
 | Ruins | Buildings **stay ruined** for the session |
-| Combat | City-defense **waves** — primary fire, telekinetic throw, **super crater** |
+| Role | **Hero** — villain raiders siege buildings; stop them (city integrity %). **Villain** — wreck the city; blue hero interceptors + wanted heat |
+| Combat | Primary / throw / super; wave spawns depend on role |
 | Economy | **Destruction cost** score + **wanted** heat when wrecking too much |
 | Roster | Full launch roster + Iron suits / form toggles; **custom hero** in local storage |
 | Online | Optional `manifest-updates.json` fetch for new skins/characters (offline-first) |

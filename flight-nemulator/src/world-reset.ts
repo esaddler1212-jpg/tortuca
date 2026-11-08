@@ -7,7 +7,7 @@ import { resetChronoAfterWorldShatter } from './earth-orbit';
 import { smashDestructible } from './destruction';
 import type { QualityTier } from './quality-tier';
 import { createWanted, type WantedState } from './wanted';
-import type { EnemyDrone } from './combat';
+import type { FactionNpc } from './faction-npcs';
 
 const WORLD_GEN_KEY = 'flight-nemulator-world-generation';
 
@@ -51,13 +51,13 @@ export function shatterAndRebuildEarth(
   app: AppBase,
   root: Entity,
   tier: QualityTier,
-  drones: EnemyDrone[]
+  npcs: FactionNpc[]
 ): ShatterResult {
-  for (const d of drones) {
+  for (const d of npcs) {
     root.removeChild(d.entity);
     d.entity.destroy();
   }
-  drones.length = 0;
+  npcs.length = 0;
 
   obliterateAllCities(app, root, tier);
   clearWorldChildren(root, ['hero']);

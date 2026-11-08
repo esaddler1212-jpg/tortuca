@@ -13,6 +13,9 @@ const required = [
   'src/earth-planet.ts',
   'src/earth-orbit.ts',
   'src/world-reset.ts',
+  'src/player-role.ts',
+  'src/faction-npcs.ts',
+  'src/city-integrity.ts',
   'public/manifest-updates.json'
 ];
 

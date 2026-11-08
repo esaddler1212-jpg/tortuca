@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { getHudSnapshot, setTouchFlight } from '../game-bridge';
 import { HERO_ROSTER } from '../hero-roster';
-import { selectHero } from '../game-loop';
+import { selectHero, selectPlayerRole } from '../game-loop';
+import { getPlayerRole, type PlayerRole } from '../player-role';
 import { loadCustomHeroes, saveCustomHero, type CustomHeroDraft } from '../custom-hero';
 import { researchHeroBundle } from '../character-research';
 import { Minimap } from './Minimap';
@@ -35,6 +36,9 @@ export type GameHudSnapshot = {
   chronoArmed?: boolean;
   chronoFrozen?: boolean;
   worldGeneration?: number;
+  playerRole?: PlayerRole;
+  cityStatus?: string;
+  foesStopped?: number;
 };
 
 function formatUsd(n: number): string {
@@ -73,7 +77,14 @@ export function HudApp() {
           <div>
             Energy {snap.stamina}/{snap.staminaMax}
           </div>
-          <div className="hud-tag">Drones {snap.dronesLeft ?? 0}</div>
+          <div className="hud-tag">
+            {snap.playerRole === 'villain' ? 'Heroes' : 'Raiders'} {snap.dronesLeft ?? 0}
+          </div>
+          {snap.cityStatus && (
+            <div className={snap.cityStatus.startsWith('City') && snap.cityStatus.includes('0%') ? 'wanted' : 'hud-tag'}>
+              {snap.cityStatus}
+            </div>
+          )}
           <div className="hud-tag">Lifetime {formatUsd(snap.lifetimeDestructionUsd ?? 0)}</div>
         </div>
       </div>
@@ -81,6 +92,7 @@ export function HudApp() {
       <Minimap heroX={snap.heroX ?? 0} heroZ={snap.heroZ ?? 0} />
 
       <QualitySettings quality={snap.quality} photoMode={!!snap.photoMode} />
+      <RolePicker role={snap.playerRole ?? getPlayerRole()} />
 
       <div className="hero-picker hud-panel">
         <strong>Hero &amp; home base</strong>
@@ -128,6 +140,23 @@ export function HudApp() {
       </p>
 
       <TouchPad />
+    </div>
+  );
+}
+
+function RolePicker({ role }: { role: PlayerRole }) {
+  return (
+    <div className="settings-bar hud-panel">
+      <label>
+        Role{' '}
+        <select
+          value={role}
+          onChange={(e) => selectPlayerRole(e.target.value as PlayerRole)}
+        >
+          <option value="hero">Hero — stop raiders</option>
+          <option value="villain">Villain — heroes chase you</option>
+        </select>
+      </label>
     </div>
   );
 }

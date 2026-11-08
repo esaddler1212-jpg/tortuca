@@ -72,6 +72,16 @@ function primaryReach(hero: HeroSpec): number {
   return hero.powers.includes('web') ? 85 : hero.powers.includes('ki') ? 150 : 120;
 }
 
+export function primaryStrikeParams(hero: HeroSpec, powerMul: number): { range: number; cone: number; dmg: number } {
+  const cone = hero.powers.includes('thunder') ? 42 : 25;
+  return {
+    range: primaryReach(hero),
+    cone,
+    dmg: primaryDamage(hero, powerMul)
+  };
+}
+
+/** @deprecated use primaryStrikeParams + faction-npcs.damageNpcsInCone */
 export function firePrimary(
   hero: HeroSpec,
   heroPos: Vec3,
@@ -80,9 +90,7 @@ export function firePrimary(
   powerMul: number
 ): number {
   let hits = 0;
-  const range = primaryReach(hero);
-  const dmg = primaryDamage(hero, powerMul);
-  const cone = hero.powers.includes('thunder') ? 42 : 25;
+  const { range, cone, dmg } = primaryStrikeParams(hero, powerMul);
   for (const d of drones) {
     const p = d.entity.getPosition();
     const dist = new Vec3(p.x - aim.x, p.y - aim.y, p.z - aim.z).length();

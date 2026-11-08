@@ -27,15 +27,23 @@ import { setHudSnapshot } from './game-bridge';
 import { detectQualityTier, type QualityTier } from './quality-tier';
 import { checkHeroSmash, tickDebris } from './destruction';
 import { addDestructionHeat, createWanted, type WantedState } from './wanted';
+import { primaryStrikeParams, superCrater, throwProp } from './combat';
 import {
-  firePrimary,
-  spawnWaveDrones,
-  superCrater,
-  throwProp,
-  tickDrones,
-  waveDroneCount,
-  type EnemyDrone
-} from './combat';
+  createCityIntegrity,
+  addVillainHavoc,
+  integrityHudLabel,
+  syncIntegrityFromBuildings,
+  type CityIntegrityState
+} from './city-integrity';
+import {
+  damageNpcsInCone,
+  spawnFactionWave,
+  tickFactionNpcs,
+  throwHitsNpcs,
+  waveNpcCount,
+  type FactionNpc
+} from './faction-npcs';
+import { getPlayerRole, setPlayerRole, type PlayerRole } from './player-role';
 import { isPhotoMode, togglePhotoMode } from './photo-mode';
 import { fetchManifestIfOnline, getManifestSuggestions } from './updates';
 import { attachHeroGltf } from './hero-gltf';
@@ -57,12 +65,14 @@ export type GameSession = {
   tier: QualityTier;
   destructionUsd: number;
   wanted: WantedState;
-  drones: EnemyDrone[];
+  playerRole: PlayerRole;
+  city: CityIntegrityState;
+  factionNpcs: FactionNpc[];
   wave: number;
   waveCooldown: number;
   camera: Entity;
   stats: SessionStats;
-  dronesDestroyed: number;
+  foesStopped: number;
 };
 
 let session: GameSession | null = null;
@@ -134,12 +144,14 @@ export async function startGame(app: AppBase): Promise<void> {
     tier,
     destructionUsd: 0,
     wanted: createWanted(),
-    drones: [],
+    playerRole: getPlayerRole(),
+    city: createCityIntegrity(),
+    factionNpcs: [],
     wave: 0,
     waveCooldown: 6,
     camera,
     stats: loadSessionStats(),
-    dronesDestroyed: 0
+    foesStopped: 0
   };
 
   app.on('update', (dt: number) => {
@@ -168,7 +180,7 @@ function tickFrame(s: GameSession, dt: number): void {
   const tags = getDestructibles();
 
   if (input.super && chrono.chronoArmed) {
-    const blast = shatterAndRebuildEarth(s.app, s.root, s.tier, s.drones);
+    const blast = shatterAndRebuildEarth(s.app, s.root, s.tier, s.factionNpcs);
     s.destructionUsd += blast.costUsd;
     s.wanted = freshWantedAfterShatter();
     s.wave = 0;
@@ -185,7 +197,11 @@ function tickFrame(s: GameSession, dt: number): void {
   const smash = checkHeroSmash(s.app, s.root, pos, s.hero.speedKmh(), smashRadius, tags, s.tier);
   if (smash.costUsd > 0) {
     s.destructionUsd += smash.costUsd;
-    addDestructionHeat(s.wanted, smash.costUsd, dt);
+    if (s.playerRole === 'villain') {
+      addDestructionHeat(s.wanted, smash.costUsd, dt);
+      addVillainHavoc(s.city, smash.costUsd);
+    }
+    syncIntegrityFromBuildings(s.city, tags);
     addScreenShake(0.25);
     playSmash();
   }
@@ -197,11 +213,14 @@ function tickFrame(s: GameSession, dt: number): void {
 
   if (input.primary && s.hero.canPrimary()) {
     s.hero.triggerPrimary();
-    const hits = firePrimary(s.heroSpec, pos, s.hero.aimPoint(), s.drones, s.heroForm.powerMul);
+    const aim = s.hero.aimPoint();
+    const strike = primaryStrikeParams(s.heroSpec, s.heroForm.powerMul);
+    const hits = damageNpcsInCone(pos, aim, s.factionNpcs, s.playerRole, strike.range, strike.cone, strike.dmg);
     if (hits > 0) playBlast(powerKind(s.heroSpec) as 'beam' | 'repulsor' | 'thunder' | 'ki' | 'default');
   }
   if (input.throw) {
-    throwProp(tags, pos, s.drones);
+    throwProp(tags, pos, []);
+    throwHitsNpcs(pos, s.factionNpcs, s.playerRole);
   }
   if (input.super && s.hero.canSuper() && !chrono.chronoArmed) {
     s.hero.triggerSuper();
@@ -209,34 +228,45 @@ function tickFrame(s: GameSession, dt: number): void {
     const blastRadius = 45 * s.heroForm.powerMul;
     const blast = superCrater(s.app, s.root, aim, tags, s.tier, blastRadius);
     s.destructionUsd += blast.costUsd;
-    addDestructionHeat(s.wanted, blast.costUsd, dt);
+    if (s.playerRole === 'villain') {
+      addDestructionHeat(s.wanted, blast.costUsd, dt);
+      addVillainHavoc(s.city, blast.costUsd);
+    }
+    syncIntegrityFromBuildings(s.city, tags);
     spawnCraterMarker(s.app, s.root, aim, blastRadius);
     addScreenShake(0.9);
     playSuper();
     s.stats = saveSessionStats({ supersUsed: s.stats.supersUsed + 1 });
   }
 
-  const maxDrones = 8 + s.wanted.stars * 3;
+  const maxNpcs =
+    s.playerRole === 'hero' ? 6 + Math.floor(s.wave / 2) : 8 + s.wanted.stars * 3;
   s.waveCooldown -= chrono.chronoFrozen ? simDt : dt;
-  if (!chrono.chronoFrozen && s.waveCooldown <= 0 && s.drones.length < maxDrones) {
+  if (!chrono.chronoFrozen && s.waveCooldown <= 0 && s.factionNpcs.length < maxNpcs) {
     s.wave += 1;
-    s.waveCooldown = Math.max(4, 12 - s.wave * 0.4 - s.wanted.stars);
-    const count = waveDroneCount(s.wave, s.wanted.stars);
-    const batch = spawnWaveDrones(s.app, s.root, pos, count);
-    batch.forEach((d) => {
-      d.entity.addComponent('render', {
-        meshInstances: [attachUnitBox(s.app, 0.85, 0.2, 0.15)]
-      });
-      d.entity.setLocalScale(3.5, 1.2, 3.5);
-    });
-    s.drones.push(...batch);
+    const cd = s.playerRole === 'hero' ? 14 : Math.max(4, 12 - s.wave * 0.4 - s.wanted.stars);
+    s.waveCooldown = cd;
+    const count = waveNpcCount(s.wave, s.wanted.stars, s.playerRole);
+    const batch = spawnFactionWave(s.app, s.root, pos, count, s.playerRole);
+    s.factionNpcs.push(...batch);
     playWaveAlert();
   }
-  const kills = tickDrones(s.drones, pos, chrono.chronoFrozen ? simDt : dt, s.root);
+  const kills = tickFactionNpcs(
+    s.factionNpcs,
+    pos,
+    chrono.chronoFrozen ? simDt : dt,
+    s.root,
+    s.playerRole,
+    tags,
+    s.tier,
+    s.city,
+    s.app
+  );
   if (kills > 0) {
-    s.dronesDestroyed += kills;
+    s.foesStopped += kills;
     s.stats = saveSessionStats({ dronesDestroyed: s.stats.dronesDestroyed + kills });
   }
+  syncIntegrityFromBuildings(s.city, tags);
 
   tickDebris(dt, s.root);
   tickTrails(dt, s.root);
@@ -271,9 +301,12 @@ function tickFrame(s: GameSession, dt: number): void {
     photoMode: isPhotoMode(),
     heroX: pos.x,
     heroZ: pos.z,
-    dronesLeft: s.drones.length,
+    dronesLeft: s.factionNpcs.length,
+    playerRole: s.playerRole,
+    cityStatus: integrityHudLabel(s.playerRole, s.city),
+    foesStopped: s.foesStopped,
     lifetimeDestructionUsd: lifetimeDestruction,
-    dronesDestroyed: s.dronesDestroyed,
+    dronesDestroyed: s.foesStopped,
     loadingTip: currentLoadingTip(),
     manifestHints: (getManifestSuggestions() ?? []).slice(0, 3).map((s) => s.title),
     orbitProgress: chron.orbitProgress,
@@ -281,6 +314,11 @@ function tickFrame(s: GameSession, dt: number): void {
     chronoFrozen: chron.chronoFrozen,
     worldGeneration: worldGeneration()
   });
+}
+
+export function selectPlayerRole(role: PlayerRole): void {
+  setPlayerRole(role);
+  window.location.reload();
 }
 
 export function selectHero(heroId: string, formId?: string): void {
