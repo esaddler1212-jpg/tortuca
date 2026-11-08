@@ -106,9 +106,9 @@ export function buildAllDistricts(app: AppBase): void {
     buildDistrict(app, DISTRICTS[id], materials);
   });
 
-  addDistrictSign(app, DISTRICTS.sf, -680, -320);
-  addDistrictSign(app, DISTRICTS.eastBay, 120, 620);
-  addDistrictSign(app, DISTRICTS.vallejo, 820, 1180);
+  addDistrictSign(app, DISTRICTS.sf, -720, -720);
+  addDistrictSign(app, DISTRICTS.eastBay, 620, -280);
+  addDistrictSign(app, DISTRICTS.vallejo, 620, 880);
 }
 
 export function buildFreewayLamps(app: AppBase, spacing: number, limit: number): void {

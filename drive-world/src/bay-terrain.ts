@@ -16,8 +16,8 @@ export function hillOffsetM(x: number, z: number): number {
   }
 
   if (inBounds(x, z, sf)) {
-    const towardPacific = Math.max(0, -z - 100);
-    const grade = towardPacific * 0.016;
+    const towardPacific = Math.max(0, -z - 520);
+    const grade = towardPacific * 0.014 + Math.max(0, -x - 400) * 0.006;
     const ripple = Math.sin(x * 0.01) * 4 + Math.cos(z * 0.008) * 3;
     const noise = (hash2(x * 0.1, z * 0.1) - 0.5) * 12;
     return Math.min(36, Math.max(0, grade + ripple + noise));

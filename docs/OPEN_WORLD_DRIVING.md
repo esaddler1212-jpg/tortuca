@@ -1,6 +1,6 @@
 # Open-world driving — big map, no speed limit
 
-Browser sandbox: **one large map**, **drive as fast as you want**, no races, events, traffic gimmicks, or progression gates. Runnable prototype: [`drive-world/`](../drive-world/).
+Browser sandbox: **one large map**, **drive as fast as you want**, no races or events. Runnable prototype: [`drive-world/`](../drive-world/).
 
 ## Product focus
 
@@ -11,56 +11,56 @@ Browser sandbox: **one large map**, **drive as fast as you want**, no races, eve
 | Speed HUD, chase cam, open throttle | NPC traffic (unless you add it later for atmosphere) |
 | Later: terrain, biomes, loops, tunnels | Multiplayer requirements at v1 |
 
-Think **endless highway / island loop** vibes, not a career mode.
+## Bay Area layout (reference map)
+
+The world follows the usual **Bay Area macro regions** (same mental model as the standard regional map):
+
+| Region (reference map) | In-game district | Status |
+|------------------------|------------------|--------|
+| **San Francisco** (yellow) | `DISTRICTS.sf` — west peninsula, hills | Built |
+| **East Bay** (tan) | `DISTRICTS.eastBay` — Oakland side | Built |
+| **North Bay / Solano** (blue) | `DISTRICTS.vallejo` — north waterfront | Built |
+| **Peninsula** (pink) | — | Future (101 / I-280 south) |
+| **South Bay** (green) | — | Future (San José loop) |
+
+**Driving route (built):** **I-80 east** from SF across the **Bay Bridge** (elevated deck) → **Oakland / East Bay** → **I-80 north** to **Vallejo**. Game +X is east, +Z is north. Scale is compressed (~3 km along the freeway, not 16 km).
+
+Spawn in SF on I-80; follow the lit corridor to Vallejo.
 
 ## Repo layout
 
 ```
-drive-world/          PlayCanvas + Ammo prototype (≈4 km × 4 km flat, cross highways)
-docs/OPEN_WORLD_*     This doc
+drive-world/
+  world-config.ts     districts + FREEWAY_ROUTE waypoints
+  build-freeway.ts    drivable collision deck
+  build-districts.ts  mini cities per region
+  build-bay.ts        bay water between peninsula and East Bay
 ```
-
-Prototype scale: **`WORLD_HALF_M = 2000`** (see `drive-world/src/world-config.ts`) — about **4 km** per side. Fog pushes the horizon; streaming comes in Phase 1 for 10×–50× larger worlds.
 
 ## Phased roadmap
 
 ### Phase 0 — Drivable core (in progress)
 
 - [x] Raycast vehicle + chase cam + mph HUD
-- [x] Multi-km flat world + cross highways + centre dashes
-- [x] High `maxEngineForce` — no code-enforced top speed
-- [ ] Handbrake / slide tuning (optional feel, not competition)
+- [x] SF ↔ Vallejo on one freeway (bridge + I-80 north)
+- [x] Three mini districts tied to reference regions
+- [ ] Ramp meshes so deck elevation matches ground at on-ramps
 - [ ] Cockpit cam toggle
 
 ### Phase 1 — **Big map** (the real goal)
 
-- **Chunk streaming** — load/unload ground + road meshes in a ring around the car (8–16 km²+ total)
-- Heightmap or modular glTF tiles (coast, hills, long bridges)
-- Biome tint + sky only (no collectibles required)
-- Warp to origin if you leave the playable border or fall through terrain
-- Optional **minimap** (position only, no pins)
+- Chunk streaming for Peninsula + South Bay + North Bay beyond Vallejo
+- Heightmap ground matching freeway grade
+- Optional **880 / 101 loop** around the bay (drive-only, no events)
 
 ### Phase 2 — Feel at speed
 
-- Engine pitch from RPM / speed (Web Audio)
-- Motion blur or FOV widen slightly with mph
-- Better car glTF + wheel sync
-- Rolling hills and banked turns that reward flat-out driving
+- Engine pitch from speed, night fog tuned like Karl
+- glTF landmarks (optional): bridge silhouette, downtown stacks
 
 ### Phase 3 — Ship
 
-- Deploy standalone site (Netlify) or `public/drive/` with SPA redirect skip
-- Mobile touch controls overlay
-- Save last spawn position locally
-
-## Technical choices
-
-| Concern | Approach |
-|---------|----------|
-| Engine | `playcanvas` |
-| Car | [`vehicle.js`](https://github.com/playcanvas/engine/blob/main/scripts/physics/vehicle.js) (Ammo raycast) |
-| World size | Single static collider today; **chunks** for production scale |
-| Performance | Activate only nearby chunk colliders/render; lower shadow distance per chunk |
+- Separate Netlify site; save last position
 
 ## Run locally
 
@@ -74,13 +74,5 @@ npm run dev
 
 ## Art direction (locked)
 
-- **Low-poly Bay Area at night** — Karl-the-fog palette, sodium streetlights, International Orange bridge accents
-- **SF → Vallejo** — three mini districts (`DISTRICTS` in `world-config.ts`): **San Francisco** (hills, tall blocks), **East Bay** (mid-rise along the bay), **Vallejo** (flat/wide waterfront)
-- **Drivable freeway** — `FREEWAY_ROUTE` + collision decks in `build-freeway.ts`: on-ramps at ground level, **elevated Bay Bridge section**, then I-80 north-east into Vallejo
-- Spawn in SF near I-80; follow the lit corridor to Vallejo (compressed ~2.5 km game scale)
-- Code: `build-districts.ts`, `build-freeway.ts`, `build-bay.ts`, `bay-terrain.ts`
-
-## Map shape (still open)
-
-1. **Layout** — cross highways through dense blocks (current) vs ring freeway around the core?
-2. **Terrain** — stay flat for max speed vs add gentle hills at the map edge?
+- **Low-poly Bay Area at night** — fog, sodium lights, International Orange bridge deck
+- **SF → Vallejo** corridor only; expand other map colors later

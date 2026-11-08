@@ -1,19 +1,28 @@
 import { Vec3 } from 'playcanvas';
 
-/** Playable half-extent in metres (full width = 2 × WORLD_HALF_M). */
+/**
+ * Game axes (Bay Area reference map): +X east, +Z north.
+ * Playable corridor: San Francisco (west) → Bay Bridge → East Bay → I-80 → Vallejo (North Bay).
+ * ~10 mi ≈ 16 km on the reference map → compressed to ~3.2 km along FREEWAY_ROUTE.
+ */
 export const WORLD_HALF_M = 2000;
 
 export const FREEWAY_WIDTH_M = 34;
 export const STRIPE_SPACING_M = 36;
 
-/** Stylised districts — SF (west) → East Bay → Vallejo (north-east). */
-export const SPAWN_SF = new Vec3(-700, 2.2, -150);
+/** Spawn on I-80 in SF, heading east toward the bay. */
+export const SPAWN_SF = new Vec3(-760, 2.2, -490);
 
 export type DistrictId = 'sf' | 'eastBay' | 'vallejo';
+
+/** Future map regions (reference): northBay, peninsula, southBay — not built yet. */
+export type MapRegionId = DistrictId | 'northBay' | 'peninsula' | 'southBay';
 
 export interface DistrictSpec {
   id: DistrictId;
   label: string;
+  /** Reference map macro-region label. */
+  mapRegion: string;
   minX: number;
   maxX: number;
   minZ: number;
@@ -24,7 +33,6 @@ export interface DistrictSpec {
   footprintMin: number;
   footprintMax: number;
   heightMul: number;
-  /** Skip procedural hills (Vallejo waterfront). */
   flat: boolean;
 }
 
@@ -32,10 +40,11 @@ export const DISTRICTS: Record<DistrictId, DistrictSpec> = {
   sf: {
     id: 'sf',
     label: 'San Francisco',
-    minX: -1150,
-    maxX: -220,
-    minZ: -850,
-    maxZ: 380,
+    mapRegion: 'San Francisco (peninsula tip)',
+    minX: -1180,
+    maxX: -80,
+    minZ: -920,
+    maxZ: -80,
     blockM: 68,
     heightMin: 14,
     heightMax: 72,
@@ -46,14 +55,15 @@ export const DISTRICTS: Record<DistrictId, DistrictSpec> = {
   },
   eastBay: {
     id: 'eastBay',
-    label: 'East Bay',
-    minX: -320,
-    maxX: 520,
-    minZ: 320,
-    maxZ: 1050,
+    label: 'Oakland / East Bay',
+    mapRegion: 'East Bay',
+    minX: 320,
+    maxX: 1180,
+    minZ: -520,
+    maxZ: 420,
     blockM: 76,
     heightMin: 10,
-    heightMax: 38,
+    heightMax: 40,
     footprintMin: 16,
     footprintMax: 34,
     heightMul: 1,
@@ -62,48 +72,52 @@ export const DISTRICTS: Record<DistrictId, DistrictSpec> = {
   vallejo: {
     id: 'vallejo',
     label: 'Vallejo',
-    minX: 420,
-    maxX: 1250,
-    minZ: 920,
-    maxZ: 1750,
+    mapRegion: 'North Bay (Solano)',
+    minX: 280,
+    maxX: 1100,
+    minZ: 520,
+    maxZ: 1580,
     blockM: 80,
     heightMin: 8,
-    heightMax: 28,
+    heightMax: 26,
     footprintMin: 18,
-    footprintMax: 40,
+    footprintMax: 42,
     heightMul: 0.9,
     flat: true
   }
 };
 
 /**
- * I-80 / Bay Bridge corridor — drivable spine from SF to Vallejo (compressed scale).
- * Optional `y` = deck elevation in metres.
+ * Realistic path: I-80 east across San Francisco–Oakland Bay Bridge, touchdown Oakland,
+ * then I-80 north beside the bay to Vallejo.
  */
 export const FREEWAY_ROUTE: { x: number; z: number; y?: number }[] = [
-  { x: -780, z: -220, y: 0 },
-  { x: -580, z: -80, y: 0 },
-  { x: -380, z: 100, y: 0 },
-  { x: -120, z: 260, y: 0 },
-  { x: 80, z: 380, y: 4 },
-  { x: 260, z: 520, y: 14 },
-  { x: 440, z: 660, y: 24 },
-  { x: 600, z: 800, y: 24 },
-  { x: 720, z: 920, y: 12 },
-  { x: 840, z: 1060, y: 4 },
-  { x: 960, z: 1220, y: 0 }
+  { x: -860, z: -520, y: 0 },
+  { x: -680, z: -505, y: 0 },
+  { x: -480, z: -488, y: 0 },
+  { x: -240, z: -472, y: 1 },
+  { x: -20, z: -455, y: 8 },
+  { x: 220, z: -438, y: 20 },
+  { x: 460, z: -422, y: 26 },
+  { x: 680, z: -405, y: 10 },
+  { x: 740, z: -320, y: 0 },
+  { x: 710, z: -80, y: 0 },
+  { x: 680, z: 160, y: 0 },
+  { x: 640, z: 420, y: 0 },
+  { x: 600, z: 680, y: 0 },
+  { x: 560, z: 940, y: 0 }
 ];
 
+/** San Francisco Bay water between peninsula and East Bay / North Bay. */
 export const BAY_WATER_BOUNDS = {
-  minX: -900,
-  maxX: 900,
-  minZ: 180,
-  maxZ: 920,
-  centerZ: 520,
-  depthZ: 900
+  minX: -120,
+  maxX: 720,
+  minZ: -540,
+  maxZ: 520,
+  centerZ: -10,
+  depthZ: 1060
 };
 
-/** Vehicle tuning — high top speed, no artificial caps. */
 export const DRIVE_TUNING = {
   maxEngineForce: 5500,
   maxBrakingForce: 140,
