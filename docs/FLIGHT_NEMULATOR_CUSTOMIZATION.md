@@ -1,14 +1,16 @@
 # Flight Nemulator — character customization
 
-## Full loadout tier (most options)
+## Ability kit tier (deepest combat options)
 
-| Hero | Codename | Mutates from | What you can change |
-|------|----------|--------------|---------------------|
-| `tin-aviator` | Tin Aviator | Iron Man | **16 armor presets** — Mk I through LXXXV, Hulkbuster, stealth, bleeding edge, Rescue gold; each has **RGB suit color** on the mesh + **SPD/PWR** modifiers |
-| `red-codriver` | Red Codriver | War Machine | **12 armor kits** — Patriot, gunship, siege, stealth, desert camo, plasma, etc. |
-| `shade-knight` | Shade Knight | Batman | **14 capes / eras** — night, Year One, animated, Arkham, Beyond, Hellbat-inspired, camo; **jetpack modes** (tactical, Beyond jet, Hellbat, glider rig) swap flight assist + aerial label |
+| Hero | Codename | Kits | What you swap |
+|------|----------|------|----------------|
+| `tin-aviator` | Tin Aviator | **7** | Repulsors, unibeam, micro-missiles, rockets, EMP, siege frame, pulse lasers — each with distinct **range, cooldown, damage, super radius** |
+| `red-codriver` | Red Codriver | **7** | Salvo cannons, gatling, bunker buster, plasma, shock fists, SAM, orbital bracer |
+| `shade-knight` | Shade Knight | **9** | Glider, batarangs, grapple, smoke, explosive gel, jet / Beyond / inferno rigs |
 
-HUD: **Suits & colors** panel with grouped dropdown, live color swatch, and `SPD % · PWR %` readout. Selection persists in `localStorage` (`flight-nemulator-form-<heroId>`).
+HUD: **Ability kit** dropdown with per-kit ability list and SPD/PWR %. Selection persists in `localStorage` (`flight-nemulator-form-<heroId>`). Flight assist for Batman jet kits updates live via `effectiveHeroAerial()`.
+
+Cosmetic armor/cape libraries were removed from this tier on purpose — depth is in **abilities**, not paint chips.
 
 ## Standard tier (everyone else)
 
@@ -21,11 +23,10 @@ HUD: **Suits & colors** panel with grouped dropdown, live color swatch, and `SPD
 
 ## Technical
 
-- Data: `HeroSpec.forms`, `HeroSpec.suitVariants` (`hero-roster.ts`)
-- Resolution: `resolveHeroForm()` (`hero-forms.ts`) — paints hero mesh + stats
+- Data: `HeroForm.abilities`, `kitPrimary`, combat multipliers (`hero-roster.ts`)
+- Combat: `primaryStrikeParams(hero, powerMul, form)` (`combat.ts`)
 - UI: `listHeroLoadouts()` (`hero-customization.ts`)
-- Flight assist: Batman jet modes → `effectiveHeroAerial()` + `syncFlightAssistVisuals()`
 
 ## CI
 
-`tsx scripts/check-hero-loadouts.mts` — Iron Man ≥ 14 loadouts, War Machine ≥ 10, Batman ≥ 12.
+`tsx scripts/check-hero-loadouts.mts` — Iron Man, War Machine, and Batman each have many ability kits with at least two named abilities per kit and **no** `suitVariants`.

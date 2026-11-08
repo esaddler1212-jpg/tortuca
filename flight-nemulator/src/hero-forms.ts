@@ -1,7 +1,7 @@
 import type { AerialMobility } from './aerial-mobility';
 import type { HeroForm, HeroSpec } from './hero-roster';
 
-const BAT_JETPACK_LOADOUTS = new Set(['tactical', 'beyond-jet', 'hellbat', 'arkham-lift']);
+const BAT_JETPACK_LOADOUTS = new Set(['tactical-jet', 'beyond-burn', 'hellbat-burn', 'grapple-lift']);
 
 export function effectiveHeroAerial(spec: HeroSpec, form: HeroForm): AerialMobility {
   if (spec.id === 'shade-knight' && BAT_JETPACK_LOADOUTS.has(form.id)) return 'jetpack';

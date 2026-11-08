@@ -292,11 +292,9 @@ function LoadoutPicker({ heroId }: { heroId: string }) {
   const full = isFullLoadoutHero(heroId);
   const blurb = customizationBlurb(heroId);
 
-  const byGroup = (g: string) => loadouts.filter((l) => l.group === g);
-
   return (
     <div className={`loadout-picker${full ? ' loadout-picker-full' : ''}`}>
-      <strong>{full ? 'Suits & colors' : 'Loadout'}</strong>
+      <strong>{full ? 'Ability kit' : 'Loadout'}</strong>
       {blurb && <p className="hud-tag">{blurb}</p>}
       <select
         className="loadout-select"
@@ -307,61 +305,25 @@ function LoadoutPicker({ heroId }: { heroId: string }) {
           selectHero(heroId, v);
         }}
       >
-        {full ? (
-          <>
-            {byGroup('suit').length > 0 && (
-              <optgroup label="Armor suits">
-                {byGroup('suit').map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.label}
-                  </option>
-                ))}
-              </optgroup>
-            )}
-            {byGroup('armor').length > 0 && (
-              <optgroup label="Armor suits">
-                {byGroup('armor').map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.label}
-                  </option>
-                ))}
-              </optgroup>
-            )}
-            {byGroup('cape').length > 0 && (
-              <optgroup label="Capes & eras">
-                {byGroup('cape').map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.label}
-                  </option>
-                ))}
-              </optgroup>
-            )}
-            {byGroup('mode').length > 0 && (
-              <optgroup label="Flight modes">
-                {byGroup('mode').map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.label}
-                  </option>
-                ))}
-              </optgroup>
-            )}
-          </>
-        ) : (
-          loadouts.map((o) => (
+        <optgroup label={full ? 'Ability kits' : 'Forms'}>
+          {loadouts.map((o) => (
             <option key={o.id} value={o.id}>
               {o.label}
             </option>
-          ))
-        )}
+          ))}
+        </optgroup>
       </select>
       {active && (
         <div className="loadout-preview">
-          <span
-            className="loadout-swatch"
-            style={{
-              background: `rgb(${Math.round(active.color[0] * 255)}, ${Math.round(active.color[1] * 255)}, ${Math.round(active.color[2] * 255)})`
-            }}
-          />
+          {active.abilities.length > 0 ? (
+            <ul className="loadout-abilities">
+              {active.abilities.map((a) => (
+                <li key={a}>{a}</li>
+              ))}
+            </ul>
+          ) : (
+            <span className="hud-tag">{loadoutStatsLabel(active)}</span>
+          )}
           <span className="hud-tag">{loadoutStatsLabel(active)}</span>
         </div>
       )}

@@ -1,10 +1,9 @@
-import { resolveHeroForm } from './hero-forms';
 import type { HeroForm, HeroSpec } from './hero-roster';
 
-/** Heroes with the largest suit / color libraries in the HUD. */
-export const FULL_LOADOUT_HERO_IDS = new Set(['tin-aviator', 'red-codriver', 'shade-knight']);
+/** Heroes with swappable ability kits (not big cosmetic libraries). */
+export const ABILITY_KIT_HERO_IDS = new Set(['tin-aviator', 'red-codriver', 'shade-knight']);
 
-export type LoadoutGroup = 'suit' | 'armor' | 'cape' | 'mode';
+export type LoadoutGroup = 'kit' | 'form';
 
 export interface LoadoutOption {
   id: string;
@@ -13,44 +12,33 @@ export interface LoadoutOption {
   color: [number, number, number];
   speedMul: number;
   powerMul: number;
+  abilities: string[];
 }
 
-function groupFor(spec: HeroSpec, id: string): LoadoutGroup {
-  if (spec.id === 'red-codriver') return 'armor';
-  if (spec.id === 'shade-knight') {
-    if (id === 'tactical' || id === 'beyond-jet' || id === 'hellbat' || id === 'arkham-lift') return 'mode';
-    return 'cape';
-  }
-  if (spec.suitVariants?.some((s) => s.id === id)) return 'suit';
-  return 'mode';
+export function isAbilityKitHero(heroId: string): boolean {
+  return ABILITY_KIT_HERO_IDS.has(heroId);
 }
 
-export function isFullLoadoutHero(heroId: string): boolean {
-  return FULL_LOADOUT_HERO_IDS.has(heroId);
-}
+/** @deprecated use isAbilityKitHero */
+export const isFullLoadoutHero = isAbilityKitHero;
 
 export function listHeroLoadouts(spec: HeroSpec): LoadoutOption[] {
-  const seen = new Set<string>();
-  const out: LoadoutOption[] = [];
+  return spec.forms.map((f) => ({
+    id: f.id,
+    label: f.label,
+    group: isAbilityKitHero(spec.id) ? 'kit' : 'form',
+    color: f.color,
+    speedMul: f.speedMul,
+    powerMul: f.powerMul,
+    abilities: f.abilities ?? []
+  }));
+}
 
-  const push = (id: string) => {
-    if (seen.has(id)) return;
-    seen.add(id);
-    const f = resolveHeroForm(spec, id);
-    out.push({
-      id: f.id,
-      label: f.label,
-      group: groupFor(spec, id),
-      color: f.color,
-      speedMul: f.speedMul,
-      powerMul: f.powerMul
-    });
-  };
-
-  for (const s of spec.suitVariants ?? []) push(s.id);
-  for (const f of spec.forms) push(f.id);
-
-  return out;
+export function kitHudLabel(form: HeroForm): string {
+  const spd = Math.round(form.speedMul * 100);
+  const pwr = Math.round(form.powerMul * 100);
+  const tail = form.abilities?.length ? form.abilities.join(' · ') : form.label;
+  return `${form.label} · ${tail} · SPD ${spd}% · PWR ${pwr}%`;
 }
 
 export function loadoutStatsLabel(form: HeroForm): string {
@@ -60,8 +48,8 @@ export function loadoutStatsLabel(form: HeroForm): string {
 }
 
 export function customizationBlurb(heroId: string): string | null {
-  if (heroId === 'tin-aviator') return 'Mk I–L armor presets, stealth, and nanite loadouts.';
-  if (heroId === 'red-codriver') return 'War armor palettes, gunship, and heavy weapons kits.';
-  if (heroId === 'shade-knight') return 'Capes, eras, and tactical / jet modes.';
+  if (heroId === 'tin-aviator') return 'Swap repulsor, unibeam, missiles, and siege tools mid-flight.';
+  if (heroId === 'red-codriver') return 'Shoulder cannons, miniguns, plasma, and bunker busters.';
+  if (heroId === 'shade-knight') return 'Gadgets, grapples, smoke, and jet rigs — not costume closets.';
   return null;
 }

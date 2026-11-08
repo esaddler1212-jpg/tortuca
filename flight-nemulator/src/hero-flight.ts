@@ -87,7 +87,8 @@ export class HeroFlightController {
   }
 
   triggerPrimary(): void {
-    this.primaryCd = this.hero.energy.primaryCooldownSec;
+    const cdMul = this.form.primaryCdMul ?? 1;
+    this.primaryCd = this.hero.energy.primaryCooldownSec * cdMul;
     this.stamina = Math.max(0, this.stamina - 6);
   }
 

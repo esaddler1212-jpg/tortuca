@@ -44,11 +44,10 @@ import {
   DEFAULT_HERO_ID,
   getHero,
   type HeroForm,
-  type HeroSpec,
-  type PowerKind
+  type HeroSpec
 } from './hero-roster';
 import { aerialHudLabel, syncFlightAssistVisuals } from './aerial-mobility';
-import { loadoutStatsLabel } from './hero-customization';
+import { kitHudLabel } from './hero-customization';
 import { effectiveHeroAerial, resolveHeroForm, storedFormId } from './hero-forms';
 import { spawnAtHome } from './districts';
 import { HeroFlightController } from './hero-flight';
@@ -208,9 +207,6 @@ export async function startGame(app: AppBase): Promise<void> {
   app.start();
 }
 
-function powerKind(hero: HeroSpec): PowerKind {
-  return hero.powers[0] ?? 'beam';
-}
 
 function tickFrame(s: GameSession, dt: number): void {
   const input = pollFlightInput();
@@ -293,9 +289,18 @@ function tickFrame(s: GameSession, dt: number): void {
   if (input.primary && s.hero.canPrimary()) {
     s.hero.triggerPrimary();
     const aim = s.hero.aimPoint();
-    const strike = primaryStrikeParams(s.heroSpec, powerMul);
+    const strike = primaryStrikeParams(s.heroSpec, powerMul, s.heroForm);
     const hits = damageNpcsInCone(pos, aim, s.factionNpcs, s.playerRole, strike.range, strike.cone, strike.dmg);
-    if (hits > 0) playBlast(powerKind(s.heroSpec) as 'beam' | 'repulsor' | 'thunder' | 'ki' | 'default');
+    if (hits > 0) {
+      const blast =
+        strike.primary === 'beam' ||
+        strike.primary === 'repulsor' ||
+        strike.primary === 'thunder' ||
+        strike.primary === 'ki'
+          ? strike.primary
+          : 'default';
+      playBlast(blast);
+    }
   }
   if (input.throw) {
     throwProp(tags, pos, []);
@@ -304,7 +309,8 @@ function tickFrame(s: GameSession, dt: number): void {
   if (input.super && s.hero.canSuper() && !chrono.chronoArmed) {
     s.hero.triggerSuper();
     const aim = s.hero.aimPoint(120);
-    const blastRadius = 45 * powerMul * (isSolarFullyCharged(s.heroSpec.id) ? 1.35 : 1);
+    const superKit = s.heroForm.superRadiusMul ?? 1;
+    const blastRadius = 45 * powerMul * superKit * (isSolarFullyCharged(s.heroSpec.id) ? 1.35 : 1);
     const blast = superCrater(s.app, s.root, aim, tags, s.tier, blastRadius);
     s.destructionUsd += blast.costUsd;
     if (s.playerRole === 'villain') {
@@ -446,7 +452,7 @@ function tickFrame(s: GameSession, dt: number): void {
     worldFatePhase: s.worldFate.phase,
     heroWorldSaved: s.worldFate.heroSaved,
     aerialMobility: aerialHudLabel(effectiveHeroAerial(s.heroSpec, s.heroForm)),
-    loadoutLabel: `${s.heroForm.label} · ${loadoutStatsLabel(s.heroForm)}`
+    loadoutLabel: kitHudLabel(s.heroForm)
   });
 }
 

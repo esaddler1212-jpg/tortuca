@@ -1,5 +1,5 @@
 import { Entity, Vec3, type AppBase } from 'playcanvas';
-import type { HeroSpec } from './hero-roster';
+import type { HeroForm, HeroSpec, PowerKind } from './hero-roster';
 import type { DestructibleTag } from './build-city';
 import { carveCrater } from './destruction';
 import type { QualityTier } from './quality-tier';
@@ -49,8 +49,11 @@ export function tickDrones(drones: EnemyDrone[], heroPos: Vec3, dt: number, root
   return kills;
 }
 
-function primaryDamage(hero: HeroSpec, powerMul: number): number {
-  const p = hero.powers[0];
+export function activeKitPrimary(hero: HeroSpec, form?: HeroForm): PowerKind {
+  return form?.kitPrimary ?? hero.powers[0] ?? 'beam';
+}
+
+function primaryDamageForKind(p: PowerKind, powerMul: number, dmgMul = 1): number {
   const base =
     p === 'repulsor'
       ? 2.2
@@ -65,19 +68,27 @@ function primaryDamage(hero: HeroSpec, powerMul: number): number {
               : p === 'telekinesis'
                 ? 1.8
                 : 1.6;
-  return base * powerMul;
+  return base * powerMul * dmgMul;
 }
 
-function primaryReach(hero: HeroSpec): number {
-  return hero.powers.includes('web') ? 85 : hero.powers.includes('ki') ? 150 : 120;
+function primaryReachForKind(p: PowerKind, rangeMul = 1): number {
+  const base = p === 'web' ? 85 : p === 'ki' ? 150 : 120;
+  return base * rangeMul;
 }
 
-export function primaryStrikeParams(hero: HeroSpec, powerMul: number): { range: number; cone: number; dmg: number } {
-  const cone = hero.powers.includes('thunder') ? 42 : 25;
+export function primaryStrikeParams(
+  hero: HeroSpec,
+  powerMul: number,
+  form?: HeroForm
+): { range: number; cone: number; dmg: number; primary: PowerKind } {
+  const primary = activeKitPrimary(hero, form);
+  const baseCone = primary === 'thunder' ? 42 : primary === 'repulsor' ? 28 : 25;
+  const cone = baseCone * (form?.coneMul ?? 1);
   return {
-    range: primaryReach(hero),
+    range: primaryReachForKind(primary, form?.rangeMul ?? 1),
     cone,
-    dmg: primaryDamage(hero, powerMul)
+    dmg: primaryDamageForKind(primary, powerMul, form?.dmgMul ?? 1),
+    primary
   };
 }
 
