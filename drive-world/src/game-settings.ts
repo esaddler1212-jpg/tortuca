@@ -26,7 +26,7 @@ export type GameSettings = {
   shareSessionStats: boolean;
   /** SFX stings + engine gain (music has musicVolume) */
   sfxVolume: number;
-  /** 0 = uncapped; 30 / 60 caps sim step via maxDeltaTime */
+  /** 0 = uncapped; 30 / 60 caps GPU draw rate (sim still ticks each frame) */
   frameCapFps: 0 | 30 | 60;
   /** Multiplier on device pixel ratio (performance / TV) */
   resolutionScale: number;

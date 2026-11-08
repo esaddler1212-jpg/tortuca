@@ -122,6 +122,9 @@ export type SavedProgress = {
   dynoRunCount: number;
   meetBadges: string[];
   activeTaxiId: string | null;
+  /** Tokyo bonus map (post-game) */
+  tokyoLandmarkIds: string[];
+  tokyoFlights: number;
 };
 
 const STORAGE_KEY = 'drive-world-progress-v5';
@@ -163,7 +166,9 @@ function defaultProgress(): SavedProgress {
     taxiCompletedIds: [],
     dynoRunCount: 0,
     meetBadges: [],
-    activeTaxiId: null
+    activeTaxiId: null,
+    tokyoLandmarkIds: [],
+    tokyoFlights: 0
   };
 }
 
@@ -199,6 +204,8 @@ function withV9Defaults(p: Partial<Omit<SavedProgress, 'version'>> & { version: 
     dynoRunCount: p.dynoRunCount ?? 0,
     meetBadges: p.meetBadges ?? [],
     activeTaxiId: p.activeTaxiId ?? null,
+    tokyoLandmarkIds: Array.isArray(p.tokyoLandmarkIds) ? p.tokyoLandmarkIds : [],
+    tokyoFlights: typeof p.tokyoFlights === 'number' ? p.tokyoFlights : 0,
     cameraMode: normalizeCameraMode(p.cameraMode)
   };
   return migrateRenamedVehicles(base);
@@ -229,6 +236,13 @@ function migrateRaw(parsed: Record<string, unknown>): SavedProgress | null {
     });
   }
   return null;
+}
+
+/** Normalize a save object from cloud / import before it touches localStorage. */
+export function normalizeProgress(raw: unknown): SavedProgress | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const migrated = migrateRaw(raw as Record<string, unknown>);
+  return migrated ? seedGhostTapes(migrated) : null;
 }
 
 export function loadProgress(): SavedProgress {
@@ -298,6 +312,19 @@ export function unlockVehicle(progress: SavedProgress, vehicleId: string): Saved
     ...progress,
     unlockedVehicleIds: [...progress.unlockedVehicleIds, vehicleId]
   };
+  saveProgress(next);
+  return next;
+}
+
+export function visitTokyoLandmark(progress: SavedProgress, landmarkId: string): SavedProgress {
+  if (progress.tokyoLandmarkIds.includes(landmarkId)) return progress;
+  const next: SavedProgress = { ...progress, tokyoLandmarkIds: [...progress.tokyoLandmarkIds, landmarkId] };
+  saveProgress(next);
+  return next;
+}
+
+export function recordTokyoFlight(progress: SavedProgress): SavedProgress {
+  const next: SavedProgress = { ...progress, tokyoFlights: progress.tokyoFlights + 1, fuelLevel: 1 };
   saveProgress(next);
   return next;
 }

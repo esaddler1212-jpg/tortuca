@@ -29,9 +29,10 @@ import {
 
 import { buildDrivingWorld } from './build-world';
 import { startGameSession } from './game-loop';
+import { getHudSnapshot } from './game-bridge';
 import { installMobileShell } from './install-mobile-shell';
 import { isIOS, recommendedPixelRatio } from './mobile-platform';
-import { applyFrameCap, applyResolutionScale } from './console-graphics';
+import { applyFrameCap, applyResolutionScale, installRenderCap } from './console-graphics';
 import { loadSettings, type GameSettings } from './game-settings';
 import { setMasterVolume, setSfxVolume } from './game-audio';
 import { tryMergeCloudOnBoot } from './game-cloud-save';
@@ -102,9 +103,10 @@ await new Promise<void>((resolve) => {
 });
 
 app.start();
+installRenderCap(app);
 applyFrameCap(app, bootSettings);
 window.addEventListener('drive-world:settings', (ev) => {
-  const s = (ev as CustomEvent<GameSettings>).detail;
+  const s = { ...loadSettings(), ...(ev as CustomEvent<Partial<GameSettings>>).detail };
   applyResolutionScale(device, s, basePixelRatio);
   applyFrameCap(app, s);
   setMasterVolume(s.masterVolume);
@@ -151,3 +153,20 @@ camera.addComponent('camera', {
 app.root.addChild(camera);
 
 startGameSession(app, speedEl);
+
+if (new URLSearchParams(location.search).has('cnDebug')) {
+  let renders = 0;
+  let ticks = 0;
+  const baseRender = app.render.bind(app);
+  app.render = () => {
+    renders++;
+    baseRender();
+  };
+  app.on('update', () => ticks++);
+  (window as unknown as { __cityNights?: unknown }).__cityNights = {
+    app,
+    renders: () => renders,
+    ticks: () => ticks,
+    hud: getHudSnapshot
+  };
+}
