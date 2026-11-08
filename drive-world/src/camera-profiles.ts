@@ -121,7 +121,7 @@ export function applyDriveCamera(
       pos.y + prof.offset.y,
       pos.z + prof.offset.z
     );
-    Vec3.lerp(smoothPos, target, Math.min(1, prof.lerp * (dt * 8 + 0.5)), smoothPos);
+    smoothPos.lerp(smoothPos, target, Math.min(1, prof.lerp * (dt * 8 + 0.5)));
     camera.setPosition(smoothPos);
     camera.lookAt(new Vec3(vistaLook.x, vistaLook.y, vistaLook.z));
     return;
@@ -133,7 +133,7 @@ export function applyDriveCamera(
       pos.y + prof.drone.height,
       pos.z - forward.z * prof.drone.back
     );
-    Vec3.lerp(smoothPos, goal, Math.min(1, dt * 4.5), smoothPos);
+    smoothPos.lerp(smoothPos, goal, Math.min(1, dt * 4.5));
     camera.setPosition(smoothPos);
     const look = new Vec3(pos.x + forward.x * 6, pos.y + 0.6, pos.z + forward.z * 6);
     camera.lookAt(look);
@@ -157,7 +157,7 @@ export function applyDriveCamera(
   if (prof.lerp >= 0.99) {
     camera.setPosition(target);
   } else {
-    Vec3.lerp(smoothPos, target, Math.min(1, prof.lerp * (dt * 10 + 0.4)), smoothPos);
+    smoothPos.lerp(smoothPos, target, Math.min(1, prof.lerp * (dt * 10 + 0.4)));
     camera.setPosition(smoothPos);
   }
 

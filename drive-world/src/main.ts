@@ -1,3 +1,4 @@
+import './pc-global';
 import {
   AppBase,
   AppOptions,

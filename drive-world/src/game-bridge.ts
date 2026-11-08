@@ -246,7 +246,7 @@ export function isTouchDriveActive(): boolean {
   );
 }
 
-export function computeTouchControls(): { steering: number; throttle: number; vertical: number } {
+export function computeTouchControls(): { steering: number; throttle: number; vertical: number; nitro: boolean } {
   const t = touchDrive;
   let steering = 0;
   let throttle = 0;
@@ -257,5 +257,5 @@ export function computeTouchControls(): { steering: number; throttle: number; ve
   if (t.down) throttle -= 1;
   if (t.climb) vertical += 1;
   if (t.descend) vertical -= 1;
-  return { steering, throttle, vertical };
+  return { steering, throttle, vertical, nitro: t.nitro };
 }

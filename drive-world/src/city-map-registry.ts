@@ -65,7 +65,7 @@ export const LANDMARK_STREET_ROUTES: LandmarkStreetRoute[] = [
       'painted-ladies',
       'palace',
       'lombard',
-      'oracle',
+      'oracle-park',
       'chase-center',
       'coit',
       'fishermans-wharf'

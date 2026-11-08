@@ -1,4 +1,4 @@
-import { Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
+import { Color, Entity, FOG_LINEAR, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
 
 import { buildBayWater } from './build-bay';
 import { buildCityStreets } from './build-city-streets';
@@ -23,7 +23,8 @@ import { NIGHT_FOG } from './night-palette';
 import { WORLD_HALF_M } from './world-config';
 
 export function buildDrivingWorld(app: AppBase): void {
-  app.scene.fog = NIGHT_FOG.clone();
+  app.scene.fog.type = FOG_LINEAR;
+  app.scene.fog.color = NIGHT_FOG.clone();
 
   const groundMat = new StandardMaterial();
   groundMat.diffuse = new Color(0.04, 0.045, 0.05);
