@@ -48,6 +48,21 @@
       <span>Esc</span> (nothing)
     </footer>
 
+    <script>
+      (function () {
+        if (!/^\/console(\/|$)/.test(location.pathname)) return;
+        var a = document.createElement('a');
+        a.href = '/';
+        a.textContent = '◯ BOYS';
+        a.setAttribute('aria-label', 'Back to BOYS student app');
+        a.className = 'console-boys-home';
+        a.style.cssText =
+          'position:fixed;z-index:9999;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));' +
+          'font:600 11px/1 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;color:#e8eef8;' +
+          'padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.22);background:rgba(8,12,20,.55);backdrop-filter:blur(8px)';
+        document.body.appendChild(a);
+      })();
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

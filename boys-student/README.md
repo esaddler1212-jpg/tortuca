@@ -29,12 +29,27 @@ Curriculum themes start **September 2026**.
 | May | Decision Making |
 | June | Purpose — I Move With Purpose |
 
+## Play · Iris (Tortuca Console)
+
+Signed-in students get a **Play · Iris** tab. **Iris** introduces Tortuca games bundled on the same site:
+
+| Game | What |
+|------|------|
+| **Tortuca Console** | PlayStation-style picker |
+| **City Nights** | Bay Area night driving |
+| **Battleworld** | Flight Nemulator crossover planet (Marvel / DC / DBZ arcs) |
+
+Netlify build runs `npm run build:with-console`, which builds [`games-hub/`](../games-hub/) into `public/console/` (City Nights + Flight Nemulator). Optional overrides:
+
+- `VITE_BOYS_CONSOLE_URL` — external console base (skip bundle path)
+- `VITE_CITY_NIGHTS_URL` / `VITE_FLIGHT_NEMULATOR_URL` — deep links
+
 ## Deploy on Netlify
 
 1. Create a new Netlify site from this repo with **Base directory** = `boys-student`
 2. Set environment variable:
    - `VITE_BOYS_API_URL` = your Family Purpose site URL (where the BOYS API functions run)
-3. Build command: `npm run build` · Publish: `dist`
+3. Build command: `npm run build:with-console` (default in `netlify.toml`) · Publish: `dist`
 
 ## Local development
 

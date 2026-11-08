@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build"
+  command = "npm run build:with-console"
   publish = "dist"
 
 [build.environment]
@@ -7,6 +7,21 @@
 
 # API lives on the Family Purpose Netlify site — set in Netlify env:
 # VITE_BOYS_API_URL = https://your-family-purpose-site.netlify.app
+
+[[redirects]]
+  from = "/console/city-nights/*"
+  to = "/console/city-nights/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/console/flight-nemulator/*"
+  to = "/console/flight-nemulator/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/console/*"
+  to = "/console/index.html"
+  status = 200
 
 [[redirects]]
   from = "/*"

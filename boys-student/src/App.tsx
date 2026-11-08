@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { fetchCurriculum, joinSession, submitResponses } from "./api";
+import { IrisPlayDock } from "./IrisPlayDock";
 import {
   clearSession,
   loadProfile,
@@ -114,6 +115,8 @@ function LoginScreen({
   );
 }
 
+type StudentTab = "learn" | "play";
+
 function LessonScreen({
   token,
   student,
@@ -125,6 +128,7 @@ function LessonScreen({
   group: BoysGroup;
   onSignOut: () => void;
 }) {
+  const [tab, setTab] = useState<StudentTab>("learn");
   const [monthLabel, setMonthLabel] = useState("");
   const [month, setMonth] = useState<BoysCurriculumMonth | null>(null);
   const [beforeCurriculum, setBeforeCurriculum] = useState(true);
@@ -229,7 +233,26 @@ function LessonScreen({
         </button>
       </header>
 
-      {beforeCurriculum ? (
+      <nav className="student-tabs" aria-label="Student sections">
+        <button
+          type="button"
+          className={`student-tab ${tab === "learn" ? "is-active" : ""}`}
+          onClick={() => setTab("learn")}
+        >
+          Lesson
+        </button>
+        <button
+          type="button"
+          className={`student-tab ${tab === "play" ? "is-active" : ""}`}
+          onClick={() => setTab("play")}
+        >
+          Play · Iris
+        </button>
+      </nav>
+
+      {tab === "play" ? (
+        <IrisPlayDock studentName={student.name} />
+      ) : beforeCurriculum ? (
         <div className="card">
           <h2>Starts in September</h2>
           <p className="hint">
@@ -330,8 +353,8 @@ function LessonScreen({
         </div>
       )}
 
-      {error && <p className="error banner-error" role="alert">{error}</p>}
-      {toast && <div className="toast" role="status">{toast}</div>}
+      {tab === "learn" && error && <p className="error banner-error" role="alert">{error}</p>}
+      {tab === "learn" && toast && <div className="toast" role="status">{toast}</div>}
     </>
   );
 }

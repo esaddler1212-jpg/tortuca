@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:with-console": "node scripts/bundle-console.mjs && npm run build",
+    "bundle-console": "node scripts/bundle-console.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
