@@ -163,6 +163,26 @@ const blocked = await consultSpecialist(noopClient, {
 });
 ok("consultSpecialist blocks duplicate courier", blocked.deduped === true && blocked.summary.includes("DUPLICATE BLOCKED"));
 
+// ── Specialist reports carry only their own domain ──────────────────────
+const dayContext = [
+  "It is Sunday, November 8 at 9:00 AM (America/Los_Angeles). Mode: Weekend. Location: Vallejo.",
+  "Do today: call the bank; renew registration (urgent).",
+  `IRIS modules (open with open_module): ${moduleContextForIris()}.`,
+].join("\n");
+const consult = (specialist: "courier" | "ledger" | "woodhouse", task: string, delegateHistory: IrisDelegateLog[] = []) =>
+  consultSpecialist(noopClient, { specialist, task, context: dayContext, sessionId: "audit", who: "audit@test", timeZone: "America/Los_Angeles", delegateHistory });
+const courierEmpty = await consult("courier", "what is in my inbox");
+ok("courier ignores module registry line", !courierEmpty.summary.includes("open_module") && !courierEmpty.summary.includes("newest Gmail"));
+ok("courier says nothing on file when inbox absent", courierEmpty.summary.includes("nothing on file"));
+const ledgerReport = await consult("ledger", "what do I have today");
+ok("ledger reports today's items", ledgerReport.summary.includes("renew registration"));
+ok("ledger skips module registry line", !ledgerReport.summary.includes("open_module"));
+const woodhouseReport = await consult("woodhouse", "how is the team doing", [
+  { specialist: "scout", at: new Date().toISOString(), task: "research bay sponsors" },
+  { specialist: "courier", at: new Date().toISOString(), task: "triage unread mail" },
+]);
+ok("woodhouse reads real delegate history", woodhouseReport.summary.includes("Scout 1") && woodhouseReport.summary.includes("Courier 1"));
+
 // ── Extended pass: commerce, markets, channels, APIs ────────────────────
 ok("stocksContext mentions watchlist", stocksContext({
   watchlist: [{ symbol: "NVDA", changePercent: 1, theme: "ai" }],
