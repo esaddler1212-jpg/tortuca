@@ -1,0 +1,290 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0a0c12;
+  font-family: system-ui, sans-serif;
+}
+
+#application-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+.hud {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 2;
+  color: #e8f4ff;
+  text-shadow: 0 0 12px rgba(120, 200, 255, 0.35);
+  pointer-events: none;
+}
+
+.hud h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.1rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hud.autonomous #speed {
+  font-size: 1.35rem;
+  color: #9ae8ff;
+}
+
+.hud.autonomous .reset-btn {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.hud .hint {
+  margin: 0 0 0.5rem;
+  opacity: 0.85;
+  font-size: 0.85rem;
+  max-width: 22rem;
+}
+
+.vehicle-name {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+
+.progress-line {
+  margin: 0 0 0.75rem;
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.legacy-speed {
+  margin: 0;
+  font-size: 1rem;
+  opacity: 0.55;
+  font-variant-numeric: tabular-nums;
+}
+
+.reset-btn {
+  pointer-events: auto;
+  margin-top: 0.75rem;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background: rgba(10, 12, 18, 0.75);
+  color: #c8dff0;
+  cursor: pointer;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(4, 6, 12, 0.72);
+  backdrop-filter: blur(6px);
+}
+
+.panel {
+  max-width: 32rem;
+  width: calc(100% - 2rem);
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid rgba(120, 180, 255, 0.25);
+  background: rgba(12, 16, 28, 0.95);
+  color: #e8f4ff;
+}
+
+.panel h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+}
+
+.panel-hint {
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.picker-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.picker-card {
+  text-align: left;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.picker-card:hover {
+  border-color: rgba(120, 200, 255, 0.45);
+  background: rgba(80, 140, 220, 0.12);
+}
+
+.picker-card strong {
+  font-size: 1rem;
+}
+
+.picker-card span {
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
+
+.garage {
+  position: fixed;
+  right: 1rem;
+  top: 1rem;
+  z-index: 3;
+  width: 14rem;
+  padding: 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 140, 60, 0.35);
+  background: rgba(16, 10, 8, 0.88);
+  color: #ffe8d4;
+  pointer-events: auto;
+}
+
+.garage h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.garage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.garage-card {
+  padding: 0.45rem 0.55rem;
+  font-size: 0.8rem;
+  text-align: left;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.25);
+  color: inherit;
+  cursor: pointer;
+}
+
+.garage-card.active {
+  border-color: rgba(255, 160, 80, 0.7);
+  background: rgba(255, 120, 40, 0.15);
+}
+
+.customize {
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.customize h4 {
+  margin: 0 0 0.25rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.customize-hint {
+  margin: 0 0 0.65rem;
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+.customize .label {
+  font-size: 0.72rem;
+  margin-bottom: 0.35rem;
+  opacity: 0.85;
+}
+
+.paint-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.65rem;
+}
+
+.swatch {
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: var(--swatch, #456);
+  cursor: pointer;
+  padding: 0;
+}
+
+.swatch.active {
+  border-color: rgba(160, 220, 255, 0.9);
+  box-shadow: 0 0 8px rgba(120, 200, 255, 0.45);
+}
+
+.slider-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  margin-bottom: 0.4rem;
+}
+
+.slider-row input {
+  flex: 1;
+  accent-color: #6ab4ff;
+}
+
+.apply-custom {
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.45rem;
+  font-size: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid rgba(120, 180, 255, 0.35);
+  background: rgba(40, 80, 140, 0.35);
+  color: #e8f4ff;
+  cursor: pointer;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 2rem;
+  transform: translateX(-50%);
+  z-index: 6;
+  min-width: 16rem;
+  max-width: 24rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(120, 220, 255, 0.35);
+  background: rgba(8, 20, 32, 0.92);
+  color: #e8f4ff;
+  pointer-events: none;
+}
+
+.toast p {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}

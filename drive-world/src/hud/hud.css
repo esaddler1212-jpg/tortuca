@@ -1,0 +1,231 @@
+.react-hud {
+  position: fixed;
+  z-index: 4;
+  pointer-events: none;
+  right: 1rem;
+  bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  max-width: 200px;
+  color: #e8f4ff;
+  font-size: 0.75rem;
+}
+
+.react-hud button {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.skip-waymo {
+  padding: 0.45rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(120, 200, 255, 0.45);
+  background: rgba(8, 24, 48, 0.88);
+  color: #dff4ff;
+  font-size: 0.8rem;
+}
+
+.hud-toolbar {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  pointer-events: auto;
+}
+
+.cam-toggle {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.68rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(10, 14, 22, 0.8);
+  color: inherit;
+}
+
+.hud-mph {
+  font-weight: 700;
+  font-size: 1.1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.minimap-wrap {
+  pointer-events: auto;
+  padding: 0.35rem;
+  border-radius: 8px;
+  background: rgba(6, 10, 18, 0.85);
+  border: 1px solid rgba(100, 160, 220, 0.25);
+}
+
+.minimap-title {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.25rem;
+  opacity: 0.8;
+}
+
+.minimap-bg {
+  fill: rgba(12, 20, 32, 0.95);
+}
+
+.minimap-dot {
+  fill: rgba(80, 180, 255, 0.85);
+}
+
+.minimap-dot.done {
+  fill: rgba(80, 120, 80, 0.7);
+}
+
+.minimap-safehouse {
+  fill: rgba(255, 140, 60, 0.9);
+}
+
+.minimap-route {
+  stroke: rgba(255, 220, 120, 0.55);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+}
+
+.minimap-player {
+  fill: #fff;
+  stroke: #6ab4ff;
+  stroke-width: 1;
+}
+
+.nav-hint {
+  text-align: right;
+  max-width: 200px;
+  opacity: 0.9;
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+}
+
+.flight-hint {
+  width: 100%;
+  text-align: center;
+  font-size: 0.82rem;
+  opacity: 0.85;
+  margin: 0.2rem 0;
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.85);
+}
+
+.landmark-panel {
+  pointer-events: auto;
+  width: 100%;
+  max-height: 28vh;
+  overflow: auto;
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  background: rgba(8, 12, 20, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.landmark-panel summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.landmark-panel ul {
+  margin: 0.35rem 0 0;
+  padding-left: 1rem;
+}
+
+.landmark-panel .region-done {
+  color: #9fd49f;
+}
+
+.touch-drive {
+  pointer-events: none;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 140px;
+}
+
+.touch-btn {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(20, 28, 40, 0.65);
+  color: #e8f4ff;
+  font-size: 1.25rem;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.touch-btn.up {
+  left: 50%;
+  bottom: 72px;
+  transform: translateX(-50%);
+}
+
+.touch-btn.down {
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
+}
+
+.touch-btn.left {
+  left: calc(50% - 72px);
+  bottom: 40px;
+}
+
+.touch-btn.right {
+  left: calc(50% + 16px);
+  bottom: 40px;
+}
+
+@media (min-width: 900px) {
+  .touch-drive {
+    display: none;
+  }
+}
+
+.settings-panel,
+.stats-panel,
+.fast-travel {
+  pointer-events: auto;
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  background: rgba(8, 12, 20, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
+}
+
+.fast-travel-btn {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.3rem;
+  font-size: 0.7rem;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.3);
+  color: inherit;
+  cursor: pointer;
+}
+
+.fast-travel-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.photo-hint {
+  font-size: 0.7rem;
+  opacity: 0.85;
+  text-align: right;
+}
+
+body.photo-mode #hud,
+body.photo-mode #garage,
+body.photo-mode #car-picker {
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+body.photo-mode .react-hud {
+  opacity: 0.95;
+}

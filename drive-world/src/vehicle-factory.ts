@@ -1,0 +1,303 @@
+import {
+  Color,
+  Entity,
+  StandardMaterial,
+  Vec3,
+  type AppBase
+} from 'playcanvas';
+
+import { getVehicleSpec } from './vehicle-catalog';
+import { appliedTuning, DEFAULT_CUSTOMIZATION, type VehicleCustomization } from './vehicle-customization';
+import { attachVehicleLights, type VehicleLights } from './vehicle-lights';
+import { attachVehicleGltf, hasGltfForVehicle } from './vehicle-gltf';
+
+const wheelDefs = [
+  { name: 'FL', pos: new Vec3(0.95, 0.35, 1.35), front: true },
+  { name: 'FR', pos: new Vec3(-0.95, 0.35, 1.35), front: true },
+  { name: 'RL', pos: new Vec3(0.95, 0.35, -1.35), front: false },
+  { name: 'RR', pos: new Vec3(-0.95, 0.35, -1.35), front: false }
+];
+
+function chassisMaterial(tuning: ReturnType<typeof appliedTuning>): StandardMaterial {
+  const paint = new StandardMaterial();
+  paint.diffuse = new Color(tuning.diffuse[0], tuning.diffuse[1], tuning.diffuse[2]);
+  paint.emissive = new Color(tuning.emissive[0], tuning.emissive[1], tuning.emissive[2]);
+  paint.emissiveIntensity = tuning.emissiveIntensity;
+  paint.metalness = 0.4;
+  paint.gloss = 0.6;
+  paint.update();
+  return paint;
+}
+
+export type PlayerVehicle = { entity: Entity; lights: VehicleLights };
+
+function attachLegendAccents(
+  vehicle: Entity,
+  vehicleId: string,
+  paint: StandardMaterial,
+  cx: number,
+  cz: number,
+  rideDrop: number
+): void {
+  if (vehicleId === 'bonus-gotham-knight') {
+    const finMat = paint.clone() as StandardMaterial;
+    finMat.emissive = new Color(0.08, 0.12, 0.55);
+    finMat.emissiveIntensity = 0.45;
+    finMat.update();
+    for (const side of [-1, 1]) {
+      const fin = new Entity(`bat-fin-${side}`);
+      fin.setLocalScale(0.07, 0.55, 1.05);
+      fin.setLocalPosition(side * 0.58, 0.52 - rideDrop, -cz * 0.52);
+      fin.setLocalEulerAngles(0, 0, side * 32);
+      fin.addComponent('render', { type: 'box', material: finMat });
+      vehicle.addChild(fin);
+    }
+    const scoop = new Entity('bat-scoop');
+    scoop.setLocalScale(0.9, 0.14, 0.45);
+    scoop.setLocalPosition(0, 0.28 - rideDrop, cz * 0.62);
+    scoop.addComponent('render', { type: 'box', material: finMat });
+    vehicle.addChild(scoop);
+  }
+  if (vehicleId === 'bonus-scarlet-five') {
+    const red = new StandardMaterial();
+    red.diffuse = new Color(0.82, 0.07, 0.05);
+    red.emissive = new Color(0.95, 0.15, 0.08);
+    red.emissiveIntensity = 0.55;
+    red.update();
+    const nose = new Entity('mach-nose');
+    nose.setLocalScale(0.32, 0.15, 0.2);
+    nose.setLocalPosition(0, 0.46 - rideDrop, cz * 0.82);
+    nose.addComponent('render', { type: 'box', material: red });
+    vehicle.addChild(nose);
+    const stripe = new Entity('mach-stripe');
+    stripe.setLocalScale(cx * 1.05, 0.04, 0.06);
+    stripe.setLocalPosition(0, 0.62 - rideDrop, cz * 0.05);
+    stripe.addComponent('render', { type: 'box', material: red });
+    vehicle.addChild(stripe);
+  }
+}
+
+function createAerialVehicle(
+  app: AppBase,
+  vehicleId: string,
+  position: Vec3,
+  yawDeg: number,
+  spec: ReturnType<typeof getVehicleSpec>,
+  tuning: ReturnType<typeof appliedTuning>,
+  paint: StandardMaterial
+): PlayerVehicle {
+  const cx = spec.chassis.x;
+  const cy = spec.chassis.y;
+  const cz = spec.chassis.z;
+  const flightMode = spec.locomotion === 'helicopter' ? 'helicopter' : 'hover';
+
+  const vehicle = new Entity(`vehicle-${vehicleId}`);
+  vehicle.addComponent('rigidbody', {
+    type: 'dynamic',
+    mass: spec.mass,
+    linearDamping: 0.48,
+    angularDamping: 1.05
+  });
+  vehicle.addComponent('collision', { type: 'box', halfExtents: new Vec3(cx, cy, cz) });
+  vehicle.addComponent('script');
+  vehicle.script!.create('flightVehicle', {
+    attributes: {
+      mode: flightMode,
+      thrust: spec.locomotion === 'helicopter' ? 32000 : 26000,
+      lift: spec.locomotion === 'helicopter' ? 34000 : 30000,
+      yawRate: spec.locomotion === 'helicopter' ? 1.35 : 1.1,
+      pitchRate: spec.locomotion === 'helicopter' ? 0.95 : 0.8
+    }
+  });
+  vehicle.setLocalPosition(position.x, position.y, position.z);
+  vehicle.setEulerAngles(0, yawDeg, 0);
+
+  const body = new Entity('hull');
+  body.addComponent('collision', { type: 'box', halfExtents: new Vec3(cx * 0.92, cy * 0.85, cz * 0.48) });
+  body.setLocalPosition(0, cy + 0.1 - tuning.rideDrop, 0);
+  if (!hasGltfForVehicle(vehicleId)) {
+    body.addComponent('render', { type: 'box', material: paint });
+  }
+  vehicle.addChild(body);
+
+  if (hasGltfForVehicle(vehicleId)) {
+    attachVehicleGltf(vehicle, vehicleId, tuning);
+  }
+
+  if (spec.locomotion === 'hover') {
+    const rotor = new Entity('hover-emitter');
+    rotor.setLocalScale(0.35, 0.06, 0.35);
+    rotor.setLocalPosition(0, -0.2 - tuning.rideDrop, 0);
+    const em = new StandardMaterial();
+    em.emissive = new Color(tuning.emissive[0], tuning.emissive[1], tuning.emissive[2]);
+    em.emissiveIntensity = tuning.emissiveIntensity * 1.4;
+    em.update();
+    rotor.addComponent('render', { type: 'cylinder', material: em });
+    vehicle.addChild(rotor);
+  }
+
+  const lights = attachVehicleLights(vehicle, app);
+  app.root.addChild(vehicle);
+  return { entity: vehicle, lights };
+}
+
+export function createPlayerVehicle(
+  app: AppBase,
+  vehicleId: string,
+  position: Vec3,
+  yawDeg = 0,
+  customization?: VehicleCustomization
+): PlayerVehicle {
+  const spec = getVehicleSpec(vehicleId);
+  const custom = { ...DEFAULT_CUSTOMIZATION, ...customization };
+  const tuning = appliedTuning(spec, custom);
+  const paint = chassisMaterial(tuning);
+
+  if (spec.locomotion !== 'ground') {
+    return createAerialVehicle(app, vehicleId, position, yawDeg, spec, tuning, paint);
+  }
+
+  const glass = new StandardMaterial();
+  glass.diffuse = new Color(0.05, 0.08, 0.12);
+  glass.emissive = new Color(0.2, 0.5, 0.9);
+  glass.emissiveIntensity = 0.22;
+  glass.opacity = tuning.tintOpacity;
+  glass.blendType = 2;
+  glass.update();
+
+  const rimMat = new StandardMaterial();
+  rimMat.diffuse = new Color(0.08, 0.08, 0.1);
+  rimMat.emissive = new Color(tuning.emissive[0], tuning.emissive[1], tuning.emissive[2]);
+  rimMat.emissiveIntensity = tuning.rimGlow;
+  rimMat.update();
+
+  const useGltfBody = hasGltfForVehicle(vehicleId);
+  const scaleWheel = spec.chassis.x / 0.95;
+  const wheels = wheelDefs.map((def) => {
+    const wheel = new Entity(def.name);
+    wheel.addComponent('script');
+    wheel.script!.create('vehicleWheel', {
+      attributes: {
+        debugRender: !useGltfBody,
+        isFront: def.front,
+        radius: 0.38 * Math.sqrt(scaleWheel) * tuning.wheelScale,
+        width: 0.32,
+        frictionSlip: tuning.frictionSlip,
+        suspensionStiffness: 12
+      }
+    });
+    const wy = def.pos.y - tuning.rideDrop;
+    wheel.setLocalPosition(def.pos.x * scaleWheel, wy, def.pos.z * (spec.chassis.z / 1.9));
+    return wheel;
+  });
+
+  const vehicle = new Entity(`vehicle-${vehicleId}`);
+  vehicle.addComponent('rigidbody', {
+    type: 'dynamic',
+    mass: spec.mass,
+    linearDamping: 0.02,
+    angularDamping: 0.1
+  });
+  vehicle.addComponent('collision', { type: 'compound' });
+  vehicle.addComponent('script');
+  vehicle.script!.create('vehicle', {
+    attributes: {
+      wheels,
+      maxEngineForce: tuning.maxEngineForce,
+      maxBrakingForce: spec.maxBrakingForce,
+      maxSteering: tuning.maxSteering
+    }
+  });
+  vehicle.script!.create('vehicleControls');
+  vehicle.setLocalPosition(position.x, position.y, position.z);
+  vehicle.setEulerAngles(0, yawDeg, 0);
+
+  const cx = spec.chassis.x;
+  const cy = spec.chassis.y;
+  const cz = spec.chassis.z;
+  const bodyY = cy + 0.15 - tuning.rideDrop;
+
+  const chassis = new Entity('chassis');
+  chassis.addComponent('collision', { type: 'box', halfExtents: new Vec3(cx, cy, cz) });
+  chassis.setLocalPosition(0, bodyY, 0);
+  if (!useGltfBody) {
+    chassis.addComponent('render', { type: 'box', material: paint });
+  }
+
+  const cabin = new Entity('cabin');
+  cabin.addComponent('collision', { type: 'box', halfExtents: new Vec3(cx * 0.88, cy * 0.85, cz * 0.55) });
+  cabin.setLocalPosition(0, cy * 2 + 0.15 - tuning.rideDrop, -cz * 0.12);
+  if (!useGltfBody) {
+    cabin.addComponent('render', { type: 'box', material: glass });
+  }
+
+  if (useGltfBody) {
+    attachVehicleGltf(vehicle, vehicleId, tuning);
+  }
+
+  if (tuning.underglowIntensity > 0.05) {
+    const glow = new Entity('underglow');
+    glow.setLocalPosition(0, 0.12 - tuning.rideDrop, 0);
+    glow.setLocalScale(cx * 2.2, 0.08, cz * 2.2);
+    const gm = new StandardMaterial();
+    gm.emissive = new Color(tuning.emissive[0], tuning.emissive[1], tuning.emissive[2]);
+    gm.emissiveIntensity = tuning.underglowIntensity * 1.2;
+    gm.diffuse = new Color(0.02, 0.02, 0.03);
+    gm.update();
+    glow.addComponent('render', { type: 'box', material: gm });
+    glow.addComponent('light', {
+      type: 'point',
+      color: new Color(tuning.emissive[0], tuning.emissive[1], tuning.emissive[2]),
+      intensity: tuning.underglowIntensity * 2.5,
+      range: 6,
+      castShadows: false
+    });
+    vehicle.addChild(glow);
+  }
+
+  if (!useGltfBody) {
+    if (vehicleId.startsWith('region-south-bay')) {
+      const wing = new Entity('ev-wing');
+      wing.setLocalScale(0.15, 0.08, 1.6);
+      wing.setLocalPosition(0, 0.75 - tuning.rideDrop, 0);
+      wing.addComponent('render', { type: 'box', material: paint });
+      vehicle.addChild(wing);
+    } else if (vehicleId.startsWith('region-vallejo') || vehicleId.includes('ute')) {
+      const rack = new Entity('bed-rack');
+      rack.setLocalScale(0.9, 0.12, 0.55);
+      rack.setLocalPosition(0, 1.05 - tuning.rideDrop, -cz * 0.45);
+      rack.addComponent('render', { type: 'box', material: paint });
+      vehicle.addChild(rack);
+    } else if (vehicleId.startsWith('region-')) {
+      const spoiler = new Entity('spoiler');
+      spoiler.setLocalScale(cx * 1.1, 0.06, 0.35);
+      spoiler.setLocalPosition(0, cy * 2.2 - tuning.rideDrop, -cz * 0.72);
+      spoiler.addComponent('render', { type: 'box', material: paint });
+      vehicle.addChild(spoiler);
+    }
+  }
+
+  wheels.forEach((w) => {
+    vehicle.addChild(w);
+    if (!useGltfBody) {
+      const rim = new Entity(`${w.name}-rim`);
+      rim.setLocalScale(0.55, 0.2, 0.55);
+      rim.setLocalPosition(0, 0, 0);
+      rim.addComponent('render', { type: 'cylinder', material: rimMat });
+      w.addChild(rim);
+    }
+  });
+  vehicle.addChild(chassis);
+  vehicle.addChild(cabin);
+  if (vehicleId === 'bonus-gotham-knight' || vehicleId === 'bonus-scarlet-five') {
+    attachLegendAccents(vehicle, vehicleId, paint, cx, cz, tuning.rideDrop);
+  }
+  const lights = attachVehicleLights(vehicle, app);
+  app.root.addChild(vehicle);
+  return { entity: vehicle, lights };
+}
+
+export function destroyPlayerVehicle(vehicle: Entity | null): void {
+  if (!vehicle) return;
+  vehicle.destroy();
+}
