@@ -65,12 +65,11 @@ Production build: `npm run build` → `dist/` (static deploy like `drive-world`)
 | Item | Notes |
 |------|-------|
 | Multiplayer | Not started |
-| Mission chapters / checkpoint races | Not started |
+| Mission chapters / checkpoint races | Light chapter HUD only — no drive-world races |
 | Blockbench hero GLBs for full roster | `public/models/heroes/` pipeline only — **0** bundled GLBs |
-| Universe-colored district rims / sky rings | **Shipped** — rim + fog tint (`battleworld-districts.ts`) |
-| Per-hero district **H** at home turf (`home-mark` beat) | **Shipped** — Lantern/Ki/Iron specials unchanged |
-| X-Men tier A roster (`FLIGHT_NEMULATOR_XMEN_RESEARCH.md`) | Research only |
-| `manifest-updates.json` stub IDs → playable characters | OTA placeholder |
+| X-Men tier B+ backlog (`FLIGHT_NEMULATOR_XMEN_RESEARCH.md`) | Tier A slice shipped; rest research |
+| Lattice cloud pull on boot + auth | POST sync shipped; Tortuca session gate optional |
+| `manifest-updates.json` | v3 real IDs; full OTA skin pipeline still stub |
 
 ## Tortuca / IRIS
 
