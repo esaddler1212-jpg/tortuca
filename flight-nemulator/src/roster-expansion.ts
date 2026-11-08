@@ -396,31 +396,31 @@ const HERO_DEFS: CompactHero[] = [
   {
     id: 'chrome-convoy',
     codename: 'Chrome Convoy',
-    tagline: 'Truck boost ram',
+    tagline: 'Foot boost ram — no alt-mode',
     districtId: 'ion-foundry',
     homeLabel: 'Convoy bay',
     power: 'repulsor',
-    aerial: 'tech',
+    aerial: 'foot-boost',
     color: [0.82, 0.12, 0.15]
   },
   {
     id: 'crimson-ace',
     codename: 'Crimson Ace',
-    tagline: 'Righteous jet',
+    tagline: 'Righteous foot boosters',
     districtId: 'ion-foundry',
     homeLabel: 'Ace hangar',
     power: 'beam',
-    aerial: 'native',
+    aerial: 'foot-boost',
     color: [0.88, 0.18, 0.12]
   },
   {
     id: 'nitro-phantom',
     codename: 'Nitro Phantom',
-    tagline: 'Triple-mode phantom',
+    tagline: 'Phantom foot rockets — skip transform',
     districtId: 'ion-foundry',
     homeLabel: 'Phantom pad',
     power: 'repulsor',
-    aerial: 'native',
+    aerial: 'foot-boost',
     color: [0.55, 0.52, 0.65]
   },
   {
@@ -436,11 +436,11 @@ const HERO_DEFS: CompactHero[] = [
   {
     id: 'spectrum-ranger',
     codename: 'Spectrum Ranger',
-    tagline: 'Jet bike squad glide',
+    tagline: 'Squad foot boosters',
     districtId: 'nova-station',
     homeLabel: 'Ranger hangar',
     power: 'ring',
-    aerial: 'tech',
+    aerial: 'foot-boost',
     color: [0.92, 0.22, 0.55]
   }
 ];
@@ -650,36 +650,36 @@ export const NEW_VILLAIN_DEFS: CompactVillain[] = [
   {
     id: 'deceit-winger',
     codename: 'Deceit Winger',
-    tagline: 'Seeker jet traitor',
+    tagline: 'Seeker foot rockets',
     universe: 'cyber',
-    aerial: 'native',
+    aerial: 'foot-boost',
     primaryRivalHeroId: 'crimson-ace',
     color: [0.72, 0.35, 0.22]
   },
   {
     id: 'megaton-forge',
     codename: 'Megaton Forge',
-    tagline: 'Gunship ram',
+    tagline: 'Gunship foot boost',
     universe: 'cyber',
-    aerial: 'tech',
+    aerial: 'foot-boost',
     primaryRivalHeroId: 'chrome-convoy',
     color: [0.55, 0.55, 0.58]
   },
   {
     id: 'bone-shredder',
     codename: 'Bone Shredder',
-    tagline: 'Cassette falcon',
+    tagline: 'Cassette foot falcon',
     universe: 'cyber',
-    aerial: 'native',
+    aerial: 'foot-boost',
     primaryRivalHeroId: 'nitro-phantom',
     color: [0.32, 0.28, 0.35]
   },
   {
     id: 'sound-barrage',
     codename: 'Sound Barrage',
-    tagline: 'Drone orbital barrage',
+    tagline: 'Drone foot barrage',
     universe: 'cyber',
-    aerial: 'tech',
+    aerial: 'foot-boost',
     primaryRivalHeroId: 'spectrum-ranger',
     color: [0.45, 0.42, 0.72]
   },
@@ -751,9 +751,9 @@ export const NEW_VILLAIN_DEFS: CompactVillain[] = [
   {
     id: 'freq-hijacker',
     codename: 'Freq Hijacker',
-    tagline: 'Resonance jammer',
+    tagline: 'Resonance foot jammer',
     universe: 'cyber',
-    aerial: 'tech',
+    aerial: 'foot-boost',
     primaryRivalHeroId: 'spectrum-ranger',
     color: [0.55, 0.25, 0.82]
   },

@@ -10,6 +10,8 @@ import {
   AUTOSAVE_VERSION
 } from '../flight-nemulator/src/battleworld-autosave.ts';
 import { cutsceneHudFields, queueDialogue, acknowledgeDialogue, clearDialogueQueue } from '../flight-nemulator/src/cutscene-queue.ts';
+import { FOOT_BOOSTER_HERO_IDS } from '../flight-nemulator/src/aerial-mobility.ts';
+import { getHero } from '../flight-nemulator/src/hero-roster.ts';
 
 const intro = dialogueIntro('Solar Apex', 'hero');
 if (intro.length < 2) {
@@ -66,5 +68,13 @@ if (!second.cutsceneActive) {
 }
 
 void loadBattleworldAutosave;
+
+for (const id of FOOT_BOOSTER_HERO_IDS) {
+  const h = getHero(id);
+  if (!h || h.aerial !== 'foot-boost') {
+    console.error(`foot-boost hero misconfigured: ${id}`);
+    process.exit(1);
+  }
+}
 
 console.log('check-battleworld-dialogue: ok');

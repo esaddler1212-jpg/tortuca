@@ -46,7 +46,12 @@ import {
   type HeroForm,
   type HeroSpec
 } from './hero-roster';
-import { aerialHudLabel, syncFlightAssistVisuals } from './aerial-mobility';
+import {
+  aerialHudLabel,
+  footRocketTrailPositions,
+  setFootRocketBoostActive,
+  syncFlightAssistVisuals
+} from './aerial-mobility';
 import { kitHudLabel } from './hero-customization';
 import { effectiveHeroAerial, resolveHeroForm, storedFormId } from './hero-forms';
 import { spawnAtHome } from './districts';
@@ -490,9 +495,25 @@ function tickFrame(s: GameSession, dt: number): void {
     playSmash();
   }
 
+  const heroAerial = effectiveHeroAerial(s.heroSpec, s.heroForm);
+  const boosting = input.boost && s.hero.speedKmh() > 120;
+  if (heroAerial === 'foot-boost') {
+    setFootRocketBoostActive(s.hero.entity, boosting);
+  }
   if (input.boost && s.hero.speedKmh() > 200) {
     playWhoosh();
-    spawnBoostTrail(s.app, s.root, pos.clone(), s.heroForm.color);
+    const flame: [number, number, number] = [
+      s.heroForm.color[0] * 0.45 + 0.35,
+      s.heroForm.color[1] * 0.35 + 0.55,
+      Math.min(1, s.heroForm.color[2] * 0.2 + 0.85)
+    ];
+    if (heroAerial === 'foot-boost') {
+      const [l, r] = footRocketTrailPositions(s.hero.entity);
+      spawnBoostTrail(s.app, s.root, l, flame);
+      spawnBoostTrail(s.app, s.root, r, flame);
+    } else {
+      spawnBoostTrail(s.app, s.root, pos.clone(), s.heroForm.color);
+    }
   }
 
   const districtHere = districtIdAtPosition(pos.x, pos.z);
