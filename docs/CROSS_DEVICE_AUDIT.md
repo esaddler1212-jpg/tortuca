@@ -22,6 +22,8 @@ Breakpoint source of truth: `tailwind.config.js` → `screens.lg: "833px"` (mirr
 | Rotation | `orientation: "any"` — landscape unlocks command deck on iPad; Chromebook friendly |
 | No input zoom | 16px fields on viewports `≤ 767px`; Focus `<select>` at 16px via overlay pattern |
 | Reduce motion | `prefers-reduced-motion` in `index.css` slows HUD animations |
+| New deploys | `src/lib/appUpdate.ts`: on return to foreground (≥ 1 min apart), compares the entry bundle with live `index.html` and reloads if newer — installed iPhone/iPad apps no longer need a force-quit |
+| Caching | `netlify.toml`: `/assets/*` immutable for a year (content-hashed); `/sw.js` `no-cache` |
 
 ## Voice & touch (all devices)
 
@@ -55,5 +57,5 @@ npm run test:os        # full release gate (includes test:devices)
 ## Sanity checklist (pre-merge)
 
 - [ ] `npm run test:os` green
-- [ ] Hard refresh after deploy (SW cache)
+- [ ] After deploy, background IRIS for a minute and reopen — it should reload onto the new build by itself
 - [ ] Focus mode changes accent on all three bands
