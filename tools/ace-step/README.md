@@ -28,4 +28,12 @@ macOS portable zip and Windows package: see upstream `docs/en/INSTALL.md`. No GP
 
 ## Tortuca use
 
-Generate **instrumental** night-driving beds → encode **OGG/MP3** → drop in [`drive-world/public/music/`](../../drive-world/public/music/). Details: [CHERRY_PICK.md](./CHERRY_PICK.md).
+```bash
+# GPU Mac/PC (best): in upstream clone — uv run acestep-api
+npm run ace-step:city-nights
+
+# No API running (CI / cloud): synth placeholder loops, still updates playlist
+npm run ace-step:city-nights -- --fallback-only
+```
+
+Prompts live in `city-nights-tracks.json`. Details: [CHERRY_PICK.md](./CHERRY_PICK.md).

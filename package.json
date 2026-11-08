@@ -27,6 +27,7 @@
     "craft:install": "bash tools/craft-anything/install.sh --cursor",
     "craft:doctor": "bash tools/craft-anything/install.sh --doctor",
     "ace-step:bootstrap": "bash tools/ace-step/bootstrap.sh",
+    "ace-step:city-nights": "node tools/ace-step/render-city-nights-playlist.mjs",
     "unreal-claude:bootstrap": "bash tools/unreal-claude/bootstrap.sh",
     "game-studios:bootstrap": "bash tools/claude-code-game-studios/bootstrap.sh",
     "audio2face:bootstrap": "bash tools/audio2face-3d/bootstrap.sh",
