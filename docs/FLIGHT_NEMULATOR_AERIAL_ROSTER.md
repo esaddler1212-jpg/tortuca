@@ -42,26 +42,9 @@ Run: `tsx scripts/audit-aerial-roster.mts` (also wired into `npm run test:flight
 | Black Adam Echo | Innate flight | DC |
 | (DBZ four) | Ki hover | DBZ |
 
-## Potential roster adds (flying-first)
+## Expanded flyers (added)
 
-Suggested **homage codenames** — natural fits for a flight sandbox (Marvel/DC weighted).
-
-| Suggested codename | Flight basis | Role |
-|--------------------|--------------|------|
-| Comet Surfer | Innate (board) | Hero — cosmic herald |
-| Photon Vanguard | Innate / binary | Hero — energy flier |
-| Nova Centurion | Innate | Hero — corps flier |
-| Solar Envoy | Innate | Hero — Kryptonian cousin |
-| Ember Strider | Innate | Hero — alien energy fly |
-| Flame Jet | Innate / plasma trail | Hero — torch flier |
-| Wing Captain | Tech wings | Hero — falcon rig |
-| Thunder Zealot | Innate (magic) | Hero — mythic flier |
-| Goblin Glider | Glide rig | Villain — board/glider |
-| Omega Tyrant | Innate hover | Villain — cosmic brute |
-| Brain Colossus | Tech drone body | Villain — android |
-| Trickster Prince | Innate (magic) | Villain — illusion flight |
-| Sine Warden | Ring flight | Villain — corps rival |
-| Steel Wraith | Innate | Villain — liquid metal flier |
+The former “potential adds” list is now in the live roster — see [`FLIGHT_NEMULATOR_FULL_ROSTER.md`](./FLIGHT_NEMULATOR_FULL_ROSTER.md) for **mutates from** labels and rival wiring.
 
 ## Design rule (enforced in data)
 

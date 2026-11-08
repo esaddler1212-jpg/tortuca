@@ -321,6 +321,139 @@ export const HERO_ROSTER: HeroSpec[] = [
     ],
     defaultFormId: 'small',
     aerial: 'jetpack'
+  },
+  {
+    id: 'comet-surfer',
+    codename: 'Comet Surfer',
+    tagline: 'Board skim — cosmic ray',
+    districtId: 'watchtower-annex',
+    homeLabel: 'Orrery Deck',
+    powers: ['beam'],
+    flight: { cruiseKmh: 460, boostKmh: 2800, agility: 1.05, mass: 88 },
+    energy: { staminaMax: 135, regenPerSec: 19, superCooldownSec: 20, primaryCooldownSec: 0.3 },
+    smashRadius: 3.9,
+    forms: [
+      { id: 'silver', label: 'Silver shell', speedMul: 1, powerMul: 1.05, color: [0.72, 0.74, 0.78] },
+      { id: 'cosmic', label: 'Cosmic flare', speedMul: 1.25, powerMul: 1.35, color: [0.95, 0.45, 0.2] }
+    ],
+    defaultFormId: 'silver',
+    aerial: 'native'
+  },
+  {
+    id: 'photon-vanguard',
+    codename: 'Photon Vanguard',
+    tagline: 'Binary dive — photon lance',
+    districtId: 'coast-city',
+    homeLabel: 'Emerald Pier',
+    powers: ['beam'],
+    flight: { cruiseKmh: 410, boostKmh: 2350, agility: 1.0, mass: 86 },
+    energy: { staminaMax: 128, regenPerSec: 21, superCooldownSec: 18, primaryCooldownSec: 0.26 },
+    smashRadius: 3.7,
+    forms: [
+      { id: 'binary', label: 'Binary', speedMul: 1.15, powerMul: 1.4, color: [0.92, 0.35, 0.12] },
+      { id: 'standard', label: 'Standard', speedMul: 1, powerMul: 1, color: [0.75, 0.18, 0.22] }
+    ],
+    defaultFormId: 'standard',
+    aerial: 'native'
+  },
+  {
+    id: 'nova-centurion',
+    codename: 'Nova Centurion',
+    tagline: 'Corps velocity burst',
+    districtId: 'watchtower-annex',
+    homeLabel: 'Corps Berth',
+    powers: ['beam', 'repulsor'],
+    flight: { cruiseKmh: 450, boostKmh: 2600, agility: 1.08, mass: 82 },
+    energy: { staminaMax: 120, regenPerSec: 24, superCooldownSec: 17, primaryCooldownSec: 0.24 },
+    smashRadius: 3.5,
+    forms: [{ id: 'helmet', label: 'Full helm', speedMul: 1, powerMul: 1, color: [0.18, 0.22, 0.75] }],
+    defaultFormId: 'helmet',
+    aerial: 'native'
+  },
+  {
+    id: 'solar-envoy',
+    codename: 'Solar Envoy',
+    tagline: 'Cousin sun-line blast',
+    districtId: 'metropolis',
+    homeLabel: 'Envoy Spire',
+    powers: ['beam'],
+    flight: { cruiseKmh: 400, boostKmh: 2200, agility: 1.05, mass: 80 },
+    energy: { staminaMax: 118, regenPerSec: 20, superCooldownSec: 19, primaryCooldownSec: 0.3 },
+    smashRadius: 3.6,
+    forms: [
+      { id: 'cape', label: 'Cape line', speedMul: 1, powerMul: 1, color: [0.2, 0.28, 0.72] },
+      { id: 'flare', label: 'Red flare', speedMul: 1.22, powerMul: 1.28, color: [0.85, 0.2, 0.15] }
+    ],
+    defaultFormId: 'cape',
+    aerial: 'native'
+  },
+  {
+    id: 'ember-strider',
+    codename: 'Ember Strider',
+    tagline: 'Starbolt arc',
+    districtId: 'watchtower-annex',
+    homeLabel: 'Diplomatic Wing',
+    powers: ['beam'],
+    flight: { cruiseKmh: 430, boostKmh: 2450, agility: 1.12, mass: 76 },
+    energy: { staminaMax: 122, regenPerSec: 23, superCooldownSec: 16, primaryCooldownSec: 0.22 },
+    smashRadius: 3.2,
+    forms: [
+      { id: 'violet', label: 'Violet aura', speedMul: 1, powerMul: 1, color: [0.55, 0.12, 0.75] },
+      { id: 'ember', label: 'Ember rush', speedMul: 1.3, powerMul: 1.2, color: [0.95, 0.35, 0.1] }
+    ],
+    defaultFormId: 'violet',
+    aerial: 'native'
+  },
+  {
+    id: 'flame-jet',
+    codename: 'Flame Jet',
+    tagline: 'Nova flame streak',
+    districtId: 'stark-nexus',
+    homeLabel: 'Baxter Loft',
+    powers: ['beam'],
+    flight: { cruiseKmh: 380, boostKmh: 2100, agility: 1.15, mass: 74 },
+    energy: { staminaMax: 112, regenPerSec: 26, superCooldownSec: 15, primaryCooldownSec: 0.2 },
+    smashRadius: 3.0,
+    forms: [
+      { id: 'blaze', label: 'Blaze', speedMul: 1, powerMul: 1, color: [0.92, 0.35, 0.08] },
+      { id: 'plasma', label: 'Plasma shell', speedMul: 1.18, powerMul: 1.25, color: [0.98, 0.55, 0.15] }
+    ],
+    defaultFormId: 'blaze',
+    aerial: 'native'
+  },
+  {
+    id: 'wing-captain',
+    codename: 'Wing Captain',
+    tagline: 'Exo-wing interceptor',
+    districtId: 'stark-nexus',
+    homeLabel: 'Hangar Nest',
+    powers: ['repulsor'],
+    flight: { cruiseKmh: 340, boostKmh: 1950, agility: 1.2, mass: 98 },
+    energy: { staminaMax: 105, regenPerSec: 24, superCooldownSec: 16, primaryCooldownSec: 0.22 },
+    smashRadius: 2.8,
+    forms: [
+      { id: 'wings', label: 'Carbon wings', speedMul: 1, powerMul: 1, color: [0.62, 0.42, 0.28] },
+      { id: 'redwing', label: 'Redwing assist', speedMul: 1.12, powerMul: 1.05, color: [0.72, 0.15, 0.12] }
+    ],
+    defaultFormId: 'wings',
+    aerial: 'tech'
+  },
+  {
+    id: 'thunder-zealot',
+    codename: 'Thunder Zealot',
+    tagline: 'Living lightning bolt',
+    districtId: 'coast-city',
+    homeLabel: 'Rock of Eternity Steps',
+    powers: ['thunder'],
+    flight: { cruiseKmh: 370, boostKmh: 2000, agility: 0.9, mass: 110 },
+    energy: { staminaMax: 138, regenPerSec: 18, superCooldownSec: 21, primaryCooldownSec: 0.38 },
+    smashRadius: 4.0,
+    forms: [
+      { id: 'champion', label: 'Champion', speedMul: 1, powerMul: 1.1, color: [0.85, 0.18, 0.12] },
+      { id: 'mythic', label: 'Mythic', speedMul: 1.08, powerMul: 1.3, color: [0.95, 0.82, 0.25] }
+    ],
+    defaultFormId: 'champion',
+    aerial: 'native'
   }
 ];
 

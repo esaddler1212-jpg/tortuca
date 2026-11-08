@@ -20,6 +20,7 @@ const required = [
   'src/solar-space-charge.ts',
   'src/villain-roster.ts',
   'src/aerial-mobility.ts',
+  'src/roster-mutations.ts',
   'src/hero-rivals.ts',
   'src/world-fate.ts',
   'src/world-persist.ts',
