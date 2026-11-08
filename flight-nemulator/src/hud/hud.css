@@ -5,6 +5,49 @@
   font-size: 14px;
 }
 
+.cutscene-overlay {
+  pointer-events: auto;
+  position: absolute;
+  left: 50%;
+  bottom: 12%;
+  transform: translateX(-50%);
+  width: min(520px, 92vw);
+  z-index: 40;
+}
+
+.cutscene-panel {
+  background: rgba(8, 12, 24, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+.cutscene-side-foe .cutscene-panel {
+  border-color: rgba(255, 90, 110, 0.45);
+}
+
+.cutscene-side-hero .cutscene-panel {
+  border-color: rgba(90, 160, 255, 0.4);
+}
+
+.cutscene-speaker {
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 6px;
+  color: #e8ecf8;
+}
+
+.cutscene-text {
+  margin: 0 0 12px;
+  line-height: 1.45;
+  color: #c8d0e8;
+}
+
+.cutscene-continue {
+  width: 100%;
+}
+
 .fate-panel {
   pointer-events: auto;
   margin: 8px 12px;

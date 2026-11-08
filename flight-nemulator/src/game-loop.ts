@@ -129,6 +129,29 @@ import {
   pullBattleworldLatticeCloud
 } from './battleworld-lattice-cloud';
 import { nearBattleworldSafeHouse } from './battleworld-safe-houses';
+import {
+  autosaveLabel,
+  buildBattleworldAutosave,
+  loadBattleworldAutosave,
+  writeBattleworldAutosave,
+  type DefeatRecord
+} from './battleworld-autosave';
+import {
+  dialogueFoeDefeat,
+  dialogueIntro,
+  dialoguePairEncounter,
+  dialoguePairIncoming,
+  dialoguePairVictory,
+  dialogueSafeHouse,
+  dialogueVillainApexEncounter,
+  pairFoeNameForHero
+} from './battleworld-dialogue';
+import {
+  canQueueGenericDefeatLine,
+  cutsceneHudFields,
+  markGenericDefeatLine,
+  queueDialogue
+} from './cutscene-queue';
 import { battleworldRoleBlurb } from './battleworld';
 import {
   createInfinityStoneState,
@@ -198,9 +221,53 @@ export type GameSession = {
   lanternKeeper: import('./solar-lantern-arc').LanternKeeper | null;
   territory: TerritoryState;
   infinity: InfinityStoneState;
+  lastSafeHouseId: string | null;
+  autosaveHint: string | null;
 };
 
 let session: GameSession | null = null;
+
+function tryRestoreBattleworldAutosave(s: GameSession): void {
+  const save = loadBattleworldAutosave();
+  if (!save || save.heroId !== s.heroSpec.id || save.playerRole !== s.playerRole) return;
+  s.wave = save.wave;
+  s.waveCooldown = save.waveCooldown;
+  s.destructionUsd = save.destructionUsd;
+  s.foesStopped = save.foesStopped;
+  s.wanted.stars = save.wantedStars;
+  s.city.integrityPct = save.cityIntegrityPct;
+  s.pairBoss = {
+    spawned: save.pairBossSpawned,
+    defeated: save.pairBossDefeated,
+    warned: save.pairBossWarned
+  };
+  s.stats = save.sessionStats;
+  s.hero.entity.setPosition(new Vec3(save.position.x, save.position.y, save.position.z));
+  s.hero.velocity.set(0, 0, 0);
+  s.autosaveHint = autosaveLabel(save);
+}
+
+function persistDefeatAutosave(s: GameSession, defeat: DefeatRecord): void {
+  const pos = s.hero.entity.getPosition();
+  const save = buildBattleworldAutosave({
+    heroId: s.heroSpec.id,
+    playerRole: s.playerRole,
+    wave: s.wave,
+    waveCooldown: s.waveCooldown,
+    destructionUsd: s.destructionUsd,
+    foesStopped: s.foesStopped,
+    wantedStars: s.wanted.stars,
+    cityIntegrityPct: s.city.integrityPct,
+    pairBossSpawned: s.pairBoss.spawned,
+    pairBossDefeated: s.pairBoss.defeated,
+    pairBossWarned: s.pairBoss.warned,
+    position: { x: pos.x, y: pos.y, z: pos.z },
+    lastDefeat: defeat,
+    sessionStats: s.stats
+  });
+  writeBattleworldAutosave(save);
+  s.autosaveHint = autosaveLabel(save);
+}
 
 function pickHero(): HeroSpec {
   const stored = localStorage.getItem('flight-nemulator-hero-id') ?? DEFAULT_HERO_ID;
@@ -305,8 +372,13 @@ export async function startGame(app: AppBase): Promise<void> {
         ? spawnLanternKeeper(app, root)
         : null,
     territory,
-    infinity: createInfinityStoneState(app, root)
+    infinity: createInfinityStoneState(app, root),
+    lastSafeHouseId: null,
+    autosaveHint: autosaveLabel(loadBattleworldAutosave())
   };
+
+  tryRestoreBattleworldAutosave(session);
+  queueDialogue(dialogueIntro(session.heroSpec.codename, session.playerRole));
 
   app.on('update', (dt: number) => {
     if (!session) return;
@@ -598,6 +670,8 @@ function tickFrame(s: GameSession, dt: number): void {
   ) {
     s.pairBoss.warned = true;
     playWaveAlert();
+    const foeName = pairFoeNameForHero(s.heroSpec.id);
+    queueDialogue(dialoguePairIncoming(s.heroSpec.codename, foeName));
   }
 
   const maxNpcs =
@@ -631,6 +705,9 @@ function tickFrame(s: GameSession, dt: number): void {
     s.waveCooldown = 30;
     playWaveAlert();
     addScreenShake(0.75);
+    queueDialogue(
+      dialoguePairEncounter(s.heroSpec.codename, pairVillainCodename(s.heroSpec.id))
+    );
   } else if (
     isVillainOnlyHero(s.heroSpec.id) &&
     !s.pairBoss.spawned &&
@@ -647,6 +724,9 @@ function tickFrame(s: GameSession, dt: number): void {
     s.waveCooldown = 28;
     playWaveAlert();
     addScreenShake(0.65);
+    queueDialogue(
+      dialogueVillainApexEncounter(s.heroSpec.codename, villainApexCodename(s.heroSpec.id))
+    );
   } else {
     s.wave += 1;
     const cd = s.playerRole === 'hero' ? 14 : Math.max(4, 12 - s.wave * 0.4 - s.wanted.stars);
@@ -709,6 +789,20 @@ function tickFrame(s: GameSession, dt: number): void {
       resetInfinityHunt(s.infinity, s.app, s.root);
       playSuper();
     }
+    const defeat: DefeatRecord = {
+      profileId: d.profileId,
+      codename: d.codename,
+      isPairBoss: d.isPairBoss
+    };
+    persistDefeatAutosave(s, defeat);
+    if (d.isPairBoss) continue;
+    const namedFoe = d.profileId !== 'generic';
+    if (namedFoe || canQueueGenericDefeatLine(nowMs)) {
+      if (!namedFoe) markGenericDefeatLine(nowMs);
+      queueDialogue(
+        dialogueFoeDefeat(s.heroSpec.codename, s.playerRole, d.profileId, d.codename)
+      );
+    }
   }
   if (kills > 0) {
     s.foesStopped += kills;
@@ -722,6 +816,15 @@ function tickFrame(s: GameSession, dt: number): void {
     } else {
       recordArcBeat(s.heroSpec.id, 'pair-down');
     }
+    const finaleName = isVillainOnlyHero(s.heroSpec.id)
+      ? villainApexCodename(s.heroSpec.id)
+      : pairVillainCodename(s.heroSpec.id);
+    queueDialogue(dialoguePairVictory(s.heroSpec.codename, finaleName));
+    persistDefeatAutosave(s, {
+      profileId: 'pair-boss',
+      codename: finaleName,
+      isPairBoss: true
+    });
     s.waveCooldown = 16;
     playSuper();
     addScreenShake(1.1);
@@ -758,6 +861,18 @@ function tickFrame(s: GameSession, dt: number): void {
 
   const lifetimeDestruction = s.stats.destructionUsd + s.destructionUsd;
   saveSessionStats({ destructionUsd: lifetimeDestruction, wavesCleared: s.wave });
+
+  const houseNear = nearBattleworldSafeHouse(
+    pos,
+    s.heroSpec.id,
+    districtIdAtPosition(pos.x, pos.z)
+  );
+  if (houseNear && houseNear.id !== s.lastSafeHouseId) {
+    s.lastSafeHouseId = houseNear.id;
+    queueDialogue(dialogueSafeHouse(s.heroSpec.codename, houseNear.label));
+  } else if (!houseNear) {
+    s.lastSafeHouseId = null;
+  }
 
   const chron = getChronoState();
   const bossForHud = s.factionNpcs.find((n) => n.isPairBoss);
@@ -884,7 +999,9 @@ function tickFrame(s: GameSession, dt: number): void {
         ? 'Defeat hero responders to bond new loadouts'
         : ABSORBER_HERO_IDS.has(s.heroSpec.id)
           ? 'Absorb fallen foes to copy powers'
-          : null
+          : null,
+    autosaveHint: s.autosaveHint,
+    ...cutsceneHudFields()
   });
 }
 

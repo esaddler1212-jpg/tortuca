@@ -28,6 +28,7 @@ import { researchHeroBundle } from '../character-research';
 import { arcPickerLine, arcPickerLinks } from '../battleworld-arcs';
 import { HERO_MUTATIONS } from '../roster-mutations';
 import { Minimap } from './Minimap';
+import { acknowledgeDialogue } from '../cutscene-queue';
 import { setQualityOverride } from '../game-settings';
 import { downloadPhoto } from '../photo-mode';
 import type { QualityTier } from '../quality-tier';
@@ -97,6 +98,12 @@ export type GameHudSnapshot = {
   villainRunwayHint?: string | null;
   chapterHint?: string | null;
   chapterChip?: string | null;
+  cutsceneActive?: boolean;
+  cutsceneSpeaker?: string | null;
+  cutsceneText?: string | null;
+  cutsceneSide?: 'hero' | 'foe' | 'narrator' | 'ally' | null;
+  cutsceneQueued?: number;
+  autosaveHint?: string | null;
 };
 
 function formatUsd(n: number): string {
@@ -161,6 +168,10 @@ export function HudApp() {
       </div>
 
       <Minimap heroX={snap.heroX ?? 0} heroZ={snap.heroZ ?? 0} />
+
+      {snap.cutsceneActive && snap.cutsceneText && (
+        <CutsceneOverlay snap={snap} onContinue={() => acknowledgeDialogue()} />
+      )}
 
       <QualitySettings quality={snap.quality} photoMode={!!snap.photoMode} />
       <RolePicker role={snap.playerRole ?? getPlayerRole()} heroId={heroId} />
@@ -242,6 +253,7 @@ export function HudApp() {
         {snap.latticeHint && <p className="hud-tag">{snap.latticeHint}</p>}
         {snap.latticeCloudHint && <p className="hud-tag hud-hint">{snap.latticeCloudHint}</p>}
         {snap.safeHouseHint && <p className="hud-tag hud-hint">{snap.safeHouseHint}</p>}
+        {snap.autosaveHint && <p className="hud-tag hud-hint">{snap.autosaveHint}</p>}
         {snap.territoryHint?.includes('H: henchmen') && (
           <div className="fate-actions">
             <button type="button" className="hud-roam" onClick={() => confirmTerritoryHenchmen()}>
@@ -304,6 +316,28 @@ export function HudApp() {
       </p>
 
       <TouchPad />
+    </div>
+  );
+}
+
+function CutsceneOverlay({
+  snap,
+  onContinue
+}: {
+  snap: GameHudSnapshot;
+  onContinue: () => void;
+}) {
+  const side = snap.cutsceneSide ?? 'narrator';
+  return (
+    <div className={`cutscene-overlay cutscene-side-${side}`} role="dialog" aria-live="polite">
+      <div className="cutscene-panel hud-panel">
+        <div className="cutscene-speaker">{snap.cutsceneSpeaker}</div>
+        <p className="cutscene-text">{snap.cutsceneText}</p>
+        <button type="button" className="hud-roam cutscene-continue" onClick={onContinue}>
+          Continue
+          {(snap.cutsceneQueued ?? 0) > 0 ? ` (+${snap.cutsceneQueued} more)` : ''}
+        </button>
+      </div>
     </div>
   );
 }

@@ -37,6 +37,9 @@ const required = [
   'src/battleworld-lattice-cloud.ts',
   'src/hero-villain-apex.ts',
   'src/battleworld-arcs.ts',
+  'src/battleworld-dialogue.ts',
+  'src/battleworld-autosave.ts',
+  'src/cutscene-queue.ts',
   'src/arc-progress.ts',
   'src/infinity-stones-arc.ts',
   'src/infinity-stones-tick.ts',
@@ -78,6 +81,12 @@ const parity = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-hero-vill
   stdio: 'inherit'
 });
 if (parity.status !== 0) process.exit(parity.status ?? 1);
+
+const dialogue = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-battleworld-dialogue.mts')], {
+  cwd: root,
+  stdio: 'inherit'
+});
+if (dialogue.status !== 0) process.exit(dialogue.status ?? 1);
 
 const lattice = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-battleworld-lattice.mts')], {
   cwd: root,
