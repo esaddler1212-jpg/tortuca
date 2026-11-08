@@ -34,7 +34,11 @@ import {
   type EnemyDrone
 } from './combat';
 import { isPhotoMode, togglePhotoMode } from './photo-mode';
-import { fetchManifestIfOnline } from './updates';
+import { fetchManifestIfOnline, getManifestSuggestions } from './updates';
+import { attachHeroGltf } from './hero-gltf';
+import { placeKenneyLandmarks } from './build-city-kenney';
+import { applySkyEnvironment, applyWeatherMood, fetchBayWeatherMood } from './sky-env';
+import { currentLoadingTip } from './loading-tips';
 import { loadCustomHeroes, customHeroToSpec } from './custom-hero';
 import { addScreenShake, consumeShake, spawnBoostTrail, spawnCraterMarker, tickTrails } from './vfx';
 import { bootAudioFromGesture, playBlast, playSmash, playSuper, playWaveAlert, playWhoosh } from './game-audio';
@@ -88,7 +92,12 @@ export async function startGame(app: AppBase, canvas: HTMLCanvasElement): Promis
   const root = new Entity('world-root');
   app.root.addChild(root);
 
+  await applySkyEnvironment(app, tier);
+  const weatherMood = await fetchBayWeatherMood();
+  applyWeatherMood(app, weatherMood);
+
   buildMetropolis(app, root, { tier });
+  void placeKenneyLandmarks(app, root, tier === 'low' ? 8 : tier === 'high' ? 28 : 16);
   spawnSimpleCars(app, root, tier === 'low' ? 32 : tier === 'high' ? 160 : 90);
 
   const flight = new HeroFlightController(heroSpec, heroForm, spawn);
@@ -98,6 +107,7 @@ export async function startGame(app: AppBase, canvas: HTMLCanvasElement): Promis
   });
   flight.entity.setLocalScale(1.8, 3.2, 1.2);
   root.addChild(flight.entity);
+  void attachHeroGltf(app, flight.entity, heroSpec.id, heroForm.color);
 
   const camera = new Entity('camera');
   camera.addComponent('camera', {
@@ -239,7 +249,9 @@ function tickFrame(s: GameSession, dt: number, canvas: HTMLCanvasElement): void 
     heroZ: pos.z,
     dronesLeft: s.drones.length,
     lifetimeDestructionUsd: lifetimeDestruction,
-    dronesDestroyed: s.dronesDestroyed
+    dronesDestroyed: s.dronesDestroyed,
+    loadingTip: currentLoadingTip(),
+    manifestHints: (getManifestSuggestions() ?? []).slice(0, 3).map((s) => s.title)
   });
 }
 

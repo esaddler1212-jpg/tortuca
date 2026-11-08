@@ -16,6 +16,18 @@ We comb multiple **free resource indexes**:
 | `npm run gamedev-resources:sync` | Pin upstream commits (Kavex + public-apis) |
 | `bash tools/gamedev-resources/install-free-packs.sh --all` | Pull CC0 Kenney audio + city GLBs locally |
 
+### Wired in Flight Nemulator (runtime)
+
+| Source | Feature |
+|--------|---------|
+| Poly Haven (CDN) | Sky equirectangular on medium/high quality |
+| Open-Meteo | Bay cloud cover → fog mood |
+| FreeToGame + GamerPower | HUD “free games” hints in cached manifest |
+| JokeAPI + Open5e SRD | Tap screen + HUD tips |
+| 3DTexel public API | Research panel CC0 texture hits |
+| Blockbench GLB | `public/models/heroes/<hero-id>.glb` via `hero-gltf.ts` |
+| Kenney City Kit | `kenney-city/*.glb` + `index.json` landmarks |
+
 ## Already in repo
 
 | Asset | Game | License |

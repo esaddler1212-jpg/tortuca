@@ -29,6 +29,8 @@ export type GameHudSnapshot = {
   dronesLeft?: number;
   lifetimeDestructionUsd?: number;
   dronesDestroyed?: number;
+  loadingTip?: string;
+  manifestHints?: string[];
 };
 
 function formatUsd(n: number): string {
@@ -105,6 +107,10 @@ export function HudApp() {
         />
       </div>
 
+      {snap.manifestHints && snap.manifestHints.length > 0 && (
+        <p className="hud-hint">Free games: {snap.manifestHints.join(' · ')}</p>
+      )}
+      {snap.loadingTip && <p className="hud-hint">{snap.loadingTip}</p>}
       <p className="hud-hint">
         WASD steer · Space/Ctrl altitude · Shift boost · F fire · Q throw · E super · P photo
       </p>

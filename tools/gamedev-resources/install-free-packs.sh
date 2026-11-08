@@ -63,7 +63,14 @@ if $INSTALL_CITY; then
       find "$tmpdir/city/Models/GLB" -name '*.glb' | head -24 | while read -r f; do
         cp -n "$f" "$CITY_DIR/"
       done
-      echo "Installed GLBs → $CITY_DIR"
+      python3 - <<PY
+import glob, json, os
+city = "$CITY_DIR"
+files = sorted(os.path.basename(p) for p in glob.glob(os.path.join(city, "*.glb")))
+with open(os.path.join(city, "index.json"), "w", encoding="utf-8") as f:
+    json.dump({"files": files}, f)
+PY
+      echo "Installed GLBs + index.json → $CITY_DIR"
     else
       echo "WARN: GLB folder not found — download from https://kenney.nl/assets/city-kit-commercial"
     fi
