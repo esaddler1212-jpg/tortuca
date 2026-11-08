@@ -151,7 +151,9 @@ export function JarvisCinemaBar({
               </span>
             ) : null}
           </div>
-          <p className={`line-clamp-2 text-left text-[13px] leading-snug text-cyan-50/95 ${stacked ? "line-clamp-4" : "lg:line-clamp-1"} ${convo.phase === "listening" && convo.interim.trim() ? "text-cyan-100" : ""}`}>
+          <p
+            className={`line-clamp-2 text-left text-[13px] leading-snug text-cyan-50/95 ${stacked ? "line-clamp-4" : "lg:line-clamp-1"} ${convo.phase === "listening" && convo.interim.trim() ? "text-cyan-100" : ""} ${convo.phase === "speaking" ? "iris-cinema-speaking" : ""}`}
+          >
             {subtitle}
           </p>
         </div>

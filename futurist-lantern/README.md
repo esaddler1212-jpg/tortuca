@@ -10,9 +10,9 @@ Part of **Augma Repo** — **CC BY-NC 4.0**. Tortuca does **not** commit the GLB
 npm run lantern:bootstrap
 ```
 
-Then reload the PWA. First open each day (when enabled in **Settings → HUD**) shows the lantern full-screen until you finish the oath or tap **Skip**.
+**IRIS home** no longer shows the lantern gate. Use this bootstrap for **God's Eye** / `gods-eye/LANTERN_RITUAL.md` when you wire the ritual in.
 
-**Netlify production** runs `lantern:bootstrap` before every build (`netlify.toml`), so you do not need a local bootstrap for the live site.
+**Netlify IRIS builds** do not run `lantern:bootstrap` by default — run it locally or on your God's Eye host when you need `public/lantern/`.
 
 ## IRIS embed patch
 

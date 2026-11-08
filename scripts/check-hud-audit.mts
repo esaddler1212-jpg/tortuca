@@ -230,7 +230,9 @@ ok("ask uses Netlify Blobs user store", askTs.includes("getStore") || askTs.incl
 ok("HUD accent: school focus CSS", read("src/index.css").includes(':root[data-focus="school"]'));
 ok("useHudAccent hook", fs.existsSync(path.join(root, "src/hooks/useHudAccent.ts")));
 ok("CoreRing wires useHudAccent", read("src/components/hud/CoreRing.tsx").includes("useHudAccent"));
-ok("Lantern embed irisTheme", read("src/components/hud/LanternUnlockGate.tsx").includes("irisTheme"));
+ok("Lantern ritual for Gods Eye", read("src/components/godsEye/LanternRitualGate.tsx").includes("irisTheme"));
+ok("voice persona prefs", read("src/lib/hudPrefs.ts").includes("voicePersona"));
+ok("voice persona CSS", read("src/index.css").includes('data-voice-persona="friday"'));
 ok("lantern bootstrap irisTheme hue", read("futurist-lantern/bootstrap.sh").includes("irisHue"));
 ok("HUD orb lantern audit doc", fs.existsSync(path.join(root, "docs/HUD_ORB_LANTERN_AUDIT.md")));
 ok("AGENTS.md guardrails doc", fs.existsSync(path.join(root, "AGENTS.md")));
