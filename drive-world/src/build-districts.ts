@@ -28,6 +28,20 @@ function buildingMaterial(index: number): StandardMaterial {
   return mat;
 }
 
+let sharedDistrictMaterials: StandardMaterial[] | null = null;
+
+function districtMaterials(): StandardMaterial[] {
+  if (!sharedDistrictMaterials) {
+    sharedDistrictMaterials = BAY_WINDOW_LIGHTS.map((_, i) => buildingMaterial(i));
+  }
+  return sharedDistrictMaterials;
+}
+
+/** Full block/collision fill for one city hub (used by hub streaming). */
+export function buildCityHubBlocks(app: AppBase, hub: CityHub): void {
+  buildHubDistrict(app, hub, DISTRICTS[hub.district], districtMaterials());
+}
+
 function buildHubDistrict(app: AppBase, hub: CityHub, spec: DistrictSpec, materials: StandardMaterial[]): void {
   const blockM = hub.blockM ?? spec.blockM;
   const minX = hub.centerX - hub.radiusM;
@@ -90,12 +104,6 @@ function addDistrictSign(app: AppBase, spec: DistrictSpec, x: number, z: number)
 }
 
 export function buildAllDistricts(app: AppBase): void {
-  const materials = BAY_WINDOW_LIGHTS.map((_, i) => buildingMaterial(i));
-
-  for (const hub of CITY_HUBS) {
-    buildHubDistrict(app, hub, DISTRICTS[hub.district], materials);
-  }
-
   const signed = new Set<DistrictId>();
   for (const hub of CITY_HUBS) {
     if (signed.has(hub.district)) continue;

@@ -3,6 +3,8 @@ import { Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas'
 import { buildBayWater } from './build-bay';
 import { buildCityStreets } from './build-city-streets';
 import { buildAllDistricts, buildFreewayLamps } from './build-districts';
+import { initHubStreaming } from './hub-streaming';
+import { loadSettings } from './game-settings';
 import { buildAllFreeways } from './build-freeway';
 import { buildFreewayRamps } from './build-freeway-ramps';
 import { buildBayAreaLandmarks } from './build-landmarks';
@@ -49,6 +51,7 @@ export function buildDrivingWorld(app: AppBase): void {
   spawnAmbientTraffic(app);
   buildSideshowMeets(app);
   buildAllDistricts(app);
+  initHubStreaming(app, loadSettings().hubStreamingEnabled);
   buildBayAreaLandmarks(app);
   buildTacoTrucks(app);
   buildParkingSpots(app);

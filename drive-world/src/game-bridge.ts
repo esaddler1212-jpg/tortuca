@@ -7,6 +7,13 @@ import type { DistrictId } from './world-config';
 
 export type { CameraMode };
 
+export type NavTarget = {
+  label: string;
+  x: number;
+  z: number;
+  scenicId?: string;
+};
+
 export type HudSnapshot = {
   playerX: number;
   playerZ: number;
@@ -38,7 +45,7 @@ export type HudSnapshot = {
   nearGas?: boolean;
   parkingSpotName?: string;
   activeSideshowName?: string;
-  navTarget?: { label: string; x: number; z: number } | null;
+  navTarget?: NavTarget | null;
   navTurnLabel?: string;
   navRoutePoints?: { x: number; z: number }[];
   storefrontStripLabel?: string | null;
@@ -80,7 +87,7 @@ let toggleCameraHandler: (() => void) | null = null;
 let togglePhotoHandler: (() => void) | null = null;
 let fastTravelHandler: ((d: DistrictId) => void) | null = null;
 let landHereHandler: ((x: number, z: number, label: string) => void) | null = null;
-let navTarget: { label: string; x: number; z: number } | null = null;
+let navTarget: NavTarget | null = null;
 let toggleAutopilotHandler: (() => void) | null = null;
 let cycleAutopilotPresetHandler: (() => void) | null = null;
 let savePhotoCardHandler: (() => void) | null = null;
@@ -138,12 +145,12 @@ export function requestLandHere(x: number, z: number, label: string): void {
   landHereHandler?.(x, z, label);
 }
 
-export function requestSetNavTarget(target: { label: string; x: number; z: number } | null): void {
+export function requestSetNavTarget(target: NavTarget | null): void {
   navTarget = target;
   publishHud({ navTarget: target });
 }
 
-export function getNavTarget(): { label: string; x: number; z: number } | null {
+export function getNavTarget(): NavTarget | null {
   return navTarget;
 }
 

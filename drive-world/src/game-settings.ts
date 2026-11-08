@@ -12,6 +12,8 @@ export type GameSettings = {
   fuelSimEnabled: boolean;
   showTraffic: boolean;
   showSideshow: boolean;
+  /** Defer distant hub blocks; show skyline shells until you approach */
+  hubStreamingEnabled: boolean;
   photoSensitivity: number;
   musicVolume: number;
   musicStation: MusicStationId;
@@ -29,6 +31,7 @@ const defaults: GameSettings = {
   fuelSimEnabled: true,
   showTraffic: true,
   showSideshow: true,
+  hubStreamingEnabled: true,
   photoSensitivity: 1,
   musicVolume: 0.55,
   musicStation: 'ambient',

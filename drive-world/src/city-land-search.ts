@@ -1,12 +1,14 @@
 import { CITY_HUBS } from './city-map-registry';
 import { LANDMARKS } from './landmark-registry';
+import { SCENIC_ROUTES } from './world-extras';
 
 export type LandTarget = {
   id: string;
   label: string;
   x: number;
   z: number;
-  kind: 'hub' | 'landmark';
+  kind: 'hub' | 'landmark' | 'scenic';
+  scenicId?: string;
 };
 
 export function searchLandTargets(query: string, limit = 10): LandTarget[] {
@@ -31,6 +33,18 @@ export function searchLandTargets(query: string, limit = 10): LandTarget[] {
       x: lm.x,
       z: lm.z,
       kind: 'landmark'
+    });
+  }
+  for (const route of SCENIC_ROUTES) {
+    if (!route.name.toLowerCase().includes(q) && !route.id.includes(q)) continue;
+    const start = route.points[0]!;
+    out.push({
+      id: `scenic-${route.id}`,
+      label: `Scenic: ${route.name}`,
+      x: start.x,
+      z: start.z,
+      kind: 'scenic',
+      scenicId: route.id
     });
   }
   return out.slice(0, limit);

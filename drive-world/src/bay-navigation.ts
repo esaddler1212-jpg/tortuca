@@ -1,8 +1,10 @@
 import { LANDMARK_STREET_ROUTES, pointsForLandmarks } from './city-map-registry';
+import { hillOffsetM } from './bay-terrain';
 import { bearingDeg } from './landmark-navigation';
 import { LANDMARKS, type LandmarkDef } from './landmark-registry';
 import { GAS_STATIONS } from './gas-stations';
 import type { StreetPoint } from './street-registry';
+import type { ScenicRouteDef } from './world-extras';
 
 export type NavPoint = { x: number; z: number };
 
@@ -84,6 +86,17 @@ function normalizeAngle(deg: number): number {
   return a;
 }
 
+function gradeAlongLeg(px: number, pz: number, legX: number, legZ: number): string | null {
+  const horiz = Math.hypot(legX - px, legZ - pz);
+  if (horiz < 25) return null;
+  const y0 = hillOffsetM(px, pz);
+  const y1 = hillOffsetM(legX, legZ);
+  const pct = ((y1 - y0) / horiz) * 100;
+  if (pct >= 4.5) return `Climb ${pct.toFixed(0)}%`;
+  if (pct <= -4.5) return `Descent ${Math.abs(pct).toFixed(0)}%`;
+  return null;
+}
+
 /** Turn hint for HUD — compare heading to next nav leg. */
 export function navTurnHint(px: number, pz: number, yawDeg: number, route: NavPoint[]): string {
   if (route.length < 2) return 'Navigate';
@@ -93,9 +106,27 @@ export function navTurnHint(px: number, pz: number, yawDeg: number, route: NavPo
   const delta = normalizeAngle(brg - yawDeg);
   const dist = Math.hypot(leg.x - px, leg.z - pz);
   const mi = ((dist / 1000) * 0.62).toFixed(1);
-  if (Math.abs(delta) < 18) return `Continue ${mi} mi`;
-  if (delta > 0) return `Bear right · ${mi} mi`;
-  return `Bear left · ${mi} mi`;
+  const grade = gradeAlongLeg(px, pz, leg.x, leg.z);
+  const turn =
+    Math.abs(delta) < 18 ? `Continue ${mi} mi` : delta > 0 ? `Bear right · ${mi} mi` : `Bear left · ${mi} mi`;
+  return grade ? `${turn} · ${grade}` : turn;
+}
+
+export function routeWaypointsForScenic(px: number, pz: number, route: ScenicRouteDef): NavPoint[] {
+  let start = 0;
+  let bestD = Infinity;
+  route.points.forEach((p, i) => {
+    const d = dist2(px, pz, p.x, p.z);
+    if (d < bestD) {
+      bestD = d;
+      start = i;
+    }
+  });
+  const out: NavPoint[] = [{ x: px, z: pz }];
+  for (let i = start; i < route.points.length; i++) {
+    out.push(route.points[i]!);
+  }
+  return out;
 }
 
 /** Nearest pump on the map (for low-fuel mission hints). */

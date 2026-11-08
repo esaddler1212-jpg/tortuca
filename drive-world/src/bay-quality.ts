@@ -10,6 +10,7 @@ export function applyBayQualityPreset(base: GameSettings, preset: BayQualityPres
       fogQuality: 'low',
       showTraffic: false,
       showSideshow: false,
+      hubStreamingEnabled: true,
       fuelSimEnabled: base.fuelSimEnabled
     };
   }
@@ -20,6 +21,7 @@ export function applyBayQualityPreset(base: GameSettings, preset: BayQualityPres
       fogQuality: 'high',
       showTraffic: true,
       showSideshow: true,
+      hubStreamingEnabled: true,
       fuelSimEnabled: true
     };
   }
@@ -28,6 +30,7 @@ export function applyBayQualityPreset(base: GameSettings, preset: BayQualityPres
     bayQualityPreset: preset,
     fogQuality: 'med',
     showTraffic: true,
-    showSideshow: true
+    showSideshow: true,
+    hubStreamingEnabled: true
   };
 }

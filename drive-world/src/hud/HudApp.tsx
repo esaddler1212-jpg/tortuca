@@ -83,10 +83,23 @@ function LandSearchPanel({ snap }: { snap: HudSnapshot }) {
           <li key={t.id}>
             <span>
               {t.label}
-              <span className="land-search-kind">{t.kind === 'hub' ? ' hub' : ''}</span>
+              <span className="land-search-kind">
+                {t.kind === 'hub' ? ' hub' : t.kind === 'scenic' ? ' cruise' : ''}
+              </span>
             </span>
             <span className="land-search-actions">
-              <button type="button" className="link-btn" onClick={() => requestSetNavTarget({ label: t.label, x: t.x, z: t.z })}>
+              <button
+                type="button"
+                className="link-btn"
+                onClick={() =>
+                  requestSetNavTarget({
+                    label: t.label,
+                    x: t.x,
+                    z: t.z,
+                    scenicId: t.scenicId
+                  })
+                }
+              >
                 Route
               </button>
               <button type="button" className="link-btn" onClick={() => requestLandHere(t.x, t.z, t.label)}>
@@ -291,6 +304,14 @@ function SettingsPanel() {
           onChange={(e) => apply({ ...s, showSideshow: e.target.checked })}
         />
         Sideshow meetups
+      </label>
+      <label className="checkbox-row">
+        <input
+          type="checkbox"
+          checked={s.hubStreamingEnabled}
+          onChange={(e) => apply({ ...s, hubStreamingEnabled: e.target.checked })}
+        />
+        Hub streaming (reload to fully toggle)
       </label>
     </details>
   );

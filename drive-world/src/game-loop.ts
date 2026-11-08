@@ -3,9 +3,12 @@ import { Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
 import { hillOffsetM } from './bay-terrain';
 import {
   navTurnHint,
+  routeWaypointsForScenic,
   routeWaypointsToLandmark,
   routeWaypointsToPoint
 } from './bay-navigation';
+import { CITY_HUBS } from './city-map-registry';
+import { ensureHubBuilt, updateHubStreaming } from './hub-streaming';
 import { nearestStorefrontStrip } from './storefront-strips';
 import { nearestTacoTruck } from './city-checkpoints';
 import { nearestGasStation } from './gas-stations';
@@ -140,6 +143,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   let lastPos = new Vec3();
   let statsT = 0;
   let cloudSaveT = 0;
+  let hubStreamT = 0;
   let parkingHoldT = 0;
   let fuelRefillT = 0;
   let playerBaseEngineForce = 5200;
@@ -497,6 +501,12 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       ui.showToast('Slow down', 'Under ~22 mph to land here.');
       return;
     }
+    if (settings.hubStreamingEnabled) {
+      for (const hub of CITY_HUBS) {
+        const d = Math.hypot(x - hub.centerX, z - hub.centerZ);
+        if (d < hub.radiusM + 420) ensureHubBuilt(app, hub);
+      }
+    }
     ent.setPosition(x, hillOffsetM(x, z) + 0.8, z);
     ent.rigidbody?.applyImpulse(0, 0, 0);
     ui.showToast('Landed', label);
@@ -583,6 +593,11 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         waterPhase: waterT
       });
       updateEngineAudio(waymo.currentMph, false);
+      hubStreamT += dt;
+      if (hubStreamT > 0.35) {
+        hubStreamT = 0;
+        updateHubStreaming(app, pos.x, pos.z, settings.hubStreamingEnabled);
+      }
       if (!still) endWaymoRide();
       return;
     }
@@ -629,6 +644,12 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     worldTime += dt;
     updateAmbientTraffic(dt, settings.showTraffic);
     const sideshowSite = updateSideshowMeets(dt, worldTime, settings.showSideshow);
+    const posEarly = ent.getPosition();
+    hubStreamT += dt;
+    if (hubStreamT > 0.35) {
+      hubStreamT = 0;
+      updateHubStreaming(app, posEarly.x, posEarly.z, settings.hubStreamingEnabled);
+    }
 
     const posTrack = ent.getPosition();
     const district = districtAt(posTrack.x, posTrack.z);
@@ -768,10 +789,16 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       manualNav ??
       (nextLm ? { label: nextLm.name, x: nextLm.x, z: nextLm.z } : null);
     if (navPin && progress.phase === 'home') {
-      navRoutePoints =
-        manualNav || !nextLm
-          ? routeWaypointsToPoint(pos.x, pos.z, navPin.x, navPin.z)
-          : routeWaypointsToLandmark(pos.x, pos.z, nextLm);
+      if (manualNav?.scenicId) {
+        const scenic = SCENIC_ROUTES.find((r) => r.id === manualNav.scenicId);
+        navRoutePoints = scenic
+          ? routeWaypointsForScenic(pos.x, pos.z, scenic)
+          : routeWaypointsToPoint(pos.x, pos.z, navPin.x, navPin.z);
+      } else if (manualNav || !nextLm) {
+        navRoutePoints = routeWaypointsToPoint(pos.x, pos.z, navPin.x, navPin.z);
+      } else {
+        navRoutePoints = routeWaypointsToLandmark(pos.x, pos.z, nextLm);
+      }
       navTurnLabel = navTurnHint(pos.x, pos.z, yaw, navRoutePoints);
     }
     const strip = nearestStorefrontStrip(pos.x, pos.z);

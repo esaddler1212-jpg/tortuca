@@ -39,6 +39,12 @@ Default home is the **Vallejo estate** with a **Fast & Furious–style garage**.
 - **Hub parking rows** at every `CITY_HUBS` center; **green dots** on the minimap are free gas pumps.
 - **Bay quality preset** in Settings (Chromebook / Balanced / Lush) adjusts fog, traffic, sideshow, and fuel sim.
 
+### Bay streaming & grade nav (EarthNG Tier 2)
+
+- **Hub streaming** — distant hubs show a low-poly **skyline shell** until you drive within range; full blocks stream in (Waymo bootstrap hubs always built). Toggle in Settings.
+- **Grade hints** — nav adds **Climb / Descent %** from terrain (`hillOffsetM`) on hills like Caldecott and Marin.
+- **Scenic cruise routes** — search *Marin coast*, *Skyline*, etc. and **Route** for checkpoint-by-checkpoint GPS on the minimap.
+
 ## Deploy
 
 See [`docs/CITY_NIGHTS_DEPLOY.md`](../docs/CITY_NIGHTS_DEPLOY.md).
