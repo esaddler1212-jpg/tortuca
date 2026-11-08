@@ -29,7 +29,8 @@ import { bayRegionsGated, syncVallejoMissionSteps, VALLEJO_CHAPTER_STEPS } from 
 import { GAMEPAD_GLYPHS } from '../gamepad-hub';
 import { setSimulationPaused } from '../console-graphics';
 import { nextTaxiContract } from '../cpm-taxi';
-import { requestStartTaxi } from '../game-bridge';
+import { requestBoardFlight, requestStartTaxi } from '../game-bridge';
+import { TOKYO_LANDMARKS, tokyoUnlockStatus } from '../tokyo-map';
 import { heatLabel } from '../game-heat';
 import {
   exportProgressJson,
@@ -236,6 +237,7 @@ function RecordsPanel({ snap }: { snap: HudSnapshot }) {
   const mastery = VALLEJO_CHAPTER_STEPS.filter((s) => synced.missionStepsCompleted.includes(s.id)).length;
   const parkStars = Object.values(p.parkingStars).reduce((a, b) => a + b, 0);
   const traps = Object.keys(p.speedTrapBests).length;
+  const tokyo = tokyoUnlockStatus(p);
   return (
     <details className="records-panel" open={!isTouchPrimary()}>
       <summary>Records · trophies</summary>
@@ -249,6 +251,11 @@ function RecordsPanel({ snap }: { snap: HudSnapshot }) {
         <li>Meet badges {p.meetBadges?.length ?? 0}</li>
         <li>Vallejo mastery {mastery} / {VALLEJO_CHAPTER_STEPS.length}</li>
         <li>Scenic routes {p.scenicCompleted.length}</li>
+        <li>
+          {tokyo.unlocked
+            ? `Tokyo landmarks ${p.tokyoLandmarkIds.length} / ${TOKYO_LANDMARKS.length} · flights ${p.tokyoFlights}`
+            : `Tokyo bonus: cars ${tokyo.cars}/${tokyo.carsTotal} · regions ${tokyo.regions}/${tokyo.regionsTotal}`}
+        </li>
       </ul>
     </details>
   );
@@ -618,9 +625,32 @@ export function HudApp() {
     <div
       className={`react-hud ${snap.photoMode ? 'photo-active' : ''} ${snap.settings.tvHudMode ? 'react-hud--tv' : ''}`}
     >
+      {snap.flightCinematic ? (
+        <>
+          <div className="flight-fade" style={{ opacity: snap.flightCinematic.fade }} aria-hidden />
+          <div className="flight-banner" aria-live="polite">
+            ✈ {snap.flightCinematic.label}
+          </div>
+        </>
+      ) : null}
       {snap.ridingWaymo && (
         <button type="button" className="skip-waymo" onClick={() => requestSkipWaymo()}>
-          {pad ? `Skip ride (${GAMEPAD_GLYPHS.skip})` : 'Skip prologue ride'}
+          {snap.flightCinematic
+            ? `Land now${pad ? ` (${GAMEPAD_GLYPHS.skip})` : ''}`
+            : pad
+              ? `Skip ride (${GAMEPAD_GLYPHS.skip})`
+              : 'Skip prologue ride'}
+        </button>
+      )}
+      {snap.flightPrompt && !snap.ridingWaymo && !snap.photoMode && (
+        <button
+          type="button"
+          className={`flight-prompt ${snap.flightPrompt.ready ? 'ready' : 'locked'}`}
+          onClick={() => requestBoardFlight()}
+        >
+          ✈ {snap.flightPrompt.label}
+          {snap.flightPrompt.ready ? ` (${pad ? GAMEPAD_GLYPHS.flight : 'F'})` : ''}
+          {snap.flightPrompt.detail ? <span className="flight-prompt-detail">{snap.flightPrompt.detail}</span> : null}
         </button>
       )}
       <GamepadGlyphs connected={pad} />

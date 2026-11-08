@@ -1,3 +1,4 @@
+import { TOKYO_LANDMARKS, tokyoUnlockStatus } from './tokyo-map';
 import {
   AUTOPILOT_VEHICLE_ID,
   BONUS_AERIAL_IDS,
@@ -286,6 +287,29 @@ export function buildMissionBoard(
     label: `Landmarks logged ${synced.visitedLandmarkIds.length}/${LANDMARKS.length}`,
     done: synced.visitedLandmarkIds.length >= LANDMARKS.length
   });
+
+  const tokyo = tokyoUnlockStatus(synced);
+  if (!tokyo.unlocked) {
+    lines.push({
+      id: 'tokyo-unlock',
+      label: `Bonus: Tokyo flight — cars ${tokyo.cars}/${tokyo.carsTotal} · regions ${tokyo.regions}/${tokyo.regionsTotal}`,
+      done: false,
+      hint: 'Unlock everything, then board at the SFO gate'
+    });
+  } else {
+    const logged = synced.tokyoLandmarkIds.length;
+    lines.push({
+      id: 'tokyo-landmarks',
+      label: `Tokyo landmarks ${logged}/${TOKYO_LANDMARKS.length}`,
+      done: logged >= TOKYO_LANDMARKS.length,
+      hint:
+        logged >= TOKYO_LANDMARKS.length
+          ? 'Shuto Night Runner unlocked'
+          : synced.tokyoFlights === 0
+            ? 'SFO gate is open — stop on the pink pad, press F'
+            : 'Log every Tokyo spot for the Shuto Night Runner'
+    });
+  }
 
   return lines;
 }

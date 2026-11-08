@@ -482,6 +482,15 @@ export const VEHICLE_CATALOG: Record<string, VehicleSpec> = {
     { mass: 1280, maxEngineForce: 6800, maxSteering: 0.36, chassis: { x: 1.0, y: 0.38, z: 2.0 } },
     { diffuse: [0.08, 0.1, 0.14], emissive: [0.25, 0.55, 0.95], emissiveIntensity: 0.45 },
     {}
+  ),
+  'tokyo-shuto-runner': spec(
+    'tokyo-shuto-runner',
+    'Shuto Night Runner',
+    'Tokyo bonus — log every Tokyo landmark',
+    'Tokyo',
+    { mass: 1120, maxEngineForce: 8400, maxSteering: 0.4, chassis: { x: 0.92, y: 0.3, z: 1.85 } },
+    { diffuse: [0.9, 0.9, 0.92], emissive: [1, 0.2, 0.55], emissiveIntensity: 0.5 },
+    { legendBonus: true }
   )
 };
 

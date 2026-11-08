@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test:smoke": "node scripts/smoke-boot.mjs",
-    "test:playtest": "node scripts/playtest-browser.mjs"
+    "test:playtest": "node scripts/playtest-browser.mjs",
+    "test:tokyo": "node scripts/playtest-tokyo.mjs"
   },
   "dependencies": {
     "@netlify/blobs": "^8.2.0",
