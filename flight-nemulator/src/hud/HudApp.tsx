@@ -49,6 +49,7 @@ export type GameHudSnapshot = {
   dyingRoamSeconds?: number;
   worldFatePhase?: string;
   heroWorldSaved?: boolean;
+  aerialMobility?: string;
 };
 
 function formatUsd(n: number): string {
@@ -77,6 +78,7 @@ export function HudApp() {
         <div className="hud-panel">
           <div className="hud-hero">{snap.heroName}</div>
           <div className="hud-tag">{snap.codename}</div>
+          {snap.aerialMobility && <div className="hud-tag">{snap.aerialMobility}</div>}
           {snap.nearestFoe && (
             <div className="hud-tag">
               vs {snap.nearestFoe}

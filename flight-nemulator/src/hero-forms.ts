@@ -1,4 +1,10 @@
+import type { AerialMobility } from './aerial-mobility';
 import type { HeroForm, HeroSpec } from './hero-roster';
+
+export function effectiveHeroAerial(spec: HeroSpec, form: HeroForm): AerialMobility {
+  if (spec.id === 'shade-knight' && form.id === 'tactical') return 'jetpack';
+  return spec.aerial;
+}
 
 export function resolveHeroForm(spec: HeroSpec, formId: string): HeroForm {
   const fromForm = spec.forms.find((f) => f.id === formId);

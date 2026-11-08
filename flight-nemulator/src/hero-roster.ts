@@ -1,5 +1,7 @@
 /** Homage codenames only — not affiliated with rights holders. */
 
+import type { AerialMobility } from './aerial-mobility';
+
 export type PowerKind =
   | 'beam'
   | 'repulsor'
@@ -44,6 +46,8 @@ export interface HeroSpec {
   forms: HeroForm[];
   defaultFormId: FormToggleId;
   suitVariants?: { id: string; label: string; color: [number, number, number] }[];
+  /** Canon flight basis — jetpack / glide / web for grounded homages */
+  aerial: AerialMobility;
 }
 
 export const HERO_ROSTER: HeroSpec[] = [
@@ -61,7 +65,8 @@ export const HERO_ROSTER: HeroSpec[] = [
       { id: 'cape', label: 'Classic cape', speedMul: 1, powerMul: 1, color: [0.12, 0.22, 0.75] },
       { id: 'godmode', label: 'Solar flare', speedMul: 1.35, powerMul: 1.5, color: [0.95, 0.82, 0.2] }
     ],
-    defaultFormId: 'cape'
+    defaultFormId: 'cape',
+    aerial: 'native'
   },
   {
     id: 'emerald-pilot',
@@ -77,7 +82,8 @@ export const HERO_ROSTER: HeroSpec[] = [
       { id: 'marine', label: 'Marine', speedMul: 1, powerMul: 1, color: [0.05, 0.55, 0.25] },
       { id: 'hard', label: 'Hard-light shell', speedMul: 0.92, powerMul: 1.25, color: [0.15, 0.85, 0.55] }
     ],
-    defaultFormId: 'marine'
+    defaultFormId: 'marine',
+    aerial: 'ring'
   },
   {
     id: 'tin-aviator',
@@ -101,7 +107,8 @@ export const HERO_ROSTER: HeroSpec[] = [
       { id: 'mk3', label: 'Mk III', speedMul: 1, powerMul: 1, color: [0.75, 0.15, 0.12] },
       { id: 'stealth', label: 'Stealth', speedMul: 1.15, powerMul: 0.85, color: [0.15, 0.18, 0.22] }
     ],
-    defaultFormId: 'mk3'
+    defaultFormId: 'mk3',
+    aerial: 'tech'
   },
   {
     id: 'chrome-sage',
@@ -117,7 +124,8 @@ export const HERO_ROSTER: HeroSpec[] = [
       { id: 'solid', label: 'Solid', speedMul: 1, powerMul: 1, color: [0.8, 0.12, 0.12] },
       { id: 'ghost', label: 'Intangible', speedMul: 1.2, powerMul: 0.7, color: [0.65, 0.7, 0.85] }
     ],
-    defaultFormId: 'solid'
+    defaultFormId: 'solid',
+    aerial: 'native'
   },
   {
     id: 'chrome-overmind',
@@ -130,7 +138,8 @@ export const HERO_ROSTER: HeroSpec[] = [
     energy: { staminaMax: 90, regenPerSec: 28, superCooldownSec: 14, primaryCooldownSec: 0.18 },
     smashRadius: 3.0,
     forms: [{ id: 'prime', label: 'Prime body', speedMul: 1, powerMul: 1, color: [0.35, 0.4, 0.45] }],
-    defaultFormId: 'prime'
+    defaultFormId: 'prime',
+    aerial: 'tech'
   },
   {
     id: 'doctor-doom',
@@ -146,7 +155,8 @@ export const HERO_ROSTER: HeroSpec[] = [
       { id: 'iron', label: 'Iron regalia', speedMul: 1, powerMul: 1.1, color: [0.42, 0.45, 0.5] },
       { id: 'hood', label: 'Hooded sovereign', speedMul: 0.95, powerMul: 1.25, color: [0.12, 0.42, 0.22] }
     ],
-    defaultFormId: 'iron'
+    defaultFormId: 'iron',
+    aerial: 'tech'
   },
   {
     id: 'storm-hammer',
@@ -162,7 +172,8 @@ export const HERO_ROSTER: HeroSpec[] = [
       { id: 'worthy', label: 'Worthy', speedMul: 1, powerMul: 1, color: [0.15, 0.35, 0.65] },
       { id: 'berserk', label: 'Berserk', speedMul: 1.1, powerMul: 1.35, color: [0.55, 0.2, 0.15] }
     ],
-    defaultFormId: 'worthy'
+    defaultFormId: 'worthy',
+    aerial: 'native'
   },
   {
     id: 'ki-wanderer',
@@ -178,7 +189,8 @@ export const HERO_ROSTER: HeroSpec[] = [
       { id: 'base', label: 'Base', speedMul: 1, powerMul: 1, color: [0.85, 0.55, 0.15] },
       { id: 'ascended', label: 'Ascended', speedMul: 1.45, powerMul: 1.55, color: [0.95, 0.25, 0.15] }
     ],
-    defaultFormId: 'base'
+    defaultFormId: 'base',
+    aerial: 'ki'
   },
   {
     id: 'ki-prince',
@@ -194,7 +206,8 @@ export const HERO_ROSTER: HeroSpec[] = [
       { id: 'base', label: 'Base', speedMul: 1, powerMul: 1, color: [0.22, 0.45, 0.85] },
       { id: 'ascended', label: 'Ascended', speedMul: 1.4, powerMul: 1.5, color: [0.75, 0.15, 0.55] }
     ],
-    defaultFormId: 'base'
+    defaultFormId: 'base',
+    aerial: 'ki'
   },
   {
     id: 'wall-crawler',
@@ -210,7 +223,8 @@ export const HERO_ROSTER: HeroSpec[] = [
       { id: 'classic', label: 'Classic', speedMul: 1, powerMul: 1, color: [0.75, 0.12, 0.12] },
       { id: 'stealth', label: 'Night', speedMul: 1.05, powerMul: 0.95, color: [0.12, 0.12, 0.18] }
     ],
-    defaultFormId: 'classic'
+    defaultFormId: 'classic',
+    aerial: 'web-swing'
   },
   {
     id: 'red-codriver',
@@ -223,7 +237,8 @@ export const HERO_ROSTER: HeroSpec[] = [
     energy: { staminaMax: 115, regenPerSec: 22, superCooldownSec: 19, primaryCooldownSec: 0.25 },
     smashRadius: 3.4,
     forms: [{ id: 'tank', label: 'Tank frame', speedMul: 1, powerMul: 1.15, color: [0.55, 0.12, 0.12] }],
-    defaultFormId: 'tank'
+    defaultFormId: 'tank',
+    aerial: 'tech'
   },
   {
     id: 'martian-strider',
@@ -239,7 +254,8 @@ export const HERO_ROSTER: HeroSpec[] = [
       { id: 'green', label: 'True form', speedMul: 1, powerMul: 1, color: [0.12, 0.55, 0.35] },
       { id: 'human', label: 'Detective guise', speedMul: 0.95, powerMul: 0.9, color: [0.25, 0.3, 0.35] }
     ],
-    defaultFormId: 'green'
+    defaultFormId: 'green',
+    aerial: 'native'
   },
   {
     id: 'shade-knight',
@@ -253,9 +269,10 @@ export const HERO_ROSTER: HeroSpec[] = [
     smashRadius: 2.2,
     forms: [
       { id: 'night', label: 'Night patrol', speedMul: 1, powerMul: 1, color: [0.1, 0.12, 0.16] },
-      { id: 'tactical', label: 'Tactical', speedMul: 1.08, powerMul: 1.1, color: [0.2, 0.22, 0.28] }
+      { id: 'tactical', label: 'Tactical jetpack', speedMul: 1.08, powerMul: 1.1, color: [0.2, 0.22, 0.28] }
     ],
-    defaultFormId: 'night'
+    defaultFormId: 'night',
+    aerial: 'glide'
   },
   {
     id: 'amazon-vanguard',
@@ -271,12 +288,13 @@ export const HERO_ROSTER: HeroSpec[] = [
       { id: 'regalia', label: 'Regalia', speedMul: 1, powerMul: 1.1, color: [0.75, 0.12, 0.15] },
       { id: 'stealth', label: 'Stealth', speedMul: 1.12, powerMul: 0.95, color: [0.15, 0.15, 0.2] }
     ],
-    defaultFormId: 'regalia'
+    defaultFormId: 'regalia',
+    aerial: 'native'
   },
   {
     id: 'bolt-archer',
     codename: 'Bolt Archer',
-    tagline: 'Trick volley bursts',
+    tagline: 'ARC jetpack trick volleys',
     districtId: 'stark-nexus',
     homeLabel: 'Rooftop Range',
     powers: ['beam'],
@@ -284,12 +302,13 @@ export const HERO_ROSTER: HeroSpec[] = [
     energy: { staminaMax: 90, regenPerSec: 30, superCooldownSec: 14, primaryCooldownSec: 0.12 },
     smashRadius: 2.0,
     forms: [{ id: 'purple', label: 'Tech suit', speedMul: 1, powerMul: 1, color: [0.55, 0.15, 0.75] }],
-    defaultFormId: 'purple'
+    defaultFormId: 'purple',
+    aerial: 'jetpack'
   },
   {
     id: 'ant-scale',
     codename: 'Ant Scale',
-    tagline: 'Pym vector hop',
+    tagline: 'Pym vector hop — belt jets',
     districtId: 'stark-nexus',
     homeLabel: 'Lab Sublevel',
     powers: ['synth'],
@@ -300,7 +319,8 @@ export const HERO_ROSTER: HeroSpec[] = [
       { id: 'small', label: 'Sub-scale', speedMul: 1.2, powerMul: 0.75, color: [0.65, 0.2, 0.15] },
       { id: 'giant', label: 'Giant', speedMul: 0.85, powerMul: 1.35, color: [0.55, 0.12, 0.12] }
     ],
-    defaultFormId: 'small'
+    defaultFormId: 'small',
+    aerial: 'jetpack'
   }
 ];
 

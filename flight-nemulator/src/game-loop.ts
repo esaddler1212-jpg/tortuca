@@ -47,7 +47,8 @@ import {
   type HeroSpec,
   type PowerKind
 } from './hero-roster';
-import { resolveHeroForm, storedFormId } from './hero-forms';
+import { aerialHudLabel, syncFlightAssistVisuals } from './aerial-mobility';
+import { effectiveHeroAerial, resolveHeroForm, storedFormId } from './hero-forms';
 import { spawnAtHome } from './districts';
 import { HeroFlightController } from './hero-flight';
 import { bindFlightKeys, pollFlightInput } from './game-input';
@@ -160,6 +161,12 @@ export async function startGame(app: AppBase): Promise<void> {
   flight.entity.setLocalScale(1.8, 3.2, 1.2);
   root.addChild(flight.entity);
   void attachHeroGltf(app, flight.entity, heroSpec.id, heroForm.color);
+  syncFlightAssistVisuals(
+    app,
+    flight.entity,
+    effectiveHeroAerial(heroSpec, heroForm),
+    heroForm.color
+  );
 
   const camera = new Entity('camera');
   camera.addComponent('camera', {
@@ -436,7 +443,8 @@ function tickFrame(s: GameSession, dt: number): void {
     fatePrompt: s.worldFate.fatePrompt,
     dyingRoamSeconds: dyingRoamSecondsLeft(s.worldFate, nowMs),
     worldFatePhase: s.worldFate.phase,
-    heroWorldSaved: s.worldFate.heroSaved
+    heroWorldSaved: s.worldFate.heroSaved,
+    aerialMobility: aerialHudLabel(effectiveHeroAerial(s.heroSpec, s.heroForm))
   });
 }
 
@@ -482,6 +490,12 @@ export function selectHero(heroId: string, formId?: string): void {
     session.heroForm = resolveHeroForm(spec, formId);
     session.hero.form = session.heroForm;
     paintHero(session.hero.entity, session.heroForm.color);
+    syncFlightAssistVisuals(
+      session.app,
+      session.hero.entity,
+      effectiveHeroAerial(spec, session.heroForm),
+      session.heroForm.color
+    );
     return;
   }
   window.location.reload();

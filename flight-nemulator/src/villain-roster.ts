@@ -1,5 +1,7 @@
 /** Homage villain clones — DBZ / Marvel / DC-inspired codenames only. */
 
+import type { AerialMobility } from './aerial-mobility';
+
 export type VillainUniverse = 'dbz' | 'marvel' | 'dc';
 
 export interface VillainCloneSpec {
@@ -7,6 +9,7 @@ export interface VillainCloneSpec {
   codename: string;
   tagline: string;
   universe: VillainUniverse;
+  aerial: AerialMobility;
   /** Heroes this clone is scripted to hunt */
   rivalHeroIds: string[];
   color: [number, number, number];
@@ -22,6 +25,7 @@ export const VILLAIN_CLONES: VillainCloneSpec[] = [
     codename: 'Emperor Frieze',
     tagline: 'Orbital death ray siege',
     universe: 'dbz',
+    aerial: 'ki',
     rivalHeroIds: ['ki-wanderer', 'ki-prince'],
     color: [0.92, 0.55, 0.95],
     hpMul: 1.1,
@@ -34,6 +38,7 @@ export const VILLAIN_CLONES: VillainCloneSpec[] = [
     codename: 'Dark Saiyan Jackal',
     tagline: 'Galick building breaker',
     universe: 'dbz',
+    aerial: 'ki',
     rivalHeroIds: ['ki-prince', 'ki-wanderer'],
     color: [0.22, 0.38, 0.82],
     hpMul: 1.25,
@@ -46,6 +51,7 @@ export const VILLAIN_CLONES: VillainCloneSpec[] = [
     codename: 'Cell Mimic',
     tagline: 'Absorbs block by block',
     universe: 'dbz',
+    aerial: 'ki',
     rivalHeroIds: ['ki-wanderer', 'solar-apex'],
     color: [0.35, 0.72, 0.28],
     hpMul: 1.35,
@@ -58,6 +64,7 @@ export const VILLAIN_CLONES: VillainCloneSpec[] = [
     codename: 'Spirit Buu',
     tagline: 'Pink devastation tantrum',
     universe: 'dbz',
+    aerial: 'ki',
     rivalHeroIds: ['ki-wanderer', 'storm-hammer'],
     color: [0.95, 0.45, 0.82],
     hpMul: 1.4,
@@ -70,6 +77,7 @@ export const VILLAIN_CLONES: VillainCloneSpec[] = [
     codename: 'Dr. Doom',
     tagline: 'Latverian orbital strike',
     universe: 'marvel',
+    aerial: 'tech',
     rivalHeroIds: ['doctor-doom', 'tin-aviator', 'chrome-overmind', 'storm-hammer'],
     color: [0.45, 0.48, 0.52],
     hpMul: 1.3,
@@ -82,6 +90,7 @@ export const VILLAIN_CLONES: VillainCloneSpec[] = [
     codename: 'Magnet Warden',
     tagline: 'Steel skeleton twist',
     universe: 'marvel',
+    aerial: 'magnet',
     rivalHeroIds: ['chrome-sage', 'wall-crawler', 'tin-aviator'],
     color: [0.72, 0.12, 0.15],
     hpMul: 1.15,
@@ -94,6 +103,7 @@ export const VILLAIN_CLONES: VillainCloneSpec[] = [
     codename: 'Titan Snap Echo',
     tagline: 'Infinity wreckage pulse',
     universe: 'marvel',
+    aerial: 'native',
     rivalHeroIds: ['tin-aviator', 'solar-apex', 'amazon-vanguard'],
     color: [0.55, 0.22, 0.72],
     hpMul: 1.55,
@@ -104,8 +114,9 @@ export const VILLAIN_CLONES: VillainCloneSpec[] = [
   {
     id: 'brute-abom',
     codename: 'Brute Abom',
-    tagline: 'Gamma smash sprint',
+    tagline: 'Gamma smash sprint — siege jetpack',
     universe: 'marvel',
+    aerial: 'jetpack',
     rivalHeroIds: ['red-codriver', 'solar-apex', 'ant-scale'],
     color: [0.28, 0.62, 0.22],
     hpMul: 1.45,
@@ -116,8 +127,9 @@ export const VILLAIN_CLONES: VillainCloneSpec[] = [
   {
     id: 'venom-echo',
     codename: 'Venom Echo',
-    tagline: 'Symbiote tendril shred',
+    tagline: 'Symbiote wing-glide shred',
     universe: 'marvel',
+    aerial: 'glide',
     rivalHeroIds: ['wall-crawler', 'shade-knight'],
     color: [0.08, 0.12, 0.1],
     hpMul: 1.2,
@@ -128,8 +140,9 @@ export const VILLAIN_CLONES: VillainCloneSpec[] = [
   {
     id: 'laughing-harlequin',
     codename: 'Laughing Harlequin',
-    tagline: 'Chaos charge downtown',
+    tagline: 'Chaos jetpack charge',
     universe: 'dc',
+    aerial: 'jetpack',
     rivalHeroIds: ['shade-knight', 'wall-crawler'],
     color: [0.78, 0.15, 0.45],
     hpMul: 0.95,
@@ -142,6 +155,7 @@ export const VILLAIN_CLONES: VillainCloneSpec[] = [
     codename: 'Krypton Eclipse',
     tagline: 'Sun-hate ram siege',
     universe: 'dc',
+    aerial: 'native',
     rivalHeroIds: ['solar-apex'],
     color: [0.12, 0.14, 0.2],
     hpMul: 1.35,
@@ -152,8 +166,9 @@ export const VILLAIN_CLONES: VillainCloneSpec[] = [
   {
     id: 'deathstroke-arc',
     codename: 'Deathstroke Arc',
-    tagline: 'Contract skyline demo',
+    tagline: 'Contract skyline demo — Ikon rig',
     universe: 'dc',
+    aerial: 'jetpack',
     rivalHeroIds: ['shade-knight', 'bolt-archer', 'wall-crawler'],
     color: [0.82, 0.55, 0.15],
     hpMul: 1.1,
@@ -164,8 +179,9 @@ export const VILLAIN_CLONES: VillainCloneSpec[] = [
   {
     id: 'night-gargoyle',
     codename: 'Night Gargoyle',
-    tagline: 'Gothic stone splitter',
+    tagline: 'Gothic wing-glide splitter',
     universe: 'dc',
+    aerial: 'glide',
     rivalHeroIds: ['shade-knight', 'martian-strider'],
     color: [0.18, 0.2, 0.28],
     hpMul: 1.2,
@@ -176,8 +192,9 @@ export const VILLAIN_CLONES: VillainCloneSpec[] = [
   {
     id: 'doomsday-echo',
     codename: 'Doomsday Echo',
-    tagline: 'World engine punch',
+    tagline: 'World engine punch — drop rig',
     universe: 'dc',
+    aerial: 'jetpack',
     rivalHeroIds: ['solar-apex', 'amazon-vanguard', 'storm-hammer'],
     color: [0.55, 0.52, 0.48],
     hpMul: 1.6,
@@ -190,6 +207,7 @@ export const VILLAIN_CLONES: VillainCloneSpec[] = [
     codename: 'Black Adam Echo',
     tagline: 'Thunder coup charge',
     universe: 'dc',
+    aerial: 'native',
     rivalHeroIds: ['storm-hammer', 'emerald-pilot', 'solar-apex'],
     color: [0.15, 0.12, 0.14],
     hpMul: 1.25,

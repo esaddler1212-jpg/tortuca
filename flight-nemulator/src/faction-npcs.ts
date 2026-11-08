@@ -7,6 +7,7 @@ import { applyRaiderSiege } from './city-integrity';
 import type { CityIntegrityState } from './city-integrity';
 import { attachUnitBox } from './primitive-mesh';
 import { pickHeroInterceptor } from './hero-rivals';
+import { syncFlightAssistVisuals, type AerialMobility } from './aerial-mobility';
 import { pickVillainClone, type VillainCloneSpec } from './villain-roster';
 
 export type FactionNpc = {
@@ -63,6 +64,7 @@ export function spawnFactionWave(
     let scale: [number, number, number] =
       allegiance === 'villain' ? [2.8, 3.6, 2.2] : [3.5, 3.2, 2.2];
 
+    let aerial: AerialMobility = allegiance === 'hero' ? 'native' : 'ki';
     let clone: VillainCloneSpec | undefined;
     if (allegiance === 'villain') {
       clone = pickVillainClone(playerHeroId, wave, i);
@@ -73,6 +75,7 @@ export function spawnFactionWave(
       speedMul = clone.speedMul;
       siegeMul = clone.siegeMul;
       scale = clone.scale;
+      aerial = clone.aerial;
     } else {
       const hero = pickHeroInterceptor(playerHeroId, wave, i);
       profileId = hero.id;
@@ -81,6 +84,7 @@ export function spawnFactionWave(
       hpMul = 1.05;
       speedMul = 1.1;
       scale = [2.8, 3.4, 2.2];
+      aerial = hero.aerial;
     }
 
     const ent = new Entity(`npc-${profileId}-${Date.now()}-${i}`);
@@ -92,6 +96,7 @@ export function spawnFactionWave(
       meshInstances: [attachUnitBox(app, color[0], color[1], color[2])]
     });
     paintNpc(ent, allegiance, color);
+    syncFlightAssistVisuals(app, ent, aerial, color);
     root.addChild(ent);
     const baseHp = allegiance === 'villain' ? 4 + Math.floor(count / 3) : 3 + Math.floor(count / 4);
     const baseSpeed =

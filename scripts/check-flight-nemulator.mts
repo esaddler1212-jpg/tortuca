@@ -19,6 +19,7 @@ const required = [
   'src/villain-annihilate.ts',
   'src/solar-space-charge.ts',
   'src/villain-roster.ts',
+  'src/aerial-mobility.ts',
   'src/hero-rivals.ts',
   'src/world-fate.ts',
   'src/world-persist.ts',
@@ -33,6 +34,12 @@ for (const f of required) {
     process.exit(1);
   }
 }
+
+const audit = spawnSync('npx', ['tsx', path.join(root, 'scripts/audit-aerial-roster.mts')], {
+  cwd: root,
+  stdio: 'inherit'
+});
+if (audit.status !== 0) process.exit(audit.status ?? 1);
 
 const build = spawnSync('npm', ['run', 'build'], { cwd: app, stdio: 'inherit' });
 if (build.status !== 0) process.exit(build.status ?? 1);
