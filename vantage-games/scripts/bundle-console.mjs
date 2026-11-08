@@ -24,4 +24,4 @@ run('npm', ['run', 'build:all'], hubDir);
 
 if (fs.existsSync(dest)) fs.rmSync(dest, { recursive: true, force: true });
 fs.cpSync(path.join(hubDir, 'dist'), dest, { recursive: true });
-console.log(`✓ Bundled console → boys-student/public/console (${dest})`);
+console.log(`✓ Bundled console → vantage-games/public/console (${dest})`);

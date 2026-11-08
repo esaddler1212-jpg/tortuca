@@ -1,4 +1,4 @@
-# VantageGames — title-card launcher + games-hub bundle (folder name: boys-student)
+# VantageGames — standalone Netlify site (NOT Alfred / repo root)
 
 [build]
   command = "npm ci && npm run build:with-console"

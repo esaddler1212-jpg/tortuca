@@ -2,7 +2,7 @@
 
 **Title-card launcher** for Tortuca browser games — no sign-in. Scroll **City Nights** and **Battleworld**, tap a card, and the game loads.
 
-Netlify **base directory** is still `boys-student/` (legacy path). This replaces the earlier **Battleworld portal** on `main` (single-game landing) and the legacy BOYS curriculum student app.
+Deploy as its **own** Netlify site with base directory `vantage-games` — not Alfred (`alfred2`). See [`../docs/VANTAGE_GAMES_DEPLOY.md`](../docs/VANTAGE_GAMES_DEPLOY.md).
 
 ## Bundled games
 
@@ -19,14 +19,14 @@ From a game, **◯ VantageGames** on the console returns to this launcher at `/`
 
 ## Deploy
 
-1. Base directory **`boys-student`**
+1. Base directory **`vantage-games`**
 2. Build: `npm ci && npm run build:with-console` (`netlify.toml`)
 3. Publish: `dist`
 
 ## Local
 
 ```bash
-cd boys-student
+cd vantage-games
 npm install
 npm run build:with-console
 npm run preview

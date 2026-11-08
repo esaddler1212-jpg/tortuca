@@ -96,7 +96,7 @@ Family Purpose is one Netlify site; **IRIS** and **BOYS** use separate sites in 
 | App | Netlify base directory | What to configure |
 | --- | --- | --- |
 | **IRIS / Alfred** | repo root (`/`) | `FAMILY_PURPOSE_BACKUP_KEY` — **same secret** as this site. Optional: `WOODHOUSE_FAMILY_PURPOSE_URL` = this site’s URL. In IRIS **Settings → Woodhouse**, register Family Purpose or paste this site URL. |
-| **Battleworld portal** | `boys-student/` | Game-only bundle (`npm run build:all`). No Family Purpose env. BOYS APIs on this site still power Group tab if you use curriculum. |
+| **VantageGames** | `vantage-games/` | Own Netlify site (`build:with-console`). No Alfred env. BOYS APIs on this site still power Family Purpose Group tab if you use curriculum. |
 | **Family Purpose (this site)** | `family-purpose/` | `FAMILY_PURPOSE_BACKUP_KEY`. In app **Settings**: backup upload URL + key; **BOYS class code** (`PURPOSE-A` / `B` / `C`). |
 
 After deploy:
