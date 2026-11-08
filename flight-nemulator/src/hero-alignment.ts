@@ -8,7 +8,8 @@ export const DUAL_ROLE_HERO_ID = 'latverian-sovereign';
 const ALIGNMENT_OVERRIDE: Record<string, HeroAlignment> = {
   [DUAL_ROLE_HERO_ID]: 'dual',
   'cell-mimic': 'villain-only',
-  'spirit-buu': 'villain-only'
+  'spirit-buu': 'villain-only',
+  'venom-echo': 'villain-only'
 };
 
 export function heroAlignment(spec: HeroSpec): HeroAlignment {

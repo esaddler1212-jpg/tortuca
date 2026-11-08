@@ -2,6 +2,7 @@
 
 import type { AerialMobility } from './aerial-mobility';
 import { wallCrawlerForms } from './hero-symbiote';
+import { venomEchoForms, VENOM_PLAYABLE_ID } from './hero-venom-bond';
 
 export type PowerKind =
   | 'beam'
@@ -76,6 +77,7 @@ export interface HeroSpec {
 
 export function heroFormsForPlay(spec: HeroSpec): HeroForm[] {
   if (spec.id === 'wall-crawler') return wallCrawlerForms(spec.forms);
+  if (spec.id === VENOM_PLAYABLE_ID) return venomEchoForms(spec.forms);
   return spec.forms;
 }
 
@@ -449,6 +451,45 @@ export const HERO_ROSTER: HeroSpec[] = [
     ],
     defaultFormId: 'classic',
     aerial: 'web-swing'
+  },
+  {
+    id: 'venom-echo',
+    codename: 'Venom Echo',
+    tagline: 'Bond with heroes you defeat',
+    districtId: 'gotham-nights',
+    homeLabel: 'Symbiote Spire',
+    powers: ['web', 'beam'],
+    flight: { cruiseKmh: 300, boostKmh: 1500, agility: 1.28, mass: 88 },
+    energy: { staminaMax: 118, regenPerSec: 26, superCooldownSec: 15, primaryCooldownSec: 0.17 },
+    smashRadius: 2.8,
+    forms: [
+      {
+        id: 'venom-base',
+        label: 'Symbiote mass',
+        suitRole: 'siege',
+        abilities: ['Tendril lash', 'Glide shred'],
+        kitPrimary: 'web',
+        dmgMul: 1.12,
+        speedMul: 1.02,
+        powerMul: 1.12,
+        color: [0.08, 0.12, 0.1]
+      },
+      {
+        id: 'carnage-lean',
+        label: 'Carnage lean',
+        suitRole: 'swift',
+        abilities: ['Axe tendrils', 'Blood sprint'],
+        kitPrimary: 'web',
+        primaryCdMul: 0.75,
+        dmgMul: 1.05,
+        flightAgilityMul: 1.12,
+        speedMul: 1.1,
+        powerMul: 1.08,
+        color: [0.72, 0.08, 0.1]
+      }
+    ],
+    defaultFormId: 'venom-base',
+    aerial: 'glide'
   },
   {
     id: 'red-codriver',

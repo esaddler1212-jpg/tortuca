@@ -22,6 +22,7 @@ export const HERO_MUTATIONS: Record<string, MutationMeta> = {
   'time-blade': { mutatesFrom: 'Future Trunks', universe: 'dbz' },
   'hybrid-warden': { mutatesFrom: 'Gohan', universe: 'dbz' },
   'wall-crawler': { mutatesFrom: 'Spider-Man', universe: 'marvel' },
+  'venom-echo': { mutatesFrom: 'Venom (playable)', universe: 'marvel' },
   'red-codriver': { mutatesFrom: 'War Machine', universe: 'marvel' },
   'martian-strider': { mutatesFrom: 'Martian Manhunter', universe: 'dc' },
   'shade-knight': { mutatesFrom: 'Batman', universe: 'dc' },

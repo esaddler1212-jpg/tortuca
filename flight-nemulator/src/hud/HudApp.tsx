@@ -66,6 +66,7 @@ export type GameHudSnapshot = {
   loadoutLabel?: string;
   symbioteUnlocked?: boolean;
   absorptionLabel?: string | null;
+  venomBondLabel?: string | null;
   alignmentNote?: string | null;
 };
 
@@ -167,6 +168,7 @@ export function HudApp() {
         {snap.alignmentNote && <p className="hud-tag">{snap.alignmentNote}</p>}
         {snap.symbioteUnlocked && <p className="hud-tag">Symbiote suit unlocked — pick merged loadout</p>}
         {snap.absorptionLabel && <p className="hud-tag">{snap.absorptionLabel}</p>}
+        {snap.venomBondLabel && <p className="hud-tag">{snap.venomBondLabel}</p>}
         <LoadoutPicker heroId={heroId} />
         <CreateHeroPanel
           onCreated={(id) => {

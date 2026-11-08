@@ -26,6 +26,7 @@ const required = [
   'src/hero-alignment.ts',
   'src/hero-absorption.ts',
   'src/hero-symbiote.ts',
+  'src/hero-venom-bond.ts',
   'src/hero-rivals.ts',
   'src/world-fate.ts',
   'src/world-persist.ts',

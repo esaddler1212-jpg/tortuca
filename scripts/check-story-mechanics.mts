@@ -30,4 +30,10 @@ if (!getVillainClone('carnage-echo')) {
   process.exit(1);
 }
 
+const venomPlay = getHero('venom-echo');
+if (!venomPlay?.forms.some((f) => f.id === 'venom-base')) {
+  console.error('missing playable venom-echo');
+  process.exit(1);
+}
+
 console.log('check-story-mechanics: ok');

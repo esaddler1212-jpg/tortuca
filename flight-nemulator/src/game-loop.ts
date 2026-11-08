@@ -89,6 +89,7 @@ import {
   loadAbsorption
 } from './hero-absorption';
 import { isSymbioteUnlocked, symbiotePreyProfile, unlockSymbioteSuit } from './hero-symbiote';
+import { bondVenomToHero, venomBondHudLine, VENOM_PLAYABLE_ID } from './hero-venom-bond';
 import { isPhotoMode, togglePhotoMode } from './photo-mode';
 import { fetchManifestIfOnline, getManifestSuggestions } from './updates';
 import { attachHeroGltf } from './hero-gltf';
@@ -468,6 +469,9 @@ function tickFrame(s: GameSession, dt: number): void {
     if (s.heroSpec.id === 'wall-crawler' && symbiotePreyProfile(d.profileId)) {
       unlockSymbioteSuit();
     }
+    if (s.heroSpec.id === VENOM_PLAYABLE_ID && s.playerRole === 'villain') {
+      bondVenomToHero(d.profileId, d.codename);
+    }
     absorbDefeatedFoe(s.heroSpec.id, d.profileId, d.codename);
   }
   if (kills > 0) {
@@ -554,11 +558,14 @@ function tickFrame(s: GameSession, dt: number): void {
     loadoutLabel: kitHudLabel(s.heroForm),
     symbioteUnlocked: s.heroSpec.id === 'wall-crawler' ? isSymbioteUnlocked() : undefined,
     absorptionLabel: absorptionHudLine(loadAbsorption(s.heroSpec.id)),
+    venomBondLabel: s.heroSpec.id === VENOM_PLAYABLE_ID ? venomBondHudLine() : null,
     alignmentNote: canPickAlignment(s.heroSpec.id)
       ? 'Doom: toggle Hero or Villain below'
-      : ABSORBER_HERO_IDS.has(s.heroSpec.id)
-        ? 'Absorb fallen foes to copy powers'
-        : null
+      : s.heroSpec.id === VENOM_PLAYABLE_ID
+        ? 'Defeat hero responders to bond new loadouts'
+        : ABSORBER_HERO_IDS.has(s.heroSpec.id)
+          ? 'Absorb fallen foes to copy powers'
+          : null
   });
 }
 
