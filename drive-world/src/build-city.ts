@@ -1,7 +1,8 @@
 import { Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
 
-import { hash2, NEON_ACCENTS } from './night-palette';
-import { CITY_BLOCK_M, CITY_HALF_M, HIGHWAY_HALF_WIDTH_M } from './world-config';
+import { hillOffsetM } from './bay-terrain';
+import { BAY_WINDOW_LIGHTS, hash2 } from './night-palette';
+import { BAY_SHORE_Z, CITY_BLOCK_M, CITY_HALF_M, HIGHWAY_HALF_WIDTH_M } from './world-config';
 
 const BUILDING_BASE = new Color(0.07, 0.075, 0.1);
 
@@ -10,28 +11,36 @@ function onHighwayCorridor(x: number, z: number): boolean {
 }
 
 function buildingMaterial(index: number): StandardMaterial {
-  const accent = NEON_ACCENTS[index % NEON_ACCENTS.length];
+  const accent = BAY_WINDOW_LIGHTS[index % BAY_WINDOW_LIGHTS.length];
   const mat = new StandardMaterial();
   mat.diffuse = BUILDING_BASE;
   mat.emissive = accent;
-  mat.emissiveIntensity = 0.85;
+  mat.emissiveIntensity = 0.75;
   mat.gloss = 0.15;
   mat.metalness = 0.05;
   mat.update();
   return mat;
 }
 
+/** East of shore line = no dense blocks (open bay / port). */
+function overTheBay(z: number): boolean {
+  return z > BAY_SHORE_Z + 40;
+}
+
 export function buildLowPolyNightCity(app: AppBase): void {
-  const materialCache: StandardMaterial[] = NEON_ACCENTS.map((_, i) => buildingMaterial(i));
+  const materialCache: StandardMaterial[] = BAY_WINDOW_LIGHTS.map((_, i) => buildingMaterial(i));
 
   for (let bx = -CITY_HALF_M; bx < CITY_HALF_M; bx += CITY_BLOCK_M) {
     for (let bz = -CITY_HALF_M; bz < CITY_HALF_M; bz += CITY_BLOCK_M) {
       const cx = bx + CITY_BLOCK_M * 0.5;
       const cz = bz + CITY_BLOCK_M * 0.5;
-      if (onHighwayCorridor(cx, cz)) continue;
+      if (onHighwayCorridor(cx, cz) || overTheBay(cz)) continue;
 
       const roll = hash2(cx, cz);
       if (roll < 0.12) continue;
+
+      const isDowntown = Math.abs(cx) < 280 && cz < 200 && cz > -350;
+      const heightMul = isDowntown ? 1.35 : 1;
 
       const towers = roll > 0.72 ? 2 : 1;
       for (let t = 0; t < towers; t++) {
@@ -40,13 +49,14 @@ export function buildLowPolyNightCity(app: AppBase): void {
         const x = cx + ox;
         const z = cz + oz;
 
+        const groundY = hillOffsetM(x, z);
         const footprint = 14 + hash2(x, z) * 22;
-        const height = 12 + hash2(z, x) * 48;
-        const matIndex = Math.floor(hash2(x + height, z) * NEON_ACCENTS.length);
+        const height = (10 + hash2(z, x) * 42) * heightMul;
+        const matIndex = Math.floor(hash2(x + height, z) * BAY_WINDOW_LIGHTS.length);
 
         const tower = new Entity(`bld-${Math.round(x)}-${Math.round(z)}-${t}`);
         tower.setLocalScale(footprint, height, footprint);
-        tower.setPosition(x, height * 0.5, z);
+        tower.setPosition(x, groundY + height * 0.5, z);
         tower.addComponent('render', { type: 'box', material: materialCache[matIndex] });
         tower.addComponent('collision', {
           type: 'box',
@@ -61,8 +71,8 @@ export function buildLowPolyNightCity(app: AppBase): void {
 
 const LAMP_MAT = (() => {
   const m = new StandardMaterial();
-  m.emissive = new Color(1, 0.92, 0.72);
-  m.emissiveIntensity = 2;
+  m.emissive = new Color(1, 0.88, 0.6);
+  m.emissiveIntensity = 1.8;
   m.diffuse = new Color(0.1, 0.1, 0.12);
   m.update();
   return m;
@@ -70,22 +80,23 @@ const LAMP_MAT = (() => {
 
 export function buildStreetLamps(app: AppBase, spacing: number, limit: number): void {
   let count = 0;
-  const addLamp = (x: number, z: number) => {
+  const addLamp = (x: number, z: number, y = 0) => {
     if (count >= limit) return;
     count++;
+    const baseY = y + hillOffsetM(x, z);
 
     const pole = new Entity(`lamp-${count}`);
     pole.setLocalScale(0.35, 5.5, 0.35);
-    pole.setPosition(x, 2.75, z);
+    pole.setPosition(x, baseY + 2.75, z);
     pole.addComponent('render', { type: 'box', material: LAMP_MAT });
     app.root.addChild(pole);
 
     const bulb = new Entity(`lamp-light-${count}`);
-    bulb.setPosition(x, 5.2, z);
+    bulb.setPosition(x, baseY + 5.2, z);
     bulb.addComponent('light', {
       type: 'point',
-      color: new Color(1, 0.85, 0.65),
-      intensity: 1.6,
+      color: new Color(1, 0.82, 0.55),
+      intensity: 1.5,
       range: 38,
       castShadows: false
     });

@@ -74,9 +74,10 @@ npm run dev
 
 ## Art direction (locked)
 
-- **Low-poly** procedural box towers with neon emissive bands
-- **Night city** — dark wet roads, yellow centre lines, street lamps, minimal moonlight
-- Prototype: `build-city.ts` + `night-palette.ts` in `drive-world/`
+- **Low-poly Bay Area at night** — Karl-the-fog palette, sodium streetlights, International Orange bridge accents
+- **Geography (stylised)** — bay on **+Z (east)**; hills rise toward **−Z (west)**; downtown stacks near origin; water + bridge meshes in `build-bay.ts`
+- **Freeways** — cross arterials (101 / 80-ish); no events, just drive
+- Code: `night-palette.ts`, `bay-terrain.ts`, `build-city.ts`, `build-bay.ts`
 
 ## Map shape (still open)
 

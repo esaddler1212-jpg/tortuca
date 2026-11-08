@@ -1,6 +1,6 @@
 # Drive World (prototype)
 
-PlayCanvas + Ammo **raycast vehicle** on a **multi-kilometre low-poly night city** — neon blocks, street lamps, wet roads; drive as fast as you want.
+PlayCanvas + Ammo **raycast vehicle** in a **low-poly Bay Area night** — fog, bay water to the east, orange bridge spans, hill-grade blocks; drive as fast as you want.
 
 ```bash
 npm install

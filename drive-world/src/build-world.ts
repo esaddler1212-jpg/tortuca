@@ -1,5 +1,6 @@
 import { Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
 
+import { buildBayBridges, buildBayWater } from './build-bay';
 import { buildLowPolyNightCity, buildStreetLamps } from './build-city';
 import { NIGHT_FOG } from './night-palette';
 import { STRIPE_SPACING_M, WORLD_HALF_M } from './world-config';
@@ -75,6 +76,8 @@ export function buildDrivingWorld(app: AppBase): WorldAssets {
     app.root.addChild(mark);
   }
 
+  buildBayWater(app);
+  buildBayBridges(app);
   buildLowPolyNightCity(app);
   buildStreetLamps(app, 90, 96);
 

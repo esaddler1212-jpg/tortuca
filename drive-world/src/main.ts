@@ -74,8 +74,8 @@ app.start();
 
 app.scene.ambientLight = NIGHT_AMBIENT.clone();
 app.scene.exposure = 0.55;
-app.scene.fogStart = 90;
-app.scene.fogEnd = Math.min(2200, WORLD_HALF_M * 1.05);
+app.scene.fogStart = 60;
+app.scene.fogEnd = Math.min(1600, WORLD_HALF_M * 0.75);
 
 buildDrivingWorld(app);
 
@@ -105,7 +105,7 @@ const wheels = wheelDefs.map((def) => {
 
 const paint = new StandardMaterial();
 paint.diffuse = new Color(0.12, 0.12, 0.14);
-paint.emissive = new Color(0.95, 0.2, 0.45);
+paint.emissive = new Color(0.78, 0.24, 0.11);
 paint.emissiveIntensity = 0.35;
 paint.metalness = 0.4;
 paint.gloss = 0.6;
