@@ -489,10 +489,18 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         const markerY = hillOffsetM(c.x, c.z) + (c.yOffset ?? 1.2);
         if (c.requireAir && Math.abs(pos.y - markerY) > 30) continue;
         const hadHeli = progress.unlockedVehicleIds.includes('bonus-coast-heli');
+        const hadGotham = progress.unlockedVehicleIds.includes('bonus-gotham-knight');
+        const hadScarlet = progress.unlockedVehicleIds.includes('bonus-scarlet-five');
         progress = collectItem(progress, c.id, c.unlockPaintId);
         ui.showToast('Collectible', c.name);
         if (!hadHeli && progress.unlockedVehicleIds.includes('bonus-coast-heli')) {
           ui.showToast('Aerial unlocked', getVehicleSpec('bonus-coast-heli').name);
+        }
+        if (!hadGotham && progress.unlockedVehicleIds.includes('bonus-gotham-knight')) {
+          ui.showToast('Legend unlocked', getVehicleSpec('bonus-gotham-knight').name);
+        }
+        if (!hadScarlet && progress.unlockedVehicleIds.includes('bonus-scarlet-five')) {
+          ui.showToast('Legend unlocked', getVehicleSpec('bonus-scarlet-five').name);
         }
         if (nearGarage) refreshGarageUi();
       }

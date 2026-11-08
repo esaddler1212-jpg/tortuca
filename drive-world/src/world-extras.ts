@@ -53,6 +53,22 @@ export const COLLECTIBLES: CollectibleDef[] = [
     radius: 32,
     yOffset: 45,
     requireAir: true
+  },
+  {
+    id: 'cave-key',
+    name: 'Cave key',
+    unlockPaintId: 'stealth',
+    x: -655,
+    z: -695,
+    radius: 26
+  },
+  {
+    id: 'mach-cog',
+    name: 'Number 5 cog',
+    unlockPaintId: 'cherry-red',
+    x: 98,
+    z: -1305,
+    radius: 24
   }
 ];
 

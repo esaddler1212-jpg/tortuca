@@ -1,4 +1,10 @@
-import { BONUS_AERIAL_IDS, GARAGE_STARTER_IDS, VEHICLE_CATALOG, REGION_VEHICLE_IDS } from './vehicle-catalog';
+import {
+  BONUS_AERIAL_IDS,
+  BONUS_LEGEND_IDS,
+  GARAGE_STARTER_IDS,
+  VEHICLE_CATALOG,
+  REGION_VEHICLE_IDS
+} from './vehicle-catalog';
 import { SCENIC_ROUTES } from './world-extras';
 import { isDistrictComplete, regionUnlockVehicleId, LANDMARKS } from './landmark-registry';
 import type { DistrictId } from './world-config';
@@ -225,8 +231,22 @@ export function collectItem(progress: SavedProgress, id: string, paintId: string
     unlockedPaintIds: paints
   };
   next = tryUnlockCoastHeli(next);
+  next = tryUnlockLegendVehicles(next);
   saveProgress(next);
   return next;
+}
+
+export function tryUnlockLegendVehicles(progress: SavedProgress): SavedProgress {
+  let p = progress;
+  const gotham = BONUS_LEGEND_IDS[0];
+  const scarlet = BONUS_LEGEND_IDS[1];
+  if (p.collectedIds.includes('cave-key') && !p.unlockedVehicleIds.includes(gotham)) {
+    p = unlockVehicle(p, gotham);
+  }
+  if (p.collectedIds.includes('mach-cog') && !p.unlockedVehicleIds.includes(scarlet)) {
+    p = unlockVehicle(p, scarlet);
+  }
+  return p;
 }
 
 export function tryUnlockSkywayHover(progress: SavedProgress): SavedProgress {

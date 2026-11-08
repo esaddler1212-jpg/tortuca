@@ -17,6 +17,7 @@ export type VehicleSpec = {
   paint: { diffuse: [number, number, number]; emissive: [number, number, number]; emissiveIntensity: number };
   garageStarter?: boolean;
   aerialBonus?: boolean;
+  legendBonus?: boolean;
 };
 
 function spec(
@@ -36,7 +37,7 @@ function spec(
     >
   >,
   paint: VehicleSpec['paint'],
-  extras?: Partial<Pick<VehicleSpec, 'region' | 'garageStarter' | 'aerialBonus'>>
+  extras?: Partial<Pick<VehicleSpec, 'region' | 'garageStarter' | 'aerialBonus' | 'legendBonus'>>
 ): VehicleSpec {
   return {
     id,
@@ -58,6 +59,9 @@ function spec(
 export const GARAGE_STARTER_IDS = ['garage-cruiser', 'garage-sport', 'garage-ute'] as const;
 
 export const BONUS_AERIAL_IDS = ['bonus-skyway-hover', 'bonus-coast-heli'] as const;
+
+/** Pop-culture homages (not affiliated). */
+export const BONUS_LEGEND_IDS = ['bonus-gotham-knight', 'bonus-scarlet-five'] as const;
 
 export const REGION_VEHICLE_IDS: Record<DistrictId, string> = {
   sf: 'region-sf-night',
@@ -169,6 +173,35 @@ export const VEHICLE_CATALOG: Record<string, VehicleSpec> = {
     { locomotion: 'helicopter', mass: 1480, chassis: { x: 2.4, y: 0.55, z: 5.2 } },
     { diffuse: [0.12, 0.14, 0.16], emissive: [0.35, 0.7, 0.95], emissiveIntensity: 0.32 },
     { aerialBonus: true }
+  ),
+
+  'bonus-gotham-knight': spec(
+    'bonus-gotham-knight',
+    'Gotham Knight',
+    'Legend — cave key at Coit Hill',
+    'San Francisco',
+    {
+      mass: 1450,
+      maxEngineForce: 8200,
+      maxSteering: 0.34,
+      chassis: { x: 1.12, y: 0.36, z: 2.35 }
+    },
+    { diffuse: [0.02, 0.02, 0.04], emissive: [0.15, 0.25, 0.95], emissiveIntensity: 0.62 },
+    { legendBonus: true }
+  ),
+  'bonus-scarlet-five': spec(
+    'bonus-scarlet-five',
+    'Scarlet Five',
+    'Legend — Mach V-style wedge at Winchester',
+    'South Bay',
+    {
+      mass: 920,
+      maxEngineForce: 7600,
+      maxSteering: 0.42,
+      chassis: { x: 0.88, y: 0.28, z: 1.72 }
+    },
+    { diffuse: [0.9, 0.9, 0.92], emissive: [0.95, 0.12, 0.08], emissiveIntensity: 0.38 },
+    { legendBonus: true }
   )
 };
 

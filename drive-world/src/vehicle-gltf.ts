@@ -21,6 +21,8 @@ export const VEHICLE_GLB: Record<string, string> = {
   'region-south-bay': `${KENNEY}/race-future.glb`,
   'bonus-skyway-hover': `${KENNEY}/race-future.glb`,
   'bonus-coast-heli': `${CC0}/helicopter.glb`,
+  'bonus-gotham-knight': `${KENNEY}/sedan-sports.glb`,
+  'bonus-scarlet-five': `${KENNEY}/race.glb`,
   default: `${KENNEY}/sedan.glb`
 };
 
@@ -29,7 +31,9 @@ const VISUAL_BY_ID: Record<string, GltfVisualOptions> = {
   'region-vallejo': { scale: 2.12, yawOffsetDeg: 90, yOffset: -0.4 },
   'region-marin-coast': { scale: 2.0, yawOffsetDeg: 90, yOffset: -0.38 },
   'bonus-skyway-hover': { scale: 2.25, yawOffsetDeg: 90, yOffset: -0.15 },
-  'bonus-coast-heli': { scale: 0.32, yawOffsetDeg: -90, yOffset: -1.1 }
+  'bonus-coast-heli': { scale: 0.32, yawOffsetDeg: -90, yOffset: -1.1 },
+  'bonus-gotham-knight': { scale: 2.08, yawOffsetDeg: 90, yOffset: -0.3 },
+  'bonus-scarlet-five': { scale: 2.05, yawOffsetDeg: 90, yOffset: -0.26 }
 };
 
 const loaded = new Map<string, Asset>();

@@ -31,6 +31,52 @@ function chassisMaterial(tuning: ReturnType<typeof appliedTuning>): StandardMate
 
 export type PlayerVehicle = { entity: Entity; lights: VehicleLights };
 
+function attachLegendAccents(
+  vehicle: Entity,
+  vehicleId: string,
+  paint: StandardMaterial,
+  cx: number,
+  cz: number,
+  rideDrop: number
+): void {
+  if (vehicleId === 'bonus-gotham-knight') {
+    const finMat = paint.clone() as StandardMaterial;
+    finMat.emissive = new Color(0.08, 0.12, 0.55);
+    finMat.emissiveIntensity = 0.45;
+    finMat.update();
+    for (const side of [-1, 1]) {
+      const fin = new Entity(`bat-fin-${side}`);
+      fin.setLocalScale(0.07, 0.55, 1.05);
+      fin.setLocalPosition(side * 0.58, 0.52 - rideDrop, -cz * 0.52);
+      fin.setLocalEulerAngles(0, 0, side * 32);
+      fin.addComponent('render', { type: 'box', material: finMat });
+      vehicle.addChild(fin);
+    }
+    const scoop = new Entity('bat-scoop');
+    scoop.setLocalScale(0.9, 0.14, 0.45);
+    scoop.setLocalPosition(0, 0.28 - rideDrop, cz * 0.62);
+    scoop.addComponent('render', { type: 'box', material: finMat });
+    vehicle.addChild(scoop);
+  }
+  if (vehicleId === 'bonus-scarlet-five') {
+    const red = new StandardMaterial();
+    red.diffuse = new Color(0.82, 0.07, 0.05);
+    red.emissive = new Color(0.95, 0.15, 0.08);
+    red.emissiveIntensity = 0.55;
+    red.update();
+    const nose = new Entity('mach-nose');
+    nose.setLocalScale(0.32, 0.15, 0.2);
+    nose.setLocalPosition(0, 0.46 - rideDrop, cz * 0.82);
+    nose.addComponent('render', { type: 'box', material: red });
+    vehicle.addChild(nose);
+    const stripe = new Entity('mach-stripe');
+    stripe.setLocalScale(cx * 1.05, 0.04, 0.06);
+    stripe.setLocalPosition(0, 0.62 - rideDrop, cz * 0.05);
+    stripe.addComponent('render', { type: 'box', material: red });
+    vehicle.addChild(stripe);
+  }
+}
+
 function createAerialVehicle(
   app: AppBase,
   vehicleId: string,
@@ -243,6 +289,9 @@ export function createPlayerVehicle(
   });
   vehicle.addChild(chassis);
   vehicle.addChild(cabin);
+  if (vehicleId === 'bonus-gotham-knight' || vehicleId === 'bonus-scarlet-five') {
+    attachLegendAccents(vehicle, vehicleId, paint, cx, cz, tuning.rideDrop);
+  }
   const lights = attachVehicleLights(vehicle, app);
   app.root.addChild(vehicle);
   return { entity: vehicle, lights };

@@ -106,7 +106,7 @@ export function wireGameUi(): GameUi {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = id === progress.activeVehicleId ? 'garage-card active' : 'garage-card';
-        const prefix = spec.aerialBonus ? '✦ ' : '';
+        const prefix = spec.aerialBonus || spec.legendBonus ? '✦ ' : '';
         btn.textContent = spec.region ? `${prefix}${spec.name} (${spec.city})` : `${prefix}${spec.name}`;
         btn.addEventListener('click', () => onSelect(id));
         list.appendChild(btn);

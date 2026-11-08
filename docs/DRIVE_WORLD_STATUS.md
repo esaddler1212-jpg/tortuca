@@ -28,7 +28,7 @@ Stack: **PlayCanvas** + **React HUD** · `drive-world-progress-v5`
 
 | Item | Notes |
 |------|--------|
-| **Kenney + CC0 glTF cars / heli** | Ground fleet + **Skyway Hover** + **Coast Guard Heli** |
+| **Kenney + CC0 glTF cars / heli** | Ground fleet + aerial + legend homages (**Gotham Knight**, **Scarlet Five**) |
 | **Cloud save** | Local only; tie to Tortuca Google session later |
 | Full **day/night cycle** | Night-only art direction kept |
 | World streaming / LOD | |

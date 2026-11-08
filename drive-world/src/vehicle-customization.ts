@@ -51,6 +51,29 @@ export const DEFAULT_CUSTOMIZATION: VehicleCustomization = {
 };
 
 export function defaultCustomizationFor(spec: VehicleSpec): VehicleCustomization {
+  if (spec.id === 'bonus-gotham-knight') {
+    return {
+      ...DEFAULT_CUSTOMIZATION,
+      paintPreset: 'stealth',
+      glow: 0.82,
+      power: 0.92,
+      grip: 0.72,
+      underglow: 0.78,
+      rims: 0.35,
+      handling: 'grip'
+    };
+  }
+  if (spec.id === 'bonus-scarlet-five') {
+    return {
+      ...DEFAULT_CUSTOMIZATION,
+      paintPreset: 'fog-white',
+      glow: 0.42,
+      power: 0.88,
+      grip: 0.62,
+      rims: 0.75,
+      handling: 'grip'
+    };
+  }
   const match = PAINT_PRESETS.find(
     (p) =>
       Math.abs(p.emissive[0] - spec.paint.emissive[0]) < 0.15 &&
