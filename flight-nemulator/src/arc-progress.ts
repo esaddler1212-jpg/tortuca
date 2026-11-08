@@ -26,6 +26,17 @@ export function battleworldLatticeStrength(): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+/** Hero cleared the last villain takeover district — once per hero save. */
+export function maybeRecordTerritoryClear(
+  heroId: string,
+  role: 'hero' | 'villain',
+  takeoverCount: number
+): void {
+  if (role !== 'hero' || takeoverCount !== 0) return;
+  if (hasArcBeat(heroId, 'territory-clear')) return;
+  recordArcBeat(heroId, 'territory-clear');
+}
+
 export function arcBeatsForHero(heroId: string): Set<ArcBeat> {
   const beats: ArcBeat[] = [
     'pair-down',

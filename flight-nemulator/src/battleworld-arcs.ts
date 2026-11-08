@@ -270,6 +270,15 @@ export function allHeroArcIds(): string[] {
   return HERO_ROSTER.map((h) => h.id);
 }
 
+/** One-liner for hero picker / role screen (static — no run context). */
+export function arcPickerLine(heroId: string): string | null {
+  const arc = BATTLEWORLD_ARCS[heroId];
+  if (!arc) return null;
+  const thread =
+    arc.thread.length > 88 ? `${arc.thread.slice(0, 85).trim()}…` : arc.thread;
+  return `${arc.title} — ${thread}`;
+}
+
 export function latticeHudLine(lattice: number): string {
   return `Battleworld lattice ${lattice} — arcs link when you clear takeovers, stones, and pair rivals`;
 }

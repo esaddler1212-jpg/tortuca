@@ -39,19 +39,33 @@ Production build: `npm run build` → `dist/` (static deploy like `drive-world`)
 | Online | Optional `manifest-updates.json` fetch for new skins/characters (offline-first) |
 | Research agent | Client hook `character-research.ts` — wire to Tortuca `/api/...` when product adds server |
 
-## Today’s stretch goals (in progress on branch)
+## Shipped in v1 (Battleworld branch)
 
-- Indestructible district home spires + Bat-cave mouth landmark
-- Quality-tier city density + manual quality override in HUD
-- Boost trails, super crater ring, camera shake
-- Wanted-scaled defense waves + power-specific primaries
-- Minimap, session lifetime stats, photo save
-- Expanded roster (Velocity Streak, DBZ ki squad, villains-only Doom & Ultron)
-- `POST /api/flight-nemulator-research` homage draft suggestions (main repo function)
+| Area | Status |
+|------|--------|
+| Planet shell + nine districts + orbit chrono-freeze | Shipped |
+| Territory takeovers, advisors, raze/henchmen, **territory-clear** arc beat | Shipped |
+| Infinity Stone hunt vs Thanos/Loki/Ultron homages | Shipped |
+| 37 hero arcs + lattice (`battleworld-arcs.ts`, HUD + picker one-liner) | Shipped |
+| Wave-10 pair rivals (5 pinned finales + rival fallback) | Shipped — see [`FLIGHT_NEMULATOR_BATTLEWORLD_ARCS.md`](./FLIGHT_NEMULATOR_BATTLEWORLD_ARCS.md) |
+| Doom timeline / God Emperor, Solar Lantern rings, symbiote, absorb heroes | Shipped |
+| Home spires, quality override, boost trails, super crater, screen shake | Shipped |
+| Wanted-scaled waves, power-tuned primaries, minimap, photo save, session stats | Shipped |
+| Full roster (DBZ ki squad, Velocity Streak, dual Doom, villain-only absorb legends) | Shipped |
+| `netlify/functions/flight-nemulator-research.ts` + client research hook | Shipped (wire Tortuca auth when live) |
+| Kenney / World Gacha / Poly Haven hooks | Shipped (optional install) |
 
 ## v2 (not in v1)
 
-Multiplayer, mission chapters, checkpoint races, GLB hero models.
+| Item | Notes |
+|------|-------|
+| Multiplayer | Not started |
+| Mission chapters / checkpoint races | Not started |
+| Blockbench hero GLBs for full roster | `public/models/heroes/` pipeline only — **0** bundled GLBs |
+| Universe-colored district rims / sky rings | Polish |
+| Per-hero district **H** signature beat (beyond Lantern / Ki / Stark) | Content pass |
+| X-Men tier A roster (`FLIGHT_NEMULATOR_XMEN_RESEARCH.md`) | Research only |
+| `manifest-updates.json` stub IDs → playable characters | OTA placeholder |
 
 ## Tortuca / IRIS
 

@@ -160,6 +160,12 @@
   pointer-events: auto;
 }
 
+.hud-arc-picker {
+  font-size: 0.78rem;
+  line-height: 1.25;
+  opacity: 0.92;
+}
+
 .hero-picker select {
   width: 100%;
   margin-top: 6px;
