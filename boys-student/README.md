@@ -1,70 +1,37 @@
-# BOYS Student App
+# BOYS Games
 
-Student-facing app for the **B.O.Y.S.** monthly curriculum (grades 6–8). Students join with a class code, enter their name and grade, then complete the warm-up and exit ticket during their group's week each month.
+**Title-card launcher** for Tortuca browser games — no class code, no sign-in. Students scroll **City Nights** and **Battleworld**, tap a card, and the game loads.
 
-## Monthly schedule
+Curriculum check-ins stay on the Family Purpose mentor app; this site is games only.
 
-Each month has **one theme** (September through June). Within each month:
+## Bundled games
 
-| Group | Code | Meets | Excused period |
-|-------|------|-------|----------------|
-| BOYS Group A | `PURPOSE-A` | Week 1 | 4 |
-| BOYS Group B | `PURPOSE-B` | Week 2 | 5 |
-| BOYS Group C | `PURPOSE-C` | Week 3 | 6 |
+Netlify build runs `npm run build:with-console`, which packages [`games-hub`](../games-hub/) into `public/console/`:
 
-Curriculum themes start **September 2026**.
-
-## School year themes
-
-| Month | Theme |
-|-------|-------|
-| September | Identity — Who Am I? |
-| October | Respect |
-| November | Confidence |
-| December | Peer Pressure |
-| January | Leadership |
-| February | Communication |
-| March | Accountability |
-| April | Resilience |
-| May | Decision Making |
-| June | Purpose — I Move With Purpose |
-
-## Games (Tortuca Console)
-
-Signed-in students get a **Games** tab with Tortuca titles bundled on the same site:
-
-| Game | What |
+| Card | Game |
 |------|------|
-| **Tortuca Console** | PlayStation-style picker |
-| **City Nights** | Bay Area night driving |
-| **Battleworld** | Flight Nemulator crossover planet (Marvel / DC / DBZ arcs) |
+| **City Nights** | `/console/city-nights/` |
+| **Battleworld** | `/console/flight-nemulator/` (Flight Nemulator) |
 
-Netlify build runs `npm run build:with-console`, which builds [`games-hub/`](../games-hub/) into `public/console/` (City Nights + Flight Nemulator). Optional overrides:
+Optional env overrides: `VITE_BOYS_CONSOLE_URL`, `VITE_CITY_NIGHTS_URL`, `VITE_FLIGHT_NEMULATOR_URL`.
 
-- `VITE_BOYS_CONSOLE_URL` — external console base (skip bundle path)
-- `VITE_CITY_NIGHTS_URL` / `VITE_FLIGHT_NEMULATOR_URL` — deep links
+From a game, **◯ BOYS** (or **◯ Console** → home) returns to this launcher at `/`.
 
 ## Deploy on Netlify
 
-1. Create a new Netlify site from this repo with **Base directory** = `boys-student`
-2. Set environment variable:
-   - `VITE_BOYS_API_URL` = your Family Purpose site URL (where the BOYS API functions run)
-3. Build command: `npm run build:with-console` (default in `netlify.toml`) · Publish: `dist`
+1. Base directory **`boys-student`**
+2. Build: `npm run build:with-console` (default in `netlify.toml`)
+3. Publish: `dist`
+4. `VITE_BOYS_API_URL` is **not** required for this launcher.
 
-## Local development
+## Local
 
 ```bash
-# Terminal 1 — Family Purpose (hosts the API)
-cd family-purpose
-npm install
-npx netlify dev
-
-# Terminal 2 — Student app
 cd boys-student
 npm install
-BOYS_API_PROXY=http://127.0.0.1:8888 npm run dev
+npm run build:with-console
+npm run preview
+# open / — scroll cards, tap to play
 ```
 
-## Family Purpose integration
-
-In **Family Purpose → Settings**, set **BOYS student app class code** to match your group. The **Group** tab shows monthly theme, session week, and warm-up/exit ticket completion.
+For API work on the old curriculum flow, use Family Purpose + `npm run dev` with `BOYS_API_PROXY` (see `family-purpose/NETLIFY.md`).

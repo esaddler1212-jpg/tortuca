@@ -1,58 +1,47 @@
-/** Tortuca Console + games (bundled under /console/ or overridden via env). */
+/** Playable games bundled under /console/ (or env overrides). */
 
 function trimSlash(url: string): string {
   return url.replace(/\/$/, '');
 }
 
-export type BoysGameLink = {
-  id: 'console' | 'city-nights' | 'battleworld';
+export type PlayableGame = {
+  id: 'city-nights' | 'battleworld';
   title: string;
   subtitle: string;
   href: string;
+  artClass: string;
 };
 
-export function resolveBoysGameLinks(): BoysGameLink[] {
+function consoleBase(): string {
   const bundled = trimSlash(`${import.meta.env.BASE_URL}console`);
-  const consoleOverride = import.meta.env.VITE_BOYS_CONSOLE_URL as string | undefined;
-  const consoleBase =
-    consoleOverride === ''
-      ? ''
-      : trimSlash(consoleOverride ?? bundled);
-  const cityUrl =
-    import.meta.env.VITE_CITY_NIGHTS_URL ??
-    (consoleBase ? `${consoleBase}/city-nights/` : '');
-  const battleUrl =
-    import.meta.env.VITE_FLIGHT_NEMULATOR_URL ??
-    (consoleBase ? `${consoleBase}/flight-nemulator/` : '');
-
-  const links: BoysGameLink[] = [];
-  if (consoleBase) {
-    links.push({
-      id: 'console',
-      title: 'Tortuca Console',
-      subtitle: 'PlayStation-style home — pick a game',
-      href: `${consoleBase}/`
-    });
-  }
-  if (cityUrl) {
-    links.push({
-      id: 'city-nights',
-      title: 'City Nights',
-      subtitle: 'Bay Area night driving open world',
-      href: cityUrl.endsWith('/') ? cityUrl : `${cityUrl}/`
-    });
-  }
-  if (battleUrl) {
-    links.push({
-      id: 'battleworld',
-      title: 'Battleworld',
-      subtitle: 'Flight Nemulator — fly homage heroes on one planet',
-      href: battleUrl.endsWith('/') ? battleUrl : `${battleUrl}/`
-    });
-  }
-  return links;
+  const override = import.meta.env.VITE_BOYS_CONSOLE_URL as string | undefined;
+  if (override === '') return '';
+  return trimSlash(override ?? bundled);
 }
 
-export function gamesReady(): boolean {
-  return resolveBoysGameLinks().length > 0;
+export function listPlayableGames(): PlayableGame[] {
+  const base = consoleBase();
+  if (!base) return [];
+
+  const city =
+    import.meta.env.VITE_CITY_NIGHTS_URL ?? `${base}/city-nights/`;
+  const battle =
+    import.meta.env.VITE_FLIGHT_NEMULATOR_URL ?? `${base}/flight-nemulator/`;
+
+  return [
+    {
+      id: 'city-nights',
+      title: 'City Nights',
+      subtitle: 'Open-world Bay Area night driving',
+      href: city.endsWith('/') ? city : `${city}/`,
+      artClass: 'art-city-nights'
+    },
+    {
+      id: 'battleworld',
+      title: 'Battleworld',
+      subtitle: 'Flight Nemulator · heroes on one destructible planet',
+      href: battle.endsWith('/') ? battle : `${battle}/`,
+      artClass: 'art-battleworld'
+    }
+  ];
 }
