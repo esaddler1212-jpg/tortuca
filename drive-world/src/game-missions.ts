@@ -1,18 +1,11 @@
-import {
-  AUTOPILOT_VEHICLE_ID,
-  BONUS_AERIAL_IDS,
-  BONUS_LEGEND_IDS,
-  BONUS_PARKING_IDS,
-  REGION_VEHICLE_IDS,
-  getVehicleSpec
-} from './vehicle-catalog';
+import { REGION_VEHICLE_IDS, getVehicleSpec } from './vehicle-catalog';
 import { districtHasLandmarkVisit, districtTacoFound } from './city-checkpoints';
 import { DISTRICT_LABELS, LANDMARKS } from './landmark-registry';
 import { nextUnvisitedLandmark } from './landmark-navigation';
 import type { SavedProgress } from './game-progress';
 import { nearestGasStationAnywhere } from './bay-navigation';
 import { DRIFT_PADS, DRAG_STRIPS, TIME_ATTACKS } from './cpm-challenges';
-import { TAXI_CONTRACTS, nextTaxiContract } from './cpm-taxi';
+import { nextTaxiContract } from './cpm-taxi';
 import { LANDMARK_PARKING, parkingSpotsCleared, parkingSpotCount } from './landmark-parking';
 import {
   VALLEJO_CHAPTER_STEPS,

@@ -75,7 +75,7 @@ import {
   unlockAudio,
   updateEngineAudio
 } from './game-audio';
-import { applyDriveCamera, CAMERA_CYCLE, cameraModeLabel } from './camera-profiles';
+import { applyDriveCamera, CAMERA_CYCLE } from './camera-profiles';
 import { appendJournal } from './cruise-journal';
 import { nearestCruiseVista, type CruiseVistaDef } from './cruise-vistas';
 import { loadSettings, saveSettings } from './game-settings';
@@ -127,8 +127,7 @@ import {
   createAutopilotCruisePreset,
   cycleAutopilotPreset,
   stepAutopilotCruise,
-  type AutopilotCruise,
-  type AutopilotPreset
+  type AutopilotCruise
 } from './autopilot-cruise';
 import {
   AUTOPILOT_VEHICLE_ID,
@@ -173,7 +172,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   setMasterVolume(settings.masterVolume);
   let photoMode = false;
   const photo = createPhotoCamera(new Vec3());
-  let lastPos = new Vec3();
+  const lastPos = new Vec3();
   let statsT = 0;
   let cloudSaveT = 0;
   let hubStreamT = 0;

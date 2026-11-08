@@ -37,7 +37,7 @@ This repo runs **Iris** (voice chief of staff), **eleven module specialists** (`
 - Never commit `.env`, tokens, or real student/parent PII in fixtures.
 - Do not weaken `safeFact`, duplicate-delegate checks, or session gates without explicit product approval.
 - Do not embed third-party agent marketplaces (Voicebox, n8n flows, etc.) into the PWA unless requested — optional docs/links only.
-- Before opening a PR: `npm run test:os` (build, time, iris, research, HUD audit, cross-device audit, guardrails audit).
+- Before opening a PR: `npm run test:os` (build, time, iris, research, HUD audit, cross-device audit, guardrails, flight-nemulator, gamedev-resources catalog).
 - **PlayCanvas asset index:** `gamedev-resources/` (Kavex, [public-apis](https://github.com/public-apis/public-apis), [game-engines](https://github.com/collections/game-engines), [Blockbench](https://github.com/JannisX11/blockbench)) — [`docs/GAMEDEV_RESOURCES.md`](docs/GAMEDEV_RESOURCES.md). Optional CC0 installs: `bash tools/gamedev-resources/install-free-packs.sh`.
 
 ## Testing
@@ -45,7 +45,7 @@ This repo runs **Iris** (voice chief of staff), **eleven module specialists** (`
 ```bash
 npm run test:guardrails   # limits + safeFact + wiring checks
 npm run test:thin         # thin programming auditor (auth, parsing, client API wiring)
-npm run test:os           # full gate including guardrails + thin auditor
+npm run test:os           # full gate: guardrails + thin auditor + flight-nemulator + gamedev-resources
 ```
 
 ## Thin programming auditor

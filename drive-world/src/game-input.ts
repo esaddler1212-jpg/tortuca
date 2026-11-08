@@ -51,7 +51,6 @@ function keyboardAxes(): { steering: number; throttle: number; vertical: number 
 
 export function pollDriveInput(): DriveInput {
   const kb = keyboardAxes();
-  const empty: DriveInput = { steering: 0, throttle: 0, nitro: shiftDown, vertical: 0 };
   if (isTouchDriveActive()) {
     const t = computeTouchControls();
     return { steering: t.steering, throttle: t.throttle, nitro: shiftDown || t.nitro, vertical: t.vertical };

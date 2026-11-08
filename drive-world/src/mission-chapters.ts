@@ -1,4 +1,4 @@
-import { districtHasLandmarkVisit, districtTacoFound, isDistrictCheckpointSatisfied } from './city-checkpoints';
+import { districtTacoFound, isDistrictCheckpointSatisfied } from './city-checkpoints';
 import type { SavedProgress } from './game-progress';
 import type { DistrictId } from './world-config';
 

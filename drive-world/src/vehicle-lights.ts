@@ -1,4 +1,4 @@
-import { Color, Entity, type AppBase } from 'playcanvas';
+import { Color, Entity } from 'playcanvas';
 
 export type VehicleLights = {
   tailLeft: Entity;
@@ -8,7 +8,7 @@ export type VehicleLights = {
   setBrake(on: boolean): void;
 };
 
-export function attachVehicleLights(vehicle: Entity, app: AppBase): VehicleLights {
+export function attachVehicleLights(vehicle: Entity): VehicleLights {
   const headColor = new Color(0.95, 0.92, 0.75);
   const tailOff = new Color(0.4, 0.08, 0.06);
   const tailBrake = new Color(1, 0.15, 0.08);

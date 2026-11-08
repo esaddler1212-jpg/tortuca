@@ -15,7 +15,7 @@ export function buildLombardStreet(app: AppBase): void {
   mat.update();
 
   const x0 = -820;
-  let z = -680;
+  const z = -680;
   for (let i = 0; i < 8; i++) {
     const y = hillOffsetM(x0 + i * 18, z) + 2 + i * 1.2;
     const seg = new Entity(`lombard-${i}`);
