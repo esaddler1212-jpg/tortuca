@@ -15,48 +15,54 @@ Browser sandbox: **one large map**, **drive as fast as you want**, no races or e
 
 The world follows the usual **Bay Area macro regions** (same mental model as the standard regional map):
 
-| Region (reference map) | In-game district | Status |
-|------------------------|------------------|--------|
-| **San Francisco** (yellow) | `DISTRICTS.sf` — west peninsula, hills | Built |
-| **East Bay** (tan) | `DISTRICTS.eastBay` — Oakland side | Built |
-| **North Bay / Solano** (blue) | `DISTRICTS.vallejo` — north waterfront | Built |
-| **Peninsula** (pink) | — | Future (101 / I-280 south) |
-| **South Bay** (green) | — | Future (San José loop) |
+| Region (reference map) | In-game district | Freeway touchpoint |
+|------------------------|------------------|-------------------|
+| **San Francisco** | `DISTRICTS.sf` | I-80 / US-101 junction (west) |
+| **Marin** (North Bay) | `DISTRICTS.marin` | Golden Gate north shore |
+| **East Bay** | `DISTRICTS.eastBay` | I-80, I-880 north end |
+| **Vallejo / Solano** | `DISTRICTS.vallejo` | I-80 north |
+| **Peninsula** | `DISTRICTS.peninsula` | US-101 south |
+| **South Bay** | `DISTRICTS.southBay` | US-101 / I-880 |
 
-**Driving route (built):** **I-80 east** from SF across the **Bay Bridge** (elevated deck) → **Oakland / East Bay** → **I-80 north** to **Vallejo**. Game +X is east, +Z is north. Scale is compressed (~3 km along the freeway, not 16 km).
+**Axes:** +X east, +Z north. Scale is compressed (whole bay ~5 km edge-to-edge, not real-world miles).
 
-Spawn in SF on I-80; follow the lit corridor to Vallejo.
+**Drivable spines:** `FREEWAY_I80`, `FREEWAY_101`, `FREEWAY_880` in [`world-config.ts`](../drive-world/src/world-config.ts) — bay loop with elevated **Bay Bridge** section on I-80.
+
+**Landmarks:** mock low-poly stacks per city — see [`BAY_AREA_LANDMARKS.md`](./BAY_AREA_LANDMARKS.md).
+
+Default spawn: SF on I-80 (`SPAWN_SF`).
 
 ## Repo layout
 
 ```
 drive-world/
-  world-config.ts     districts + FREEWAY_ROUTE waypoints
-  build-freeway.ts    drivable collision deck
-  build-districts.ts  mini cities per region
-  build-bay.ts        bay water between peninsula and East Bay
+  world-config.ts       districts + FREEWAY_ROUTES
+  build-freeway.ts      drivable decks (all routes)
+  build-districts.ts    procedural blocks + signs + lamps
+  build-landmarks.ts    iconic mock buildings / bridges
+  build-bay.ts          bay water
 ```
 
 ## Phased roadmap
 
-### Phase 0 — Drivable core (in progress)
+### Phase 0 — Drivable core
 
 - [x] Raycast vehicle + chase cam + mph HUD
-- [x] SF ↔ Vallejo on one freeway (bridge + I-80 north)
-- [x] Three mini districts tied to reference regions
-- [ ] Ramp meshes so deck elevation matches ground at on-ramps
+- [x] SF bay loop (80 / 101 / 880)
+- [x] Six macro districts + mock landmarks
+- [ ] Ramp meshes so deck elevation matches ground at every merge
 - [ ] Cockpit cam toggle
 
-### Phase 1 — **Big map** (the real goal)
+### Phase 1 — **Big map**
 
-- Chunk streaming for Peninsula + South Bay + North Bay beyond Vallejo
-- Heightmap ground matching freeway grade
-- Optional **880 / 101 loop** around the bay (drive-only, no events)
+- Chunk streaming if entity count grows
+- Heightmap ground matching freeway grade everywhere
+- glTF swap for landmark meshes (optional)
 
 ### Phase 2 — Feel at speed
 
 - Engine pitch from speed, night fog tuned like Karl
-- glTF landmarks (optional): bridge silhouette, downtown stacks
+- Water shimmer / shore decals
 
 ### Phase 3 — Ship
 
@@ -74,5 +80,5 @@ npm run dev
 
 ## Art direction (locked)
 
-- **Low-poly Bay Area at night** — fog, sodium lights, International Orange bridge deck
-- **SF → Vallejo** corridor only; expand other map colors later
+- **Low-poly Bay Area at night** — fog, sodium lights, International Orange bridge decks
+- Full reference-map coverage at compressed scale; landmarks are recognizable silhouettes, not geospatially exact

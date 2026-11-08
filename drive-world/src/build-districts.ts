@@ -2,7 +2,7 @@ import { Color, Entity, StandardMaterial, type AppBase } from 'playcanvas';
 
 import { hillOffsetM } from './bay-terrain';
 import { BAY_WINDOW_LIGHTS, hash2 } from './night-palette';
-import { DISTRICTS, FREEWAY_ROUTE, FREEWAY_WIDTH_M, type DistrictId, type DistrictSpec } from './world-config';
+import { DISTRICTS, FREEWAY_ROUTES, FREEWAY_WIDTH_M, type DistrictId, type DistrictSpec } from './world-config';
 
 const BUILDING_BASE = new Color(0.07, 0.075, 0.1);
 
@@ -40,10 +40,12 @@ function distToSegment(px: number, pz: number, ax: number, az: number, bx: numbe
 
 function tooCloseToFreeway(x: number, z: number): boolean {
   const clearance = FREEWAY_WIDTH_M * 0.55 + 20;
-  for (let i = 0; i < FREEWAY_ROUTE.length - 1; i++) {
-    const a = FREEWAY_ROUTE[i];
-    const b = FREEWAY_ROUTE[i + 1];
-    if (distToSegment(x, z, a.x, a.z, b.x, b.z) < clearance) return true;
+  for (const route of FREEWAY_ROUTES) {
+    for (let i = 0; i < route.length - 1; i++) {
+      const a = route[i];
+      const b = route[i + 1];
+      if (distToSegment(x, z, a.x, a.z, b.x, b.z) < clearance) return true;
+    }
   }
   return false;
 }
@@ -107,44 +109,50 @@ export function buildAllDistricts(app: AppBase): void {
   });
 
   addDistrictSign(app, DISTRICTS.sf, -720, -720);
+  addDistrictSign(app, DISTRICTS.marin, -980, 280);
   addDistrictSign(app, DISTRICTS.eastBay, 620, -280);
   addDistrictSign(app, DISTRICTS.vallejo, 620, 880);
+  addDistrictSign(app, DISTRICTS.peninsula, -620, -1380);
+  addDistrictSign(app, DISTRICTS.southBay, 520, -1520);
 }
 
 export function buildFreewayLamps(app: AppBase, spacing: number, limit: number): void {
   let count = 0;
-  for (let i = 0; i < FREEWAY_ROUTE.length - 1 && count < limit; i++) {
-    const a = FREEWAY_ROUTE[i];
-    const b = FREEWAY_ROUTE[i + 1];
-    const dx = b.x - a.x;
-    const dz = b.z - a.z;
-    const len = Math.hypot(dx, dz);
-    const steps = Math.max(1, Math.floor(len / spacing));
-    for (let s = 0; s <= steps && count < limit; s++) {
-      const t = s / steps;
-      const x = a.x + dx * t;
-      const z = a.z + dz * t;
-      const y = hillOffsetM(x, z) + ((a.y ?? 0) + (b.y ?? 0)) * 0.5;
-      const nx = (-dz / len) * (FREEWAY_WIDTH_M * 0.55);
-      const nz = (dx / len) * (FREEWAY_WIDTH_M * 0.55);
+  for (const route of FREEWAY_ROUTES) {
+    for (let i = 0; i < route.length - 1 && count < limit; i++) {
+      const a = route[i];
+      const b = route[i + 1];
+      const dx = b.x - a.x;
+      const dz = b.z - a.z;
+      const len = Math.hypot(dx, dz);
+      if (len < 1) continue;
+      const steps = Math.max(1, Math.floor(len / spacing));
+      for (let s = 0; s <= steps && count < limit; s++) {
+        const t = s / steps;
+        const x = a.x + dx * t;
+        const z = a.z + dz * t;
+        const y = hillOffsetM(x, z) + ((a.y ?? 0) + (b.y ?? 0)) * 0.5;
+        const nx = (-dz / len) * (FREEWAY_WIDTH_M * 0.55);
+        const nz = (dx / len) * (FREEWAY_WIDTH_M * 0.55);
 
-      const pole = new Entity(`fw-lamp-${count}`);
-      pole.setLocalScale(0.35, 5.5, 0.35);
-      pole.setPosition(x + nx, y + 2.75, z + nz);
-      pole.addComponent('render', { type: 'box', material: LAMP_MAT });
-      app.root.addChild(pole);
+        const pole = new Entity(`fw-lamp-${count}`);
+        pole.setLocalScale(0.35, 5.5, 0.35);
+        pole.setPosition(x + nx, y + 2.75, z + nz);
+        pole.addComponent('render', { type: 'box', material: LAMP_MAT });
+        app.root.addChild(pole);
 
-      const bulb = new Entity(`fw-lamp-light-${count}`);
-      bulb.setPosition(x + nx, y + 5.2, z + nz);
-      bulb.addComponent('light', {
-        type: 'point',
-        color: new Color(1, 0.82, 0.55),
-        intensity: 1.4,
-        range: 42,
-        castShadows: false
-      });
-      app.root.addChild(bulb);
-      count++;
+        const bulb = new Entity(`fw-lamp-light-${count}`);
+        bulb.setPosition(x + nx, y + 5.2, z + nz);
+        bulb.addComponent('light', {
+          type: 'point',
+          color: new Color(1, 0.82, 0.55),
+          intensity: 1.4,
+          range: 42,
+          castShadows: false
+        });
+        app.root.addChild(bulb);
+        count++;
+      }
     }
   }
 }

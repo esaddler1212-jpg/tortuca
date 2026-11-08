@@ -75,7 +75,7 @@ app.start();
 app.scene.ambientLight = NIGHT_AMBIENT.clone();
 app.scene.exposure = 0.55;
 app.scene.fogStart = 60;
-app.scene.fogEnd = Math.min(1600, WORLD_HALF_M * 0.75);
+app.scene.fogEnd = Math.min(2200, WORLD_HALF_M * 0.85);
 
 buildDrivingWorld(app);
 
@@ -169,7 +169,7 @@ app.root.addChild(moon);
 const camera = new Entity('camera');
 camera.addComponent('camera', {
   fov: 74,
-  farClip: 2800,
+  farClip: 3600,
   clearColor: NIGHT_SKY.clone()
 });
 app.root.addChild(camera);

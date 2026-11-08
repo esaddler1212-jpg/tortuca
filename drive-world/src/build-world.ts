@@ -2,7 +2,8 @@ import { Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas'
 
 import { buildBayWater } from './build-bay';
 import { buildAllDistricts, buildFreewayLamps } from './build-districts';
-import { buildFreewayToVallejo } from './build-freeway';
+import { buildAllFreeways } from './build-freeway';
+import { buildBayAreaLandmarks } from './build-landmarks';
 import { NIGHT_FOG } from './night-palette';
 import { WORLD_HALF_M } from './world-config';
 
@@ -24,7 +25,8 @@ export function buildDrivingWorld(app: AppBase): void {
   app.root.addChild(ground);
 
   buildBayWater(app);
-  buildFreewayToVallejo(app);
+  buildAllFreeways(app);
   buildAllDistricts(app);
-  buildFreewayLamps(app, 85, 80);
+  buildBayAreaLandmarks(app);
+  buildFreewayLamps(app, 120, 140);
 }

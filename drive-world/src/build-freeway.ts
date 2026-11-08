@@ -1,7 +1,7 @@
 import { Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
 
 import { BAY_BRIDGE_ORANGE } from './night-palette';
-import { FREEWAY_ROUTE, FREEWAY_WIDTH_M, STRIPE_SPACING_M } from './world-config';
+import { FREEWAY_I80, FREEWAY_ROUTES, FREEWAY_WIDTH_M, STRIPE_SPACING_M, type FreewayWaypoint } from './world-config';
 
 export type FreewayMaterials = {
   deck: StandardMaterial;
@@ -33,7 +33,8 @@ function addDeckSegment(
   bz: number,
   by: number,
   mats: FreewayMaterials,
-  elevated: boolean
+  elevated: boolean,
+  tag: string
 ) {
   const dx = bx - ax;
   const dz = bz - az;
@@ -57,7 +58,7 @@ function addDeckSegment(
     deckMat = m;
   }
 
-  const road = new Entity(`fw-${Math.round(mx)}-${Math.round(mz)}`);
+  const road = new Entity(`${tag}-${Math.round(mx)}-${Math.round(mz)}`);
   road.setLocalScale(FREEWAY_WIDTH_M, 0.32, len + 0.5);
   road.setPosition(mx, my, mz);
   road.setEulerAngles(0, angleDeg, 0);
@@ -74,7 +75,7 @@ function addDeckSegment(
     const t = (i + 0.5) / stripes - 0.5;
     const ox = Math.sin((angleDeg * Math.PI) / 180) * t * len;
     const oz = Math.cos((angleDeg * Math.PI) / 180) * t * len;
-    const mark = new Entity(`fw-stripe-${Math.round(mx)}-${i}`);
+    const mark = new Entity(`${tag}-stripe-${Math.round(mx)}-${i}`);
     mark.setLocalScale(0.4, 0.03, 3.2);
     mark.setPosition(mx + ox, my + 0.08, mz + oz);
     mark.setEulerAngles(0, angleDeg, 0);
@@ -83,24 +84,26 @@ function addDeckSegment(
   }
 }
 
-/** Drivable I-80 from SF to Vallejo with elevated Bay Bridge section. */
-export function buildFreewayToVallejo(app: AppBase): FreewayMaterials {
-  const mats = freewayMaterials();
-  const route = FREEWAY_ROUTE;
-
+export function buildFreewayPath(app: AppBase, route: FreewayWaypoint[], mats: FreewayMaterials, tag: string): void {
   for (let i = 0; i < route.length - 1; i++) {
     const a = route[i];
     const b = route[i + 1];
     const ay = a.y ?? 0;
     const by = b.y ?? 0;
     const elevated = ay > 10 || by > 10;
-    addDeckSegment(app, a.x, a.z, ay, b.x, b.z, by, mats, elevated);
+    addDeckSegment(app, a.x, a.z, ay, b.x, b.z, by, mats, elevated, tag);
   }
+}
 
-  const bridgeMid = route[5];
+export function buildAllFreeways(app: AppBase): FreewayMaterials {
+  const mats = freewayMaterials();
+  const tags = ['i80', 'us101', 'i880'];
+  FREEWAY_ROUTES.forEach((route, i) => buildFreewayPath(app, route, mats, tags[i] ?? `fw${i}`));
+
+  const bridgeMid = FREEWAY_I80[5];
   if (bridgeMid) {
     for (const tx of [-12, 12]) {
-      const tower = new Entity(`tower-${tx}`);
+      const tower = new Entity(`bay-bridge-tower-${tx}`);
       tower.setLocalScale(6, 72, 6);
       tower.setPosition(bridgeMid.x + tx, (bridgeMid.y ?? 24) - 12, bridgeMid.z);
       const orange = new StandardMaterial();
@@ -116,14 +119,21 @@ export function buildFreewayToVallejo(app: AppBase): FreewayMaterials {
   return mats;
 }
 
+/** @deprecated */
+export function buildFreewayToVallejo(app: AppBase): FreewayMaterials {
+  return buildAllFreeways(app);
+}
+
 export function nearestFreewayPoint(x: number, z: number): Vec3 {
-  let best = new Vec3(FREEWAY_ROUTE[0].x, FREEWAY_ROUTE[0].y ?? 0, FREEWAY_ROUTE[0].z);
+  let best = new Vec3(FREEWAY_I80[0].x, FREEWAY_I80[0].y ?? 0, FREEWAY_I80[0].z);
   let bestD = Infinity;
-  for (const p of FREEWAY_ROUTE) {
-    const d = (p.x - x) ** 2 + (p.z - z) ** 2;
-    if (d < bestD) {
-      bestD = d;
-      best = new Vec3(p.x, p.y ?? 0, p.z);
+  for (const route of FREEWAY_ROUTES) {
+    for (const p of route) {
+      const d = (p.x - x) ** 2 + (p.z - z) ** 2;
+      if (d < bestD) {
+        bestD = d;
+        best = new Vec3(p.x, p.y ?? 0, p.z);
+      }
     }
   }
   return best;

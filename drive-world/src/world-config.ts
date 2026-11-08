@@ -1,27 +1,22 @@
 import { Vec3 } from 'playcanvas';
 
-/**
- * Game axes (Bay Area reference map): +X east, +Z north.
- * Playable corridor: San Francisco (west) → Bay Bridge → East Bay → I-80 → Vallejo (North Bay).
- * ~10 mi ≈ 16 km on the reference map → compressed to ~3.2 km along FREEWAY_ROUTE.
- */
-export const WORLD_HALF_M = 2000;
+/** +X east, +Z north. Full reference-map coverage (compressed). */
+export const WORLD_HALF_M = 2600;
 
 export const FREEWAY_WIDTH_M = 34;
 export const STRIPE_SPACING_M = 36;
 
-/** Spawn on I-80 in SF, heading east toward the bay. */
 export const SPAWN_SF = new Vec3(-760, 2.2, -490);
 
-export type DistrictId = 'sf' | 'eastBay' | 'vallejo';
+export type DistrictId = 'sf' | 'eastBay' | 'vallejo' | 'peninsula' | 'southBay' | 'marin';
 
-/** Future map regions (reference): northBay, peninsula, southBay — not built yet. */
-export type MapRegionId = DistrictId | 'northBay' | 'peninsula' | 'southBay';
+export type MapRegionId = DistrictId;
+
+export type FreewayWaypoint = { x: number; z: number; y?: number };
 
 export interface DistrictSpec {
   id: DistrictId;
   label: string;
-  /** Reference map macro-region label. */
   mapRegion: string;
   minX: number;
   maxX: number;
@@ -40,7 +35,7 @@ export const DISTRICTS: Record<DistrictId, DistrictSpec> = {
   sf: {
     id: 'sf',
     label: 'San Francisco',
-    mapRegion: 'San Francisco (peninsula tip)',
+    mapRegion: 'San Francisco',
     minX: -1180,
     maxX: -80,
     minZ: -920,
@@ -53,6 +48,22 @@ export const DISTRICTS: Record<DistrictId, DistrictSpec> = {
     heightMul: 1.25,
     flat: false
   },
+  marin: {
+    id: 'marin',
+    label: 'Marin',
+    mapRegion: 'North Bay',
+    minX: -1280,
+    maxX: -420,
+    minZ: -120,
+    maxZ: 720,
+    blockM: 82,
+    heightMin: 8,
+    heightMax: 32,
+    footprintMin: 14,
+    footprintMax: 36,
+    heightMul: 0.95,
+    flat: false
+  },
   eastBay: {
     id: 'eastBay',
     label: 'Oakland / East Bay',
@@ -60,7 +71,7 @@ export const DISTRICTS: Record<DistrictId, DistrictSpec> = {
     minX: 320,
     maxX: 1180,
     minZ: -520,
-    maxZ: 420,
+    maxZ: 480,
     blockM: 76,
     heightMin: 10,
     heightMax: 40,
@@ -84,14 +95,43 @@ export const DISTRICTS: Record<DistrictId, DistrictSpec> = {
     footprintMax: 42,
     heightMul: 0.9,
     flat: true
+  },
+  peninsula: {
+    id: 'peninsula',
+    label: 'Peninsula',
+    mapRegion: 'Peninsula',
+    minX: -980,
+    maxX: 280,
+    minZ: -1980,
+    maxZ: -960,
+    blockM: 74,
+    heightMin: 10,
+    heightMax: 36,
+    footprintMin: 14,
+    footprintMax: 32,
+    heightMul: 1,
+    flat: false
+  },
+  southBay: {
+    id: 'southBay',
+    label: 'South Bay',
+    mapRegion: 'South Bay',
+    minX: -80,
+    maxX: 1180,
+    minZ: -1980,
+    maxZ: -580,
+    blockM: 78,
+    heightMin: 10,
+    heightMax: 42,
+    footprintMin: 16,
+    footprintMax: 38,
+    heightMul: 1.05,
+    flat: false
   }
 };
 
-/**
- * Realistic path: I-80 east across San Francisco–Oakland Bay Bridge, touchdown Oakland,
- * then I-80 north beside the bay to Vallejo.
- */
-export const FREEWAY_ROUTE: { x: number; z: number; y?: number }[] = [
+/** I-80: SF → Bay Bridge → Oakland → Vallejo. */
+export const FREEWAY_I80: FreewayWaypoint[] = [
   { x: -860, z: -520, y: 0 },
   { x: -680, z: -505, y: 0 },
   { x: -480, z: -488, y: 0 },
@@ -108,14 +148,42 @@ export const FREEWAY_ROUTE: { x: number; z: number; y?: number }[] = [
   { x: 560, z: 940, y: 0 }
 ];
 
-/** San Francisco Bay water between peninsula and East Bay / North Bay. */
+/** US-101: SF → Peninsula → San José. */
+export const FREEWAY_101: FreewayWaypoint[] = [
+  { x: -820, z: -520, y: 0 },
+  { x: -780, z: -720, y: 0 },
+  { x: -700, z: -980, y: 0 },
+  { x: -580, z: -1220, y: 0 },
+  { x: -400, z: -1480, y: 0 },
+  { x: -120, z: -1680, y: 0 },
+  { x: 220, z: -1780, y: 0 },
+  { x: 520, z: -1820, y: 0 }
+];
+
+/** I-880: San José → East Bay (east shore). */
+export const FREEWAY_880: FreewayWaypoint[] = [
+  { x: 580, z: -1810, y: 0 },
+  { x: 680, z: -1560, y: 0 },
+  { x: 760, z: -1280, y: 0 },
+  { x: 800, z: -980, y: 0 },
+  { x: 780, z: -700, y: 0 },
+  { x: 750, z: -420, y: 0 },
+  { x: 740, z: -320, y: 0 }
+];
+
+/** All drivable freeway spines for the bay loop. */
+export const FREEWAY_ROUTES: FreewayWaypoint[][] = [FREEWAY_I80, FREEWAY_101, FREEWAY_880];
+
+/** @deprecated use FREEWAY_I80 */
+export const FREEWAY_ROUTE = FREEWAY_I80;
+
 export const BAY_WATER_BOUNDS = {
-  minX: -120,
-  maxX: 720,
-  minZ: -540,
-  maxZ: 520,
+  minX: -280,
+  maxX: 820,
+  minZ: -580,
+  maxZ: 560,
   centerZ: -10,
-  depthZ: 1060
+  depthZ: 1140
 };
 
 export const DRIVE_TUNING = {
