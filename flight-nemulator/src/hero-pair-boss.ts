@@ -13,7 +13,8 @@ const PAIR_BOSS_HP_SCALE = 14;
 const PAIR_VILLAIN_ID: Record<string, string> = {
   'tin-aviator': 'doctor-doom',
   'red-codriver': 'brute-abom',
-  'shade-knight': 'laughing-harlequin'
+  'shade-knight': 'laughing-harlequin',
+  'latverian-sovereign': 'doctor-doom'
 };
 
 export function pairVillainForHero(heroId: string): VillainCloneSpec {

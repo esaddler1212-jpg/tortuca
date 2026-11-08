@@ -13,8 +13,13 @@ if (!solar.forms.some((f) => f.id === 'yellow-ring')) {
   process.exit(1);
 }
 
-if (!getHero(DUAL_ROLE_HERO_ID)) {
+const doom = getHero(DUAL_ROLE_HERO_ID);
+if (!doom) {
   console.error('missing playable Latverian Sovereign');
+  process.exit(1);
+}
+if (!doom.forms.some((f) => f.id === 'doom-god-emperor')) {
+  console.error('latverian-sovereign missing god-emperor form');
   process.exit(1);
 }
 

@@ -6,7 +6,7 @@ if (PAIR_BOSS_WAVE < 8) {
   process.exit(1);
 }
 
-for (const id of ['tin-aviator', 'red-codriver', 'shade-knight', 'solar-apex']) {
+for (const id of ['tin-aviator', 'red-codriver', 'shade-knight', 'solar-apex', 'latverian-sovereign']) {
   const hero = getHero(id);
   if (!hero) continue;
   const pair = pairVillainForHero(id);

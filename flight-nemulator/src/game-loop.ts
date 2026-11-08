@@ -102,6 +102,14 @@ import {
   spawnLanternKeeper,
   SOLAR_HERO_ID
 } from './solar-lantern-arc';
+import {
+  applyDoomGodEmperor,
+  doomHeroTimelineGeneration,
+  doomHeroTimelineJump,
+  doomStoryHudLine,
+  DOOM_GOD_EMPEROR_FORM,
+  isDoomGodEmperor
+} from './doom-story-arc';
 import { isPhotoMode, togglePhotoMode } from './photo-mode';
 import { fetchManifestIfOnline, getManifestSuggestions } from './updates';
 import { attachHeroGltf } from './hero-gltf';
@@ -308,6 +316,12 @@ function tickFrame(s: GameSession, dt: number): void {
     const blast = villainAnnihilatePlanet(s.app, s.root, s.tier, s.factionNpcs);
     addVillainHavoc(s.city, blast.costUsd);
     s.destructionUsd += blast.costUsd;
+    if (s.heroSpec.id === DUAL_ROLE_HERO_ID && !isDoomGodEmperor()) {
+      applyDoomGodEmperor();
+      s.heroForm = resolveHeroForm(s.heroSpec, DOOM_GOD_EMPEROR_FORM);
+      s.hero.form = s.heroForm;
+      paintHero(s.hero.entity, s.heroForm.color);
+    }
     s.wanted = freshWantedAfterShatter();
     s.wave = 0;
     s.waveCooldown = 12;
@@ -532,6 +546,23 @@ function tickFrame(s: GameSession, dt: number): void {
     s.waveCooldown = 16;
     playSuper();
     addScreenShake(1.1);
+    if (
+      s.heroSpec.id === DUAL_ROLE_HERO_ID &&
+      s.playerRole === 'hero' &&
+      doomHeroTimelineGeneration() == null
+    ) {
+      const jump = doomHeroTimelineJump(s.app, s.root, s.tier, s.factionNpcs, s.worldFate);
+      s.city = jump.city;
+      s.wanted = jump.wanted;
+      s.wave = 0;
+      s.waveCooldown = 14;
+      s.destructionUsd += 2_500_000_000;
+      const home = spawnAtHome(s.heroSpec.districtId);
+      s.hero.entity.setPosition(home);
+      s.hero.velocity.set(0, 0, 0);
+      playWaveAlert();
+      addScreenShake(1.4);
+    }
   }
   tickDebris(dt, s.root);
   tickTrails(dt, s.root);
@@ -614,6 +645,7 @@ function tickFrame(s: GameSession, dt: number): void {
       lanternAidForFinalBoss(),
       isSolarCorrupted()
     ),
+    doomStoryHint: doomStoryHudLine(s.heroSpec.id, s.playerRole),
     alignmentNote: canPickAlignment(s.heroSpec.id)
       ? 'Doom: toggle Hero or Villain below'
       : s.heroSpec.id === VENOM_PLAYABLE_ID
@@ -626,6 +658,12 @@ function tickFrame(s: GameSession, dt: number): void {
 
 export function confirmVillainWorldRemake(): void {
   if (!session || session.playerRole !== 'villain' || session.worldFate.phase !== 'dying_roam') return;
+  if (session.heroSpec.id === DUAL_ROLE_HERO_ID && !isDoomGodEmperor()) {
+    applyDoomGodEmperor();
+    session.heroForm = resolveHeroForm(session.heroSpec, DOOM_GOD_EMPEROR_FORM);
+    session.hero.form = session.heroForm;
+    paintHero(session.hero.entity, session.heroForm.color);
+  }
   villainRemakeEarthInYourImage(
     session.app,
     session.root,

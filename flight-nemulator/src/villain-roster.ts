@@ -117,7 +117,7 @@ export const VILLAIN_CLONES: VillainCloneSpec[] = [
     tagline: 'Latverian orbital strike',
     universe: 'marvel',
     aerial: 'tech',
-    rivalHeroIds: ['tin-aviator', 'chrome-sage', 'storm-hammer', 'comet-surfer'],
+    rivalHeroIds: ['tin-aviator', 'latverian-sovereign', 'chrome-sage', 'storm-hammer', 'comet-surfer'],
     color: [0.45, 0.48, 0.52],
     hpMul: 1.3,
     speedMul: 0.9,

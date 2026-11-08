@@ -28,6 +28,7 @@ const required = [
   'src/hero-symbiote.ts',
   'src/hero-venom-bond.ts',
   'src/solar-lantern-arc.ts',
+  'src/doom-story-arc.ts',
   'src/hero-rivals.ts',
   'src/world-fate.ts',
   'src/world-persist.ts',

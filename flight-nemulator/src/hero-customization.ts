@@ -1,3 +1,5 @@
+import { DUAL_ROLE_HERO_ID } from './hero-alignment';
+import { DOOM_GOD_EMPEROR_FORM, isDoomGodEmperor } from './doom-story-arc';
 import type { HeroForm, HeroSpec, SuitRole } from './hero-roster';
 import { heroFormsForPlay } from './hero-roster';
 
@@ -32,7 +34,11 @@ export function isAbilityKitHero(heroId: string): boolean {
 export const isFullLoadoutHero = isAbilityKitHero;
 
 export function listHeroLoadouts(spec: HeroSpec): LoadoutOption[] {
-  return heroFormsForPlay(spec).map((f) => ({
+  const forms = heroFormsForPlay(spec).filter(
+    (f) =>
+      spec.id !== DUAL_ROLE_HERO_ID || f.id !== DOOM_GOD_EMPEROR_FORM || isDoomGodEmperor()
+  );
+  return forms.map((f) => ({
     id: f.id,
     label: f.label,
     group: (f.suitRole ?? (isAbilityKitHero(spec.id) ? 'kit' : 'form')) as LoadoutGroup,

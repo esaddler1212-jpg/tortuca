@@ -1,4 +1,6 @@
 import type { AerialMobility } from './aerial-mobility';
+import { DOOM_GOD_EMPEROR_FORM, isDoomGodEmperor } from './doom-story-arc';
+import { DUAL_ROLE_HERO_ID } from './hero-alignment';
 import type { HeroForm, HeroSpec } from './hero-roster';
 import { heroFormsForPlay } from './hero-roster';
 
@@ -42,5 +44,6 @@ export function resolveHeroForm(spec: HeroSpec, formId: string): HeroForm {
 }
 
 export function storedFormId(spec: HeroSpec): string {
+  if (spec.id === DUAL_ROLE_HERO_ID && isDoomGodEmperor()) return DOOM_GOD_EMPEROR_FORM;
   return localStorage.getItem(`flight-nemulator-form-${spec.id}`) ?? spec.defaultFormId;
 }

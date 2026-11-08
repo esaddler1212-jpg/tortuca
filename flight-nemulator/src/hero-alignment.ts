@@ -1,5 +1,6 @@
 import type { HeroSpec } from './hero-roster';
 import { getPlayerRole, setPlayerRole, type PlayerRole } from './player-role';
+import { isDoomGodEmperor } from './doom-story-arc';
 import { isSolarCorrupted, SOLAR_HERO_ID } from './solar-lantern-arc';
 
 export type HeroAlignment = 'hero-only' | 'villain-only' | 'dual';
@@ -18,6 +19,7 @@ export function heroAlignment(spec: HeroSpec): HeroAlignment {
 }
 
 export function canPickAlignment(heroId: string): boolean {
+  if (heroId === DUAL_ROLE_HERO_ID && isDoomGodEmperor()) return false;
   return heroId === DUAL_ROLE_HERO_ID;
 }
 
@@ -26,6 +28,10 @@ export function isVillainOnlyHero(heroId: string): boolean {
 }
 
 export function enforceAlignmentForHero(heroId: string): PlayerRole {
+  if (heroId === DUAL_ROLE_HERO_ID && isDoomGodEmperor()) {
+    setPlayerRole('villain');
+    return 'villain';
+  }
   if (heroId === SOLAR_HERO_ID && isSolarCorrupted()) {
     setPlayerRole('villain');
     return 'villain';

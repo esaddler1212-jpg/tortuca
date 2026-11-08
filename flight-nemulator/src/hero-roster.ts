@@ -1053,6 +1053,18 @@ export const HERO_ROSTER: HeroSpec[] = [
         speedMul: 0.94,
         powerMul: 1.22,
         color: [0.38, 0.12, 0.15]
+      },
+      {
+        id: 'doom-god-emperor',
+        label: 'God Emperor — Battleworld',
+        suitRole: 'siege',
+        abilities: ['Reality lattice', 'Throne world-breaker'],
+        kitPrimary: 'thunder',
+        dmgMul: 1.38,
+        superRadiusMul: 1.45,
+        speedMul: 0.92,
+        powerMul: 1.42,
+        color: [0.78, 0.62, 0.18]
       }
     ],
     defaultFormId: 'doom-hero',

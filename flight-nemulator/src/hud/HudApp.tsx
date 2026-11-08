@@ -9,7 +9,8 @@ import {
   suitRoleLabel
 } from '../hero-customization';
 import type { HeroForm, SuitRole } from '../hero-roster';
-import { canPickAlignment, isVillainOnlyHero } from '../hero-alignment';
+import { canPickAlignment, DUAL_ROLE_HERO_ID, isVillainOnlyHero } from '../hero-alignment';
+import { isDoomGodEmperor } from '../doom-story-arc';
 import {
   confirmVillainWorldRemake,
   continueDyingRoam,
@@ -76,6 +77,7 @@ export type GameHudSnapshot = {
   alignmentNote?: string | null;
   lanternSafehouseNear?: boolean;
   lanternArcHint?: string | null;
+  doomStoryHint?: string | null;
 };
 
 function formatUsd(n: number): string {
@@ -178,6 +180,7 @@ export function HudApp() {
         {snap.absorptionLabel && <p className="hud-tag">{snap.absorptionLabel}</p>}
         {snap.venomBondLabel && <p className="hud-tag">{snap.venomBondLabel}</p>}
         {snap.lanternArcHint && <p className="hud-tag">{snap.lanternArcHint}</p>}
+        {snap.doomStoryHint && <p className="hud-tag">{snap.doomStoryHint}</p>}
         {snap.lanternSafehouseNear && snap.playerRole === 'hero' && heroId === 'solar-apex' && (
           <div className="fate-actions">
             <button type="button" className="hud-roam" onClick={() => requestLanternAidAtSafeHouse()}>
@@ -279,6 +282,13 @@ function RolePicker({ role, heroId }: { role: PlayerRole; heroId: string }) {
     return (
       <p className="hud-tag settings-bar hud-panel">
         Alignment: Villain (fear ring — stole Emerald Pilot&apos;s ring)
+      </p>
+    );
+  }
+  if (heroId === DUAL_ROLE_HERO_ID && isDoomGodEmperor()) {
+    return (
+      <p className="hud-tag settings-bar hud-panel">
+        Alignment: Villain (God Emperor — Battleworld throne)
       </p>
     );
   }
