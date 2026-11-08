@@ -1,5 +1,7 @@
 import type { GamePhase, SavedProgress } from './game-progress';
 import type { LandmarkDef } from './landmark-registry';
+import type { GameSettings } from './game-settings';
+import type { DistrictId } from './world-config';
 
 export type CameraMode = 'chase' | 'cockpit' | 'drone';
 
@@ -14,6 +16,9 @@ export type HudSnapshot = {
   nextLandmark: LandmarkDef | null;
   cameraMode: CameraMode;
   waterPhase: number;
+  photoMode: boolean;
+  nearGarage: boolean;
+  settings: GameSettings;
 };
 
 export type TouchDrive = {
@@ -25,18 +30,12 @@ export type TouchDrive = {
 
 type HudListener = (snap: HudSnapshot) => void;
 
-const emptyProgress = (): SavedProgress => ({
-  version: 4,
-  phase: 'waymo_ride',
-  activeVehicleId: null,
-  unlockedVehicleIds: [],
-  visitedLandmarkIds: [],
-  unlockedRegionIds: [],
-  safehouseReached: false,
-  customizations: {},
-  lastPose: null,
-  cameraMode: 'chase'
-} as SavedProgress);
+const defaultSettings: GameSettings = {
+  masterVolume: 0.85,
+  fogQuality: 'med',
+  showTraffic: true,
+  photoSensitivity: 1
+};
 
 let snapshot: HudSnapshot = {
   playerX: 0,
@@ -48,13 +47,18 @@ let snapshot: HudSnapshot = {
   progress: null,
   nextLandmark: null,
   cameraMode: 'chase',
-  waterPhase: 0
+  waterPhase: 0,
+  photoMode: false,
+  nearGarage: false,
+  settings: defaultSettings
 };
 
 const listeners = new Set<HudListener>();
 
 let skipWaymoHandler: (() => void) | null = null;
 let toggleCameraHandler: (() => void) | null = null;
+let togglePhotoHandler: (() => void) | null = null;
+let fastTravelHandler: ((d: DistrictId) => void) | null = null;
 
 let touchDrive: TouchDrive = { up: false, down: false, left: false, right: false };
 
@@ -81,12 +85,28 @@ export function registerToggleCamera(fn: () => void): void {
   toggleCameraHandler = fn;
 }
 
+export function registerTogglePhoto(fn: () => void): void {
+  togglePhotoHandler = fn;
+}
+
+export function registerFastTravel(fn: (d: DistrictId) => void): void {
+  fastTravelHandler = fn;
+}
+
 export function requestSkipWaymo(): void {
   skipWaymoHandler?.();
 }
 
 export function requestToggleCamera(): void {
   toggleCameraHandler?.();
+}
+
+export function requestTogglePhoto(): void {
+  togglePhotoHandler?.();
+}
+
+export function requestFastTravel(district: DistrictId): void {
+  fastTravelHandler?.(district);
 }
 
 export function setTouchDrive(partial: Partial<TouchDrive>): void {
@@ -110,8 +130,4 @@ export function computeTouchControls(): { steering: number; throttle: number } {
   if (t.up) throttle += 1;
   if (t.down) throttle -= 1;
   return { steering, throttle };
-}
-
-export function defaultHudProgress(): SavedProgress {
-  return emptyProgress();
 }

@@ -4,6 +4,12 @@ let ctx: AudioContext | null = null;
 let engineOsc: OscillatorNode | null = null;
 let engineGain: GainNode | null = null;
 let unlocked = false;
+let masterVolume = 0.85;
+
+export function setMasterVolume(v: number): void {
+  masterVolume = Math.max(0, Math.min(1, v));
+  if (engineGain) engineGain.gain.setTargetAtTime(engineGain.gain.value * masterVolume, ctx?.currentTime ?? 0, 0.05);
+}
 
 function ensureContext(): AudioContext | null {
   if (ctx) return ctx;
@@ -34,7 +40,7 @@ export function unlockAudio(): void {
 
 export function updateEngineAudio(mph: number, driving: boolean): void {
   if (!unlocked || !ctx || !engineGain || !engineOsc) return;
-  const targetVol = driving && mph > 2 ? Math.min(0.08, 0.015 + mph * 0.0012) : 0;
+  const targetVol = (driving && mph > 2 ? Math.min(0.08, 0.015 + mph * 0.0012) : 0) * masterVolume;
   engineGain.gain.setTargetAtTime(targetVol, ctx.currentTime, 0.08);
   const hz = 42 + mph * 1.35;
   engineOsc.frequency.setTargetAtTime(hz, ctx.currentTime, 0.05);

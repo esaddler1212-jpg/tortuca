@@ -1,42 +1,37 @@
-# Drive World — status & gaps
+# Drive World — status
 
-Runnable prototype: [`drive-world/`](../drive-world/). Stack: **PlayCanvas** (world + physics) + **React** (minimap, nav, touch).
+Stack: **PlayCanvas** + **React HUD** · `drive-world-progress-v5`
 
-## Shipped
+## Shipped (this wave)
 
-| Area | Status |
+| Feature | Notes |
+|---------|--------|
+| Headlights / taillights / brake glow | `vehicle-lights.ts` |
+| Nitro | **Shift** or gamepad shoulder |
+| Gamepad | Left stick + triggers |
+| React minimap, nav, landmarks, settings | Volume, fog, traffic toggle |
+| Chase / cockpit / **drone** (C) | |
+| **Photo mode** (P) | Free-fly cam; hide main HUD |
+| Waymo skip + **fast travel** | Unlocked regions only, at safehouse |
+| Collectibles | Unlock bonus paints (Warriors, Giants, etc.) |
+| Speed traps | Personal best mph per trap |
+| Scenic routes | Checkpoint badges (Marin coast, Skyline) |
+| Per-car **odometer + top speed** | Saved per vehicle id |
+| Garage: ride height, underglow, tint, rims, handling presets | Grip / Drift / Comfort |
+| I-280 freeway, **Lombard** switchbacks | |
+| **6 new landmarks** | Lombard, Painted Ladies, Wharf, Oracle Park, Lake Merritt, … |
+| Ambient freeway traffic | Toggle in settings |
+| Regional **Karl fog** | SF/Marin denser |
+| Freeway ramps | Prior pass |
+
+## Still optional / not done
+
+| Item | Notes |
 |------|--------|
-| Full Bay map, freeways, landmarks, Waymo intro, regional unlocks | ✅ |
-| Safehouse garage + per-car customization (paint, glow, power, grip, wheels) | ✅ |
-| **React HUD**: minimap, landmark regions, next-landmark nav | ✅ |
-| **Chase / cockpit / drone cam** (C cycles) | ✅ |
-| **Skip Waymo** | ✅ |
-| **Engine audio** + landmark chime (Web Audio) | ✅ |
-| **Save last pose** (v4 `lastPose`) | ✅ |
-| **Freeway ramp colliders** (major merges) | ✅ |
-| **Touch drive** controls (coarse pointer) | ✅ |
-| **Animated bay** emissive | ✅ |
-| **Extra landmark collision** (select footings) | ✅ |
-| **Regional body bits** (spoiler / wing / rack) | ✅ |
-| **Netlify** config in `drive-world/netlify.toml` | ✅ |
+| **glTF hero cars** | Drop models in `drive-world/public/models/` |
+| **Cloud save** | Local only; tie to Tortuca Google session later |
+| Full **day/night cycle** | Night-only art direction kept |
+| World streaming / LOD | |
+| True heightmap terrain | |
 
-Deploy: [`DRIVE_WORLD_DEPLOY.md`](./DRIVE_WORLD_DEPLOY.md).
-
-Progress key: `drive-world-progress-v4`.
-
-## Still thin / future
-
-| Gap | Notes |
-|-----|--------|
-| **glTF real cars** | Still block meshes; hook PlayCanvas glb loader when art is ready. |
-| **World streaming / LOD** | Full scene load; cull distant districts if mobile struggles. |
-| **Terrain mesh vs freeway** | Ramps help; heightmap ground still ideal. |
-| **Shore decals / better water** | Shader or normal map pass. |
-| **Waypoint GPS voice / Missions UI** | React HUD is textual only. |
-| **Multiplayer** | Out of scope for sandbox. |
-
-## Run
-
-```bash
-cd drive-world && npm install && npm run dev
-```
+Deploy: [`DRIVE_WORLD_DEPLOY.md`](./DRIVE_WORLD_DEPLOY.md)

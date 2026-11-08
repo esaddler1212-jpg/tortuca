@@ -174,3 +174,49 @@
     display: none;
   }
 }
+
+.settings-panel,
+.stats-panel,
+.fast-travel {
+  pointer-events: auto;
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  background: rgba(8, 12, 20, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
+}
+
+.fast-travel-btn {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.3rem;
+  font-size: 0.7rem;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.3);
+  color: inherit;
+  cursor: pointer;
+}
+
+.fast-travel-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.photo-hint {
+  font-size: 0.7rem;
+  opacity: 0.85;
+  text-align: right;
+}
+
+body.photo-mode #hud,
+body.photo-mode #garage,
+body.photo-mode #car-picker {
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+body.photo-mode .react-hud {
+  opacity: 0.95;
+}

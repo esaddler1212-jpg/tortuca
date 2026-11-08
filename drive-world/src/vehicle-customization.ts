@@ -1,15 +1,22 @@
 import type { VehicleSpec } from './vehicle-catalog';
 
+export type HandlingPreset = 'grip' | 'drift' | 'comfort';
+
 export type VehicleCustomization = {
   paintPreset: string;
-  /** 0–1 night glow on body */
   glow: number;
-  /** 0–1 → engine force multiplier */
   power: number;
-  /** 0–1 → wheel friction */
   grip: number;
-  /** 0–1 → wheel radius scale */
   wheel: number;
+  /** 0–1 chassis lower */
+  rideHeight: number;
+  /** 0–1 underglow intensity */
+  underglow: number;
+  /** 0–1 window tint */
+  tint: number;
+  /** 0–1 rim accent */
+  rims: number;
+  handling: HandlingPreset;
 };
 
 export type PaintPreset = {
@@ -25,7 +32,9 @@ export const PAINT_PRESETS: PaintPreset[] = [
   { id: 'bridge-orange', label: 'Bridge Orange', diffuse: [0.2, 0.08, 0.04], emissive: [0.78, 0.28, 0.1] },
   { id: 'neon-cyan', label: 'Neon Cyan', diffuse: [0.06, 0.12, 0.14], emissive: [0.15, 0.85, 0.95] },
   { id: 'cherry-red', label: 'Cherry Red', diffuse: [0.18, 0.05, 0.05], emissive: [0.9, 0.18, 0.12] },
-  { id: 'stealth', label: 'Stealth', diffuse: [0.04, 0.04, 0.05], emissive: [0.12, 0.14, 0.18] }
+  { id: 'stealth', label: 'Stealth', diffuse: [0.04, 0.04, 0.05], emissive: [0.12, 0.14, 0.18] },
+  { id: 'warriors-blue', label: 'Warriors Blue', diffuse: [0.06, 0.12, 0.28], emissive: [0.15, 0.45, 0.95] },
+  { id: 'giants-orange', label: 'Giants Orange', diffuse: [0.22, 0.1, 0.04], emissive: [0.95, 0.4, 0.12] }
 ];
 
 export const DEFAULT_CUSTOMIZATION: VehicleCustomization = {
@@ -33,7 +42,12 @@ export const DEFAULT_CUSTOMIZATION: VehicleCustomization = {
   glow: 0.45,
   power: 0.55,
   grip: 0.5,
-  wheel: 0.5
+  wheel: 0.5,
+  rideHeight: 0.5,
+  underglow: 0.35,
+  tint: 0.4,
+  rims: 0.45,
+  handling: 'grip'
 };
 
 export function defaultCustomizationFor(spec: VehicleSpec): VehicleCustomization {
@@ -60,18 +74,42 @@ export function appliedTuning(spec: VehicleSpec, custom: VehicleCustomization): 
   diffuse: [number, number, number];
   emissive: [number, number, number];
   wheelScale: number;
+  maxSteering: number;
+  rideDrop: number;
+  underglowIntensity: number;
+  tintOpacity: number;
+  rimGlow: number;
 } {
   const preset = resolvePaintPreset(custom.paintPreset);
   const powerMul = 0.85 + custom.power * 0.4;
-  const friction = 920 + custom.grip * 520;
+  let friction = 920 + custom.grip * 520;
+  let steering = spec.maxSteering;
+  let power = spec.maxEngineForce * powerMul;
+  if (custom.handling === 'drift') {
+    friction *= 0.82;
+    steering *= 1.12;
+    power *= 1.05;
+  } else if (custom.handling === 'comfort') {
+    friction *= 1.08;
+    steering *= 0.92;
+    power *= 0.95;
+  }
   const glow = 0.15 + custom.glow * 0.65;
   const wheelScale = 0.88 + custom.wheel * 0.28;
+  const rideDrop = custom.rideHeight * 0.22;
   return {
-    maxEngineForce: spec.maxEngineForce * powerMul,
+    maxEngineForce: power,
     frictionSlip: friction,
     emissiveIntensity: glow,
     diffuse: preset.diffuse,
     emissive: preset.emissive,
-    wheelScale
+    wheelScale,
+    maxSteering: steering,
+    rideDrop,
+    underglowIntensity: custom.underglow,
+    tintOpacity: 0.35 + custom.tint * 0.45,
+    rimGlow: 0.2 + custom.rims * 0.8
   };
 }
+
+export const COLLECTIBLE_PAINTS = ['warriors-blue', 'giants-orange'] as const;

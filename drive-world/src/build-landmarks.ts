@@ -91,6 +91,9 @@ export function buildBayAreaLandmarks(app: AppBase): void {
   box(app, 'ferry-tower', -780, 42, -520, 8, 28, 8, warm);
   box(app, 'palace-dome', -1040, 14, -180, 36, 16, 36, stone);
   box(app, 'palace-ring', -1040, 22, -180, 48, 6, 48, matConcrete());
+  box(app, 'painted-ladies', -900, 12, -220, 42, 18, 22, warm);
+  box(app, 'fishermans-pier', -720, 8, -760, 55, 8, 30, stone, true);
+  box(app, 'oracle-park', -880, 14, -610, 48, 20, 40, matConcrete(), true);
 
   bridgeSpan(app, 'golden-gate', -1190, -820, 80, 42);
 
@@ -104,6 +107,7 @@ export function buildBayAreaLandmarks(app: AppBase): void {
   box(app, 'fox-theater', 600, 12, -360, 42, 24, 16, warm, true);
   box(app, 'fox-marquee', 600, 26, -368, 38, 4, 20, matOrange());
   ringBuilding(app, 'oakland-arena', 780, -200, 55, matConcrete());
+  box(app, 'lake-merritt', 620, 4, -120, 70, 3, 50, matGlass());
 
   // —— Vallejo ——
   box(app, 'mare-island-crane-leg-a', 430, 28, 1020, 4, 56, 4, matOrange());

@@ -99,19 +99,29 @@ Vehicle.prototype.initialize = function () {
         Ammo.destroy(vehicle);
     });
 
+    this.nitroMul = 1;
+    this.brakingVisual = false;
+
     this.on('vehicle:controls', function (steering, throttle) {
         this.steering = pc.math.lerp(this.steering, steering * this.maxSteering, 0.3);
 
         if (throttle > 0) {
             this.brakingForce = 0;
-            this.engineForce = this.maxEngineForce;
+            this.engineForce = this.maxEngineForce * this.nitroMul;
+            this.brakingVisual = false;
         } else if (throttle < 0) {
             this.brakingForce = 0;
-            this.engineForce = -this.maxEngineForce;
+            this.engineForce = -this.maxEngineForce * this.nitroMul;
+            this.brakingVisual = false;
         } else {
             this.brakingForce = this.maxBrakingForce;
             this.engineForce = 0;
+            this.brakingVisual = true;
         }
+    });
+
+    this.on('vehicle:nitro', function (mul) {
+        this.nitroMul = Math.max(1, Math.min(2.2, mul));
     });
 };
 

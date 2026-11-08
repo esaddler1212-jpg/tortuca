@@ -23,7 +23,8 @@ export type GameUi = {
     vehicleId: string | null,
     custom: VehicleCustomization,
     onChange: (next: VehicleCustomization) => void,
-    onApply: () => void
+    onApply: () => void,
+    unlockedPaintIds?: string[]
   ): void;
   bindReset(onReset: () => void): void;
 };
@@ -110,7 +111,7 @@ export function wireGameUi(): GameUi {
         list.appendChild(btn);
       }
     },
-    bindCustomize(vehicleId, custom, onChange, onApply) {
+    bindCustomize(vehicleId, custom, onChange, onApply, unlockedPaintIds) {
       const section = el<HTMLDivElement>('customize');
       if (!vehicleId) {
         section.hidden = true;
@@ -122,6 +123,11 @@ export function wireGameUi(): GameUi {
       const power = el<HTMLInputElement>('slider-power');
       const grip = el<HTMLInputElement>('slider-grip');
       const wheel = el<HTMLInputElement>('slider-wheel');
+      const ride = el<HTMLInputElement>('slider-ride');
+      const underglow = el<HTMLInputElement>('slider-underglow');
+      const tint = el<HTMLInputElement>('slider-tint');
+      const rims = el<HTMLInputElement>('slider-rims');
+      const handling = el<HTMLSelectElement>('handling-preset');
 
       const emit = () => {
         onChange({
@@ -129,13 +135,19 @@ export function wireGameUi(): GameUi {
           glow: Number(glow.value) / 100,
           power: Number(power.value) / 100,
           grip: Number(grip.value) / 100,
-          wheel: Number(wheel.value) / 100
+          wheel: Number(wheel.value) / 100,
+          rideHeight: Number(ride.value) / 100,
+          underglow: Number(underglow.value) / 100,
+          tint: Number(tint.value) / 100,
+          rims: Number(rims.value) / 100,
+          handling: (handling.value as VehicleCustomization['handling']) || 'grip'
         });
       };
 
+      const allowed = new Set(unlockedPaintIds ?? PAINT_PRESETS.map((p) => p.id));
       const swatches = el<HTMLDivElement>('paint-swatches');
       swatches.innerHTML = '';
-      for (const preset of PAINT_PRESETS) {
+      for (const preset of PAINT_PRESETS.filter((p) => allowed.has(p.id))) {
         const b = document.createElement('button');
         b.type = 'button';
         b.className = preset.id === selectedPaint ? 'swatch active' : 'swatch';
@@ -157,10 +169,20 @@ export function wireGameUi(): GameUi {
       power.value = String(Math.round(custom.power * 100));
       grip.value = String(Math.round(custom.grip * 100));
       wheel.value = String(Math.round((custom.wheel ?? 0.5) * 100));
+      ride.value = String(Math.round((custom.rideHeight ?? 0.5) * 100));
+      underglow.value = String(Math.round((custom.underglow ?? 0.35) * 100));
+      tint.value = String(Math.round((custom.tint ?? 0.4) * 100));
+      rims.value = String(Math.round((custom.rims ?? 0.45) * 100));
+      handling.value = custom.handling ?? 'grip';
       glow.oninput = emit;
       power.oninput = emit;
       grip.oninput = emit;
       wheel.oninput = emit;
+      ride.oninput = emit;
+      underglow.oninput = emit;
+      tint.oninput = emit;
+      rims.oninput = emit;
+      handling.onchange = emit;
       el<HTMLButtonElement>('apply-custom').onclick = onApply;
     },
     bindReset(onReset) {

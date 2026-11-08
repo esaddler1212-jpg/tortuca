@@ -172,8 +172,18 @@ export const FREEWAY_880: FreewayWaypoint[] = [
   { x: 740, z: -320, y: 0 }
 ];
 
+/** I-280: SF ↔ Peninsula interior. */
+export const FREEWAY_280: FreewayWaypoint[] = [
+  { x: -750, z: -580, y: 0 },
+  { x: -680, z: -820, y: 0 },
+  { x: -580, z: -1050, y: 0 },
+  { x: -420, z: -1280, y: 0 },
+  { x: -220, z: -1480, y: 0 },
+  { x: 40, z: -1620, y: 0 }
+];
+
 /** All drivable freeway spines for the bay loop. */
-export const FREEWAY_ROUTES: FreewayWaypoint[][] = [FREEWAY_I80, FREEWAY_101, FREEWAY_880];
+export const FREEWAY_ROUTES: FreewayWaypoint[][] = [FREEWAY_I80, FREEWAY_101, FREEWAY_880, FREEWAY_280];
 
 /** @deprecated use FREEWAY_I80 */
 export const FREEWAY_ROUTE = FREEWAY_I80;

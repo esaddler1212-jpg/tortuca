@@ -13,8 +13,10 @@ export type SavedPose = { x: number; y: number; z: number; yaw: number };
 
 export type CameraMode = 'chase' | 'cockpit' | 'drone';
 
+export type VehicleStats = { miles: number; topMph: number };
+
 export type SavedProgress = {
-  version: 4;
+  version: 5;
   phase: GamePhase;
   activeVehicleId: string | null;
   unlockedVehicleIds: string[];
@@ -24,13 +26,19 @@ export type SavedProgress = {
   customizations: Record<string, VehicleCustomization>;
   lastPose: SavedPose | null;
   cameraMode: CameraMode;
+  collectedIds: string[];
+  unlockedPaintIds: string[];
+  speedTrapBests: Record<string, number>;
+  scenicCompleted: string[];
+  scenicProgress: Record<string, number>;
+  vehicleStats: Record<string, VehicleStats>;
 };
 
-const STORAGE_KEY = 'drive-world-progress-v4';
+const STORAGE_KEY = 'drive-world-progress-v5';
 
 function defaultProgress(): SavedProgress {
   return {
-    version: 4,
+    version: 5,
     phase: 'waymo_ride',
     activeVehicleId: null,
     unlockedVehicleIds: [],
@@ -39,26 +47,47 @@ function defaultProgress(): SavedProgress {
     safehouseReached: false,
     customizations: {},
     lastPose: null,
-    cameraMode: 'chase'
+    cameraMode: 'chase',
+    collectedIds: [],
+    unlockedPaintIds: ['bay-blue', 'fog-white', 'bridge-orange', 'neon-cyan', 'cherry-red', 'stealth'],
+    speedTrapBests: {},
+    scenicCompleted: [],
+    scenicProgress: {},
+    vehicleStats: {}
+  };
+}
+
+function withV5Defaults(p: Partial<SavedProgress> & { version: number }): SavedProgress {
+  return {
+    ...defaultProgress(),
+    ...p,
+    version: 5,
+    collectedIds: p.collectedIds ?? [],
+    unlockedPaintIds:
+      p.unlockedPaintIds ?? ['bay-blue', 'fog-white', 'bridge-orange', 'neon-cyan', 'cherry-red', 'stealth'],
+    speedTrapBests: p.speedTrapBests ?? {},
+    scenicCompleted: p.scenicCompleted ?? [],
+    scenicProgress: p.scenicProgress ?? {},
+    vehicleStats: p.vehicleStats ?? {}
   };
 }
 
 function migrateRaw(parsed: Record<string, unknown>): SavedProgress | null {
-  if (parsed.version === 4) return parsed as SavedProgress;
+  if (parsed.version === 5) return parsed as SavedProgress;
+  if (parsed.version === 4) return withV5Defaults(parsed as SavedProgress & { version: 4 });
   if (parsed.version === 3) {
     const p = parsed as SavedProgress & { version: 3 };
-    return { ...p, version: 4, lastPose: null, cameraMode: 'chase' };
+    return withV5Defaults({ ...p, lastPose: null, cameraMode: 'chase' });
   }
   if (parsed.version === 2) {
     const p = parsed as SavedProgress & { version: 2; customizations?: Record<string, VehicleCustomization> };
     const { version: _v, ...rest } = p;
-    return {
+    return withV5Defaults({
       ...rest,
-      version: 4,
       customizations: p.customizations ?? {},
       lastPose: null,
       cameraMode: 'chase'
-    };
+    });
   }
   return null;
 }
@@ -178,9 +207,72 @@ export function setCameraMode(progress: SavedProgress, cameraMode: CameraMode): 
 
 export function getVehicleCustomization(progress: SavedProgress, vehicleId: string): VehicleCustomization {
   const saved = progress.customizations[vehicleId];
-  if (saved) return { ...saved };
+  const base = saved ? { ...DEFAULT_CUSTOMIZATION, ...saved } : undefined;
+  if (base) return base;
   const spec = VEHICLE_CATALOG[vehicleId];
   return spec ? defaultCustomizationFor(spec) : { ...DEFAULT_CUSTOMIZATION };
+}
+
+export function collectItem(progress: SavedProgress, id: string, paintId: string): SavedProgress {
+  if (progress.collectedIds.includes(id)) return progress;
+  const paints = progress.unlockedPaintIds.includes(paintId)
+    ? progress.unlockedPaintIds
+    : [...progress.unlockedPaintIds, paintId];
+  const next = {
+    ...progress,
+    collectedIds: [...progress.collectedIds, id],
+    unlockedPaintIds: paints
+  };
+  saveProgress(next);
+  return next;
+}
+
+export function recordSpeedTrap(progress: SavedProgress, trapId: string, mph: number): SavedProgress {
+  const prev = progress.speedTrapBests[trapId] ?? 0;
+  if (mph <= prev) return progress;
+  const next = { ...progress, speedTrapBests: { ...progress.speedTrapBests, [trapId]: mph } };
+  saveProgress(next);
+  return next;
+}
+
+export function tickScenicRoute(progress: SavedProgress, routeId: string, checkpointIdx: number): SavedProgress {
+  const cur = progress.scenicProgress[routeId] ?? 0;
+  if (checkpointIdx !== cur) return progress;
+  const nextIdx = cur + 1;
+  let next: SavedProgress = {
+    ...progress,
+    scenicProgress: { ...progress.scenicProgress, [routeId]: nextIdx }
+  };
+  saveProgress(next);
+  return next;
+}
+
+export function completeScenicRoute(progress: SavedProgress, routeId: string): SavedProgress {
+  if (progress.scenicCompleted.includes(routeId)) return progress;
+  const next = { ...progress, scenicCompleted: [...progress.scenicCompleted, routeId] };
+  saveProgress(next);
+  return next;
+}
+
+export function bumpVehicleStats(
+  progress: SavedProgress,
+  vehicleId: string,
+  milesDelta: number,
+  mph: number
+): SavedProgress {
+  const prev = progress.vehicleStats[vehicleId] ?? { miles: 0, topMph: 0 };
+  const next = {
+    ...progress,
+    vehicleStats: {
+      ...progress.vehicleStats,
+      [vehicleId]: {
+        miles: prev.miles + milesDelta,
+        topMph: Math.max(prev.topMph, mph)
+      }
+    }
+  };
+  saveProgress(next);
+  return next;
 }
 
 export function setVehicleCustomization(
