@@ -74,7 +74,10 @@ export const COLLECTIBLES: CollectibleDef[] = [
   { id: 'hyphy-whistle', name: 'Hyphy whistle', unlockPaintId: 'parking-yellow', x: 598, z: -358, radius: 24 },
   { id: 'cookie-case', name: 'Cookie tour case', unlockPaintId: 'fuel-green', x: 1030, z: 98, radius: 26 },
   { id: 'willie-glove', name: 'Say hey glove', unlockPaintId: 'cherry-red', x: -872, z: -605, radius: 26 },
-  { id: 'beast-bell', name: 'Beast mode bell', unlockPaintId: 'stealth', x: 775, z: -195, radius: 26 }
+  { id: 'beast-bell', name: 'Beast mode bell', unlockPaintId: 'stealth', x: 775, z: -195, radius: 26 },
+  { id: 'craft-wedge-shard', name: 'Craft wedge shard', unlockPaintId: 'neon-cyan', x: -50, z: 298, radius: 24 },
+  { id: 'craft-lift-shard', name: 'Craft lift shard', unlockPaintId: 'fog-white', x: 655, z: -108, radius: 24 },
+  { id: 'craft-spike-shard', name: 'Craft spike shard', unlockPaintId: 'cherry-red', x: 418, z: -1235, radius: 26 }
 ];
 
 export const SPEED_TRAPS: SpeedTrapDef[] = [

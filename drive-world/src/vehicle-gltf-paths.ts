@@ -27,6 +27,21 @@ export const VEHICLE_GLB: Record<string, string> = {
   'legend-hyphy-shortbus': `${KENNEY}/van.glb`,
   'legend-cookie-bus': `${KENNEY}/van.glb`,
   'legend-say-hey-cadillac': `${KENNEY}/sedan.glb`,
+  'garage-drifter': `${KENNEY}/hatchback-sports.glb`,
+  'meet-vallejo-lot': `${KENNEY}/race.glb`,
+  'meet-sf-flash': `${KENNEY}/sedan-sports.glb`,
+  'meet-marin-breeze': `${KENNEY}/suv.glb`,
+  'meet-east-donk': `${KENNEY}/van.glb`,
+  'meet-pen-low': `${KENNEY}/sedan.glb`,
+  'meet-south-arc': `${KENNEY}/race-future.glb`,
+  'bonus-sprint-king': `${KENNEY}/race-future.glb`,
+  'bonus-chapter-hauler': `${KENNEY}/truck.glb`,
+  'bonus-vista-liner': `${KENNEY}/suv.glb`,
+  'bonus-heat-shade': `${KENNEY}/sedan-sports.glb`,
+  'bonus-trap-outlaw': `${KENNEY}/police.glb`,
+  'craft-bay-wedge': `${KENNEY}/sedan-sports.glb`,
+  'craft-night-lift': `${KENNEY}/suv.glb`,
+  'craft-street-spike': `${KENNEY}/race.glb`,
   default: `${KENNEY}/sedan.glb`
 };
 

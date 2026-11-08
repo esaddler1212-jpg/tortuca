@@ -21,11 +21,13 @@ import { DISTRICT_LABELS, LANDMARKS, districtLandmarkTotal, districtLandmarksVis
 import type { DistrictId } from '../world-config';
 import { Minimap } from './Minimap';
 import { applyBayQualityPreset } from '../bay-quality';
-import { searchLandTargets } from '../city-land-search';
+import { isLandTargetAllowed, searchLandTargets } from '../city-land-search';
 import { loadSettings, saveSettings, type GameSettings } from '../game-settings';
 import { FAST_TRAVEL } from '../world-extras';
 import { buildMissionBoard } from '../game-missions';
-import { bayRegionsGated } from '../mission-chapters';
+import { bayRegionsGated, syncVallejoMissionSteps, VALLEJO_CHAPTER_STEPS } from '../mission-chapters';
+import { GAMEPAD_GLYPHS } from '../gamepad-hub';
+import { setSimulationPaused } from '../console-graphics';
 import { nextTaxiContract } from '../cpm-taxi';
 import { requestStartTaxi } from '../game-bridge';
 import { heatLabel } from '../game-heat';
@@ -43,10 +45,91 @@ import { JournalPanel } from './JournalPanel';
 import { SafehousePanel } from './SafehousePanel';
 import { MusicPanel } from './MusicPanel';
 
+function PinnedObjective({ snap }: { snap: HudSnapshot }) {
+  if (snap.ridingWaymo || snap.photoMode || !snap.pinnedChapterLabel) return null;
+  return (
+    <div className="pinned-objective" aria-live="polite">
+      <strong>Chapter</strong> — {snap.pinnedChapterLabel}
+      {snap.pinnedChapterHint ? <span className="pinned-hint"> · {snap.pinnedChapterHint}</span> : null}
+    </div>
+  );
+}
+
+function HudDrawerTabs({ snap }: { snap: HudSnapshot }) {
+  const [tab, setTab] = useState<'map' | 'missions' | 'garage' | 'settings'>('missions');
+
+  useEffect(() => {
+    const onTab = (ev: Event) => {
+      const id = (ev as CustomEvent<'map' | 'missions' | 'garage' | 'settings'>).detail;
+      setTab(id);
+    };
+    window.addEventListener('drive-world:hud-tab', onTab);
+    return () => window.removeEventListener('drive-world:hud-tab', onTab);
+  }, []);
+
+  useEffect(() => {
+    setSimulationPaused(tab !== 'missions' && snap.phase === 'home' && !snap.ridingWaymo && !snap.photoMode);
+    return () => setSimulationPaused(false);
+  }, [tab, snap.phase, snap.ridingWaymo, snap.photoMode]);
+
+  if (snap.photoMode || snap.ridingWaymo) return null;
+  return (
+    <div className="hud-drawer-stack">
+      <div className="hud-tabs" role="tablist" aria-label="HUD panels">
+        {(['map', 'missions', 'garage', 'settings'] as const).map((id) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={tab === id}
+            className={`hud-tab ${tab === id ? 'active' : ''}`}
+            onClick={() => setTab(id)}
+          >
+            {id === 'map' ? 'Map' : id === 'missions' ? 'Missions' : id === 'garage' ? 'Garage' : 'Settings'}
+          </button>
+        ))}
+      </div>
+      <div className="hud-tab-panel" role="tabpanel">
+        {tab === 'map' && (
+          <>
+            <LandSearchPanel snap={snap} />
+            <FastTravel snap={snap} />
+            <LandmarkPanel snap={snap} />
+          </>
+        )}
+        {tab === 'missions' && (
+          <>
+            {snap.landmarkSprintLabel ? (
+              <div className="sprint-armed">Sprint: {snap.landmarkSprintLabel}</div>
+            ) : null}
+            <MissionBoard snap={snap} />
+            <StatsPanel snap={snap} />
+          </>
+        )}
+        {tab === 'garage' && (
+          <>
+            {snap.garageInteriorCam ? <div className="sprint-armed">Garage interior cam</div> : null}
+            <RecordsPanel snap={snap} />
+            <SafehousePanel snap={snap} />
+          </>
+        )}
+        {tab === 'settings' && (
+          <>
+            <SettingsPanel />
+            <MusicPanel />
+            <JournalPanel snap={snap} />
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function NavHint({ snap }: { snap: HudSnapshot }) {
   if (snap.ridingWaymo || snap.photoMode) return null;
   const pin =
     snap.navTarget ??
+    snap.navObjective ??
     (snap.nextLandmark
       ? { label: snap.nextLandmark.name, x: snap.nextLandmark.x, z: snap.nextLandmark.z }
       : null);
@@ -69,7 +152,11 @@ function NavHint({ snap }: { snap: HudSnapshot }) {
 
 function LandSearchPanel({ snap }: { snap: HudSnapshot }) {
   const [q, setQ] = useState('');
-  const hits = useMemo(() => searchLandTargets(q), [q]);
+  const hits = useMemo(() => {
+    const all = searchLandTargets(q);
+    if (!snap.progress) return all;
+    return all.filter((t) => isLandTargetAllowed(snap.progress!, t));
+  }, [q, snap.progress]);
   if (snap.photoMode || snap.ridingWaymo || snap.phase !== 'home') return null;
   return (
     <details className="land-search-panel">
@@ -134,6 +221,43 @@ function LandmarkPanel({ snap }: { snap: HudSnapshot }) {
         })}
       </ul>
     </details>
+  );
+}
+
+function RecordsPanel({ snap }: { snap: HudSnapshot }) {
+  const p = snap.progress;
+  if (!p) return null;
+  const synced = syncVallejoMissionSteps(p);
+  const mastery = VALLEJO_CHAPTER_STEPS.filter((s) => synced.missionStepsCompleted.includes(s.id)).length;
+  const parkStars = Object.values(p.parkingStars).reduce((a, b) => a + b, 0);
+  const traps = Object.keys(p.speedTrapBests).length;
+  return (
+    <details className="records-panel" open={!isTouchPrimary()}>
+      <summary>Records · trophies</summary>
+      <ul className="records-list">
+        <li>Landmarks {p.visitedLandmarkIds.length}</li>
+        <li>Garage unlocks {p.unlockedVehicleIds.length}</li>
+        <li>Regions {p.unlockedRegionIds.length} / 6</li>
+        <li>Parking ★ {parkStars}</li>
+        <li>Speed traps logged {traps}</li>
+        <li>Heat peak {p.heatPeakEver?.toFixed(1) ?? '0'} / 5</li>
+        <li>Meet badges {p.meetBadges?.length ?? 0}</li>
+        <li>Vallejo mastery {mastery} / {VALLEJO_CHAPTER_STEPS.length}</li>
+        <li>Scenic routes {p.scenicCompleted.length}</li>
+      </ul>
+    </details>
+  );
+}
+
+function GamepadGlyphs({ connected }: { connected: boolean }) {
+  if (!connected) return null;
+  return (
+    <div className="gamepad-glyphs" aria-label="Controller hints">
+      <span>{GAMEPAD_GLYPHS.drive}</span>
+      <span>Cam {GAMEPAD_GLYPHS.camera}</span>
+      <span>{GAMEPAD_GLYPHS.photo}</span>
+      <span>{GAMEPAD_GLYPHS.map}</span>
+    </div>
   );
 }
 
@@ -315,13 +439,23 @@ function SettingsPanel() {
         />
       </label>
       <label className="slider-row">
-        Volume
+        Master volume
         <input
           type="range"
           min={0}
           max={100}
           value={Math.round(s.masterVolume * 100)}
           onChange={(e) => apply({ ...s, masterVolume: Number(e.target.value) / 100 })}
+        />
+      </label>
+      <label className="slider-row">
+        SFX / engine
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={Math.round((s.sfxVolume ?? 0.9) * 100)}
+          onChange={(e) => apply({ ...s, sfxVolume: Number(e.target.value) / 100 })}
         />
       </label>
       <label className="slider-row">
@@ -334,8 +468,40 @@ function SettingsPanel() {
         >
           <option value="chromebook">Chromebook (light)</option>
           <option value="balanced">Balanced</option>
+          <option value="console">Console / TV</option>
           <option value="lush">Lush nights</option>
         </select>
+      </label>
+      <label className="slider-row">
+        Frame cap
+        <select
+          value={String(s.frameCapFps ?? 0)}
+          onChange={(e) =>
+            apply({ ...s, frameCapFps: Number(e.target.value) as GameSettings['frameCapFps'] })
+          }
+        >
+          <option value="0">Uncapped</option>
+          <option value="30">30 fps (Performance)</option>
+          <option value="60">60 fps</option>
+        </select>
+      </label>
+      <label className="slider-row">
+        Resolution scale
+        <input
+          type="range"
+          min={50}
+          max={100}
+          value={Math.round((s.resolutionScale ?? 1) * 100)}
+          onChange={(e) => apply({ ...s, resolutionScale: Number(e.target.value) / 100 })}
+        />
+      </label>
+      <label className="checkbox-row">
+        <input
+          type="checkbox"
+          checked={!!s.tvHudMode}
+          onChange={(e) => apply({ ...s, tvHudMode: e.target.checked })}
+        />
+        TV / couch HUD (larger text)
       </label>
       <label className="slider-row">
         Fog
@@ -356,6 +522,32 @@ function SettingsPanel() {
         />
         Ambient traffic
       </label>
+      <label className="checkbox-row">
+        <input
+          type="checkbox"
+          checked={s.coastalWeatherEnabled !== false}
+          onChange={(e) => apply({ ...s, coastalWeatherEnabled: e.target.checked })}
+        />
+        Coastal rain (SF / Marin)
+      </label>
+      <label className="checkbox-row">
+        <input
+          type="checkbox"
+          checked={s.shareSessionStats !== false}
+          onChange={(e) => apply({ ...s, shareSessionStats: e.target.checked })}
+        />
+        Share anonymous play-time stats
+      </label>
+      <p className="sync-msg">
+        <a
+          className="link-btn"
+          href="https://github.com/esaddler1212-jpg/tortuca/issues/new?labels=city-nights&title=City%20Nights%20feedback"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Send feedback (GitHub)
+        </a>
+      </p>
       <label className="checkbox-row">
         <input
           type="checkbox"
@@ -413,14 +605,20 @@ export function HudApp() {
 
   const showTouch =
     typeof window !== 'undefined' && isTouchPrimary() && !snap.photoMode && snap.phase === 'home' && !snap.ridingWaymo;
+  const pad = !!snap.gamepadConnected;
+  const camLabel = pad ? `Cam ${GAMEPAD_GLYPHS.camera}` : `Camera: ${cameraModeLabel(snap.cameraMode)} (C)`;
+  const photoLabel = pad ? `Photo ${GAMEPAD_GLYPHS.photo}` : `Photo ${snap.photoMode ? 'ON' : ''} (P)`;
 
   return (
-    <div className={`react-hud ${snap.photoMode ? 'photo-active' : ''}`}>
+    <div
+      className={`react-hud ${snap.photoMode ? 'photo-active' : ''} ${snap.settings.tvHudMode ? 'react-hud--tv' : ''}`}
+    >
       {snap.ridingWaymo && (
         <button type="button" className="skip-waymo" onClick={() => requestSkipWaymo()}>
-          Skip Waymo ride
+          {pad ? `Skip ride (${GAMEPAD_GLYPHS.skip})` : 'Skip prologue ride'}
         </button>
       )}
+      <GamepadGlyphs connected={pad} />
       {(snap.streetName || snap.storefrontStripLabel) && !snap.photoMode && !snap.ridingWaymo && (
         <div className="street-blade" aria-live="polite">
           {snap.storefrontStripLabel ?? snap.streetName}
@@ -428,10 +626,10 @@ export function HudApp() {
       )}
       <div className="hud-toolbar">
         <button type="button" className="cam-toggle" onClick={() => requestToggleCamera()}>
-          Camera: {cameraModeLabel(snap.cameraMode)} (C)
+          {camLabel}
         </button>
         <button type="button" className="cam-toggle" onClick={() => requestTogglePhoto()}>
-          Photo {snap.photoMode ? 'ON' : ''} (P)
+          {photoLabel}
         </button>
         <span className="hud-mph">{Math.round(snap.mph)} mph</span>
         {snap.progress?.activeVehicleId === 'bonus-night-coil' && snap.phase === 'home' && !snap.ridingWaymo && (
@@ -455,8 +653,8 @@ export function HudApp() {
           <strong>{snap.vistaName}</strong> — slow orbit · <button type="button" className="link-btn" onClick={() => requestVistaCam()}>Vista cam (V)</button>
         </div>
       )}
+      <PinnedObjective snap={snap} />
       <NavHint snap={snap} />
-      <LandSearchPanel snap={snap} />
       {snap.flightMode && !snap.photoMode && (
         <p className="flight-hint">Space/⤒ climb · Ctrl/⤓ sink · WASD · Shift boost</p>
       )}
@@ -474,19 +672,12 @@ export function HudApp() {
       {snap.activeSideshowName && !snap.photoMode && (
         <div className="parking-hint">Sideshow tonight: {snap.activeSideshowName}</div>
       )}
-      <SafehousePanel snap={snap} />
-      <MusicPanel />
-      <JournalPanel snap={snap} />
-      <MissionBoard snap={snap} />
-      <StatsPanel snap={snap} />
-      <SettingsPanel />
-      <FastTravel snap={snap} />
+      <HudDrawerTabs snap={snap} />
       {snap.nearGarageReplay && snap.phase === 'home' && !snap.ridingWaymo && (
         <button type="button" className="skip-waymo" onClick={() => requestWaymoReplay()}>
           Replay Waymo intro route
         </button>
       )}
-      {!snap.photoMode && <LandmarkPanel snap={snap} />}
       {showTouch && <TouchControlsImpl flight={!!snap.flightMode} />}
       {snap.photoMode && (
         <p className="photo-hint">

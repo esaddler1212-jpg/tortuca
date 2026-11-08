@@ -1,0 +1,32 @@
+name: Flight Nemulator
+
+on:
+  push:
+    paths:
+      - 'flight-nemulator/**'
+      - '.github/workflows/flight-nemulator.yml'
+  pull_request:
+    paths:
+      - 'flight-nemulator/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flight-nemulator
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: flight-nemulator/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - name: Install Chromium for smoke test
+        run: sudo apt-get update -qq && sudo apt-get install -y chromium-browser
+      - name: Smoke boot
+        env:
+          CHROME_PATH: /usr/bin/chromium-browser
+        run: npm run test:smoke

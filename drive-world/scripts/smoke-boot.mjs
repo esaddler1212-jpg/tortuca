@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
  * Headless boot smoke — catches WebGL/TS boot failures before deploy.
- * Needs Google Chrome/Chromium on PATH (CHROME_PATH overrides).
+ * Resolves Chromium on Linux CI (CHROME_PATH overrides).
  */
-import { spawn } from 'node:child_process';
+import { execSync } from 'node:child_process';
 import { createServer } from 'node:http';
-import { readFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer-core';
@@ -13,7 +13,37 @@ import puppeteer from 'puppeteer-core';
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dist = path.join(root, 'dist');
 const port = 4173;
-const chrome = process.env.CHROME_PATH || '/usr/local/bin/google-chrome';
+
+function resolveChromePath() {
+  const fromEnv = process.env.CHROME_PATH?.trim();
+  if (fromEnv && existsSync(fromEnv)) return fromEnv;
+  const candidates = [
+    '/usr/bin/google-chrome-stable',
+    '/usr/bin/google-chrome',
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser',
+    '/usr/local/bin/google-chrome',
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    '/snap/bin/chromium'
+  ];
+  for (const p of candidates) {
+    if (existsSync(p)) return p;
+  }
+  try {
+    const found = execSync(
+      'sh -c "command -v google-chrome-stable || command -v google-chrome || command -v chromium-browser || command -v chromium"',
+      { encoding: 'utf8' }
+    ).trim();
+    if (found && existsSync(found)) return found;
+  } catch {
+    /* no chrome on PATH */
+  }
+  throw new Error(
+    'Chrome/Chromium not found for smoke test. Set CHROME_PATH or install Chrome (CI: browser-actions/setup-chrome).'
+  );
+}
+
+const chrome = resolveChromePath();
 
 function serveStatic(req, res) {
   let url = req.url?.split('?')[0] ?? '/';
@@ -29,6 +59,7 @@ function serveStatic(req, res) {
       '.wasm': 'application/wasm',
       '.json': 'application/json',
       '.png': 'image/png',
+      '.ogg': 'audio/ogg',
       '.glb': 'model/gltf-binary'
     };
     res.writeHead(200, { 'Content-Type': types[ext] ?? 'application/octet-stream' });
@@ -41,6 +72,11 @@ function serveStatic(req, res) {
 
 if (!statSync(dist).isDirectory()) {
   console.error('Run npm run build first (missing dist/)');
+  process.exit(1);
+}
+
+if (!existsSync(chrome)) {
+  console.error(`FAIL: no Chromium/Chrome at ${chrome} — set CHROME_PATH or install chromium`);
   process.exit(1);
 }
 

@@ -3,6 +3,18 @@
     {
       "file": "bay-night-cruise.ogg",
       "title": "Bay night cruise (synth, CC0-style)"
+    },
+    {
+      "file": "vallejo-night-haze.ogg",
+      "title": "Vallejo night haze (ambient bed)"
+    },
+    {
+      "file": "freeway-neon-drift.ogg",
+      "title": "Freeway neon drift (ambient bed)"
+    },
+    {
+      "file": "marin-fog-cruise.ogg",
+      "title": "Marin fog cruise (ambient bed)"
     }
   ]
 }

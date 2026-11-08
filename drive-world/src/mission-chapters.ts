@@ -1,4 +1,8 @@
-import { districtTacoFound, isDistrictCheckpointSatisfied } from './city-checkpoints';
+import {
+  districtHasLandmarkVisit,
+  districtTacoFound,
+  isDistrictCheckpointSatisfied
+} from './city-checkpoints';
 import type { SavedProgress } from './game-progress';
 import type { DistrictId } from './world-config';
 
@@ -14,7 +18,7 @@ export const VALLEJO_CHAPTER_STEPS: ChapterStep[] = [
     id: 'v-pick-car',
     chapter: 'vallejo',
     label: 'Pick your starter at the estate',
-    hint: 'Choose Safehouse Cruiser, Sport, or Ute'
+    hint: 'Cruiser, Sport, Ute, or Drifter'
   },
   {
     id: 'v-fuel',
@@ -158,8 +162,10 @@ export function vallejoChapterSummary(progress: SavedProgress): {
   return { done, total: VALLEJO_CHAPTER_STEPS.length, next: nextVallejoStep(synced) };
 }
 
+/** Home phase until Vallejo taco + landmark — then Bay travel/search opens (chapter mastery stays optional). */
 export function bayRegionsGated(progress: SavedProgress): boolean {
-  return progress.phase === 'home' && !isVallejoChapterComplete(syncVallejoMissionSteps(progress));
+  if (progress.phase !== 'home') return false;
+  return !isDistrictCheckpointSatisfied(syncVallejoMissionSteps(progress), 'vallejo');
 }
 
 export function districtVisibleInBoard(progress: SavedProgress, district: DistrictId): boolean {

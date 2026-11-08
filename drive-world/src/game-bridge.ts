@@ -46,6 +46,7 @@ export type HudSnapshot = {
   parkingSpotName?: string;
   activeSideshowName?: string;
   navTarget?: NavTarget | null;
+  navObjective?: NavTarget | null;
   navTurnLabel?: string;
   navRoutePoints?: { x: number; z: number }[];
   storefrontStripLabel?: string | null;
@@ -60,6 +61,11 @@ export type HudSnapshot = {
   timeAttackProgress?: string | null;
   heatHunted?: boolean;
   ghostRivalLabel?: string | null;
+  pinnedChapterLabel?: string | null;
+  pinnedChapterHint?: string | null;
+  landmarkSprintLabel?: string | null;
+  garageInteriorCam?: boolean;
+  gamepadConnected?: boolean;
 };
 
 export type TouchDrive = {

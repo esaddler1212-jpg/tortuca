@@ -232,5 +232,5 @@ export function missionTextForPhase(phase: GamePhase, progress?: SavedProgress |
   if (progress) return missionBannerText(progress);
   if (phase === 'waymo_ride') return 'Prologue: Waymo to Vallejo estate';
   if (phase === 'pick_car') return 'Chapter 1: Vallejo — pick your starter';
-  return 'Chapter 1: Vallejo training grounds';
+  return 'Chapter 1: Vallejo — open the Bay';
 }

@@ -1,6 +1,6 @@
 import type { GameSettings } from './game-settings';
 
-export type BayQualityPreset = 'chromebook' | 'balanced' | 'lush';
+export type BayQualityPreset = 'chromebook' | 'balanced' | 'lush' | 'console';
 
 export function applyBayQualityPreset(base: GameSettings, preset: BayQualityPreset): GameSettings {
   if (preset === 'chromebook') {
@@ -8,10 +8,26 @@ export function applyBayQualityPreset(base: GameSettings, preset: BayQualityPres
       ...base,
       bayQualityPreset: preset,
       fogQuality: 'low',
-      showTraffic: false,
-      showSideshow: false,
+      showTraffic: true,
+      showSideshow: true,
       hubStreamingEnabled: true,
-      fuelSimEnabled: base.fuelSimEnabled
+      fuelSimEnabled: base.fuelSimEnabled,
+      frameCapFps: 30,
+      resolutionScale: 0.75
+    };
+  }
+  if (preset === 'console') {
+    return {
+      ...base,
+      bayQualityPreset: preset,
+      fogQuality: 'med',
+      showTraffic: true,
+      showSideshow: true,
+      hubStreamingEnabled: true,
+      fuelSimEnabled: true,
+      frameCapFps: 30,
+      resolutionScale: 0.85,
+      tvHudMode: true
     };
   }
   if (preset === 'lush') {
