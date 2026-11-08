@@ -76,7 +76,10 @@ const VISUAL_BY_ID: Record<string, GltfVisualOptions> = {
   'bonus-chapter-hauler': { scale: 2.2, yawOffsetDeg: 90, yOffset: -0.44 },
   'bonus-vista-liner': { scale: 2.08, yawOffsetDeg: 90, yOffset: -0.42 },
   'bonus-heat-shade': { scale: 2.06, yawOffsetDeg: 90, yOffset: -0.28 },
-  'bonus-trap-outlaw': { scale: 2.1, yawOffsetDeg: 90, yOffset: -0.36 }
+  'bonus-trap-outlaw': { scale: 2.1, yawOffsetDeg: 90, yOffset: -0.36 },
+  'craft-bay-wedge': { scale: 2.04, yawOffsetDeg: 90, yOffset: -0.26 },
+  'craft-night-lift': { scale: 2.1, yawOffsetDeg: 90, yOffset: -0.42 },
+  'craft-street-spike': { scale: 1.98, yawOffsetDeg: 90, yOffset: -0.22 }
 };
 
 function visualOptsFor(vehicleId: string): GltfVisualOptions {

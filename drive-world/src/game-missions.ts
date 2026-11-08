@@ -21,6 +21,7 @@ import {
   bayRegionsGated,
   districtVisibleInBoard,
   isVallejoChapterComplete,
+  nextVallejoStep,
   syncVallejoMissionSteps,
   vallejoChapterSummary
 } from './mission-chapters';
@@ -52,8 +53,28 @@ export function buildMissionBoard(
       id: 'pick',
       label: 'Chapter 1 · Step 1 — pick your starter',
       done: false,
-      hint: 'Safehouse Cruiser, Sport, or Ute'
+      hint: 'Cruiser, Sport, Ute, or Drifter'
     });
+    return lines;
+  }
+
+  if (bayRegionsGated(synced)) {
+    const step = nextVallejoStep(synced);
+    lines.push({
+      id: 'chapter-intro',
+      label: 'Chapter 1: Vallejo — open the Bay',
+      done: false,
+      hint: 'Taco truck + any Vallejo landmark, then the full map unlocks'
+    });
+    if (step) {
+      lines.push({
+        id: step.id,
+        label: step.label,
+        done: false,
+        hint: step.hint,
+        action: step.id === 'v-taxi' ? 'taxi' : undefined
+      });
+    }
     return lines;
   }
 
@@ -276,9 +297,8 @@ export function missionBannerText(progress: SavedProgress): string {
   if (synced.phase === 'waymo_ride') return 'Prologue: Waymo to Vallejo estate';
   if (synced.phase === 'pick_car') return 'Chapter 1: Vallejo — pick your starter';
   if (bayRegionsGated(synced)) {
-    const ch = vallejoChapterSummary(synced);
-    const n = ch.next;
-    return n ? `Chapter 1 (${ch.done}/${ch.total}): ${n.label}` : 'Chapter 1: Vallejo complete';
+    const n = nextVallejoStep(synced);
+    return n ? `Chapter 1: ${n.label}` : 'Chapter 1: finish Vallejo unlock';
   }
   return 'Bay open world — parking · drift · drag · courier';
 }

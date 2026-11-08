@@ -154,7 +154,13 @@ import { createPlayerVehicle, destroyPlayerVehicle, type PlayerVehicle } from '.
 import { ensureVehicleModelLoaded, ensureVehicleModelsLoaded } from './vehicle-gltf';
 import type { GameSettings } from './game-settings';
 import type { DistrictId } from './world-config';
-import { buildWaymoRidePath, spawnWaymoRide, waymoPassengerCameraOffset, type WaymoRide } from './waymo-ride';
+import {
+  buildWaymoRidePath,
+  spawnWaymoRide,
+  waymoCinematicCamera,
+  waymoPassengerCameraOffset,
+  type WaymoRide
+} from './waymo-ride';
 import type { CameraMode } from './game-progress';
 
 export type GameSession = {
@@ -209,6 +215,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   let vistaLookTarget: CruiseVistaDef | null = null;
   let cameraBeforeVista: CameraMode | null = null;
   let waymoSightseeing: WaymoRide | null = null;
+  let waymoRideElapsed = 0;
   let sightseeing = false;
   let lastDistrict: DistrictId | null = null;
 
@@ -370,7 +377,11 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     if (progress.missionStepsCompleted.length <= prev.length) return;
     const id = progress.missionStepsCompleted.find((s) => !prev.includes(s));
     const step = VALLEJO_CHAPTER_STEPS.find((s) => s.id === id);
-    ui.showToast('Objective', step?.label ?? 'Complete');
+    if (id === 'v-unlock') {
+      ui.showToast('Bay unlocked', 'City search, fast travel, and the full map are open.');
+    } else {
+      ui.showToast('Objective', step?.label ?? 'Complete');
+    }
     ui.setMission(missionTextForPhase(progress.phase, progress));
     ui.setProgressSummary(progress);
     saveProgress(progress);
@@ -440,6 +451,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     waymo?.destroy();
     waymo = null;
     ridingWaymo = false;
+    waymoRideElapsed = 0;
     progress = finishWaymoRide(progress);
     ui.setAutonomousMode(false);
     ui.setMission(missionTextForPhase('pick_car', progress));
@@ -458,6 +470,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     ui.setMission(missionTextForPhase('waymo_ride', progress));
     ui.setVehicleName('Waymo — autonomous');
     ui.setGarageVisible(false, progress, () => {});
+    waymoRideElapsed = 0;
     const path = buildWaymoRidePath();
     waymo = spawnWaymoRide(app, path);
     publishHud({ ridingWaymo: true, phase: 'waymo_ride', progress });
@@ -605,7 +618,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
 
   registerFastTravel((district: DistrictId) => {
     if (bayRegionsGated(progress) && district !== 'vallejo') {
-      ui.showToast('Chapter 1', 'Complete Vallejo objectives before Bay fast travel');
+      ui.showToast('Chapter 1', 'Vallejo taco + landmark unlocks Bay fast travel');
       return;
     }
     if (!progress.unlockedRegionIds.includes(district) || !vehicle() || progress.phase !== 'home') return;
@@ -621,6 +634,18 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   registerLandHere((x, z, label) => {
     const ent = vehicle();
     if (!ent || progress.phase !== 'home') return;
+    if (bayRegionsGated(progress)) {
+      const inVallejo =
+        Math.hypot(x - 500, z - 980) < 420 ||
+        Math.hypot(x - 720, z - 1360) < 220 ||
+        LANDMARKS.some(
+          (lm) => lm.district === 'vallejo' && Math.hypot(x - lm.x, z - lm.z) < lm.visitRadius + 80
+        );
+      if (!inVallejo) {
+        ui.showToast('Chapter 1', 'Finish Vallejo taco + landmark before leaving North Bay');
+        return;
+      }
+    }
     const mphNow = getHudSnapshot().mph;
     if (mphNow > 22) {
       ui.showToast('Slow down', 'Under ~22 mph to land here.');
@@ -688,21 +713,12 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
 
     if (ridingWaymo && waymo) {
       const still = waymo.update(dt);
+      waymoRideElapsed += dt;
       const pos = waymo.root.getPosition();
       const forward = waymo.root.forward;
-      const passenger = waymoPassengerCameraOffset();
-      const target = new Vec3(
-        pos.x - forward.x * passenger.offset.z + forward.x * 0.15,
-        pos.y + passenger.offset.y,
-        pos.z - forward.z * passenger.offset.z
-      );
-      camera.setPosition(target);
-      const look = new Vec3(
-        pos.x + forward.x * passenger.lookAhead,
-        pos.y + 0.6,
-        pos.z + forward.z * passenger.lookAhead
-      );
-      camera.lookAt(look);
+      const shot = waymoCinematicCamera(pos, forward, waymoRideElapsed);
+      camera.setPosition(shot.eye);
+      camera.lookAt(shot.look);
       speedEl.textContent = `${waymo.currentMph.toFixed(0)} mph · Waymo`;
       const yaw = waymo.root.getEulerAngles().y;
       publishHud({

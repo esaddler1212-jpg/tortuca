@@ -152,3 +152,44 @@ export function waymoPassengerCameraOffset(): { offset: Vec3; lookAhead: number 
     lookAhead: 28
   };
 }
+
+export type WaymoCinematicShot = { eye: Vec3; look: Vec3 };
+
+/** Prologue: aerial drone → glide → passenger over ~26 s. */
+export function waymoCinematicCamera(pos: Vec3, forward: Vec3, rideTimeSec: number): WaymoCinematicShot {
+  const passenger = waymoPassengerCameraOffset();
+  const passEye = new Vec3(
+    pos.x - forward.x * passenger.offset.z + forward.x * 0.15,
+    pos.y + passenger.offset.y,
+    pos.z - forward.z * passenger.offset.z
+  );
+  const passLook = new Vec3(
+    pos.x + forward.x * passenger.lookAhead,
+    pos.y + 0.6,
+    pos.z + forward.z * passenger.lookAhead
+  );
+
+  const orbit = Math.sin(rideTimeSec * 0.22) * 12;
+  const droneH = 72 + Math.sin(rideTimeSec * 0.35) * 6;
+  const droneBack = 38 + Math.cos(rideTimeSec * 0.18) * 4;
+  const droneEye = new Vec3(
+    pos.x - forward.x * droneBack + orbit,
+    pos.y + droneH,
+    pos.z - forward.z * droneBack
+  );
+  const droneLook = new Vec3(pos.x + forward.x * 6, pos.y + 2.5, pos.z + forward.z * 6);
+
+  const t0 = 10;
+  const t1 = 24;
+  if (rideTimeSec < t0) {
+    return { eye: droneEye, look: droneLook };
+  }
+  if (rideTimeSec < t1) {
+    const u = (rideTimeSec - t0) / (t1 - t0);
+    const ease = u * u * (3 - 2 * u);
+    const eye = new Vec3().lerp(droneEye, passEye, ease);
+    const look = new Vec3().lerp(droneLook, passLook, ease);
+    return { eye, look };
+  }
+  return { eye: passEye, look: passLook };
+}

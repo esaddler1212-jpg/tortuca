@@ -3,12 +3,7 @@ const KENNEY = './models/kenney';
 const CC0 = './models/cc0';
 
 /** Block-mesh bodies only (no Kenney GLB). */
-export const BLOCK_BODY_VEHICLE_IDS = new Set<string>([
-  'legend-beast-cart',
-  'craft-bay-wedge',
-  'craft-night-lift',
-  'craft-street-spike'
-]);
+export const BLOCK_BODY_VEHICLE_IDS = new Set<string>(['legend-beast-cart']);
 
 export const VEHICLE_GLB: Record<string, string> = {
   'garage-cruiser': `${KENNEY}/sedan.glb`,
@@ -44,6 +39,9 @@ export const VEHICLE_GLB: Record<string, string> = {
   'bonus-vista-liner': `${KENNEY}/suv.glb`,
   'bonus-heat-shade': `${KENNEY}/sedan-sports.glb`,
   'bonus-trap-outlaw': `${KENNEY}/police.glb`,
+  'craft-bay-wedge': `${KENNEY}/sedan-sports.glb`,
+  'craft-night-lift': `${KENNEY}/suv.glb`,
+  'craft-street-spike': `${KENNEY}/race.glb`,
   default: `${KENNEY}/sedan.glb`
 };
 

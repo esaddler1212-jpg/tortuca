@@ -21,7 +21,7 @@ import { DISTRICT_LABELS, LANDMARKS, districtLandmarkTotal, districtLandmarksVis
 import type { DistrictId } from '../world-config';
 import { Minimap } from './Minimap';
 import { applyBayQualityPreset } from '../bay-quality';
-import { searchLandTargets } from '../city-land-search';
+import { isLandTargetAllowed, searchLandTargets } from '../city-land-search';
 import { loadSettings, saveSettings, type GameSettings } from '../game-settings';
 import { FAST_TRAVEL } from '../world-extras';
 import { buildMissionBoard } from '../game-missions';
@@ -134,7 +134,11 @@ function NavHint({ snap }: { snap: HudSnapshot }) {
 
 function LandSearchPanel({ snap }: { snap: HudSnapshot }) {
   const [q, setQ] = useState('');
-  const hits = useMemo(() => searchLandTargets(q), [q]);
+  const hits = useMemo(() => {
+    const all = searchLandTargets(q);
+    if (!snap.progress) return all;
+    return all.filter((t) => isLandTargetAllowed(snap.progress!, t));
+  }, [q, snap.progress]);
   if (snap.photoMode || snap.ridingWaymo || snap.phase !== 'home') return null;
   return (
     <details className="land-search-panel">
@@ -483,7 +487,7 @@ export function HudApp() {
     <div className={`react-hud ${snap.photoMode ? 'photo-active' : ''}`}>
       {snap.ridingWaymo && (
         <button type="button" className="skip-waymo" onClick={() => requestSkipWaymo()}>
-          Skip Waymo ride
+          Skip prologue ride
         </button>
       )}
       {(snap.streetName || snap.storefrontStripLabel) && !snap.photoMode && !snap.ridingWaymo && (
