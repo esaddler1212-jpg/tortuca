@@ -34,6 +34,7 @@ Progress: `arc-progress.ts` (local) + `pullBattleworldLatticeCloud` on boot (mer
 | [FLIGHT_NEMULATOR_BATTLEWORLD_ARCS.md](./FLIGHT_NEMULATOR_BATTLEWORLD_ARCS.md) | Arc beats, pair policy |
 | [FLIGHT_NEMULATOR_FULL_ROSTER.md](./FLIGHT_NEMULATOR_FULL_ROSTER.md) | Homage map |
 | [FLIGHT_NEMULATOR_XMEN_RESEARCH.md](./FLIGHT_NEMULATOR_XMEN_RESEARCH.md) | X-Men backlog |
+| [FLIGHT_NEMULATOR_ROSTER_BACKLOG.md](./FLIGHT_NEMULATOR_ROSTER_BACKLOG.md) | Marvel / DC / DBZ / off-brand / Transformers research |
 
 ## APIs (Tortuca monorepo)
 
