@@ -1,6 +1,13 @@
-import { LANDMARKS } from './landmark-registry';
+import {
+  DISTRICT_LABELS,
+  districtLandmarkTotal,
+  districtLandmarksVisited,
+  LANDMARKS
+} from './landmark-registry';
 import type { GamePhase, SavedProgress } from './game-progress';
-import { STARTER_VEHICLE_IDS, VEHICLE_CATALOG } from './vehicle-catalog';
+import { GARAGE_STARTER_IDS, VEHICLE_CATALOG } from './vehicle-catalog';
+import { TOTAL_LANDMARKS, countRegionsComplete, TOTAL_REGIONS } from './game-progress';
+import type { DistrictId } from './world-config';
 
 export type GameUi = {
   showCarPicker(onPick: (vehicleId: string) => void): void;
@@ -8,6 +15,7 @@ export type GameUi = {
   setMission(text: string): void;
   setVehicleName(name: string): void;
   setProgressSummary(progress: SavedProgress): void;
+  setAutonomousMode(active: boolean): void;
   showToast(title: string, body: string): void;
   setGarageVisible(visible: boolean, progress: SavedProgress, onSelect: (id: string) => void): void;
   bindReset(onReset: () => void): void;
@@ -27,6 +35,7 @@ export function wireGameUi(): GameUi {
   const garageEl = el<HTMLDivElement>('garage');
   const toastEl = el<HTMLDivElement>('toast');
   const resetBtn = el<HTMLButtonElement>('reset-progress');
+  const hudEl = el<HTMLDivElement>('hud');
 
   let toastTimer = 0;
 
@@ -35,7 +44,7 @@ export function wireGameUi(): GameUi {
       pickerEl.hidden = false;
       const grid = el<HTMLDivElement>('picker-grid');
       grid.innerHTML = '';
-      for (const id of STARTER_VEHICLE_IDS) {
+      for (const id of GARAGE_STARTER_IDS) {
         const spec = VEHICLE_CATALOG[id];
         const btn = document.createElement('button');
         btn.type = 'button';
@@ -55,10 +64,20 @@ export function wireGameUi(): GameUi {
       vehicleEl.textContent = name;
     },
     setProgressSummary(progress) {
-      const total = LANDMARKS.length;
       const done = progress.visitedLandmarkIds.length;
-      const cars = progress.unlockedVehicleIds.length;
-      progressEl.textContent = `Landmarks ${done}/${total} · Garage ${cars} cars`;
+      const regions = countRegionsComplete(progress);
+      const regionLines = (Object.keys(DISTRICT_LABELS) as DistrictId[])
+        .map((d) => {
+          const v = districtLandmarksVisited(progress.visitedLandmarkIds, d);
+          const t = districtLandmarkTotal(d);
+          const mark = progress.unlockedRegionIds.includes(d) ? '✓' : '·';
+          return `${mark} ${DISTRICT_LABELS[d]} ${v}/${t}`;
+        })
+        .join(' · ');
+      progressEl.textContent = `Landmarks ${done}/${TOTAL_LANDMARKS} · Regions ${regions}/${TOTAL_REGIONS} — ${regionLines}`;
+    },
+    setAutonomousMode(active: boolean) {
+      hudEl.classList.toggle('autonomous', active);
     },
     showToast(title: string, body: string) {
       toastEl.hidden = false;
@@ -79,7 +98,7 @@ export function wireGameUi(): GameUi {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = id === progress.activeVehicleId ? 'garage-card active' : 'garage-card';
-        btn.textContent = spec.name;
+        btn.textContent = spec.region ? `${spec.name} (${spec.city})` : spec.name;
         btn.addEventListener('click', () => onSelect(id));
         list.appendChild(btn);
       }
@@ -91,7 +110,7 @@ export function wireGameUi(): GameUi {
 }
 
 export function missionTextForPhase(phase: GamePhase): string {
-  if (phase === 'pick_car') return 'SFO rental — pick your ride';
-  if (phase === 'to_safehouse') return 'Mission — drive to the Vallejo Safehouse (I-80 north)';
-  return 'Free roam — visit blue beacons to unlock Bay Area cars';
+  if (phase === 'waymo_ride') return 'Waymo rider — autonomous run to Vallejo Safehouse';
+  if (phase === 'pick_car') return 'Safehouse — pick up your car';
+  return 'Clear every landmark in a region to unlock that region’s ride';
 }

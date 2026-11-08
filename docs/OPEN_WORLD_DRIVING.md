@@ -32,12 +32,12 @@ The world follows the usual **Bay Area macro regions** (same mental model as the
 
 ## Progression loop
 
-1. **SFO airport** — choose 1 of 3 rentals (`Rental Compact`, `Black Car`, `Airport Shuttle`).
-2. **First mission** — drive to the **Vallejo Safehouse** (orange lit building, I-80 north).
-3. **After safehouse** — visit **blue beacon landmarks** across the Bay; each stop unlocks a **city-themed car** (19 landmarks → 19 unlocks, plus your starter).
-4. **Garage** — stand near the safehouse to swap any unlocked ride. Progress saves in `localStorage` (`drive-world-progress-v1`); **New game** in the HUD resets.
+1. **SFO airport** — **Waymo** autonomous ride (no driving); it follows **101 → I-80** to the **Vallejo Safehouse**.
+2. **Safehouse** — choose 1 of 3 **garage starters** (`Safehouse Cruiser`, `Sport`, `Ute`); you drive from here.
+3. **Regions** — visit **every landmark** in a macro region (SF, Marin, East Bay, Vallejo, Peninsula, South Bay) to unlock that **region’s signature car** (6 unlocks).
+4. **Garage** — at the safehouse, swap any unlocked ride. Progress: `localStorage` `drive-world-progress-v2`; **New game** restarts the Waymo intro.
 
-Landmark ↔ vehicle mapping: [`landmark-registry.ts`](../drive-world/src/landmark-registry.ts) and [`vehicle-catalog.ts`](../drive-world/src/vehicle-catalog.ts).
+See [`waymo-ride.ts`](../drive-world/src/waymo-ride.ts), [`landmark-registry.ts`](../drive-world/src/landmark-registry.ts), [`vehicle-catalog.ts`](../drive-world/src/vehicle-catalog.ts).
 
 ## Repo layout
 

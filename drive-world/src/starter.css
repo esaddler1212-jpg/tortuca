@@ -36,6 +36,16 @@ body {
   text-transform: uppercase;
 }
 
+.hud.autonomous #speed {
+  font-size: 1.35rem;
+  color: #9ae8ff;
+}
+
+.hud.autonomous .reset-btn {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
 .hud .hint {
   margin: 0 0 0.5rem;
   opacity: 0.85;
