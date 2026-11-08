@@ -6,6 +6,13 @@ import { buildAllDistricts, buildFreewayLamps } from './build-districts';
 import { initHubStreaming } from './hub-streaming';
 import { buildCpmChallengePads } from './build-cpm-pads';
 import { loadSettings } from './game-settings';
+import type { BayQualityPreset } from './bay-quality';
+
+function freewayLampBudget(preset: BayQualityPreset): { spacing: number; limit: number } {
+  if (preset === 'chromebook') return { spacing: 165, limit: 52 };
+  if (preset === 'lush') return { spacing: 105, limit: 165 };
+  return { spacing: 120, limit: 140 };
+}
 import { buildAllFreeways } from './build-freeway';
 import { buildFreewayRamps } from './build-freeway-ramps';
 import { buildBayAreaLandmarks } from './build-landmarks';
@@ -19,6 +26,7 @@ import {
   buildLombardStreet,
   spawnAmbientTraffic
 } from './build-world-extras';
+import { spawnHubStreetTraffic } from './hub-street-traffic';
 import { buildSideshowMeets } from './sideshow-meets';
 import { NIGHT_FOG } from './night-palette';
 import { WORLD_HALF_M } from './world-config';
@@ -50,7 +58,9 @@ export function buildDrivingWorld(app: AppBase): void {
   buildLombardStreet(app);
   buildCollectibles(app);
   buildCruiseVistas(app);
-  spawnAmbientTraffic(app, loadSettings().bayQualityPreset);
+  const preset = loadSettings().bayQualityPreset;
+  spawnAmbientTraffic(app, preset);
+  spawnHubStreetTraffic(app, preset);
   buildSideshowMeets(app);
   buildAllDistricts(app);
   initHubStreaming(app, loadSettings().hubStreamingEnabled);
@@ -60,5 +70,6 @@ export function buildDrivingWorld(app: AppBase): void {
   buildCpmChallengePads(app);
   buildGasStations(app);
   buildMissionSites(app);
-  buildFreewayLamps(app, 120, 140);
+  const lamps = freewayLampBudget(loadSettings().bayQualityPreset);
+  buildFreewayLamps(app, lamps.spacing, lamps.limit);
 }

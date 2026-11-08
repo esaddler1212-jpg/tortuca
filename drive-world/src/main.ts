@@ -101,8 +101,6 @@ app.scene.exposure = 0.55;
 app.scene.fogStart = 60;
 app.scene.fogEnd = Math.min(2200, WORLD_HALF_M * 0.85);
 
-buildDrivingWorld(app);
-
 try {
   await tryMergeCloudOnBoot();
 } catch {
@@ -113,6 +111,8 @@ try {
 } catch (err) {
   console.warn('[city-nights] Boot vehicle models failed to preload; block fallback only.', err);
 }
+
+buildDrivingWorld(app);
 
 const moon = new Entity('moon');
 moon.addComponent('light', {

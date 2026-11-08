@@ -18,6 +18,12 @@ gods-eye/gods-eye-view/
 jarvis-os-v2/JARVIS-OS-V.2/
 herald-os/herald-upstream/
 
+# Local upstream clones (game / media toolchains)
+tools/ace-step/upstream/
+tools/unreal-claude/upstream/
+tools/claude-code-game-studios/upstream/
+tools/audio2face-3d/upstream/
+
 # Futurist Lantern (cloned GLB/WAV; CC BY-NC)
 public/lantern/
 

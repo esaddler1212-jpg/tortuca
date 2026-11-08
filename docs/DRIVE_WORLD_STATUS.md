@@ -2,38 +2,29 @@
 
 _Product name **City Nights**; code lives in `drive-world/`._
 
-Stack: **PlayCanvas** + **React HUD** · `drive-world-progress-v5`
+Stack: **PlayCanvas** + **Ammo** + **React HUD** · save data **v9** (storage key `drive-world-progress-v5`)
 
-## Shipped (this wave)
+## Shipped
 
-| Feature | Notes |
-|---------|--------|
-| Headlights / taillights / brake glow | `vehicle-lights.ts` |
-| Nitro | **Shift** or gamepad shoulder |
-| Gamepad | Left stick + triggers |
-| React minimap, nav, landmarks, settings | Volume, fog, traffic toggle |
-| Chase / cockpit / **drone** (C) | |
-| **Photo mode** (P) | Free-fly cam; hide main HUD |
-| Waymo skip + **fast travel** | Unlocked regions only, at safehouse |
-| Collectibles | Unlock bonus paints (Warriors, Giants, etc.) |
-| Speed traps | Personal best mph per trap |
-| Scenic routes | Checkpoint badges (Marin coast, Skyline) |
-| Per-car **odometer + top speed** | Saved per vehicle id |
-| Garage: ride height, underglow, tint, rims, handling presets | Grip / Drift / Comfort |
-| I-280 freeway, **Lombard** switchbacks | |
-| **6 new landmarks** | Lombard, Painted Ladies, Wharf, Oracle Park, Lake Merritt, … |
-| Ambient freeway traffic | Toggle in settings |
-| Regional **Karl fog** | SF/Marin denser |
-| Freeway ramps | Prior pass |
+| Area | Notes |
+|------|-------|
+| Prologue + onboarding | Cinematic Waymo (drone → passenger), 4 starters, one pinned objective until Vallejo taco + landmark opens the Bay |
+| Driving | Headlights / brake glow, nitro, gamepad, touch pad, chase / cockpit / drone cams, garage interior cam |
+| Fleet | Kenney CC0 GLBs: starters, region cars, parking rewards, activity cars, district meet cars, craft shard cars, homage legends, aerial |
+| Loops | Parking stars, drag, drift, time attack, landmark sprints, ghost PBs, courier, dyno, speed traps + heat chaser, sideshow meets |
+| World | Bay freeways + ramps, 37+ landmarks, hub streaming (time-sliced), freeway + hub street traffic, regional fog, coastal rain (SF/Marin) |
+| HUD | Tabbed drawer, minimap, nav with grade hints, city search, journal, photo mode, CC0 music playlist |
+| Saves | Local + optional cloud sync key (throttled), JSON import/export, renamed-vehicle migration |
+| Ops | `npm run test:smoke` headless boot in CI, opt-out anonymous play-time rollups, GitHub feedback link |
 
-## Still optional / not done
+## Still open
 
 | Item | Notes |
-|------|--------|
-| **Kenney + CC0 glTF cars / heli** | Ground fleet + aerial + legend homages (**Gotham Knight**, **Scarlet Five**) |
-| **Cloud save** | Local only; tie to Tortuca Google session later |
-| Full **day/night cycle** | Night-only art direction kept |
-| World streaming / LOD | |
-| True heightmap terrain | |
+|------|-------|
+| Draw-call / VRAM pass | Batch static hub geometry; texture downsample for Chromebook |
+| Chase cam vs buildings | Terrain + physics raycast shipped; tight garages can still clip |
+| Oracle Park / Chase Center overlap | 12 m apart on the compressed map |
+| `game-loop.ts` size | 1,400+ lines; split per system before large additions |
+| Unit tests | No Vitest in `drive-world/` yet |
 
-Deploy: [`CITY_NIGHTS_DEPLOY.md`](./CITY_NIGHTS_DEPLOY.md) · Audit: [`CITY_NIGHTS_AUDIT.md`](./CITY_NIGHTS_AUDIT.md)
+Deploy: [`CITY_NIGHTS_DEPLOY.md`](./CITY_NIGHTS_DEPLOY.md) · Audit: [`CITY_NIGHTS_AUDIT.md`](./CITY_NIGHTS_AUDIT.md) · Playbook: [`CITY_NIGHTS_PLAYBOOK.md`](./CITY_NIGHTS_PLAYBOOK.md)

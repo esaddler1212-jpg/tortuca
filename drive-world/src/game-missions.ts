@@ -6,6 +6,8 @@ import {
   REGION_VEHICLE_IDS,
   getVehicleSpec
 } from './vehicle-catalog';
+import { ACTIVITY_VEHICLE_UNLOCKS } from './vehicle-activity-unlocks';
+import { DISTRICT_MEET_UNLOCKS } from './district-meets';
 import { districtHasLandmarkVisit, districtTacoFound } from './city-checkpoints';
 import { DISTRICT_LABELS, LANDMARKS } from './landmark-registry';
 import { nextUnvisitedLandmark } from './landmark-navigation';
@@ -19,6 +21,7 @@ import {
   bayRegionsGated,
   districtVisibleInBoard,
   isVallejoChapterComplete,
+  nextVallejoStep,
   syncVallejoMissionSteps,
   vallejoChapterSummary
 } from './mission-chapters';
@@ -50,37 +53,26 @@ export function buildMissionBoard(
       id: 'pick',
       label: 'Chapter 1 · Step 1 — pick your starter',
       done: false,
-      hint: 'Safehouse Cruiser, Sport, or Ute'
+      hint: 'Cruiser, Sport, Ute, or Drifter'
     });
     return lines;
   }
 
-  const chapter = vallejoChapterSummary(synced);
-  if (!isVallejoChapterComplete(synced)) {
+  if (bayRegionsGated(synced)) {
+    const step = nextVallejoStep(synced);
     lines.push({
-      id: 'chapter-vallejo',
-      label: `Chapter 1: Vallejo training (${chapter.done}/${chapter.total})`,
+      id: 'chapter-intro',
+      label: 'Chapter 1: Vallejo — open the Bay',
       done: false,
-      hint: 'Parking, drag, drift, meet — earn the Bay'
+      hint: 'Taco truck + any Vallejo landmark, then the full map unlocks'
     });
-    for (const step of VALLEJO_CHAPTER_STEPS) {
-      const done = synced.missionStepsCompleted.includes(step.id);
+    if (step) {
       lines.push({
         id: step.id,
-        label: `${done ? '✓' : '○'} ${step.label}`,
-        done,
-        hint: step.hint,
-        action: !done && step.id === 'v-taxi' ? 'taxi' : undefined
-      });
-    }
-    const taxi = nextTaxiContract(synced, 'vallejo');
-    if (taxi && !synced.activeTaxiId) {
-      lines.push({
-        id: 'taxi-offer',
-        label: `Courier gig: ${taxi.label}`,
+        label: step.label,
         done: false,
-        hint: 'Tap Start courier in the mission header',
-        action: 'taxi'
+        hint: step.hint,
+        action: step.id === 'v-taxi' ? 'taxi' : undefined
       });
     }
     return lines;
@@ -92,6 +84,35 @@ export function buildMissionBoard(
     done: true,
     hint: 'Parking, strips, drag, courier board, meets'
   });
+
+  const chapter = vallejoChapterSummary(synced);
+  if (!isVallejoChapterComplete(synced)) {
+    lines.push({
+      id: 'chapter-vallejo',
+      label: `Vallejo mastery (${chapter.done}/${chapter.total})`,
+      done: false,
+      hint: 'Optional — finishing it unlocks the Chapter Hauler'
+    });
+    if (chapter.next) {
+      lines.push({
+        id: chapter.next.id,
+        label: `○ ${chapter.next.label}`,
+        done: false,
+        hint: chapter.next.hint,
+        action: chapter.next.id === 'v-taxi' ? 'taxi' : undefined
+      });
+    }
+    const taxi = nextTaxiContract(synced, 'vallejo');
+    if (taxi && !synced.activeTaxiId && chapter.next?.id === 'v-taxi') {
+      lines.push({
+        id: 'taxi-offer',
+        label: `Courier gig: ${taxi.label}`,
+        done: false,
+        hint: 'Tap Start courier in the mission header',
+        action: 'taxi'
+      });
+    }
+  }
 
   if (fuelPercent !== undefined && fuelPercent < 28) {
     const pump = nearestGasStationAnywhere(playerX, playerZ);
@@ -214,6 +235,43 @@ export function buildMissionBoard(
     });
   }
 
+  for (const meet of DISTRICT_MEET_UNLOCKS) {
+    const owned = synced.unlockedVehicleIds.includes(meet.vehicleId);
+    const atLot = synced.meetBadges.includes(meet.badgeId);
+    lines.push({
+      id: `meet-${meet.district}`,
+      label: `${owned ? '✓' : '○'} Meet car: ${meet.label}`,
+      done: owned,
+      hint: atLot ? 'Unlocked at garage' : 'Tonight’s sideshow — roll in under 12 mph'
+    });
+  }
+
+  const craftHints = [
+    { id: 'craft-w', collectible: 'craft-wedge-shard', label: 'Bay Wedge' },
+    { id: 'craft-l', collectible: 'craft-lift-shard', label: 'Night Lift' },
+    { id: 'craft-s', collectible: 'craft-spike-shard', label: 'Street Spike' }
+  ];
+  for (const h of craftHints) {
+    if (synced.unlockedVehicleIds.some((id) => id.startsWith('craft-'))) continue;
+    if (synced.collectedIds.includes(h.collectible)) continue;
+    lines.push({
+      id: h.id,
+      label: `Craft original: ${h.label}`,
+      done: false,
+      hint: 'Grab the cyan craft shard beacon'
+    });
+  }
+
+  for (const act of ACTIVITY_VEHICLE_UNLOCKS) {
+    const owned = synced.unlockedVehicleIds.includes(act.id);
+    lines.push({
+      id: `act-${act.id}`,
+      label: `${owned ? '✓' : '○'} Activity: ${act.label}`,
+      done: owned,
+      hint: act.hint
+    });
+  }
+
   const trapsHit = SPEED_TRAPS.filter((t) => (synced.speedTrapBests[t.id] ?? 0) >= 70).length;
   if (trapsHit < SPEED_TRAPS.length) {
     lines.push({
@@ -237,9 +295,8 @@ export function missionBannerText(progress: SavedProgress): string {
   if (synced.phase === 'waymo_ride') return 'Prologue: Waymo to Vallejo estate';
   if (synced.phase === 'pick_car') return 'Chapter 1: Vallejo — pick your starter';
   if (bayRegionsGated(synced)) {
-    const ch = vallejoChapterSummary(synced);
-    const n = ch.next;
-    return n ? `Chapter 1 (${ch.done}/${ch.total}): ${n.label}` : 'Chapter 1: Vallejo complete';
+    const n = nextVallejoStep(synced);
+    return n ? `Chapter 1: ${n.label}` : 'Chapter 1: finish Vallejo unlock';
   }
   return 'Bay open world — parking · drift · drag · courier';
 }

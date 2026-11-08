@@ -30,3 +30,22 @@ export function fogDistances(strength: number, quality: 'low' | 'med' | 'high'):
     end: (900 + (1 - strength) * 1400) * q
   };
 }
+
+export function coastalRainDistrict(district: DistrictId | null): boolean {
+  return district === 'sf' || district === 'marin';
+}
+
+/** Wet coastal night — tighter fog, slightly darker exposure. */
+export function coastalRainAdjust(
+  district: DistrictId | null,
+  fog: { start: number; end: number }
+): { fogStart: number; fogEnd: number; exposure: number } {
+  if (!coastalRainDistrict(district)) {
+    return { fogStart: fog.start, fogEnd: fog.end, exposure: 0.55 };
+  }
+  return {
+    fogStart: fog.start * 0.82,
+    fogEnd: fog.end * 0.88,
+    exposure: 0.48
+  };
+}
