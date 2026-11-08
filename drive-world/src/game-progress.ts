@@ -97,6 +97,8 @@ export type SavedProgress = {
   vehicleStats: Record<string, VehicleStats>;
   /** Speed-trap heat 0–5 */
   heatLevel: number;
+  /** Highest heat level reached (unlock tracking) */
+  heatPeakEver: number;
   visitedVistaIds: string[];
   journal: JournalEntry[];
   homeSafehouseId: string;
@@ -142,6 +144,7 @@ function defaultProgress(): SavedProgress {
     scenicProgress: {},
     vehicleStats: {},
     heatLevel: 0,
+    heatPeakEver: 0,
     visitedVistaIds: [],
     journal: [],
     homeSafehouseId: defaultHomeSafehouseId(),
@@ -176,6 +179,7 @@ function withV9Defaults(p: Partial<Omit<SavedProgress, 'version'>> & { version: 
     scenicProgress: p.scenicProgress ?? {},
     vehicleStats: p.vehicleStats ?? {},
     heatLevel: typeof p.heatLevel === 'number' ? p.heatLevel : 0,
+    heatPeakEver: typeof p.heatPeakEver === 'number' ? p.heatPeakEver : 0,
     visitedVistaIds: p.visitedVistaIds ?? [],
     journal: p.journal ?? [],
     homeSafehouseId: p.homeSafehouseId ?? defaultHomeSafehouseId(),

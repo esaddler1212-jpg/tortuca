@@ -83,6 +83,7 @@ import {
 } from './camera-profiles';
 import { activeSprintLabel, freshSprintRuntime, tickLandmarkSprint } from './landmark-sprints';
 import { chapterObjectivePin } from './mission-nav';
+import { bumpHeatPeak, tryUnlockActivityVehicles } from './vehicle-activity-unlocks';
 import { appendJournal } from './cruise-journal';
 import { nearestCruiseVista, type CruiseVistaDef } from './cruise-vistas';
 import { loadSettings, saveSettings } from './game-settings';
@@ -337,6 +338,19 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     exhaustGain = tune.exhaustGain;
     swapVehicle(activeId, pos, yaw);
     ui.showToast('Applied', 'Paint and tuning updated for this car.');
+  };
+
+  const applyActivityVehicleUnlocks = () => {
+    const out = tryUnlockActivityVehicles(progress);
+    if (out.progress === progress) return;
+    progress = out.progress;
+    for (const id of out.newlyUnlocked) {
+      ui.showToast('Vehicle unlocked', getVehicleSpec(id).name, 6200);
+      playLandmarkChime();
+      progress = appendJournal(progress, { kind: 'cpm', id, label: getVehicleSpec(id).name });
+    }
+    ui.setProgressSummary(progress);
+    if (nearGarage) refreshGarageUi();
   };
 
   const syncMissionProgress = () => {
@@ -898,6 +912,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
 
     progress = heatDecay(progress, mph, dt);
     progress = heatFromSpeedTrap(progress, mph, pos.x, pos.z);
+    progress = bumpHeatPeak(progress, progress.heatLevel ?? 0);
     progress = tickFuel(progress, settings, mph, progress.activeVehicleId, dt);
     if (!aerial && progress.activeVehicleId) {
       const veh = scriptInstance(ent, 'vehicle') as { maxEngineForce?: number } | undefined;
@@ -1139,6 +1154,8 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         if (meetHoldT > 2.2 && !progress.meetBadges.includes('vallejo-meet')) {
           progress = { ...progress, meetBadges: [...progress.meetBadges, 'vallejo-meet'] };
           ui.showToast('Meet badge', 'Vallejo yard — welcome to the lot');
+          saveProgress(progress);
+          applyActivityVehicleUnlocks();
           meetHoldT = 0;
         }
       } else meetHoldT = 0;
@@ -1152,6 +1169,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       }
 
       syncMissionProgress();
+      applyActivityVehicleUnlocks();
     }
 
     const driftPad = nearestDriftPad(pos.x, pos.z);
@@ -1342,6 +1360,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         if (mph > prev) {
           progress = recordSpeedTrap(progress, trap.id, Math.round(mph));
           ui.showToast(trap.name, `${Math.round(mph)} mph`);
+          applyActivityVehicleUnlocks();
         }
       }
 

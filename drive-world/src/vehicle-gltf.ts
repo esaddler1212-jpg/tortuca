@@ -64,7 +64,13 @@ const VISUAL_BY_ID: Record<string, GltfVisualOptions> = {
   'legend-time-warp': { scale: 2.05, yawOffsetDeg: 90, yOffset: -0.22 },
   'legend-hyphy-shortbus': { scale: 2.35, yawOffsetDeg: 90, yOffset: -0.5 },
   'legend-cookie-bus': { scale: 2.28, yawOffsetDeg: 90, yOffset: -0.48 },
-  'legend-say-hey-cadillac': { scale: 2.12, yawOffsetDeg: 90, yOffset: -0.36 }
+  'legend-say-hey-cadillac': { scale: 2.12, yawOffsetDeg: 90, yOffset: -0.36 },
+  'bonus-meet-racer': { scale: 2.04, yawOffsetDeg: 90, yOffset: -0.24 },
+  'bonus-sprint-king': { scale: 2.0, yawOffsetDeg: 90, yOffset: -0.2 },
+  'bonus-chapter-hauler': { scale: 2.2, yawOffsetDeg: 90, yOffset: -0.44 },
+  'bonus-vista-liner': { scale: 2.08, yawOffsetDeg: 90, yOffset: -0.42 },
+  'bonus-heat-shade': { scale: 2.06, yawOffsetDeg: 90, yOffset: -0.28 },
+  'bonus-trap-outlaw': { scale: 2.1, yawOffsetDeg: 90, yOffset: -0.36 }
 };
 
 function visualOptsFor(vehicleId: string): GltfVisualOptions {

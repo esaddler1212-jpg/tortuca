@@ -6,6 +6,7 @@ import {
   REGION_VEHICLE_IDS,
   getVehicleSpec
 } from './vehicle-catalog';
+import { ACTIVITY_VEHICLE_UNLOCKS } from './vehicle-activity-unlocks';
 import { districtHasLandmarkVisit, districtTacoFound } from './city-checkpoints';
 import { DISTRICT_LABELS, LANDMARKS } from './landmark-registry';
 import { nextUnvisitedLandmark } from './landmark-navigation';
@@ -211,6 +212,16 @@ export function buildMissionBoard(
       label: `Scenic: ${route.name}`,
       done,
       hint: done ? 'Complete' : `Checkpoint ${idx + 1}/${route.points.length}`
+    });
+  }
+
+  for (const act of ACTIVITY_VEHICLE_UNLOCKS) {
+    const owned = synced.unlockedVehicleIds.includes(act.id);
+    lines.push({
+      id: `act-${act.id}`,
+      label: `${owned ? '✓' : '○'} Activity: ${act.label}`,
+      done: owned,
+      hint: act.hint
     });
   }
 

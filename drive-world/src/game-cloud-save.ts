@@ -66,7 +66,10 @@ export async function tryMergeCloudOnBoot(): Promise<void> {
       version: 9,
       tacoTrucksFound: remote.tacoTrucksFound ?? [],
       fuelLevel: remote.fuelLevel ?? 1,
-      parkingStars: remote.parkingStars ?? {}
+      parkingStars: remote.parkingStars ?? {},
+      heatPeakEver: (remote as SavedProgress).heatPeakEver ?? 0,
+      landmarkSprintMs: (remote as SavedProgress).landmarkSprintMs ?? {},
+      cpmGhostTapes: (remote as SavedProgress).cpmGhostTapes ?? {}
     });
   } else if (localScore > remoteScore) {
     await pushCloudProgress(local);
@@ -86,7 +89,10 @@ export function importProgressJson(raw: string): boolean {
       version: 9,
       tacoTrucksFound: parsed.tacoTrucksFound ?? [],
       fuelLevel: parsed.fuelLevel ?? 1,
-      parkingStars: parsed.parkingStars ?? {}
+      parkingStars: parsed.parkingStars ?? {},
+      heatPeakEver: parsed.heatPeakEver ?? 0,
+      landmarkSprintMs: parsed.landmarkSprintMs ?? {},
+      cpmGhostTapes: parsed.cpmGhostTapes ?? {}
     });
     return true;
   } catch {

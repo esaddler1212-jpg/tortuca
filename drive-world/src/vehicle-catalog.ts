@@ -80,6 +80,16 @@ export const BONUS_CULTURE_IDS = [
 /** EV sedan with full-map night cruise autopilot (not affiliated). */
 export const AUTOPILOT_VEHICLE_ID = 'bonus-night-coil' as const;
 
+/** Gameplay mastery — meet, sprints, chapter, vistas, heat, speed traps. */
+export const BONUS_ACTIVITY_VEHICLE_IDS = [
+  'bonus-meet-racer',
+  'bonus-sprint-king',
+  'bonus-chapter-hauler',
+  'bonus-vista-liner',
+  'bonus-heat-shade',
+  'bonus-trap-outlaw'
+] as const;
+
 export const REGION_VEHICLE_IDS: Record<DistrictId, string> = {
   sf: 'region-sf-night',
   marin: 'region-marin-coast',
@@ -312,6 +322,66 @@ export const VEHICLE_CATALOG: Record<string, VehicleSpec> = {
       chassis: { x: 0.95, y: 0.34, z: 2.05 }
     },
     { diffuse: [0.9, 0.91, 0.93], emissive: [0.85, 0.88, 0.92], emissiveIntensity: 0.22 },
+    {}
+  ),
+
+  'bonus-meet-racer': spec(
+    'bonus-meet-racer',
+    'Lot Slant Racer',
+    'Activity — Vallejo night meet',
+    'Vallejo',
+    { mass: 940, maxEngineForce: 7400, maxSteering: 0.41, chassis: { x: 0.86, y: 0.28, z: 1.68 } },
+    { diffuse: [0.2, 0.18, 0.22], emissive: [0.95, 0.45, 0.12], emissiveIntensity: 0.48 },
+    {}
+  ),
+  'bonus-sprint-king': spec(
+    'bonus-sprint-king',
+    'Sprint King F1',
+    'Activity — all landmark sprints',
+    'Bay Area',
+    { mass: 880, maxEngineForce: 7800, maxSteering: 0.43, chassis: { x: 0.82, y: 0.26, z: 1.65 } },
+    { diffuse: [0.05, 0.08, 0.12], emissive: [0.15, 0.85, 0.95], emissiveIntensity: 0.55 },
+    {}
+  ),
+  'bonus-chapter-hauler': spec(
+    'bonus-chapter-hauler',
+    'Chapter Hauler',
+    'Activity — Vallejo chapter complete',
+    'Vallejo',
+    { mass: 1380, maxEngineForce: 6500, maxSteering: 0.31, chassis: { x: 1.08, y: 0.5, z: 2.25 } },
+    { diffuse: [0.12, 0.14, 0.16], emissive: [0.55, 0.72, 0.95], emissiveIntensity: 0.32 },
+    {}
+  ),
+  'bonus-vista-liner': spec(
+    'bonus-vista-liner',
+    'Vista Line SUV',
+    'Activity — five cruise vistas',
+    'Marin',
+    { mass: 1260, maxEngineForce: 5600, maxSteering: 0.34, chassis: { x: 1.02, y: 0.48, z: 2.05 } },
+    { diffuse: [0.14, 0.16, 0.18], emissive: [0.35, 0.65, 0.85], emissiveIntensity: 0.3 },
+    {}
+  ),
+  'bonus-heat-shade': spec(
+    'bonus-heat-shade',
+    'Heat Shade',
+    'Activity — max speed-trap heat',
+    'East Bay',
+    {
+      mass: 1020,
+      maxEngineForce: 7000,
+      maxSteering: 0.39,
+      chassis: { x: 0.92, y: 0.32, z: 1.82 }
+    },
+    { diffuse: [0.04, 0.04, 0.06], emissive: [0.95, 0.2, 0.12], emissiveIntensity: 0.52 },
+    {}
+  ),
+  'bonus-trap-outlaw': spec(
+    'bonus-trap-outlaw',
+    'Trap Outlaw',
+    'Activity — 85+ on every speed strip',
+    'Bay Area',
+    { mass: 1280, maxEngineForce: 6800, maxSteering: 0.36, chassis: { x: 1.0, y: 0.38, z: 2.0 } },
+    { diffuse: [0.08, 0.1, 0.14], emissive: [0.25, 0.55, 0.95], emissiveIntensity: 0.45 },
     {}
   )
 };
