@@ -131,3 +131,50 @@ export function isNoiseTranscript(text: string): boolean {
 
   return NOISE_TRANSCRIPTS.has(normalized) || normalized.length < 2;
 }
+
+function piecesUpTo(sentence: string, maxChars: number): string[] {
+  const out: string[] = [];
+  let rest = sentence.trim();
+
+  while (rest.length > maxChars) {
+    const head = rest.slice(0, maxChars + 1);
+    const pause = Math.max(head.lastIndexOf(", "), head.lastIndexOf("; "), head.lastIndexOf(": "));
+    const space = head.lastIndexOf(" ");
+    const cut = pause > maxChars / 2 ? pause + 1 : space > maxChars / 2 ? space : maxChars;
+    out.push(rest.slice(0, cut).trim());
+    rest = rest.slice(cut).trim();
+  }
+
+  return rest ? [...out, rest] : out;
+}
+
+/**
+ * Short first chunk so TTS starts quickly, then larger pieces (Herald system-voice pattern).
+ */
+export function chunkForSystemVoice(text: string, firstMax = 200, restMax = 180, maxTotal = SYSTEM_VOICE_MAX_CHARS): string[] {
+  const cleaned = sanitizeForSpeech(text);
+  if (!cleaned) return [];
+
+  const chunker = new SentenceChunker();
+  const sentences = [...chunker.feed(cleaned), ...chunker.flush()].map((s) => s.replace(/\s+/g, " "));
+  const pieces = sentences.flatMap((sentence, index) => piecesUpTo(sentence, index === 0 ? firstMax : restMax));
+  const out: string[] = [];
+  let current = "";
+  let total = 0;
+
+  for (const piece of pieces) {
+    total += piece.length + 1;
+    if (total > maxTotal + 1) break;
+
+    const joined = current ? `${current} ${piece}` : piece;
+    const cap = out.length === 0 ? firstMax : restMax;
+    if (current && joined.length > cap) {
+      out.push(current);
+      current = piece;
+    } else {
+      current = joined;
+    }
+  }
+
+  return current ? [...out, current] : out;
+}

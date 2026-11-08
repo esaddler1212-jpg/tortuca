@@ -7,6 +7,7 @@ import { isHudModuleId, matchModuleFromSpeech, type HudModuleId } from "../../sh
 import { isIrisSpecialistId, type IrisSpecialistId } from "../../shared/irisTeam";
 import { readDelegateHistory, writeLastDelegate } from "../../shared/irisTeamActivity";
 import { isStopPhrase } from "../../shared/speechText";
+import { fastModuleAck, fastModuleNavigation } from "../../shared/voiceIntents";
 
 export type Turn = { role: "user" | "assistant"; content: string; /** Read-out of the brief, not a real exchange. */ brief?: boolean };
 /** What the Iris ring shows. */
@@ -229,6 +230,20 @@ export function useConversation(opts: {
       }
       if (GOODBYE.test(said) || isStopPhrase(said)) {
         wrapUp();
+        return;
+      }
+      const fastNav = fastModuleNavigation(said);
+      if (fastNav) {
+        optsRef.current.onOpenModule?.(fastNav);
+        const ack = fastModuleAck(fastNav);
+        setTurns((t) => [...t, { role: "user", content: said }, { role: "assistant", content: ack }]);
+        setReplyTick((n) => n + 1);
+        voice.speak(ack, {
+          force: true,
+          onEnd: () => {
+            if (handsFreeRef.current) relisten();
+          },
+        });
         return;
       }
       const next = [...turnsRef.current, { role: "user" as const, content: said }];

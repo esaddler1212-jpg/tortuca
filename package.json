@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "test:time": "tsx scripts/check-time-logic.mts",
     "test:speech": "tsx scripts/check-speech-text.mts",
+    "herald:bootstrap": "bash herald-os/bootstrap.sh",
     "test:herald": "tsx scripts/check-herald-cherry.mts",
     "scan:secrets": "tsx scripts/scan-secrets.mts",
     "test:iris": "tsx scripts/check-iris.mts",

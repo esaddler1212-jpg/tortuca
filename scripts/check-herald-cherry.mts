@@ -1,6 +1,13 @@
 import { existsSync, readFileSync } from "node:fs";
 
-const paths = ["herald-os/CHERRY_PICK.md", "herald-os/README.md", "shared/speechText.ts"];
+const paths = [
+  "herald-os/CHERRY_PICK.md",
+  "herald-os/README.md",
+  "herald-os/bootstrap.sh",
+  "shared/speechText.ts",
+  "shared/voiceIntents.ts",
+  "src/hooks/useGuardedAsync.ts",
+];
 let ok = true;
 for (const p of paths) {
   if (!existsSync(p)) {

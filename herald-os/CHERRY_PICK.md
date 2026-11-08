@@ -13,9 +13,16 @@ Herald OS is **MIT**. Hermes Agent upstream is separate — Iris keeps **Claude*
 
 ## Ported in Tortuca
 
-- **`shared/speechText.ts`** — from `speech-text.ts` (sanitize, chunker, `isStopPhrase`, `isNoiseTranscript`)
-- **`useVoiceOutput`** — sanitizes model markdown before `speechSynthesis`
+- **`shared/speechText.ts`** — from `speech-text.ts` (sanitize, chunker, `chunkForSystemVoice`, `isStopPhrase`, `isNoiseTranscript`)
+- **`shared/voiceIntents.ts`** — from `intents.ts` (`stripVoiceFillers`, `fastModuleNavigation` — skips `/api/ask` for pure navigation)
+- **`src/hooks/useGuardedAsync.ts`** — from `use-async.ts` (stale fetch guard)
+- **`useVoiceOutput`** — Herald chunking for faster time-to-first-speech
 - **`useSpeechInput`** — drops noise transcripts
+- **`useConversation`** — voice fast path for HUD tabs
+
+```bash
+npm run herald:bootstrap   # shallow clone → herald-os/herald-upstream/ (gitignored)
+```
 
 ## Worth studying later (no code yet)
 

@@ -5,15 +5,17 @@
 We **do not vendor** the full tree. Clone locally when comparing UX:
 
 ```bash
-git clone --depth 1 https://github.com/iamlukethedev/Herald-OS.git /tmp/herald-os
+npm run herald:bootstrap   # → herald-os/herald-upstream/
 ```
 
 ## What we ported (MIT)
 
 | Herald source | IRIS |
 |---------------|------|
-| `apps/desktop/src/lib/voice/speech-text.ts` | `shared/speechText.ts` — TTS sanitize, sentence chunker, stop/noise STT helpers |
-| Voice pipeline idea | `useVoiceOutput` calls `sanitizeForSpeech` before `speechChunks` |
+| `speech-text.ts` | `shared/speechText.ts` — TTS sanitize, `chunkForSystemVoice`, stop/noise STT |
+| `intents.ts` | `shared/voiceIntents.ts` — navigation fast path (no `/api/ask`) |
+| `use-async.ts` | `src/hooks/useGuardedAsync.ts` — stale fetch guard |
+| Voice pipeline | `useVoiceOutput`, `useConversation`, `useSpeechInput` |
 
 ## What stays on the Mac / Linux image
 

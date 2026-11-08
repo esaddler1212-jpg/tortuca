@@ -1,5 +1,12 @@
 /** Herald-derived speech helpers — run via npm run test:speech */
-import { sanitizeForSpeech, SentenceChunker, isNoiseTranscript, isStopPhrase } from "../shared/speechText.ts";
+import {
+  sanitizeForSpeech,
+  SentenceChunker,
+  chunkForSystemVoice,
+  isNoiseTranscript,
+  isStopPhrase,
+} from "../shared/speechText.ts";
+import { fastModuleNavigation, stripVoiceFillers } from "../shared/voiceIntents.ts";
 
 let n = 0;
 const ok = (label: string, cond: boolean) => {
@@ -14,5 +21,9 @@ ok("chunker yields sentence", new SentenceChunker().feed("Hello. Wait")[0] === "
 ok("noise transcript", isNoiseTranscript("uh") && !isNoiseTranscript("leave by 7"));
 ok("stop phrase iris", isStopPhrase("thanks iris"));
 ok("stop phrase not partial", !isStopPhrase("thanks iris for the brief"));
+ok("chunk first short", chunkForSystemVoice("Hello there. Second sentence here.")[0]!.length <= 210);
+ok("strip fillers", stripVoiceFillers("Hey Iris, open inbox").toLowerCase().includes("open"));
+ok("fast nav inbox", fastModuleNavigation("Hey Iris, open inbox") === "inbox");
+ok("no fast nav heavy", fastModuleNavigation("open inbox and summarize") === null);
 
 console.log(process.exitCode ? `speech-text failed (${n})` : `speech-text passed (${n}).`);
