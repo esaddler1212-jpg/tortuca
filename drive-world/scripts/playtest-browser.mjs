@@ -67,7 +67,9 @@ check('home phase after car pick', (await hud()).phase === 'home', (await hud())
 check(
   '3D bay terrain present',
   await page.evaluate(
-    () => !!window.__cityNights.app.root.find((n) => n.name === 'bay-terrain-root')?.children?.length
+    () =>
+      !!window.__cityNights.app.root.find((n) => n.name === 'bay-terrain-root') &&
+      !!window.__cityNights.app.root.find((n) => n.name?.startsWith('bay-terrain-') && n.name !== 'bay-terrain-root')
   )
 );
 
