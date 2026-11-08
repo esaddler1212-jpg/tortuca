@@ -38,7 +38,8 @@ import {
   registerWaymoReplay,
   registerStartTaxi,
   registerDynoPull,
-  registerBoardFlight
+  registerBoardFlight,
+  registerVehicleSwap
 } from './game-bridge';
 import {
   loadProgress,
@@ -794,6 +795,18 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     ui.showToast(dir === 'toTokyo' ? 'SFO → Haneda' : 'Haneda → SFO', 'Night flight — A / Skip to land now');
   };
   registerBoardFlight(boardFlight);
+  registerVehicleSwap((id) => {
+    if (progress.phase !== 'home' || ridingWaymo || flight || photoMode) return;
+    if (!progress.unlockedVehicleIds.includes(id)) return;
+    if (id === progress.activeVehicleId) return;
+    if (getHudSnapshot().mph > 12) {
+      ui.showToast('Slow down', 'Stop to swap cars.');
+      return;
+    }
+    void swapVehicle(id);
+    ui.showToast('Switched', getVehicleSpec(id).name);
+    if (nearGarage) refreshGarageUi();
+  });
 
   const resumeFromSave = () => {
     progress = tryUnlockNightCoil(progress);

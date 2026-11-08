@@ -15,8 +15,13 @@ import {
   requestWaymoReplay,
   setTouchDrive,
   subscribeHud,
+  requestVehicleSwap,
+  requestBoardFlight,
+  requestStartTaxi,
   type HudSnapshot
 } from '../game-bridge';
+import { VEHICLE_CATALOG } from '../vehicle-catalog';
+import { BayMap } from './BayMap';
 import { DISTRICT_LABELS, LANDMARKS, districtLandmarkTotal, districtLandmarksVisited } from '../landmark-registry';
 import type { DistrictId } from '../world-config';
 import { Minimap } from './Minimap';
@@ -29,7 +34,6 @@ import { bayRegionsGated, syncVallejoMissionSteps, VALLEJO_CHAPTER_STEPS } from 
 import { GAMEPAD_GLYPHS } from '../gamepad-hub';
 import { setSimulationPaused } from '../console-graphics';
 import { nextTaxiContract } from '../cpm-taxi';
-import { requestBoardFlight, requestStartTaxi } from '../game-bridge';
 import { TOKYO_FF_GARAGE_LABEL, tokyoFleetUnlockedCount } from '../tokyo-ff-cars';
 import { TOKYO_LANDMARKS, tokyoUnlockStatus } from '../tokyo-map';
 import { heatLabel } from '../game-heat';
@@ -53,6 +57,37 @@ function PinnedObjective({ snap }: { snap: HudSnapshot }) {
     <div className="pinned-objective" aria-live="polite">
       <strong>Chapter</strong> — {snap.pinnedChapterLabel}
       {snap.pinnedChapterHint ? <span className="pinned-hint"> · {snap.pinnedChapterHint}</span> : null}
+    </div>
+  );
+}
+
+function VehicleFleetPanel({ snap }: { snap: HudSnapshot }) {
+  const ids = snap.progress?.unlockedVehicleIds ?? [];
+  if (!snap.progress || snap.phase !== 'home') return <p className="sync-msg">Finish the intro to manage your fleet.</p>;
+  return (
+    <div className="vehicle-fleet-panel">
+      <p className="fleet-hint">
+        {snap.nearGarage ? 'Garage open — paint & tuning on the left panel.' : 'Stop at a garage door (slow) for full tuning.'}
+      </p>
+      <div className="fleet-grid" aria-label="Your cars">
+        {ids.map((id) => {
+          const spec = VEHICLE_CATALOG[id];
+          if (!spec) return null;
+          const active = id === snap.progress?.activeVehicleId;
+          return (
+            <button
+              key={id}
+              type="button"
+              className={`fleet-card ${active ? 'active' : ''}`}
+              disabled={active}
+              onClick={() => requestVehicleSwap(id)}
+            >
+              <span className="fleet-card-name">{spec.name}</span>
+              <span className="fleet-card-tag">{spec.city}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -92,17 +127,18 @@ function HudDrawerTabs({ snap }: { snap: HudSnapshot }) {
             className={`hud-tab ${tab === id ? 'active' : ''}`}
             onClick={() => setTab(id)}
           >
-            {id === 'map' ? 'Map' : id === 'missions' ? 'Missions' : id === 'garage' ? 'Garage' : 'Settings'}
+            {id === 'map' ? 'Map' : id === 'missions' ? 'Drive' : id === 'garage' ? 'Cars' : 'More'}
           </button>
         ))}
       </div>
       <div className="hud-tab-panel" role="tabpanel">
         {tab === 'map' && (
-          <>
+          <div className="map-tab-panel">
+            <BayMap snap={snap} size={280} showDistrictLabels />
+            <p className="map-legend">Orange = freeways · dots = landmarks · square = taco truck</p>
             <LandSearchPanel snap={snap} />
             <FastTravel snap={snap} />
-            <LandmarkPanel snap={snap} />
-          </>
+          </div>
         )}
         {tab === 'missions' && (
           <>
@@ -116,13 +152,16 @@ function HudDrawerTabs({ snap }: { snap: HudSnapshot }) {
         {tab === 'garage' && (
           <>
             {snap.garageInteriorCam ? <div className="sprint-armed">Garage interior cam</div> : null}
-            <RecordsPanel snap={snap} />
-            <SafehousePanel snap={snap} />
+            <VehicleFleetPanel snap={snap} />
           </>
         )}
         {tab === 'settings' && (
           <>
-            <SettingsPanel />
+            <SettingsQuickPanel />
+            <details className="settings-panel">
+              <summary>Advanced &amp; cloud</summary>
+              <SettingsPanel />
+            </details>
             <MusicPanel />
             <JournalPanel snap={snap} />
           </>
@@ -360,7 +399,7 @@ function MissionBoard({ snap }: { snap: HudSnapshot }) {
   const taxiOffer = snap.progress ? nextTaxiContract(snap.progress, 'vallejo') : null;
   return (
     <details className="mission-panel" {...(isTouchPrimary() ? {} : { open: true })}>
-      <summary>Missions · CPM · Horizon · MC</summary>
+      <summary>Objectives</summary>
       {taxiOffer && !snap.progress?.activeTaxiId ? (
         <button
           type="button"
@@ -387,6 +426,56 @@ function MissionBoard({ snap }: { snap: HudSnapshot }) {
   );
 }
 
+function SettingsQuickPanel() {
+  const [s, setS] = useState<GameSettings>(loadSettings());
+  const apply = (next: GameSettings) => {
+    setS(next);
+    saveSettings(next);
+    window.dispatchEvent(new CustomEvent('drive-world:settings', { detail: next }));
+  };
+  return (
+    <div className="settings-quick">
+      <p className="settings-quick-title">Quick settings</p>
+      <label className="slider-row">
+        Quality
+        <select
+          value={s.bayQualityPreset ?? 'balanced'}
+          onChange={(e) =>
+            apply(applyBayQualityPreset(s, e.target.value as GameSettings['bayQualityPreset']))
+          }
+        >
+          <option value="chromebook">Chromebook</option>
+          <option value="balanced">Balanced</option>
+          <option value="console">Console / TV</option>
+          <option value="lush">Lush</option>
+        </select>
+      </label>
+      <label className="slider-row">
+        Volume
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={Math.round(s.masterVolume * 100)}
+          onChange={(e) => apply({ ...s, masterVolume: Number(e.target.value) / 100 })}
+        />
+      </label>
+      <label className="checkbox-row">
+        <input
+          type="checkbox"
+          checked={s.fuelSimEnabled}
+          onChange={(e) => apply({ ...s, fuelSimEnabled: e.target.checked })}
+        />
+        Fuel sim
+      </label>
+      <label className="checkbox-row">
+        <input type="checkbox" checked={!!s.tvHudMode} onChange={(e) => apply({ ...s, tvHudMode: e.target.checked })} />
+        Couch / TV text size
+      </label>
+    </div>
+  );
+}
+
 function SettingsPanel() {
   const [s, setS] = useState<GameSettings>(loadSettings());
   const [syncMsg, setSyncMsg] = useState('');
@@ -397,8 +486,7 @@ function SettingsPanel() {
   };
   const syncKey = getOrCreateSyncKey();
   return (
-    <details className="settings-panel">
-      <summary>Settings</summary>
+    <div className="settings-panel">
       <p className="sync-key-line">
         Cloud sync key: <code>{syncKey}</code>
       </p>
@@ -585,7 +673,7 @@ function SettingsPanel() {
         />
         Hub streaming (reload to fully toggle)
       </label>
-    </details>
+    </div>
   );
 }
 
