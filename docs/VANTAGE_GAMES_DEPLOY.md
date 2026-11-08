@@ -26,7 +26,7 @@ If the home page title is **City Nights** and you see “Tap to start”, Netlif
 
 After saving, **Deploys → Trigger deploy → Clear cache and deploy site**.
 
-Until the folder rename lands on `main`, you can use base directory **`boys-student`** with the same build command; that is the same app as `vantage-games/`.
+**Base directory:** use **`vantage-games`**. The repo also has a **`boys-student` → `vantage-games` symlink** so older Netlify settings that still say `boys-student` keep working after clear cache + redeploy.
 
 ## What gets published
 
