@@ -31,6 +31,7 @@ import {
   pushCloudProgress
 } from '../game-cloud-save';
 import { loadProgress, saveProgress } from '../game-progress';
+import { isTouchPrimary } from '../mobile-platform';
 import { cameraModeLabel } from '../camera-profiles';
 import { JournalPanel } from './JournalPanel';
 import { MusicPanel } from './MusicPanel';
@@ -237,7 +238,7 @@ export function HudApp() {
   useEffect(() => subscribeHud(setSnap), []);
 
   const showTouch =
-    typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches && !snap.photoMode;
+    typeof window !== 'undefined' && isTouchPrimary() && !snap.photoMode && snap.phase === 'home' && !snap.ridingWaymo;
 
   return (
     <div className={`react-hud ${snap.photoMode ? 'photo-active' : ''}`}>
@@ -292,9 +293,7 @@ export function HudApp() {
         </button>
       )}
       {!snap.photoMode && <LandmarkPanel snap={snap} />}
-      {showTouch && snap.phase === 'home' && !snap.ridingWaymo && (
-        <TouchControlsImpl flight={!!snap.flightMode} />
-      )}
+      {showTouch && <TouchControlsImpl flight={!!snap.flightMode} />}
       {snap.photoMode && (
         <p className="photo-hint">
           WASD move · Q/E altitude · P exit ·{' '}
@@ -309,7 +308,7 @@ export function HudApp() {
 
 function TouchControlsImpl({ flight }: { flight: boolean }) {
   const press =
-    (key: 'up' | 'down' | 'left' | 'right' | 'climb' | 'descend', down: boolean) =>
+    (key: 'up' | 'down' | 'left' | 'right' | 'climb' | 'descend' | 'nitro', down: boolean) =>
     (e: React.PointerEvent) => {
       e.preventDefault();
       window.dispatchEvent(new CustomEvent('drive-world:unlock-audio'));
@@ -328,6 +327,15 @@ function TouchControlsImpl({ flight }: { flight: boolean }) {
       </button>
       <button type="button" className="touch-btn right" onPointerDown={press('right', true)} onPointerUp={press('right', false)} onPointerLeave={press('right', false)}>
         ▶
+      </button>
+      <button
+        type="button"
+        className="touch-btn nitro"
+        onPointerDown={press('nitro', true)}
+        onPointerUp={press('nitro', false)}
+        onPointerLeave={press('nitro', false)}
+      >
+        N₂O
       </button>
       {flight ? (
         <>

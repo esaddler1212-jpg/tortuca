@@ -12,7 +12,9 @@
    - **Build command:** `npm ci && npm run build` (also in [`drive-world/netlify.toml`](../drive-world/netlify.toml))
    - **Publish directory:** `dist`
 4. Deploy. Every push to `main` that touches `drive-world/` can auto-deploy if continuous deployment is on.
-5. **Netlify Blobs** (for Settings → Pull/Push cloud): enable Blobs on the site (Netlify dashboard). Saves are keyed by the **sync key** shown in game settings (copy to other devices).
+5. **iOS Safari:** Site must be served over **HTTPS** (Netlify default). Test on a real iPhone/iPad: tap-to-start, touch drive pad, landscape on phone.
+
+6. **Netlify Blobs** (for Settings → Pull/Push cloud): enable Blobs on the site (Netlify dashboard). Saves are keyed by the **sync key** shown in game settings (copy to other devices).
 
 ### CLI (optional)
 

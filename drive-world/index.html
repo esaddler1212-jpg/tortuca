@@ -2,12 +2,24 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
     <meta name="description" content="City Nights — open-world Bay Area night driving (PlayCanvas)." />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#0a0c12" />
+    <meta name="format-detection" content="telephone=no" />
     <title>City Nights</title>
     <link rel="stylesheet" href="/src/starter.css" />
   </head>
   <body>
+    <div id="tap-start" class="tap-start" role="button" tabindex="0">
+      <span class="tap-start-title">City Nights</span>
+      <span class="tap-start-sub">Tap to start · landscape recommended on phone</span>
+    </div>
     <canvas id="application-canvas"></canvas>
     <div id="react-hud"></div>
     <div id="hud" class="hud" aria-live="polite">

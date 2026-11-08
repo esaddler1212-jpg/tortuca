@@ -28,6 +28,8 @@ import {
 
 import { buildDrivingWorld } from './build-world';
 import { startGameSession } from './game-loop';
+import { installMobileShell } from './install-mobile-shell';
+import { isIOS, recommendedPixelRatio } from './mobile-platform';
 import { tryMergeCloudOnBoot } from './game-cloud-save';
 import { preloadBootVehicleModels } from './vehicle-gltf';
 import { mountReactHud } from './hud/mount';
@@ -43,13 +45,17 @@ await new Promise<void>((resolve) => {
   WasmModule.getInstance('Ammo', () => resolve());
 });
 
+installMobileShell();
 mountReactHud();
 
 const canvas = document.getElementById('application-canvas') as HTMLCanvasElement;
 const speedEl = document.getElementById('speed') as HTMLParagraphElement;
 
-const device = await createGraphicsDevice(canvas);
-device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
+const device = await createGraphicsDevice(canvas, {
+  antialias: false,
+  powerPreference: isIOS() ? 'low-power' : 'high-performance'
+});
+device.maxPixelRatio = recommendedPixelRatio();
 
 const options = new AppOptions();
 options.graphicsDevice = device;
@@ -113,9 +119,9 @@ moon.addComponent('light', {
   type: 'directional',
   color: new Color(0.45, 0.5, 0.75),
   intensity: 0.22,
-  castShadows: true,
-  shadowDistance: 140,
-  shadowResolution: 1024
+  castShadows: !isIOS(),
+  shadowDistance: isIOS() ? 80 : 140,
+  shadowResolution: isIOS() ? 512 : 1024
 });
 moon.setEulerAngles(55, 30, 0);
 app.root.addChild(moon);

@@ -1,5 +1,6 @@
 import type { AutopilotPreset } from './autopilot-cruise';
 import type { MusicStationId } from './game-music';
+import { isTouchPrimary } from './mobile-platform';
 
 export type GameSettings = {
   masterVolume: number;
@@ -30,7 +31,11 @@ const defaults: GameSettings = {
 export function loadSettings(): GameSettings {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return { ...defaults };
+    if (!raw) {
+      const base = { ...defaults };
+      if (isTouchPrimary()) base.fogQuality = 'low';
+      return base;
+    }
     return { ...defaults, ...(JSON.parse(raw) as GameSettings) };
   } catch {
     return { ...defaults };

@@ -38,6 +38,7 @@ export type TouchDrive = {
   right: boolean;
   climb: boolean;
   descend: boolean;
+  nitro: boolean;
 };
 
 type HudListener = (snap: HudSnapshot) => void;
@@ -71,7 +72,15 @@ let savePhotoCardHandler: (() => void) | null = null;
 let waymoReplayHandler: (() => void) | null = null;
 let vistaCamHandler: (() => void) | null = null;
 
-let touchDrive: TouchDrive = { up: false, down: false, left: false, right: false, climb: false, descend: false };
+let touchDrive: TouchDrive = {
+  up: false,
+  down: false,
+  left: false,
+  right: false,
+  climb: false,
+  descend: false,
+  nitro: false
+};
 
 export function publishHud(patch: Partial<HudSnapshot>): void {
   snapshot = { ...snapshot, ...patch };
@@ -175,7 +184,8 @@ export function isTouchDriveActive(): boolean {
     touchDrive.left ||
     touchDrive.right ||
     touchDrive.climb ||
-    touchDrive.descend
+    touchDrive.descend ||
+    touchDrive.nitro
   );
 }
 
