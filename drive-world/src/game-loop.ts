@@ -222,7 +222,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   let lastDistrict: DistrictId | null = null;
   let telemetryT = 0;
   markSessionBoot();
-  installSessionTelemetryFlush(settings.shareSessionStats !== false, () => ({
+  installSessionTelemetryFlush(() => settings.shareSessionStats !== false, () => ({
     preset: settings.bayQualityPreset ?? 'balanced',
     district: lastDistrict,
     phase: progress.phase
@@ -450,7 +450,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     ui.setAutonomousMode(false);
     ui.setMission(missionTextForPhase('home', progress));
     swapVehicle(vehicleId, safehouseSpawn(), 195);
-    ui.showToast('Chapter 1', 'Vallejo training — finish the CPM board to unlock the Bay.');
+    ui.showToast('Chapter 1', 'Find the Vallejo taco truck + any Vallejo landmark to open the Bay.');
     ui.setProgressSummary(progress);
     unlockAudio();
     void unlockMusic();
@@ -644,13 +644,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     const ent = vehicle();
     if (!ent || progress.phase !== 'home') return;
     if (bayRegionsGated(progress)) {
-      const inVallejo =
-        Math.hypot(x - 500, z - 980) < 420 ||
-        Math.hypot(x - 720, z - 1360) < 220 ||
-        LANDMARKS.some(
-          (lm) => lm.district === 'vallejo' && Math.hypot(x - lm.x, z - lm.z) < lm.visitRadius + 80
-        );
-      if (!inVallejo) {
+      if (districtAt(x, z) !== 'vallejo') {
         ui.showToast('Chapter 1', 'Finish Vallejo taco + landmark before leaving North Bay');
         return;
       }

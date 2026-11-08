@@ -78,26 +78,32 @@ export function buildMissionBoard(
     return lines;
   }
 
+  lines.push({
+    id: 'chapter-open',
+    label: 'Bay open world — CPM loops unlocked',
+    done: true,
+    hint: 'Parking, strips, drag, courier board, meets'
+  });
+
   const chapter = vallejoChapterSummary(synced);
   if (!isVallejoChapterComplete(synced)) {
     lines.push({
       id: 'chapter-vallejo',
-      label: `Chapter 1: Vallejo training (${chapter.done}/${chapter.total})`,
+      label: `Vallejo mastery (${chapter.done}/${chapter.total})`,
       done: false,
-      hint: 'Parking, drag, drift, meet — earn the Bay'
+      hint: 'Optional — finishing it unlocks the Chapter Hauler'
     });
-    for (const step of VALLEJO_CHAPTER_STEPS) {
-      const done = synced.missionStepsCompleted.includes(step.id);
+    if (chapter.next) {
       lines.push({
-        id: step.id,
-        label: `${done ? '✓' : '○'} ${step.label}`,
-        done,
-        hint: step.hint,
-        action: !done && step.id === 'v-taxi' ? 'taxi' : undefined
+        id: chapter.next.id,
+        label: `○ ${chapter.next.label}`,
+        done: false,
+        hint: chapter.next.hint,
+        action: chapter.next.id === 'v-taxi' ? 'taxi' : undefined
       });
     }
     const taxi = nextTaxiContract(synced, 'vallejo');
-    if (taxi && !synced.activeTaxiId) {
+    if (taxi && !synced.activeTaxiId && chapter.next?.id === 'v-taxi') {
       lines.push({
         id: 'taxi-offer',
         label: `Courier gig: ${taxi.label}`,
@@ -106,15 +112,7 @@ export function buildMissionBoard(
         action: 'taxi'
       });
     }
-    return lines;
   }
-
-  lines.push({
-    id: 'chapter-open',
-    label: 'Bay open world — CPM loops unlocked',
-    done: true,
-    hint: 'Parking, strips, drag, courier board, meets'
-  });
 
   if (fuelPercent !== undefined && fuelPercent < 28) {
     const pump = nearestGasStationAnywhere(playerX, playerZ);

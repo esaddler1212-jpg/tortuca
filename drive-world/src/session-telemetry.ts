@@ -63,10 +63,10 @@ export function flushSessionTelemetry(
 }
 
 export function installSessionTelemetryFlush(
-  enabled: boolean,
+  readEnabled: () => boolean,
   readState: () => Omit<FlushPayload, 'clientId' | 'sessionSec'>
 ): void {
-  const send = () => flushSessionTelemetry(enabled, readState());
+  const send = () => flushSessionTelemetry(readEnabled(), readState());
   window.addEventListener('pagehide', send);
   window.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') send();
