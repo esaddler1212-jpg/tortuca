@@ -159,7 +159,8 @@ async function main() {
       console.log(`Fallback synth: ${track.title}`);
       renderFallback(track, ogg);
     }
-    playlistTracks.push({ file: track.file, title: track.title });
+    const title = useApi ? track.title : `${track.title.replace(/ \(ambient bed\)$/, '')} (ambient bed)`;
+    playlistTracks.push({ file: track.file, title });
   }
 
   const existing = JSON.parse(readFileSync(join(MUSIC_DIR, 'playlist.json'), 'utf8'));
