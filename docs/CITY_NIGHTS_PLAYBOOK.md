@@ -40,6 +40,14 @@ npm run ace-step:city-nights
 
 No GPU handy: `npm run ace-step:city-nights -- --fallback-only` (ffmpeg ambient placeholders).
 
+## Tokyo bonus map
+
+Unlock when you own **every Bay catalog car** (except the Tokyo reward) and **all six regions**. Drive to **SFO** (pink gate pad on the minimap), stop under ~12 mph, then **F**, HUD **Take flight**, or gamepad **D-pad ↑**. Land at **Haneda**, log **8 Tokyo landmarks**, earn **Shuto Night Runner**, fly home the same way. Headless check: `cd drive-world && npm run test:tokyo`.
+
+## Peer comparison
+
+See [`CITY_NIGHTS_PEER_COMPARISON.md`](./CITY_NIGHTS_PEER_COMPARISON.md) (CPM2, Forza Horizon, Midnight Club LA vs what ships in the browser).
+
 ## Next engineering priorities
 
 1. **Performance** — draw calls, hub hitch, VRAM (Chromebook-first)
