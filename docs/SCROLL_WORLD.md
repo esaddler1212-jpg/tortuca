@@ -19,7 +19,16 @@ This repo vendors the skill at `.claude/skills/scroll-world/` so Cursor, Claude 
 | Python 3 + Pillow | Optional knockout / mobile canvases |
 | Codex CLI (optional) | Scene stills via ChatGPT `image_gen` instead of Higgsfield credits |
 
-**Not the same repo:** [higgsfield-ai/higgsfield](https://github.com/higgsfield-ai/higgsfield) is an older **GPU / LLM training** framework (`pip install higgsfield==0.0.3`). Scroll-world needs the **generation CLI** above (`higgsfield generate create …`).
+### Higgsfield name collision (read this once)
+
+| Repo | What it is | Fits scroll-world? |
+|------|------------|-------------------|
+| [higgsfield-ai/cli](https://github.com/higgsfield-ai/cli) | Creative CLI (`generate create`, OAuth, plan credits) | **Yes** — default stills/video path in `pipeline.md` |
+| [higgsfield-ai/skills](https://github.com/higgsfield-ai/skills) | Agent skills (`higgsfield-generate`, …) | **Yes** — vendored under `.claude/skills/` |
+| [higgsfield-ai/higgsfield](https://github.com/higgsfield-ai/higgsfield) | Legacy **GPU / LLM training** (`pip install higgsfield==0.0.3`) | **No** |
+| [wide-trace/open-higgsfield](https://github.com/wide-trace/open-higgsfield) | OSS **browser studio** for the [Higgsfield developer API](https://higgsfield.ai) (`id:secret` key + `HF_API_BASE_URL`) | **Optional helper** — not a drop-in for the bash pipeline |
+
+Scroll-world’s automated seam chain is written for the **CLI** (and **Monid** for video). [OpenHiggsfield](https://openhiggsfield.ai) is useful when you prefer a UI or an **API key** instead of `higgsfield auth login`: pick Seedance / Kling with **start + end** frames, download MP4s, then continue with `ffmpeg` + `references/pipeline.md` by hand. It does not replace `references/pipeline.md` batch scripts or frame-locked connector generation unless you script against the same HTTP API yourself.
 
 ### Higgsfield setup (scroll-world Step 0)
 
