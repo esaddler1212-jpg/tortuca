@@ -1,9 +1,10 @@
 import { Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
 
+import type { BayQualityPreset } from './bay-quality';
 import { hillOffsetM } from './bay-terrain';
 import { CRUISE_VISTAS } from './cruise-vistas';
 import { COLLECTIBLES } from './world-extras';
-import { FREEWAY_I80 } from './world-config';
+import { FREEWAY_101, FREEWAY_880, FREEWAY_I80 } from './world-config';
 
 /** Switchback blocks — Lombard-inspired. */
 export function buildLombardStreet(app: AppBase): void {
@@ -49,26 +50,52 @@ type TrafficCar = { root: Entity; path: { x: number; z: number }[]; seg: number;
 
 const traffic: TrafficCar[] = [];
 
-export function spawnAmbientTraffic(app: AppBase): void {
-  const path = FREEWAY_I80.slice(4, 10).map((p) => ({ x: p.x, z: p.z }));
+type TrafficLoop = { path: { x: number; z: number }[]; cars: number; speed: number };
+
+function pathFromFreeway(waypoints: { x: number; z: number }[], start: number, end: number) {
+  return waypoints.slice(start, end).map((p) => ({ x: p.x, z: p.z }));
+}
+
+export function spawnAmbientTraffic(app: AppBase, preset: BayQualityPreset = 'balanced'): void {
+  for (const car of traffic) car.root.destroy();
+  traffic.length = 0;
+  if (preset === 'chromebook') return;
+
+  const loops: TrafficLoop[] =
+    preset === 'lush'
+      ? [
+          { path: pathFromFreeway(FREEWAY_I80, 3, 12), cars: 5, speed: 0.15 },
+          { path: pathFromFreeway(FREEWAY_880, 2, 10), cars: 4, speed: 0.12 },
+          { path: pathFromFreeway(FREEWAY_101, 1, 9), cars: 3, speed: 0.11 }
+        ]
+      : [
+          { path: pathFromFreeway(FREEWAY_I80, 4, 10), cars: 4, speed: 0.13 },
+          { path: pathFromFreeway(FREEWAY_880, 3, 9), cars: 3, speed: 0.11 },
+          { path: pathFromFreeway(FREEWAY_101, 2, 8), cars: 2, speed: 0.1 }
+        ];
+
   const mat = new StandardMaterial();
   mat.diffuse = new Color(0.5, 0.52, 0.55);
   mat.emissive = new Color(0.2, 0.5, 0.65);
   mat.emissiveIntensity = 0.2;
   mat.update();
 
-  for (let i = 0; i < 4; i++) {
-    const root = new Entity(`traffic-${i}`);
-    root.setLocalScale(1.6, 0.55, 2.2);
-    root.addComponent('render', { type: 'box', material: mat });
-    app.root.addChild(root);
-    traffic.push({
-      root,
-      path,
-      seg: i % Math.max(1, path.length - 1),
-      t: i * 0.22,
-      speed: 0.12 + i * 0.02
-    });
+  let idx = 0;
+  for (const loop of loops) {
+    if (loop.path.length < 2) continue;
+    for (let i = 0; i < loop.cars; i++) {
+      const root = new Entity(`traffic-${idx++}`);
+      root.setLocalScale(1.6, 0.55, 2.2);
+      root.addComponent('render', { type: 'box', material: mat });
+      app.root.addChild(root);
+      traffic.push({
+        root,
+        path: loop.path,
+        seg: i % Math.max(1, loop.path.length - 1),
+        t: i * 0.18,
+        speed: loop.speed + i * 0.01
+      });
+    }
   }
 }
 
