@@ -8,6 +8,7 @@ import type { GamePhase, SavedProgress } from './game-progress';
 import { GARAGE_STARTER_IDS, VEHICLE_CATALOG } from './vehicle-catalog';
 import { TOTAL_LANDMARKS, countRegionsComplete, TOTAL_REGIONS } from './game-progress';
 import type { DistrictId } from './world-config';
+import { PAINT_PRESETS, type VehicleCustomization } from './vehicle-customization';
 
 export type GameUi = {
   showCarPicker(onPick: (vehicleId: string) => void): void;
@@ -18,6 +19,12 @@ export type GameUi = {
   setAutonomousMode(active: boolean): void;
   showToast(title: string, body: string): void;
   setGarageVisible(visible: boolean, progress: SavedProgress, onSelect: (id: string) => void): void;
+  bindCustomize(
+    vehicleId: string | null,
+    custom: VehicleCustomization,
+    onChange: (next: VehicleCustomization) => void,
+    onApply: () => void
+  ): void;
   bindReset(onReset: () => void): void;
 };
 
@@ -102,6 +109,55 @@ export function wireGameUi(): GameUi {
         btn.addEventListener('click', () => onSelect(id));
         list.appendChild(btn);
       }
+    },
+    bindCustomize(vehicleId, custom, onChange, onApply) {
+      const section = el<HTMLDivElement>('customize');
+      if (!vehicleId) {
+        section.hidden = true;
+        return;
+      }
+      section.hidden = false;
+      let selectedPaint = custom.paintPreset;
+      const glow = el<HTMLInputElement>('slider-glow');
+      const power = el<HTMLInputElement>('slider-power');
+      const grip = el<HTMLInputElement>('slider-grip');
+
+      const emit = () => {
+        onChange({
+          paintPreset: selectedPaint,
+          glow: Number(glow.value) / 100,
+          power: Number(power.value) / 100,
+          grip: Number(grip.value) / 100
+        });
+      };
+
+      const swatches = el<HTMLDivElement>('paint-swatches');
+      swatches.innerHTML = '';
+      for (const preset of PAINT_PRESETS) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = preset.id === selectedPaint ? 'swatch active' : 'swatch';
+        b.title = preset.label;
+        b.style.setProperty(
+          '--swatch',
+          `rgb(${Math.round(preset.emissive[0] * 255)}, ${Math.round(preset.emissive[1] * 255)}, ${Math.round(preset.emissive[2] * 255)})`
+        );
+        b.addEventListener('click', () => {
+          selectedPaint = preset.id;
+          swatches.querySelectorAll('.swatch').forEach((node) => node.classList.remove('active'));
+          b.classList.add('active');
+          emit();
+        });
+        swatches.appendChild(b);
+      }
+
+      glow.value = String(Math.round(custom.glow * 100));
+      power.value = String(Math.round(custom.power * 100));
+      grip.value = String(Math.round(custom.grip * 100));
+      glow.oninput = emit;
+      power.oninput = emit;
+      grip.oninput = emit;
+      el<HTMLButtonElement>('apply-custom').onclick = onApply;
     },
     bindReset(onReset) {
       resetBtn.addEventListener('click', onReset);

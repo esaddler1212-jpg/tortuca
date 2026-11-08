@@ -7,6 +7,7 @@ import {
 } from 'playcanvas';
 
 import { getVehicleSpec, type VehicleSpec } from './vehicle-catalog';
+import { appliedTuning, type VehicleCustomization } from './vehicle-customization';
 
 const wheelDefs = [
   { name: 'FL', pos: new Vec3(0.95, 0.35, 1.35), front: true },
@@ -15,21 +16,27 @@ const wheelDefs = [
   { name: 'RR', pos: new Vec3(-0.95, 0.35, -1.35), front: false }
 ];
 
-function materialFromPaint(spec: VehicleSpec): StandardMaterial {
+function chassisMaterial(tuning: ReturnType<typeof appliedTuning>): StandardMaterial {
   const paint = new StandardMaterial();
-  const p = spec.paint;
-  paint.diffuse = new Color(p.diffuse[0], p.diffuse[1], p.diffuse[2]);
-  paint.emissive = new Color(p.emissive[0], p.emissive[1], p.emissive[2]);
-  paint.emissiveIntensity = p.emissiveIntensity;
+  paint.diffuse = new Color(tuning.diffuse[0], tuning.diffuse[1], tuning.diffuse[2]);
+  paint.emissive = new Color(tuning.emissive[0], tuning.emissive[1], tuning.emissive[2]);
+  paint.emissiveIntensity = tuning.emissiveIntensity;
   paint.metalness = 0.4;
   paint.gloss = 0.6;
   paint.update();
   return paint;
 }
 
-export function createPlayerVehicle(app: AppBase, vehicleId: string, position: Vec3, yawDeg = 0): Entity {
+export function createPlayerVehicle(
+  app: AppBase,
+  vehicleId: string,
+  position: Vec3,
+  yawDeg = 0,
+  customization?: VehicleCustomization
+): Entity {
   const spec = getVehicleSpec(vehicleId);
-  const paint = materialFromPaint(spec);
+  const tuning = appliedTuning(spec, customization ?? { paintPreset: 'bay-blue', glow: 0.45, power: 0.55, grip: 0.5 });
+  const paint = chassisMaterial(tuning);
 
   const glass = new StandardMaterial();
   glass.diffuse = new Color(0.05, 0.08, 0.12);
@@ -49,7 +56,7 @@ export function createPlayerVehicle(app: AppBase, vehicleId: string, position: V
         isFront: def.front,
         radius: 0.38 * Math.sqrt(scaleWheel),
         width: 0.32,
-        frictionSlip: 1180,
+        frictionSlip: tuning.frictionSlip,
         suspensionStiffness: 12
       }
     });
@@ -69,7 +76,7 @@ export function createPlayerVehicle(app: AppBase, vehicleId: string, position: V
   vehicle.script!.create('vehicle', {
     attributes: {
       wheels,
-      maxEngineForce: spec.maxEngineForce,
+      maxEngineForce: tuning.maxEngineForce,
       maxBrakingForce: spec.maxBrakingForce,
       maxSteering: spec.maxSteering
     }

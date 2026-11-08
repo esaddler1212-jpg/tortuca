@@ -1,35 +1,47 @@
 import { GARAGE_STARTER_IDS, VEHICLE_CATALOG, REGION_VEHICLE_IDS } from './vehicle-catalog';
 import { isDistrictComplete, regionUnlockVehicleId, LANDMARKS } from './landmark-registry';
 import type { DistrictId } from './world-config';
+import {
+  DEFAULT_CUSTOMIZATION,
+  defaultCustomizationFor,
+  type VehicleCustomization
+} from './vehicle-customization';
 
 export type GamePhase = 'waymo_ride' | 'pick_car' | 'home';
 
 export type SavedProgress = {
-  version: 2;
+  version: 3;
   phase: GamePhase;
   activeVehicleId: string | null;
   unlockedVehicleIds: string[];
   visitedLandmarkIds: string[];
   unlockedRegionIds: DistrictId[];
   safehouseReached: boolean;
+  customizations: Record<string, VehicleCustomization>;
 };
 
-const STORAGE_KEY = 'drive-world-progress-v2';
+const STORAGE_KEY = 'drive-world-progress-v3';
 
 function defaultProgress(): SavedProgress {
   return {
-    version: 2,
+    version: 3,
     phase: 'waymo_ride',
     activeVehicleId: null,
     unlockedVehicleIds: [],
     visitedLandmarkIds: [],
     unlockedRegionIds: [],
-    safehouseReached: false
+    safehouseReached: false,
+    customizations: {}
   };
 }
 
 function migrateRaw(parsed: Record<string, unknown>): SavedProgress | null {
-  if (parsed.version === 2) return parsed as SavedProgress;
+  if (parsed.version === 3) return parsed as SavedProgress;
+  if (parsed.version === 2) {
+    const p = parsed as SavedProgress & { version: 2; customizations?: Record<string, VehicleCustomization> };
+    const { version: _v, customizations: _c, ...rest } = p;
+    return { ...rest, version: 3, customizations: p.customizations ?? {} };
+  }
   return null;
 }
 
@@ -130,6 +142,26 @@ export function tryUnlockCompletedRegions(progress: SavedProgress): {
 export function setActiveVehicle(progress: SavedProgress, vehicleId: string): SavedProgress {
   if (!progress.unlockedVehicleIds.includes(vehicleId)) return progress;
   const next = { ...progress, activeVehicleId: vehicleId };
+  saveProgress(next);
+  return next;
+}
+
+export function getVehicleCustomization(progress: SavedProgress, vehicleId: string): VehicleCustomization {
+  const saved = progress.customizations[vehicleId];
+  if (saved) return { ...saved };
+  const spec = VEHICLE_CATALOG[vehicleId];
+  return spec ? defaultCustomizationFor(spec) : { ...DEFAULT_CUSTOMIZATION };
+}
+
+export function setVehicleCustomization(
+  progress: SavedProgress,
+  vehicleId: string,
+  custom: VehicleCustomization
+): SavedProgress {
+  const next: SavedProgress = {
+    ...progress,
+    customizations: { ...progress.customizations, [vehicleId]: { ...custom } }
+  };
   saveProgress(next);
   return next;
 }

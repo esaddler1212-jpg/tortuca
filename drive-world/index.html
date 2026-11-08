@@ -28,6 +28,16 @@
     <div id="garage" class="garage" hidden>
       <h3>Safehouse garage</h3>
       <div id="garage-list" class="garage-list"></div>
+      <div id="customize" class="customize" hidden>
+        <h4>Customize</h4>
+        <p class="customize-hint">Per car · saved to this browser</p>
+        <div class="label">Paint</div>
+        <div id="paint-swatches" class="paint-swatches"></div>
+        <label class="slider-row">Glow <input id="slider-glow" type="range" min="0" max="100" /></label>
+        <label class="slider-row">Power <input id="slider-power" type="range" min="0" max="100" /></label>
+        <label class="slider-row">Grip <input id="slider-grip" type="range" min="0" max="100" /></label>
+        <button id="apply-custom" type="button" class="apply-custom">Apply &amp; refresh</button>
+      </div>
     </div>
 
     <div id="toast" class="toast" hidden></div>

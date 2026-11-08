@@ -8,6 +8,8 @@ import {
   visitLandmark,
   chooseGarageCar,
   finishWaymoRide,
+  getVehicleCustomization,
+  setVehicleCustomization,
   tryUnlockCompletedRegions,
   type SavedProgress
 } from './game-progress';
@@ -16,6 +18,7 @@ import { DISTRICT_LABELS, LANDMARKS, VALLEJO_SAFEHOUSE } from './landmark-regist
 import { getVehicleSpec } from './vehicle-catalog';
 import { createPlayerVehicle, destroyPlayerVehicle } from './vehicle-factory';
 import { buildWaymoRidePath, spawnWaymoRide, waymoPassengerCameraOffset, type WaymoRide } from './waymo-ride';
+import type { VehicleCustomization } from './vehicle-customization';
 
 export type GameSession = {
   vehicle: Entity | null;
@@ -29,6 +32,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   let waymo: WaymoRide | null = null;
   let nearGarage = false;
   let ridingWaymo = progress.phase === 'waymo_ride';
+  let draftCustom: VehicleCustomization | null = null;
 
   const safehouseSpawn = () =>
     new Vec3(
@@ -37,22 +41,48 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       VALLEJO_SAFEHOUSE.z + 18
     );
 
-  const onGarageSelect = (id: string) => {
-    if (id === progress.activeVehicleId) return;
-    swapVehicle(id);
-    ui.showToast('Switched', getVehicleSpec(id).name);
-    if (nearGarage) ui.setGarageVisible(true, progress, onGarageSelect);
-  };
-
-  const swapVehicle = (vehicleId: string, pos?: Vec3, yaw?: number) => {
+  function swapVehicle(vehicleId: string, pos?: Vec3, yaw?: number) {
     const old = vehicle?.getPosition();
     const oldRot = vehicle?.getEulerAngles();
     destroyPlayerVehicle(vehicle);
     const p = pos ?? old ?? safehouseSpawn();
-    vehicle = createPlayerVehicle(app, vehicleId, p, yaw ?? oldRot?.y ?? 15);
+    const custom = getVehicleCustomization(progress, vehicleId);
+    draftCustom = { ...custom };
+    vehicle = createPlayerVehicle(app, vehicleId, p, yaw ?? oldRot?.y ?? 15, custom);
     progress = setActiveVehicle(progress, vehicleId);
     ui.setVehicleName(getVehicleSpec(vehicleId).name);
     ui.setProgressSummary(progress);
+    if (nearGarage) refreshGarageUi();
+  }
+
+  const applyCustomization = () => {
+    if (!progress.activeVehicleId || !draftCustom) return;
+    const pos = vehicle?.getPosition().clone();
+    const yaw = vehicle?.getEulerAngles().y ?? 15;
+    progress = setVehicleCustomization(progress, progress.activeVehicleId, draftCustom);
+    swapVehicle(progress.activeVehicleId, pos, yaw);
+    ui.showToast('Applied', 'Paint and tuning updated for this car.');
+  };
+
+  const refreshGarageUi = () => {
+    if (!nearGarage || !progress.activeVehicleId) return;
+    draftCustom = { ...getVehicleCustomization(progress, progress.activeVehicleId) };
+    ui.setGarageVisible(true, progress, onGarageSelect);
+    ui.bindCustomize(
+      progress.activeVehicleId,
+      draftCustom,
+      (next) => {
+        draftCustom = next;
+      },
+      applyCustomization
+    );
+  };
+
+  const onGarageSelect = (id: string) => {
+    if (id === progress.activeVehicleId) return;
+    swapVehicle(id);
+    ui.showToast('Switched', getVehicleSpec(id).name);
+    refreshGarageUi();
   };
 
   const beginAfterGaragePick = (vehicleId: string) => {
@@ -172,7 +202,8 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       const inGarage = Math.hypot(gdx, gdz) < VALLEJO_SAFEHOUSE.radius + 12;
       if (inGarage !== nearGarage) {
         nearGarage = inGarage;
-        ui.setGarageVisible(inGarage, progress, onGarageSelect);
+        if (inGarage) refreshGarageUi();
+        else ui.setGarageVisible(false, progress, onGarageSelect);
       }
 
       for (const lm of LANDMARKS) {
