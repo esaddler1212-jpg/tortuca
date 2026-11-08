@@ -133,6 +133,22 @@ export const HERO_ROSTER: HeroSpec[] = [
     defaultFormId: 'prime'
   },
   {
+    id: 'doctor-doom',
+    codename: 'Dr. Doom',
+    tagline: 'Sovereign blast — doomfield siege',
+    districtId: 'sokovia-memorial',
+    homeLabel: 'Royal Citadel',
+    powers: ['beam', 'telekinesis'],
+    flight: { cruiseKmh: 350, boostKmh: 2050, agility: 0.95, mass: 118 },
+    energy: { staminaMax: 125, regenPerSec: 20, superCooldownSec: 17, primaryCooldownSec: 0.28 },
+    smashRadius: 3.6,
+    forms: [
+      { id: 'iron', label: 'Iron regalia', speedMul: 1, powerMul: 1.1, color: [0.42, 0.45, 0.5] },
+      { id: 'hood', label: 'Hooded sovereign', speedMul: 0.95, powerMul: 1.25, color: [0.12, 0.42, 0.22] }
+    ],
+    defaultFormId: 'iron'
+  },
+  {
     id: 'storm-hammer',
     codename: 'Storm Hammer',
     tagline: 'Lightning arc smash',

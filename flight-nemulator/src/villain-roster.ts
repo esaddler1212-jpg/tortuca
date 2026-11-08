@@ -66,11 +66,11 @@ export const VILLAIN_CLONES: VillainCloneSpec[] = [
     scale: [3.2, 3.5, 2.8]
   },
   {
-    id: 'chrome-doom',
-    codename: 'Chrome Doom',
+    id: 'doctor-doom',
+    codename: 'Dr. Doom',
     tagline: 'Latverian orbital strike',
     universe: 'marvel',
-    rivalHeroIds: ['tin-aviator', 'chrome-overmind', 'storm-hammer'],
+    rivalHeroIds: ['doctor-doom', 'tin-aviator', 'chrome-overmind', 'storm-hammer'],
     color: [0.45, 0.48, 0.52],
     hpMul: 1.3,
     speedMul: 0.9,
