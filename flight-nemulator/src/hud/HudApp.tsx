@@ -26,6 +26,7 @@ import { getPlayerRole, type PlayerRole } from '../player-role';
 import { loadCustomHeroes, saveCustomHero, type CustomHeroDraft } from '../custom-hero';
 import { researchHeroBundle } from '../character-research';
 import { arcPickerLine, arcPickerLinks } from '../battleworld-arcs';
+import { HERO_MUTATIONS } from '../roster-mutations';
 import { Minimap } from './Minimap';
 import { setQualityOverride } from '../game-settings';
 import { downloadPhoto } from '../photo-mode';
@@ -92,6 +93,8 @@ export type GameHudSnapshot = {
   latticeHint?: string | null;
   latticeBeatChip?: string | null;
   villainRunwayHint?: string | null;
+  chapterHint?: string | null;
+  chapterChip?: string | null;
 };
 
 function formatUsd(n: number): string {
@@ -115,6 +118,7 @@ export function HudApp() {
   const custom = loadCustomHeroes();
   const arcLine = arcPickerLine(heroId);
   const arcLinks = arcPickerLinks(heroId);
+  const universe = HERO_MUTATIONS[heroId]?.universe;
 
   return (
     <div className="hud-root">
@@ -186,6 +190,7 @@ export function HudApp() {
           </p>
         )}
         {arcLinks && <p className="hud-tag hud-hint">{arcLinks}</p>}
+        {universe && <p className="hud-tag">Universe · {universe.toUpperCase()}</p>}
         {snap.playerRole === 'hero' && snap.villainRivals && snap.villainRivals.length > 0 && (
           <p className="hud-tag">Rivals: {snap.villainRivals.join(', ')}</p>
         )}
@@ -226,6 +231,12 @@ export function HudApp() {
           </p>
         )}
         {snap.villainRunwayHint && <p className="hud-tag hud-hint">{snap.villainRunwayHint}</p>}
+        {snap.chapterChip && (
+          <p className="hud-tag hud-lattice-chip" title="Battleworld chapter ladder">
+            Chapters {snap.chapterChip}
+          </p>
+        )}
+        {snap.chapterHint && <p className="hud-tag hud-hint">{snap.chapterHint}</p>}
         {snap.latticeHint && <p className="hud-tag">{snap.latticeHint}</p>}
         {snap.territoryHint?.includes('H: henchmen') && (
           <div className="fate-actions">

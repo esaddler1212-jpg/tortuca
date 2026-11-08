@@ -42,6 +42,9 @@ export const HERO_MUTATIONS: Record<string, MutationMeta> = {
   'wing-archon': { mutatesFrom: 'Angel / Archangel', universe: 'marvel' },
   'golden-sentry': { mutatesFrom: 'Sentry', universe: 'marvel' },
   'magnet-sovereign': { mutatesFrom: 'Magneto', universe: 'marvel' },
+  'frost-monarch': { mutatesFrom: 'Emma Frost', universe: 'marvel' },
+  'cable-echo': { mutatesFrom: 'Cable', universe: 'marvel' },
+  'banshee-wail': { mutatesFrom: 'Banshee', universe: 'marvel' },
   'latverian-sovereign': { mutatesFrom: 'Doctor Doom', universe: 'marvel' },
   'cell-mimic': { mutatesFrom: 'Cell (playable)', universe: 'dbz' },
   'spirit-buu': { mutatesFrom: 'Majin Buu (playable)', universe: 'dbz' }
@@ -65,6 +68,8 @@ export const VILLAIN_MUTATIONS: Record<string, MutationMeta> = {
   'venom-echo': { mutatesFrom: 'Venom', universe: 'marvel' },
   'carnage-echo': { mutatesFrom: 'Carnage', universe: 'marvel' },
   'cinder-phoenix': { mutatesFrom: 'Dark Phoenix', universe: 'marvel' },
+  'nimrod-sentinel': { mutatesFrom: 'Nimrod / Sentinels', universe: 'marvel' },
+  'sabretooth-echo': { mutatesFrom: 'Sabretooth', universe: 'marvel' },
   'laughing-harlequin': { mutatesFrom: 'Joker & Harley Quinn', universe: 'dc' },
   'krypton-eclipse': { mutatesFrom: 'General Zod', universe: 'dc' },
   'mirror-streak': { mutatesFrom: 'Reverse-Flash', universe: 'dc' },

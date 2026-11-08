@@ -46,7 +46,11 @@ Production build: `npm run build` → `dist/` (static deploy like `drive-world`)
 | Planet shell + nine districts + orbit chrono-freeze | Shipped |
 | Territory takeovers, advisors, raze/henchmen, **territory-clear** arc beat | Shipped |
 | Infinity Stone hunt vs Thanos/Loki/Ultron homages | Shipped |
-| 37 hero arcs + lattice (`battleworld-arcs.ts`, HUD chip, picker arc + links) | Shipped |
+| 40 hero arcs + lattice (`battleworld-arcs.ts`, HUD chip, picker arc + links) | Shipped |
+| X-Men tier A drop (Frost Monarch, Cable Echo, Banshee Wail + Nimrod / Sabretooth) | Shipped |
+| Mission-style **chapter** ladder (`battleworld-chapters.ts`) | Shipped (light v1) |
+| Villain-only **apex** wave 10 (`hero-villain-apex.ts`) | Shipped |
+| Cloud lattice sync (`/api/flight-nemulator-lattice`) | Shipped (optional Blobs) |
 | **`home-mark`** H at every hero home district + villain runway HUD | Shipped |
 | Wave-10 pair rivals (5 pinned finales + rival fallback) | Shipped — see [`FLIGHT_NEMULATOR_BATTLEWORLD_ARCS.md`](./FLIGHT_NEMULATOR_BATTLEWORLD_ARCS.md) |
 | Doom timeline / God Emperor, Solar Lantern rings, symbiote, absorb heroes | Shipped |

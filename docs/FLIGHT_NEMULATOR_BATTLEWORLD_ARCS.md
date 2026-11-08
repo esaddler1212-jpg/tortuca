@@ -35,3 +35,4 @@ CI: `tsx scripts/check-pair-boss.mts` asserts every non-exempt hero has at least
 | `home-mark` | District **H** at hero home turf (all roster; signature beats for Lantern/Ki/Iron still apply) |
 | `pair-down` | Wave-10 pair boss defeated |
 | `world-saved` | Hero save fate at ≥52% integrity |
+| `villain-apex` | Villain-only legend defeats wave-10 hero interceptor |

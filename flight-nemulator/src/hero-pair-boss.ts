@@ -16,7 +16,10 @@ export const PAIR_VILLAIN_PINNED: Record<string, string> = {
   'tin-aviator': 'doctor-doom',
   'red-codriver': 'brute-abom',
   'shade-knight': 'laughing-harlequin',
-  'latverian-sovereign': 'doctor-doom'
+  'latverian-sovereign': 'doctor-doom',
+  'ki-wanderer': 'emperor-frieze',
+  'phoenix-ember': 'cinder-phoenix',
+  'frost-monarch': 'nimrod-sentinel'
 };
 
 export function pairVillainForHero(heroId: string): VillainCloneSpec {

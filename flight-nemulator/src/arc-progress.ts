@@ -1,3 +1,5 @@
+import { queueBattleworldLatticeCloud } from './battleworld-lattice-cloud';
+
 const PREFIX = 'flight-nemulator-arc-beat-';
 const LATTICE_KEY = 'flight-nemulator-battleworld-lattice';
 
@@ -9,12 +11,14 @@ export type ArcBeat =
   | 'corps-oath'
   | 'squad-clash'
   | 'hunt-ascended'
-  | 'home-mark';
+  | 'home-mark'
+  | 'villain-apex';
 
 export function recordArcBeat(heroId: string, beat: ArcBeat): void {
   localStorage.setItem(`${PREFIX}${heroId}-${beat}`, '1');
   const n = battleworldLatticeStrength();
   localStorage.setItem(LATTICE_KEY, String(n + 1));
+  queueBattleworldLatticeCloud(heroId);
 }
 
 export function hasArcBeat(heroId: string, beat: ArcBeat): boolean {
@@ -47,7 +51,8 @@ export function arcBeatsForHero(heroId: string): Set<ArcBeat> {
     'corps-oath',
     'squad-clash',
     'hunt-ascended',
-    'home-mark'
+    'home-mark',
+    'villain-apex'
   ];
   const out = new Set<ArcBeat>();
   for (const b of beats) {
@@ -73,6 +78,7 @@ export function latticeBeatChip(heroId: string, role: 'hero' | 'villain'): strin
     return [
       tick(stones, 'Stones'),
       tick(b.has('home-mark'), 'Turf'),
+      tick(b.has('villain-apex'), 'Apex'),
       tick(b.has('hunt-ascended'), 'Ascend')
     ].join(' · ');
   }

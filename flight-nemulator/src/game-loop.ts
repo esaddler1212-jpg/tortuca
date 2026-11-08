@@ -57,6 +57,7 @@ import {
   pairVillainCodename,
   spawnPairBoss
 } from './hero-pair-boss';
+import { spawnVillainApexInterceptor, VILLAIN_APEX_WAVE, villainApexCodename } from './hero-villain-apex';
 import { bindFlightKeys, pollFlightInput } from './game-input';
 import { setHudSnapshot } from './game-bridge';
 import { detectQualityTier, type QualityTier } from './quality-tier';
@@ -81,7 +82,7 @@ import {
 } from './faction-npcs';
 import { villainRivalsForHero } from './villain-roster';
 import { getPlayerRole, setPlayerRole, type PlayerRole } from './player-role';
-import { canPickAlignment, DUAL_ROLE_HERO_ID, enforceAlignmentForHero } from './hero-alignment';
+import { canPickAlignment, DUAL_ROLE_HERO_ID, enforceAlignmentForHero, isVillainOnlyHero } from './hero-alignment';
 import {
   absorbDefeatedFoe,
   absorptionHudLine,
@@ -116,12 +117,14 @@ import {
   maybeRecordTerritoryClear,
   recordArcBeat
 } from './arc-progress';
+import { nextBattleworldChapterHint, battleworldChapterChip } from './battleworld-chapters';
 import {
   characterArcHudLine,
   latticeHudLine,
   tryArcDistrictInteract,
   villainRunwayHudLine
 } from './battleworld-arcs';
+import { pullBattleworldLatticeCloud } from './battleworld-lattice-cloud';
 import { battleworldRoleBlurb } from './battleworld';
 import {
   createInfinityStoneState,
@@ -218,6 +221,7 @@ export async function startGame(app: AppBase): Promise<void> {
 
   const tier = detectQualityTier();
   const heroSpec = pickHero();
+  void pullBattleworldLatticeCloud(heroSpec.id);
   enforceAlignmentForHero(heroSpec.id);
   const heroForm = resolveHeroForm(heroSpec, storedFormId(heroSpec));
   const spawn = spawnAtHome(heroSpec.districtId);
@@ -583,10 +587,10 @@ function tickFrame(s: GameSession, dt: number): void {
   const pairBossAlive = s.pairBoss.spawned && !s.pairBoss.defeated && !!pairBossNpc;
 
   if (
-    s.playerRole === 'hero' &&
     !s.pairBoss.defeated &&
     s.wave >= PAIR_BOSS_WAVE - 3 &&
-    !s.pairBoss.warned
+    !s.pairBoss.warned &&
+    (s.playerRole === 'hero' || isVillainOnlyHero(s.heroSpec.id))
   ) {
     s.pairBoss.warned = true;
     playWaveAlert();
@@ -623,6 +627,22 @@ function tickFrame(s: GameSession, dt: number): void {
     s.waveCooldown = 30;
     playWaveAlert();
     addScreenShake(0.75);
+  } else if (
+    isVillainOnlyHero(s.heroSpec.id) &&
+    !s.pairBoss.spawned &&
+    !s.pairBoss.defeated &&
+    s.wave + 1 >= VILLAIN_APEX_WAVE
+  ) {
+    s.wave += 1;
+    for (const n of [...s.factionNpcs]) {
+      s.root.removeChild(n.entity);
+      n.entity.destroy();
+    }
+    s.factionNpcs = [spawnVillainApexInterceptor(s.app, s.root, pos, s.heroSpec.id)];
+    s.pairBoss.spawned = true;
+    s.waveCooldown = 28;
+    playWaveAlert();
+    addScreenShake(0.65);
   } else {
     s.wave += 1;
     const cd = s.playerRole === 'hero' ? 14 : Math.max(4, 12 - s.wave * 0.4 - s.wanted.stars);
@@ -693,7 +713,11 @@ function tickFrame(s: GameSession, dt: number): void {
 
   if (s.pairBoss.spawned && !s.pairBoss.defeated && !s.factionNpcs.some((n) => n.isPairBoss)) {
     s.pairBoss.defeated = true;
-    recordArcBeat(s.heroSpec.id, 'pair-down');
+    if (isVillainOnlyHero(s.heroSpec.id)) {
+      recordArcBeat(s.heroSpec.id, 'villain-apex');
+    } else {
+      recordArcBeat(s.heroSpec.id, 'pair-down');
+    }
     s.waveCooldown = 16;
     playSuper();
     addScreenShake(1.1);
@@ -768,18 +792,23 @@ function tickFrame(s: GameSession, dt: number): void {
     nearestFoe: nearestFoeCodename(s.factionNpcs, s.playerRole, pos),
     villainRivals:
       s.playerRole === 'hero' ? villainRivalsForHero(s.heroSpec.id).slice(0, 4) : undefined,
-    pairBossName: s.playerRole === 'hero' ? pairVillainCodename(s.heroSpec.id) : null,
+    pairBossName:
+      s.playerRole === 'hero'
+        ? pairVillainCodename(s.heroSpec.id)
+        : isVillainOnlyHero(s.heroSpec.id)
+          ? villainApexCodename(s.heroSpec.id)
+          : null,
     pairBossHpPct: pairBossHpPercent(bossForHud),
     pairBossStatus:
-      s.playerRole !== 'hero'
-        ? null
-        : s.pairBoss.defeated
+      s.playerRole === 'hero' || isVillainOnlyHero(s.heroSpec.id)
+        ? s.pairBoss.defeated
           ? 'defeated'
           : bossAliveHud
             ? 'active'
             : s.pairBoss.warned && !s.pairBoss.spawned
               ? 'incoming'
-              : null,
+              : null
+        : null,
     fatePrompt: s.worldFate.fatePrompt,
     dyingRoamSeconds: dyingRoamSecondsLeft(s.worldFate, nowMs),
     worldFatePhase: s.worldFate.phase,
@@ -830,6 +859,12 @@ function tickFrame(s: GameSession, dt: number): void {
         : null,
     latticeBeatChip: latticeBeatChip(s.heroSpec.id, s.playerRole),
     villainRunwayHint: villainRunwayHudLine(s.heroSpec.id, s.wave),
+    chapterHint: nextBattleworldChapterHint(
+      s.heroSpec.id,
+      s.playerRole,
+      isVillainOnlyHero(s.heroSpec.id)
+    ),
+    chapterChip: battleworldChapterChip(s.heroSpec.id, s.playerRole, isVillainOnlyHero(s.heroSpec.id)),
     alignmentNote: canPickAlignment(s.heroSpec.id)
       ? 'Doom: toggle Hero or Villain below'
       : s.heroSpec.id === VENOM_PLAYABLE_ID

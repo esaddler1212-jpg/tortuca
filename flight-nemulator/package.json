@@ -12,6 +12,7 @@
     "test:smoke": "node scripts/smoke-boot.mjs"
   },
   "dependencies": {
+    "@netlify/blobs": "^10.0.10",
     "@netlify/functions": "^2.8.2",
     "playcanvas": "^2.23.3",
     "react": "^19.3.1",

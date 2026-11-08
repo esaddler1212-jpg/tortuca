@@ -244,6 +244,31 @@ register(
 );
 
 // Speed / cosmic / misc — compact defaults
+register(
+  'frost-monarch',
+  buildArc('frost-monarch', {
+    title: 'White queen siege',
+    thread: 'Sentinel raids vs X-flight school — Mind Stone hunters watch',
+    links: ['nimrod-sentinel', 'cinder-phoenix', 'storm-caller']
+  })
+);
+register(
+  'cable-echo',
+  buildArc('cable-echo', {
+    title: 'Future solder',
+    thread: 'Chrono bunker ↔ Sokovia memorial — stones fracture timelines',
+    links: ['trickster-prince', 'brain-colossus', 'tin-aviator']
+  })
+);
+register(
+  'banshee-wail',
+  buildArc('banshee-wail', {
+    title: 'Sonic glide',
+    thread: 'Gotham pipe loft — pair vs Sabretooth echoes',
+    links: ['sabretooth-echo', 'night-gargoyle', 'shade-knight']
+  })
+);
+
 const DEFAULT_LINKS: Record<string, string[]> = {
   'martian-strider': ['trickster-prince', 'brain-colossus'],
   'velocity-streak': ['mirror-streak', 'android-phalanx'],
