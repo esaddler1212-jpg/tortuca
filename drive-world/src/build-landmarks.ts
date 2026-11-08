@@ -117,6 +117,7 @@ export function buildBayAreaLandmarks(app: AppBase): void {
   box(app, 'painted-ladies', -900, 12, -220, 42, 18, 22, warm);
   box(app, 'fishermans-pier', -720, 8, -760, 55, 8, 30, stone, true);
   box(app, 'oracle-park', -880, 14, -610, 48, 20, 40, matConcrete(), true);
+  ringBuilding(app, 'chase-center', -878, -598, 48, glass);
 
   bridgeSpan(app, 'golden-gate', -1190, -820, 80, 42);
 
@@ -138,6 +139,10 @@ export function buildBayAreaLandmarks(app: AppBase): void {
   box(app, 'grizzly-bear-silhouette', 400, 38, 218.8, 8, 5, 0.4, stone);
   box(app, 'oakland-radio-mast', 360, 48, 160, 4, 88, 4, matOrange(), true);
   box(app, 'oakland-radio-dish', 360, 92, 160, 12, 1.2, 12, matConcrete());
+  box(app, 'pixar-main', 618, 16, -278, 52, 18, 38, matConcrete(), true);
+  box(app, 'pixar-lamp-a', 598, 28, -268, 8, 22, 8, matOrange(), true);
+  box(app, 'pixar-lamp-b', 638, 28, -268, 8, 22, 8, matOrange(), true);
+  box(app, 'pixar-ball', 618, 42, -278, 9, 9, 9, matOrange());
   telegraphCorridor(app, warm, stone);
   caldecottPortal(app, 392, 265);
   box(app, 'orinda-theatre', 458, 22, 332, 28, 14, 16, warm, true);

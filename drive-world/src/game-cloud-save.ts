@@ -2,6 +2,7 @@ import type { SavedProgress } from './game-progress';
 import { loadProgress, saveProgress } from './game-progress';
 
 const SYNC_KEY = 'city-nights-sync-key';
+const SUPPORTED_SAVE_VERSIONS = [5, 6, 7, 8];
 const API = import.meta.env.VITE_CITY_NIGHTS_API ?? '/.netlify/functions/city-nights-progress';
 
 export function getOrCreateSyncKey(): string {
@@ -49,13 +50,19 @@ export async function pushCloudProgress(progress: SavedProgress): Promise<boolea
 export async function tryMergeCloudOnBoot(): Promise<void> {
   const local = loadProgress();
   const remote = await pullCloudProgress();
-  if (!remote || remote.version !== 5) return;
+  if (!remote || !SUPPORTED_SAVE_VERSIONS.includes((remote as { version: number }).version)) return;
   const localScore =
     local.visitedLandmarkIds.length * 10 + local.unlockedVehicleIds.length * 5 + local.collectedIds.length;
   const remoteScore =
     remote.visitedLandmarkIds.length * 10 + remote.unlockedVehicleIds.length * 5 + remote.collectedIds.length;
   if (remoteScore > localScore) {
-    saveProgress({ ...remote, version: 5 });
+    saveProgress({
+      ...remote,
+      version: 8,
+      tacoTrucksFound: remote.tacoTrucksFound ?? [],
+      fuelLevel: remote.fuelLevel ?? 1,
+      parkingStars: remote.parkingStars ?? {}
+    });
   } else if (localScore > remoteScore) {
     await pushCloudProgress(local);
   }
@@ -68,8 +75,14 @@ export function exportProgressJson(): string {
 export function importProgressJson(raw: string): boolean {
   try {
     const parsed = JSON.parse(raw) as SavedProgress;
-    if (parsed.version !== 5) return false;
-    saveProgress(parsed);
+    if (!SUPPORTED_SAVE_VERSIONS.includes((parsed as { version: number }).version)) return false;
+    saveProgress({
+      ...parsed,
+      version: 8,
+      tacoTrucksFound: parsed.tacoTrucksFound ?? [],
+      fuelLevel: parsed.fuelLevel ?? 1,
+      parkingStars: parsed.parkingStars ?? {}
+    });
     return true;
   } catch {
     return false;

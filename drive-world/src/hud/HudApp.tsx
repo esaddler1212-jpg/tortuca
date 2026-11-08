@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import {
   getHudSnapshot,
   requestFastTravel,
+  requestLandHere,
+  requestSetNavTarget,
   requestSkipWaymo,
   requestToggleCamera,
   requestCycleAutopilotPreset,
@@ -16,12 +18,16 @@ import {
   type HudSnapshot
 } from '../game-bridge';
 import { DISTRICT_LABELS, LANDMARKS, districtLandmarkTotal, districtLandmarksVisited } from '../landmark-registry';
-import { bearingDeg } from '../landmark-navigation';
 import type { DistrictId } from '../world-config';
 import { Minimap } from './Minimap';
+import { applyBayQualityPreset } from '../bay-quality';
+import { searchLandTargets } from '../city-land-search';
 import { loadSettings, saveSettings, type GameSettings } from '../game-settings';
 import { FAST_TRAVEL } from '../world-extras';
 import { buildMissionBoard } from '../game-missions';
+import { bayRegionsGated } from '../mission-chapters';
+import { nextTaxiContract } from '../cpm-taxi';
+import { requestStartTaxi } from '../game-bridge';
 import { heatLabel } from '../game-heat';
 import {
   exportProgressJson,
@@ -34,18 +40,79 @@ import { loadProgress, saveProgress } from '../game-progress';
 import { isTouchPrimary } from '../mobile-platform';
 import { cameraModeLabel } from '../camera-profiles';
 import { JournalPanel } from './JournalPanel';
+import { SafehousePanel } from './SafehousePanel';
 import { MusicPanel } from './MusicPanel';
 
 function NavHint({ snap }: { snap: HudSnapshot }) {
-  const next = snap.nextLandmark;
-  if (!next || snap.ridingWaymo || snap.photoMode) return null;
-  const brg = bearingDeg(snap.playerX, snap.playerZ, next.x, next.z);
-  const dist = Math.hypot(next.x - snap.playerX, next.z - snap.playerZ);
+  if (snap.ridingWaymo || snap.photoMode) return null;
+  const pin =
+    snap.navTarget ??
+    (snap.nextLandmark
+      ? { label: snap.nextLandmark.name, x: snap.nextLandmark.x, z: snap.nextLandmark.z }
+      : null);
+  if (!pin) return null;
+  const dist = Math.hypot(pin.x - snap.playerX, pin.z - snap.playerZ);
   const distMi = (dist / 1000) * 0.62;
+  const turn = snap.navTurnLabel;
   return (
     <div className="nav-hint">
-      <strong>Next:</strong> {next.name} · {distMi.toFixed(1)} mi · {Math.round(brg)}°
+      <strong>{snap.navTarget ? 'Route:' : 'Next:'}</strong> {pin.label} · {distMi.toFixed(1)} mi
+      {turn ? <span className="nav-turn"> — {turn}</span> : null}
+      {snap.navTarget ? (
+        <button type="button" className="link-btn nav-clear" onClick={() => requestSetNavTarget(null)}>
+          Clear route
+        </button>
+      ) : null}
     </div>
+  );
+}
+
+function LandSearchPanel({ snap }: { snap: HudSnapshot }) {
+  const [q, setQ] = useState('');
+  const hits = useMemo(() => searchLandTargets(q), [q]);
+  if (snap.photoMode || snap.ridingWaymo || snap.phase !== 'home') return null;
+  return (
+    <details className="land-search-panel">
+      <summary>City map search</summary>
+      <input
+        className="land-search-input"
+        type="search"
+        placeholder="Hub or landmark…"
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+      />
+      <ul className="land-search-list">
+        {hits.map((t) => (
+          <li key={t.id}>
+            <span>
+              {t.label}
+              <span className="land-search-kind">
+                {t.kind === 'hub' ? ' hub' : t.kind === 'scenic' ? ' cruise' : ''}
+              </span>
+            </span>
+            <span className="land-search-actions">
+              <button
+                type="button"
+                className="link-btn"
+                onClick={() =>
+                  requestSetNavTarget({
+                    label: t.label,
+                    x: t.x,
+                    z: t.z,
+                    scenicId: t.scenicId
+                  })
+                }
+              >
+                Route
+              </button>
+              <button type="button" className="link-btn" onClick={() => requestLandHere(t.x, t.z, t.label)}>
+                Land here
+              </button>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }
 
@@ -87,7 +154,7 @@ function HeatMeter({ snap }: { snap: HudSnapshot }) {
   if (heat < 0.35 || snap.ridingWaymo) return null;
   const pct = Math.min(100, (heat / 5) * 100);
   return (
-    <div className="heat-meter" title="Speed-trap heat">
+    <div className={`heat-meter ${snap.heatHunted ? 'hunted' : ''}`} title="Speed-trap heat">
       Heat: {heatLabel(heat)} ({Math.round(pct)}%)
       <div className="heat-bar">
         <div className="heat-fill" style={{ width: `${pct}%` }} />
@@ -96,17 +163,83 @@ function HeatMeter({ snap }: { snap: HudSnapshot }) {
   );
 }
 
+function RacingHud({ snap }: { snap: HudSnapshot }) {
+  if (snap.photoMode || snap.ridingWaymo || snap.phase !== 'home') return null;
+  const drift = snap.driftScore ?? 0;
+  const showDrift = drift > 2 || snap.driftPadName;
+  const nitro = snap.nitroPercent ?? 100;
+  const showNitro = !snap.flightMode && nitro < 99.5;
+  const tree = snap.dragTreeLabel;
+  const showTree = Boolean(tree);
+  const time = snap.timeAttackElapsedMs;
+  const showTime = time != null && time > 0;
+  if (!showDrift && !showNitro && !showTree && !showTime) return null;
+  const driftPct = snap.driftGoal ? Math.min(100, (drift / snap.driftGoal) * 100) : Math.min(100, drift / 10);
+  return (
+    <div className="racing-hud" aria-live="polite">
+      {showTree ? (
+        <div className="race-strip drag-tree">{tree === 'GO' ? 'GO!' : tree}</div>
+      ) : null}
+      {showDrift ? (
+        <div className="race-strip drift">
+          Drift {Math.round(drift)}
+          {snap.driftPadName ? ` · ${snap.driftPadName}` : ''}
+          <div className="race-bar">
+            <div className="race-bar-fill drift" style={{ width: `${driftPct}%` }} />
+          </div>
+        </div>
+      ) : null}
+      {showTime ? (
+        <div className="race-strip">
+          Time {(time! / 1000).toFixed(2)}s {snap.timeAttackProgress ? `· ${snap.timeAttackProgress}` : ''}
+        </div>
+      ) : null}
+      {showNitro ? (
+        <div className="race-strip nitro">
+          N₂O {snap.nitroBoosting ? 'BOOST' : 'Tank'} {Math.round(nitro)}%
+          <div className="race-bar">
+            <div
+              className="race-bar-fill nitro"
+              style={{ width: `${nitro}%`, opacity: snap.nitroBoosting ? 1 : 0.85 }}
+            />
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function MissionBoard({ snap }: { snap: HudSnapshot }) {
   if (!snap.progress || snap.photoMode || snap.ridingWaymo) return null;
-  const lines = buildMissionBoard(snap.progress, snap.playerX, snap.playerZ);
+  const lines = buildMissionBoard(
+    snap.progress,
+    snap.playerX,
+    snap.playerZ,
+    snap.settings.fuelSimEnabled ? snap.fuelPercent : undefined
+  );
+  const taxiOffer = snap.progress ? nextTaxiContract(snap.progress, 'vallejo') : null;
   return (
     <details className="mission-panel" open>
-      <summary>Missions</summary>
+      <summary>Missions · CPM · Horizon · MC</summary>
+      {taxiOffer && !snap.progress?.activeTaxiId ? (
+        <button
+          type="button"
+          className="link-btn mission-taxi-start"
+          onClick={() => requestStartTaxi(taxiOffer.id)}
+        >
+          Start courier: {taxiOffer.label}
+        </button>
+      ) : null}
       <ul>
-        {lines.slice(0, 10).map((m) => (
+        {lines.map((m) => (
           <li key={m.id} className={m.done ? 'mission-done' : ''}>
             {m.label}
             {m.hint ? <span className="mission-hint"> — {m.hint}</span> : null}
+            {m.action === 'taxi' && !m.done && taxiOffer ? (
+              <button type="button" className="link-btn" onClick={() => requestStartTaxi(taxiOffer.id)}>
+                Start
+              </button>
+            ) : null}
           </li>
         ))}
       </ul>
@@ -189,6 +322,19 @@ function SettingsPanel() {
         />
       </label>
       <label className="slider-row">
+        Bay quality preset
+        <select
+          value={s.bayQualityPreset ?? 'balanced'}
+          onChange={(e) =>
+            apply(applyBayQualityPreset(s, e.target.value as GameSettings['bayQualityPreset']))
+          }
+        >
+          <option value="chromebook">Chromebook (light)</option>
+          <option value="balanced">Balanced</option>
+          <option value="lush">Lush nights</option>
+        </select>
+      </label>
+      <label className="slider-row">
         Fog
         <select
           value={s.fogQuality}
@@ -207,6 +353,30 @@ function SettingsPanel() {
         />
         Ambient traffic
       </label>
+      <label className="checkbox-row">
+        <input
+          type="checkbox"
+          checked={s.fuelSimEnabled}
+          onChange={(e) => apply({ ...s, fuelSimEnabled: e.target.checked })}
+        />
+        Fuel sim (free pumps)
+      </label>
+      <label className="checkbox-row">
+        <input
+          type="checkbox"
+          checked={s.showSideshow}
+          onChange={(e) => apply({ ...s, showSideshow: e.target.checked })}
+        />
+        Sideshow meetups
+      </label>
+      <label className="checkbox-row">
+        <input
+          type="checkbox"
+          checked={s.hubStreamingEnabled}
+          onChange={(e) => apply({ ...s, hubStreamingEnabled: e.target.checked })}
+        />
+        Hub streaming (reload to fully toggle)
+      </label>
     </details>
   );
 }
@@ -214,10 +384,11 @@ function SettingsPanel() {
 function FastTravel({ snap }: { snap: HudSnapshot }) {
   if (!snap.nearGarage || !snap.progress) return null;
   const unlocked = new Set(snap.progress.unlockedRegionIds);
+  const gated = bayRegionsGated(snap.progress);
   return (
     <div className="fast-travel">
       <div className="fast-travel-title">Waymo fast travel</div>
-      {FAST_TRAVEL.map((f) => (
+      {FAST_TRAVEL.filter((f) => !gated || f.district === 'vallejo').map((f) => (
         <button
           key={f.district}
           type="button"
@@ -246,6 +417,11 @@ export function HudApp() {
         <button type="button" className="skip-waymo" onClick={() => requestSkipWaymo()}>
           Skip Waymo ride
         </button>
+      )}
+      {(snap.streetName || snap.storefrontStripLabel) && !snap.photoMode && !snap.ridingWaymo && (
+        <div className="street-blade" aria-live="polite">
+          {snap.storefrontStripLabel ?? snap.streetName}
+        </div>
       )}
       <div className="hud-toolbar">
         <button type="button" className="cam-toggle" onClick={() => requestToggleCamera()}>
@@ -277,10 +453,25 @@ export function HudApp() {
         </div>
       )}
       <NavHint snap={snap} />
+      <LandSearchPanel snap={snap} />
       {snap.flightMode && !snap.photoMode && (
         <p className="flight-hint">Space/⤒ climb · Ctrl/⤓ sink · WASD · Shift boost</p>
       )}
+      <RacingHud snap={snap} />
       <HeatMeter snap={snap} />
+      {snap.settings.fuelSimEnabled && snap.phase === 'home' && !snap.photoMode && (
+        <div className="fuel-meter" aria-label="Fuel">
+          Fuel {snap.fuelPercent ?? 100}%
+          {snap.nearGas ? ' · filling…' : ''}
+        </div>
+      )}
+      {snap.parkingSpotName && !snap.photoMode && (
+        <div className="parking-hint">{snap.parkingSpotName}</div>
+      )}
+      {snap.activeSideshowName && !snap.photoMode && (
+        <div className="parking-hint">Sideshow tonight: {snap.activeSideshowName}</div>
+      )}
+      <SafehousePanel snap={snap} />
       <MusicPanel />
       <JournalPanel snap={snap} />
       <MissionBoard snap={snap} />

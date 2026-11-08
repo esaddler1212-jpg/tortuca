@@ -1,7 +1,16 @@
 import { Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
 
 import { hillOffsetM } from './bay-terrain';
-import { FREEWAY_I80, FREEWAY_101, FREEWAY_880, FREEWAY_WIDTH_M } from './world-config';
+import {
+  FREEWAY_24,
+  FREEWAY_580,
+  FREEWAY_680,
+  FREEWAY_780,
+  FREEWAY_I80,
+  FREEWAY_101,
+  FREEWAY_880,
+  FREEWAY_WIDTH_M
+} from './world-config';
 
 function rampMat(): StandardMaterial {
   const m = new StandardMaterial();
@@ -52,10 +61,17 @@ function addRampSegment(
 
 /** Grade transitions at major freeway merges (ground ↔ deck). */
 export function buildFreewayRamps(app: AppBase): void {
+  const maze880 = FREEWAY_880[FREEWAY_880.length - 1]!;
+  const maze80 = FREEWAY_I80[7]!;
+
   const junctions: [typeof FREEWAY_I80[0], typeof FREEWAY_I80[0], string][] = [
-    [FREEWAY_101[0], FREEWAY_I80[0], 'sf-101-80'],
-    [FREEWAY_880[6], FREEWAY_I80[7], 'oak-880-80'],
-    [{ x: -520, z: -1240, y: 0 }, FREEWAY_101[3], 'sfo-101']
+    [FREEWAY_101[0]!, FREEWAY_I80[0]!, 'sf-101-80'],
+    [maze880, maze80, 'oak-880-80'],
+    [FREEWAY_101[4]!, FREEWAY_101[3]!, 'sfo-101'],
+    [FREEWAY_24[0]!, FREEWAY_I80[8]!, 'oak-24-80'],
+    [FREEWAY_680[0]!, FREEWAY_24[FREEWAY_24.length - 1]!, 'wc-680-24'],
+    [FREEWAY_580[0]!, FREEWAY_I80[11]!, 'rich-580-80'],
+    [FREEWAY_780[0]!, FREEWAY_I80[FREEWAY_I80.length - 1]!, 'val-780-80']
   ];
 
   for (const [a, b, tag] of junctions) {

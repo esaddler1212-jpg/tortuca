@@ -1,3 +1,4 @@
+import './pc-global';
 import {
   AppBase,
   AppOptions,
@@ -62,7 +63,6 @@ options.graphicsDevice = device;
 options.keyboard = new Keyboard(window);
 
 const vehicleScript = new Asset('vehicle-script', 'script', { url: './scripts/vehicle.js' });
-options.mouse = undefined;
 options.componentSystems = [
   RenderComponentSystem,
   ModelComponentSystem,

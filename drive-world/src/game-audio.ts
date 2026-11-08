@@ -38,12 +38,29 @@ export function unlockAudio(): void {
   unlocked = true;
 }
 
-export function updateEngineAudio(mph: number, driving: boolean): void {
+export function updateEngineAudio(mph: number, driving: boolean, exhaustGain = 1): void {
   if (!unlocked || !ctx || !engineGain || !engineOsc) return;
-  const targetVol = (driving && mph > 2 ? Math.min(0.08, 0.015 + mph * 0.0012) : 0) * masterVolume;
+  const gain = Math.max(0.85, Math.min(1.6, exhaustGain));
+  const targetVol = (driving && mph > 2 ? Math.min(0.1, (0.015 + mph * 0.0012) * gain) : 0) * masterVolume;
   engineGain.gain.setTargetAtTime(targetVol, ctx.currentTime, 0.08);
-  const hz = 42 + mph * 1.35;
+  const hz = 40 + mph * (1.25 + gain * 0.12);
   engineOsc.frequency.setTargetAtTime(hz, ctx.currentTime, 0.05);
+}
+
+export function playRaceTreeBeep(go = false): void {
+  const c = ensureContext();
+  if (!c) return;
+  if (c.state === 'suspended') void c.resume();
+  const o = c.createOscillator();
+  const g = c.createGain();
+  o.type = 'square';
+  o.frequency.value = go ? 880 : 440;
+  g.gain.value = (go ? 0.11 : 0.07) * masterVolume;
+  g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + (go ? 0.32 : 0.12));
+  o.connect(g);
+  g.connect(c.destination);
+  o.start();
+  o.stop(c.currentTime + (go ? 0.35 : 0.14));
 }
 
 export function playLandmarkChime(): void {

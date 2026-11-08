@@ -32,11 +32,12 @@ export function preloadBootVehicleModels(app: AppBase): Promise<void> {
 
 export async function ensureVehicleModelLoaded(app: AppBase, vehicleId: string): Promise<void> {
   const url = pathForId(vehicleId);
+  if (!url) return;
   await loadUrl(app, url);
 }
 
 export async function ensureVehicleModelsLoaded(app: AppBase, vehicleIds: string[]): Promise<void> {
-  const paths = [...new Set(vehicleIds.map((id) => pathForId(id)))];
+  const paths = [...new Set(vehicleIds.map((id) => pathForId(id)).filter((u): u is string => Boolean(u)))];
   await Promise.all(paths.map((url) => loadUrl(app, url)));
 }
 
@@ -56,7 +57,14 @@ const VISUAL_BY_ID: Record<string, GltfVisualOptions> = {
   'bonus-coast-heli': { scale: 0.34, yawOffsetDeg: -90, yOffset: -1.05 },
   'bonus-gotham-knight': { scale: 2.08, yawOffsetDeg: 90, yOffset: -0.3 },
   'bonus-scarlet-five': { scale: 2.05, yawOffsetDeg: 90, yOffset: -0.26 },
-  'bonus-night-coil': { scale: 2.1, yawOffsetDeg: 90, yOffset: -0.28 }
+  'bonus-night-coil': { scale: 2.1, yawOffsetDeg: 90, yOffset: -0.28 },
+  'bonus-bay-van': { scale: 2.18, yawOffsetDeg: 90, yOffset: -0.44 },
+  'bonus-night-delivery': { scale: 2.14, yawOffsetDeg: 90, yOffset: -0.4 },
+  'bonus-marina-hatch': { scale: 2.02, yawOffsetDeg: 90, yOffset: -0.3 },
+  'legend-time-warp': { scale: 2.05, yawOffsetDeg: 90, yOffset: -0.22 },
+  'legend-hyphy-shortbus': { scale: 2.35, yawOffsetDeg: 90, yOffset: -0.5 },
+  'legend-cookie-bus': { scale: 2.28, yawOffsetDeg: 90, yOffset: -0.48 },
+  'legend-say-hey-cadillac': { scale: 2.12, yawOffsetDeg: 90, yOffset: -0.36 }
 };
 
 function visualOptsFor(vehicleId: string): GltfVisualOptions {
@@ -100,6 +108,7 @@ export function attachVehicleGltf(
   tuning?: VehicleTuning
 ): Entity | null {
   const url = pathForId(vehicleId);
+  if (!url) return null;
   const asset = loaded.get(url);
   if (!asset?.resource) return null;
 
@@ -128,5 +137,7 @@ export function attachVehicleGltf(
 }
 
 export function hasGltfForVehicle(vehicleId: string): boolean {
-  return loaded.has(pathForId(vehicleId));
+  const url = pathForId(vehicleId);
+  if (!url) return false;
+  return loaded.has(url);
 }
