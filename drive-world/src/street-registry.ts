@@ -62,6 +62,39 @@ export const NAMED_STREETS: NamedStreet[] = [
     width: 17
   },
   {
+    id: 'geary',
+    label: 'Geary Blvd',
+    district: 'sf',
+    points: [
+      { x: -900, z: -380 },
+      { x: -820, z: -400 },
+      { x: -740, z: -420 }
+    ],
+    width: 18
+  },
+  {
+    id: 'california-sf',
+    label: 'California St',
+    district: 'sf',
+    points: [
+      { x: -880, z: -320 },
+      { x: -800, z: -340 },
+      { x: -720, z: -360 }
+    ],
+    width: 17
+  },
+  {
+    id: 'columbus',
+    label: 'Columbus Ave',
+    district: 'sf',
+    points: [
+      { x: -760, z: -700 },
+      { x: -740, z: -600 },
+      { x: -720, z: -500 }
+    ],
+    width: 15
+  },
+  {
     id: 'telegraph',
     label: 'Telegraph Ave',
     district: 'eastBay',
@@ -97,6 +130,95 @@ export const NAMED_STREETS: NamedStreet[] = [
       { x: 780, z: -1020 }
     ],
     width: 18
+  },
+  {
+    id: 'san-pablo',
+    label: 'San Pablo Ave',
+    district: 'eastBay',
+    points: [
+      { x: 480, z: 40 },
+      { x: 520, z: -100 },
+      { x: 560, z: -240 },
+      { x: 600, z: -380 }
+    ],
+    width: 17
+  },
+  {
+    id: 'macarthur',
+    label: 'MacArthur Blvd',
+    district: 'eastBay',
+    points: [
+      { x: 520, z: -60 },
+      { x: 600, z: -80 },
+      { x: 700, z: -100 }
+    ],
+    width: 17
+  },
+  {
+    id: 'emeryville-bay-st',
+    label: 'Bay St',
+    district: 'eastBay',
+    points: [
+      { x: 520, z: -248 },
+      { x: 598, z: -248 },
+      { x: 676, z: -248 }
+    ],
+    width: 16
+  },
+  {
+    id: 'emeryville-shellmound',
+    label: 'Shellmound St',
+    district: 'eastBay',
+    points: [
+      { x: 540, z: -290 },
+      { x: 598, z: -270 },
+      { x: 656, z: -250 }
+    ],
+    width: 15
+  },
+  {
+    id: 'emeryville-powell',
+    label: 'Powell St',
+    district: 'eastBay',
+    points: [
+      { x: 598, z: -300 },
+      { x: 598, z: -248 },
+      { x: 598, z: -196 }
+    ],
+    width: 14
+  },
+  {
+    id: 'emeryville-christie',
+    label: 'Christie St',
+    district: 'eastBay',
+    points: [
+      { x: 572, z: -310 },
+      { x: 572, z: -248 },
+      { x: 572, z: -186 }
+    ],
+    width: 14
+  },
+  {
+    id: 'shattuck',
+    label: 'Shattuck Ave',
+    district: 'eastBay',
+    points: [
+      { x: 480, z: 120 },
+      { x: 500, z: 50 },
+      { x: 520, z: -20 }
+    ],
+    width: 16
+  },
+  {
+    id: 'university-berkeley',
+    label: 'University Ave',
+    district: 'eastBay',
+    points: [
+      { x: 560, z: 80 },
+      { x: 540, z: 20 },
+      { x: 520, z: -40 }
+    ],
+    width: 17
   },
   {
     id: 'lake-merritt',
@@ -143,6 +265,28 @@ export const NAMED_STREETS: NamedStreet[] = [
       { x: 220, z: -1580 },
       { x: 340, z: -1620 },
       { x: 480, z: -1650 }
+    ],
+    width: 18
+  },
+  {
+    id: 'the-alameda',
+    label: 'The Alameda',
+    district: 'southBay',
+    points: [
+      { x: 80, z: -1480 },
+      { x: 200, z: -1520 },
+      { x: 320, z: -1560 }
+    ],
+    width: 17
+  },
+  {
+    id: 'stevens-creek',
+    label: 'Stevens Creek Blvd',
+    district: 'southBay',
+    points: [
+      { x: 320, z: -1380 },
+      { x: 400, z: -1340 },
+      { x: 500, z: -1300 }
     ],
     width: 18
   },

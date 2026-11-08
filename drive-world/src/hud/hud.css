@@ -233,6 +233,22 @@
   padding: 0;
 }
 
+.street-blade {
+  position: absolute;
+  left: 50%;
+  top: 3.5rem;
+  transform: translateX(-50%);
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  background: rgba(12, 40, 28, 0.88);
+  border: 1px solid rgba(80, 180, 120, 0.45);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  text-transform: none;
+}
+
 .dwelling-tag {
   opacity: 0.85;
   font-weight: 500;

@@ -248,6 +248,11 @@ export function HudApp() {
           Skip Waymo ride
         </button>
       )}
+      {snap.streetName && !snap.photoMode && !snap.ridingWaymo && (
+        <div className="street-blade" aria-live="polite">
+          {snap.streetName}
+        </div>
+      )}
       <div className="hud-toolbar">
         <button type="button" className="cam-toggle" onClick={() => requestToggleCamera()}>
           Camera: {cameraModeLabel(snap.cameraMode)} (C)

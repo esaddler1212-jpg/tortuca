@@ -18,6 +18,7 @@ Compressed **Bay Area night sandbox** in `drive-world/`. Not a AAA open world; a
 | Place | In game? |
 |-------|----------|
 | **Telegraph Ave** (Berkeley → Oakland) | Yes — landmark + shop strip meshes |
+| **Emeryville (Bay St / Shellmound)** | Yes — landmark hub + named streets |
 | **Caldecott / tunnel side** | Yes — portal landmark + **Hwy 24** spine to Concord |
 | **Orinda** | Yes — hillside / theatre beacon |
 | **Concord** | Yes — plaza landmark (east along 24) |

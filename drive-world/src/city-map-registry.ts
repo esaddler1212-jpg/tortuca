@@ -20,6 +20,7 @@ export const CITY_HUBS: CityHub[] = [
   { id: 'marin-bridge', district: 'marin', label: 'Golden Gate', centerX: -1170, centerZ: -400, radiusM: 130, blockM: 58 },
   { id: 'marin-sausalito', district: 'marin', label: 'Sausalito', centerX: -1180, centerZ: 320, radiusM: 110, blockM: 56 },
   { id: 'oakland-lake', district: 'eastBay', label: 'Oakland', centerX: 660, centerZ: -200, radiusM: 210, blockM: 50 },
+  { id: 'emeryville', district: 'eastBay', label: 'Emeryville', centerX: 598, centerZ: -248, radiusM: 95, blockM: 46 },
   { id: 'berkeley-campus', district: 'eastBay', label: 'Berkeley', centerX: 520, centerZ: 50, radiusM: 140, blockM: 48 },
   { id: 'lamorinda', district: 'eastBay', label: 'Caldecott hills', centerX: 420, centerZ: 270, radiusM: 130, blockM: 52 },
   { id: 'concord-wc', district: 'eastBay', label: 'Concord & Walnut Creek', centerX: 1070, centerZ: 70, radiusM: 120, blockM: 50 },
@@ -82,7 +83,7 @@ export const LANDMARK_STREET_ROUTES: LandmarkStreetRoute[] = [
     id: 'oakland-loop',
     district: 'eastBay',
     label: 'Oakland loop',
-    landmarkIds: ['lake-merritt', 'fox', 'oakland-arena', 'telegraph-ave'],
+    landmarkIds: ['lake-merritt', 'emeryville-bay', 'fox', 'oakland-arena', 'telegraph-ave'],
     width: 17,
     ring: true
   },
@@ -146,9 +147,17 @@ export const HUB_CONNECTORS: { id: string; district: DistrictId; points: StreetP
       { x: 538, z: 220 },
       { x: 538, z: 28 },
       { x: 538, z: -120 },
+      { x: 598, z: -200 },
+      lmPoint('emeryville-bay'),
       { x: 620, z: -120 }
     ],
     width: 16
+  },
+  {
+    id: 'emeryville-i80',
+    district: 'eastBay',
+    points: [lmPoint('emeryville-bay'), { x: 680, z: -320 }],
+    width: 15
   },
   {
     id: 'eastbay-24-corridor',

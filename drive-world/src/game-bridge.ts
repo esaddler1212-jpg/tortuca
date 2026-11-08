@@ -32,6 +32,7 @@ export type HudSnapshot = {
   atSafehouse?: boolean;
   homeSafehouseName?: string;
   homeServiceMode?: 'valet' | 'garage';
+  streetName?: string | null;
 };
 
 export type TouchDrive = {

@@ -57,6 +57,7 @@ import { loadSettings, saveSettings } from './game-settings';
 import { setMusicDistrict, unlockMusic } from './game-music';
 import { saveCruisePhotoCard } from './photo-share';
 import { districtAt, fogDistances, regionalFogStrength } from './regional-weather';
+import { nearestStreetLabel } from './street-name-registry';
 import { COLLECTIBLES, FAST_TRAVEL, SCENIC_ROUTES, SPEED_TRAPS } from './world-extras';
 import { createPhotoCamera } from './photo-mode';
 import { updateAmbientTraffic } from './build-world-extras';
@@ -745,7 +746,8 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       district: district ?? undefined,
       atSafehouse: Boolean(nearUnlockedSafehouse(progress, pos.x, pos.z)),
       homeSafehouseName: resolveHomeSafehouse(progress).name,
-      homeServiceMode: homeServicePoint(resolveHomeSafehouse(progress)).mode
+      homeServiceMode: homeServicePoint(resolveHomeSafehouse(progress)).mode,
+      streetName: nearestStreetLabel(pos.x, pos.z)
     });
 
     statsT += dt;

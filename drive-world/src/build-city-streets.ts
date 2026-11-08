@@ -10,6 +10,7 @@ import {
 } from './city-map-registry';
 import { hillOffsetM } from './bay-terrain';
 import { LANDMARKS } from './landmark-registry';
+import { crossingForHub } from './street-name-registry';
 import { NAMED_STREETS } from './street-registry';
 import {
   ARTERIAL_STREET_WIDTH_M,
@@ -217,17 +218,45 @@ function addHubLamps(app: AppBase, hub: CityHub, limit: number): void {
   }
 }
 
-function addHubLabel(app: AppBase, hub: CityHub): void {
-  const y = hillOffsetM(hub.centerX, hub.centerZ) + 0.2;
-  const sign = new Entity(`hub-label-${hub.id}`);
-  sign.setLocalScale(1.2, 8, 4.5);
-  sign.setPosition(hub.centerX, y + 10, hub.centerZ);
-  const signMat = new StandardMaterial();
-  signMat.emissive = new Color(0.25, 0.55, 0.9);
-  signMat.emissiveIntensity = 0.75;
-  signMat.update();
-  sign.addComponent('render', { type: 'box', material: signMat });
-  app.root.addChild(sign);
+function addStreetNameSign(app: AppBase, x: number, z: number, label: string, alongZ: boolean): void {
+  const y = streetDeckY(x, z);
+  const poleMat = new StandardMaterial();
+  poleMat.diffuse = new Color(0.12, 0.12, 0.14);
+  poleMat.update();
+  const bladeMat = new StandardMaterial();
+  bladeMat.emissive = new Color(0.15, 0.42, 0.28);
+  bladeMat.emissiveIntensity = 0.55;
+  bladeMat.update();
+
+  const pole = new Entity(`street-sign-pole-${label.replace(/\s+/g, '-')}-${Math.round(x)}`);
+  pole.setLocalScale(0.2, 3.6, 0.2);
+  pole.setPosition(x, y + 1.8, z);
+  pole.addComponent('render', { type: 'box', material: poleMat });
+  app.root.addChild(pole);
+
+  const blade = new Entity(`street-sign-blade-${label.replace(/\s+/g, '-')}-${Math.round(x)}`);
+  blade.setLocalScale(alongZ ? 0.15 : 2.8, 0.5, alongZ ? 2.8 : 0.15);
+  blade.setPosition(x, y + 3.5, z);
+  blade.addComponent('render', { type: 'box', material: bladeMat });
+  app.root.addChild(blade);
+}
+
+function buildHubStreetSigns(app: AppBase): void {
+  for (const hub of CITY_HUBS) {
+    const cross = crossingForHub(hub.id);
+    if (!cross) continue;
+    addStreetNameSign(app, hub.centerX + 7, hub.centerZ, cross.eastWest, false);
+    addStreetNameSign(app, hub.centerX, hub.centerZ + 7, cross.northSouth, true);
+  }
+
+  const signed = new Set<string>();
+  for (const street of NAMED_STREETS) {
+    if (signed.has(street.id)) continue;
+    signed.add(street.id);
+    const mid = street.points[Math.floor(street.points.length / 2)];
+    if (!mid) continue;
+    addStreetNameSign(app, mid.x, mid.z, street.label, Math.abs(street.points[0]!.x - street.points[1]!.x) < 8);
+  }
 }
 
 export function buildCityStreets(app: AppBase): void {
@@ -236,7 +265,6 @@ export function buildCityStreets(app: AppBase): void {
   for (const hub of CITY_HUBS) {
     buildHubGrid(app, hub, mats);
     addHubLamps(app, hub, 14);
-    addHubLabel(app, hub);
   }
 
   for (const route of LANDMARK_STREET_ROUTES) {
@@ -256,4 +284,5 @@ export function buildCityStreets(app: AppBase): void {
   }
 
   buildLandmarkPlazas(app, mats);
+  buildHubStreetSigns(app);
 }

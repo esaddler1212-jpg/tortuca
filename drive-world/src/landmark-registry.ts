@@ -30,6 +30,7 @@ export const LANDMARKS: LandmarkDef[] = [
   { id: 'fox', name: 'Fox Theater', district: 'eastBay', x: 600, z: -360, visitRadius: 48 },
   { id: 'oakland-arena', name: 'Oakland Arena', district: 'eastBay', x: 780, z: -200, visitRadius: 58 },
   { id: 'lake-merritt', name: 'Lake Merritt', district: 'eastBay', x: 620, z: -120, visitRadius: 55 },
+  { id: 'emeryville-bay', name: 'Emeryville Bay St', district: 'eastBay', x: 598, z: -248, visitRadius: 50 },
   { id: 'grizzly-peak', name: 'Grizzly Peak', district: 'eastBay', x: 400, z: 220, visitRadius: 58 },
   { id: 'oracle-park', name: 'Oracle Park', district: 'sf', x: -880, z: -610, visitRadius: 55 },
   { id: 'mare-island', name: 'Mare Island crane', district: 'vallejo', x: 444, z: 1020, visitRadius: 50 },
