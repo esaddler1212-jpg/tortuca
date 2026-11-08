@@ -92,6 +92,7 @@ export type GameHudSnapshot = {
   characterArcHint?: string | null;
   latticeHint?: string | null;
   latticeCloudHint?: string | null;
+  safeHouseHint?: string | null;
   latticeBeatChip?: string | null;
   villainRunwayHint?: string | null;
   chapterHint?: string | null;
@@ -240,6 +241,7 @@ export function HudApp() {
         {snap.chapterHint && <p className="hud-tag hud-hint">{snap.chapterHint}</p>}
         {snap.latticeHint && <p className="hud-tag">{snap.latticeHint}</p>}
         {snap.latticeCloudHint && <p className="hud-tag hud-hint">{snap.latticeCloudHint}</p>}
+        {snap.safeHouseHint && <p className="hud-tag hud-hint">{snap.safeHouseHint}</p>}
         {snap.territoryHint?.includes('H: henchmen') && (
           <div className="fate-actions">
             <button type="button" className="hud-roam" onClick={() => confirmTerritoryHenchmen()}>

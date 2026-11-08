@@ -2,6 +2,7 @@ import { Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas'
 import type { FactionNpc } from './faction-npcs';
 import { attachUnitBox } from './primitive-mesh';
 import { syncFlightAssistVisuals } from './aerial-mobility';
+import { primaryVillainIdForHero } from './roster-expansion';
 import { getVillainClone, VILLAIN_CLONES, type VillainCloneSpec } from './villain-roster';
 
 /** Wave when the hero's scripted pair rival arrives (hero role only). */
@@ -28,7 +29,18 @@ export function pairVillainForHero(heroId: string): VillainCloneSpec {
     const v = getVillainClone(pinned);
     if (v) return v;
   }
-  const rivals = VILLAIN_CLONES.filter((v) => v.rivalHeroIds.includes(heroId));
+  const scripted = primaryVillainIdForHero(heroId);
+  if (scripted) {
+    const v = getVillainClone(scripted);
+    if (v) return v;
+  }
+  const canonical = VILLAIN_CLONES.find((v) => v.primaryRivalHeroId === heroId);
+  if (canonical) return canonical;
+  const rivals = VILLAIN_CLONES.filter((v) => v.rivalHeroIds.includes(heroId)).sort((a, b) => {
+    const aPrimary = a.primaryRivalHeroId === heroId ? 0 : 1;
+    const bPrimary = b.primaryRivalHeroId === heroId ? 0 : 1;
+    return aPrimary - bPrimary;
+  });
   return rivals[0] ?? VILLAIN_CLONES[0]!;
 }
 

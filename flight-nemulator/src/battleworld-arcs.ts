@@ -284,7 +284,16 @@ const DEFAULT_LINKS: Record<string, string[]> = {
   'phoenix-ember': ['cinder-phoenix', 'magnet-warden', 'storm-caller'],
   'wing-archon': ['sky-tyrant', 'shade-knight'],
   'golden-sentry': ['void-colossus', 'harbinger-titan'],
-  'magnet-sovereign': ['magnet-warden', 'chrome-sage']
+  'magnet-sovereign': ['magnet-warden', 'chrome-sage'],
+  'cosmic-envoy': ['annihilus-gate', 'titan-snap-echo'],
+  'crimson-ace': ['deceit-winger', 'megaton-forge'],
+  'undefeated-youth': ['throne-viltrum', 'azure-patriarch'],
+  'nth-wing': ['night-gargoyle', 'sky-tyrant'],
+  'scarab-pilot': ['brain-colossus', 'vulture-scavenger'],
+  'magnetic-ace': ['iron-sentinel', 'nimrod-sentinel'],
+  'patriot-apex': ['lex-frame', 'titan-snap-echo'],
+  'chrome-convoy': ['megaton-forge', 'deceit-winger'],
+  'condor-warden': ['sky-tyrant', 'night-gargoyle']
 };
 
 for (const h of HERO_ROSTER) {

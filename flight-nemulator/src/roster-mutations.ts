@@ -1,6 +1,8 @@
 /** Informal “mutates from” labels — fan tribute only, not affiliated with rights holders. */
 
-export type MutationUniverse = 'marvel' | 'dc' | 'dbz' | 'original';
+import { EXPANSION_HERO_MUTATIONS, EXPANSION_VILLAIN_MUTATIONS } from './roster-expansion';
+
+export type MutationUniverse = 'marvel' | 'dc' | 'dbz' | 'original' | 'indie' | 'cyber' | 'golden';
 
 export interface MutationMeta {
   mutatesFrom: string;
@@ -47,7 +49,8 @@ export const HERO_MUTATIONS: Record<string, MutationMeta> = {
   'banshee-wail': { mutatesFrom: 'Banshee', universe: 'marvel' },
   'latverian-sovereign': { mutatesFrom: 'Doctor Doom', universe: 'marvel' },
   'cell-mimic': { mutatesFrom: 'Cell (playable)', universe: 'dbz' },
-  'spirit-buu': { mutatesFrom: 'Majin Buu (playable)', universe: 'dbz' }
+  'spirit-buu': { mutatesFrom: 'Majin Buu (playable)', universe: 'dbz' },
+  ...EXPANSION_HERO_MUTATIONS
 };
 
 export const VILLAIN_MUTATIONS: Record<string, MutationMeta> = {
@@ -84,5 +87,6 @@ export const VILLAIN_MUTATIONS: Record<string, MutationMeta> = {
   'trickster-prince': { mutatesFrom: 'Loki', universe: 'marvel' },
   'sine-warden': { mutatesFrom: 'Sinestro', universe: 'dc' },
   'steel-wraith': { mutatesFrom: 'Liquid-metal assassin (T-1000 archetype)', universe: 'marvel' },
-  'harbinger-titan': { mutatesFrom: 'Galactus', universe: 'marvel' }
+  'harbinger-titan': { mutatesFrom: 'Galactus', universe: 'marvel' },
+  ...EXPANSION_VILLAIN_MUTATIONS
 };

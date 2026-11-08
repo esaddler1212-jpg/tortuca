@@ -1,6 +1,7 @@
 /** Homage codenames only — not affiliated with rights holders. */
 
 import type { AerialMobility } from './aerial-mobility';
+import { buildExpansionHeroes } from './roster-expansion';
 import { wallCrawlerForms } from './hero-symbiote';
 import { venomEchoForms, VENOM_PLAYABLE_ID } from './hero-venom-bond';
 
@@ -1194,7 +1195,8 @@ export const HERO_ROSTER: HeroSpec[] = [
     ],
     defaultFormId: 'fat',
     aerial: 'ki'
-  }
+  },
+  ...buildExpansionHeroes()
 ];
 
 export function getHero(id: string): HeroSpec | undefined {

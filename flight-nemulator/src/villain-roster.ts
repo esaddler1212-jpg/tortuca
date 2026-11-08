@@ -1,8 +1,10 @@
 /** Homage villain clones — DBZ / Marvel / DC-inspired codenames only. */
 
 import type { AerialMobility } from './aerial-mobility';
+import { applyVillainPrimaryRivals, buildExpansionVillains } from './roster-expansion';
+import { HERO_ROSTER } from './hero-roster';
 
-export type VillainUniverse = 'dbz' | 'marvel' | 'dc';
+export type VillainUniverse = 'dbz' | 'marvel' | 'dc' | 'indie' | 'cyber' | 'golden';
 
 export interface VillainCloneSpec {
   id: string;
@@ -10,6 +12,8 @@ export interface VillainCloneSpec {
   tagline: string;
   universe: VillainUniverse;
   aerial: AerialMobility;
+  /** Canonical wave-10 / pair nemesis */
+  primaryRivalHeroId?: string;
   /** Heroes this clone is scripted to hunt */
   rivalHeroIds: string[];
   color: [number, number, number];
@@ -19,7 +23,7 @@ export interface VillainCloneSpec {
   scale: [number, number, number];
 }
 
-export const VILLAIN_CLONES: VillainCloneSpec[] = [
+const VILLAIN_CLONES_RAW: VillainCloneSpec[] = [
   {
     id: 'emperor-frieze',
     codename: 'Emperor Frieze',
@@ -482,8 +486,23 @@ export const VILLAIN_CLONES: VillainCloneSpec[] = [
     speedMul: 1.1,
     siegeMul: 1.5,
     scale: [3.2, 4, 2.5]
-  }
+  },
+  ...buildExpansionVillains()
 ];
+
+const _villainIds = new Set<string>();
+function trackVillainIds(clones: VillainCloneSpec[]): VillainCloneSpec[] {
+  for (const v of clones) _villainIds.add(v.id);
+  return clones;
+}
+
+trackVillainIds(VILLAIN_CLONES_RAW);
+
+export const VILLAIN_CLONES: VillainCloneSpec[] = applyVillainPrimaryRivals(
+  VILLAIN_CLONES_RAW,
+  new Set(HERO_ROSTER.map((h) => h.id)),
+  _villainIds
+);
 
 export function getVillainClone(id: string): VillainCloneSpec | undefined {
   return VILLAIN_CLONES.find((v) => v.id === id);
@@ -496,7 +515,7 @@ export function villainRivalsForHero(heroId: string): string[] {
 /** Pick a villain clone weighted toward the active hero's rivals; wave rotates universes. */
 export function pickVillainClone(playerHeroId: string, wave: number, slot: number): VillainCloneSpec {
   const rivals = VILLAIN_CLONES.filter((v) => v.rivalHeroIds.includes(playerHeroId));
-  const uniOrder: VillainUniverse[] = ['dbz', 'marvel', 'dc'];
+  const uniOrder: VillainUniverse[] = ['dbz', 'marvel', 'dc', 'indie', 'cyber', 'golden'];
   const preferredUni = uniOrder[(wave + slot) % uniOrder.length]!;
   const pool =
     rivals.length > 0

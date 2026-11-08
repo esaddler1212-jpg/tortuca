@@ -128,6 +128,7 @@ import {
   consumeLatticeCloudLabel,
   pullBattleworldLatticeCloud
 } from './battleworld-lattice-cloud';
+import { nearBattleworldSafeHouse } from './battleworld-safe-houses';
 import { battleworldRoleBlurb } from './battleworld';
 import {
   createInfinityStoneState,
@@ -862,6 +863,14 @@ function tickFrame(s: GameSession, dt: number): void {
         : null,
     latticeBeatChip: latticeBeatChip(s.heroSpec.id, s.playerRole),
     latticeCloudHint: consumeLatticeCloudLabel(),
+    safeHouseHint: (() => {
+      const house = nearBattleworldSafeHouse(
+        pos,
+        s.heroSpec.id,
+        districtIdAtPosition(pos.x, pos.z)
+      );
+      return house ? `Safe house: ${house.label} — rest lattice (H)` : null;
+    })(),
     villainRunwayHint: villainRunwayHudLine(s.heroSpec.id, s.wave),
     chapterHint: nextBattleworldChapterHint(
       s.heroSpec.id,
