@@ -52,8 +52,8 @@ export default function App() {
     return (
       <div className="launcher-shell">
         <header className="launcher-header">
-          <p className="eyebrow">BOYS</p>
-          <h1>Games</h1>
+          <p className="eyebrow">VantageGames</p>
+          <h1>Pick a game</h1>
         </header>
         <div className="card empty-card">
           <p className="hint">
@@ -69,8 +69,8 @@ export default function App() {
     <div className="launcher-shell">
       <div className="launcher-bg" aria-hidden="true" />
       <header className="launcher-header">
-        <p className="eyebrow">BOYS</p>
-        <h1>Games</h1>
+        <p className="eyebrow">VantageGames</p>
+        <h1>Pick a game</h1>
         <p className="launcher-sub">Scroll the row · tap or press Enter to play</p>
       </header>
 

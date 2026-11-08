@@ -14,7 +14,8 @@ export type PlayableGame = {
 
 function consoleBase(): string {
   const bundled = trimSlash(`${import.meta.env.BASE_URL}console`);
-  const override = import.meta.env.VITE_BOYS_CONSOLE_URL as string | undefined;
+  const override = (import.meta.env.VITE_VANTAGE_CONSOLE_URL ??
+    import.meta.env.VITE_BOYS_CONSOLE_URL) as string | undefined;
   if (override === '') return '';
   return trimSlash(override ?? bundled);
 }

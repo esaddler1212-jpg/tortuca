@@ -9,7 +9,7 @@ its own README, build, and (typically) its own Netlify site.
 |---------|------|---------|
 | **Alfred** | repo root | Personal command center — email, calendar, weather, Woodhouse app dashboard |
 | **Family Purpose** | [`family-purpose/`](family-purpose/) | Student check-ins, mentoring group sign-in, debriefs, BOYS curriculum API |
-| **BOYS Games** | [`boys-student/`](boys-student/) | Title-card launcher for City Nights + Battleworld (no sign-in) |
+| **VantageGames** | [`boys-student/`](boys-student/) | Title-card launcher for City Nights + Battleworld (no sign-in) |
 | **Alfred × OpenJarvis** | [`alfred-jarvis/`](alfred-jarvis/) | Local AI assistant (OpenJarvis) personalized as Alfred: briefings, ECS ops, research, career |
 | **God's Eye** | [`gods-eye/`](gods-eye/) | Local 3D globe ([upstream](https://github.com/bilawalsidhu/gods-eye-view)): run on Mac; link from IRIS Pulse — [same Wi‑Fi + remote](gods-eye/README.md) |
 | **JARVIS-OS-V.2** | [`jarvis-os-v2/`](jarvis-os-v2/) | Local Gemini Jarvis ([upstream](https://github.com/MAL19INDUSTRIES/JARVIS-OS-V.2)): clone + [cherry-pick only](jarvis-os-v2/CHERRY_PICK.md) — not Iris |
@@ -51,15 +51,13 @@ See [`family-purpose/README.md`](family-purpose/README.md).
 
 Deploy as a **separate Netlify site** with base directory `family-purpose`.
 
-### BOYS Student App
+### VantageGames
 
-Students join with a class code (`PURPOSE-A`, `PURPOSE-B`, or `PURPOSE-C`), enter
-name and grade, and submit monthly warm-up and exit ticket responses.
+Scrollable title cards → **City Nights** and **Battleworld** (bundled via `build:with-console`). Netlify base directory is still `boys-student/`.
 
 See [`boys-student/README.md`](boys-student/README.md).
 
-Deploy as a **separate Netlify site** with base directory `boys-student` and
-`VITE_BOYS_API_URL` set to your Family Purpose site URL.
+Deploy as a **separate Netlify site** with base directory `boys-student`.
 
 ## License
 
