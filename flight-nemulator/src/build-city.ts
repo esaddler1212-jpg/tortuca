@@ -84,9 +84,9 @@ function districtAt(x: number, z: number): DistrictSpec | null {
 }
 
 function gridStep(tier: QualityTier): number {
-  if (tier === 'low') return 88;
-  if (tier === 'high') return 42;
-  return 55;
+  if (tier === 'low') return 160;
+  if (tier === 'high') return 78;
+  return 110;
 }
 
 function skipChance(tier: QualityTier): number {
@@ -115,7 +115,8 @@ export function buildMetropolis(app: AppBase, root: Entity, opts: BuildCityOptio
       const dist = districtAt(x, z);
       const mul = dist?.skylineMul ?? 0.65;
       const r = hash2(x, z);
-      if (r < skipBelow) continue;
+      if (!dist && r < 0.68) continue;
+      if (dist && r < skipBelow) continue;
       const w = 18 + r * 22;
       const h = (14 + hash2(z, x) * 90) * mul;
       const d = 16 + hash2(x + z, x - z) * 20;

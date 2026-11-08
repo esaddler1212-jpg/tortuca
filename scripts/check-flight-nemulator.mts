@@ -10,6 +10,9 @@ const required = [
   'src/main.ts',
   'src/game-loop.ts',
   'src/hero-roster.ts',
+  'src/earth-planet.ts',
+  'src/earth-orbit.ts',
+  'src/world-reset.ts',
   'public/manifest-updates.json'
 ];
 

@@ -11,7 +11,8 @@ export interface DistrictSpec {
   skylineMul: number;
 }
 
-export const WORLD_HALF_M = 2000;
+/** Half-width of the Earth play disk (districts live on the ring inside). */
+export const WORLD_HALF_M = 10000;
 
 export const DISTRICTS: DistrictSpec[] = [
   {

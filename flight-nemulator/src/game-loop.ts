@@ -7,7 +7,10 @@ import {
   StandardMaterial,
   Vec3
 } from 'playcanvas';
-import { buildMetropolis, getDestructibles, nearestDistrictLabel, spawnSimpleCars } from './build-city';
+import { buildMetropolis, getDestructibles, spawnSimpleCars } from './build-city';
+import { buildPlanetShell, earthLabel, initEarthDistrictRing } from './earth-planet';
+import { getChronoState, tickEarthOrbit } from './earth-orbit';
+import { freshWantedAfterShatter, shatterAndRebuildEarth, worldGeneration } from './world-reset';
 import { attachUnitBox } from './primitive-mesh';
 import {
   DEFAULT_HERO_ID,
@@ -97,7 +100,9 @@ export async function startGame(app: AppBase): Promise<void> {
   const weatherMood = await fetchBayWeatherMood();
   applyWeatherMood(app, weatherMood);
 
+  initEarthDistrictRing();
   buildMetropolis(app, root, { tier });
+  buildPlanetShell(app, root);
   void placeKenneyLandmarks(app, root, tier === 'low' ? 8 : tier === 'high' ? 28 : 16);
   void placeWorldGachaTowns(app, root, tier === 'low' ? 0 : tier === 'high' ? 3 : 1);
   spawnSimpleCars(app, root, tier === 'low' ? 32 : tier === 'high' ? 160 : 90);
@@ -114,7 +119,7 @@ export async function startGame(app: AppBase): Promise<void> {
   const camera = new Entity('camera');
   camera.addComponent('camera', {
     clearColor: new Color(0.04, 0.06, 0.12),
-    farClip: 8000,
+    farClip: 48000,
     nearClip: 0.3,
     fov: 60
   });
@@ -158,7 +163,23 @@ function tickFrame(s: GameSession, dt: number): void {
   s.hero.form = s.heroForm;
   s.hero.update(dt, input);
   const pos = s.hero.entity.getPosition();
+  const chrono = tickEarthOrbit(pos, s.hero.speedKmh(), dt);
+  const simDt = dt * chrono.timeScale;
   const tags = getDestructibles();
+
+  if (input.super && chrono.chronoArmed) {
+    const blast = shatterAndRebuildEarth(s.app, s.root, s.tier, s.drones);
+    s.destructionUsd += blast.costUsd;
+    s.wanted = freshWantedAfterShatter();
+    s.wave = 0;
+    s.waveCooldown = 10;
+    const home = spawnAtHome(s.heroSpec.districtId);
+    s.hero.entity.setPosition(home);
+    s.hero.velocity.set(0, 0, 0);
+    addScreenShake(1.6);
+    playSuper();
+    s.stats = saveSessionStats({ supersUsed: s.stats.supersUsed + 1 });
+  }
 
   const smashRadius = s.heroSpec.smashRadius * s.heroForm.powerMul;
   const smash = checkHeroSmash(s.app, s.root, pos, s.hero.speedKmh(), smashRadius, tags, s.tier);
@@ -182,7 +203,7 @@ function tickFrame(s: GameSession, dt: number): void {
   if (input.throw) {
     throwProp(tags, pos, s.drones);
   }
-  if (input.super && s.hero.canSuper()) {
+  if (input.super && s.hero.canSuper() && !chrono.chronoArmed) {
     s.hero.triggerSuper();
     const aim = s.hero.aimPoint(120);
     const blastRadius = 45 * s.heroForm.powerMul;
@@ -196,8 +217,8 @@ function tickFrame(s: GameSession, dt: number): void {
   }
 
   const maxDrones = 8 + s.wanted.stars * 3;
-  s.waveCooldown -= dt;
-  if (s.waveCooldown <= 0 && s.drones.length < maxDrones) {
+  s.waveCooldown -= chrono.chronoFrozen ? simDt : dt;
+  if (!chrono.chronoFrozen && s.waveCooldown <= 0 && s.drones.length < maxDrones) {
     s.wave += 1;
     s.waveCooldown = Math.max(4, 12 - s.wave * 0.4 - s.wanted.stars);
     const count = waveDroneCount(s.wave, s.wanted.stars);
@@ -211,7 +232,7 @@ function tickFrame(s: GameSession, dt: number): void {
     s.drones.push(...batch);
     playWaveAlert();
   }
-  const kills = tickDrones(s.drones, pos, dt, s.root);
+  const kills = tickDrones(s.drones, pos, chrono.chronoFrozen ? simDt : dt, s.root);
   if (kills > 0) {
     s.dronesDestroyed += kills;
     s.stats = saveSessionStats({ dronesDestroyed: s.stats.dronesDestroyed + kills });
@@ -233,10 +254,11 @@ function tickFrame(s: GameSession, dt: number): void {
   const lifetimeDestruction = s.stats.destructionUsd + s.destructionUsd;
   saveSessionStats({ destructionUsd: lifetimeDestruction, wavesCleared: s.wave });
 
+  const chron = getChronoState();
   setHudSnapshot({
     heroName: s.heroSpec.codename,
     codename: s.heroSpec.tagline,
-    district: nearestDistrictLabel(pos),
+    district: earthLabel(pos),
     speedKmh: Math.round(s.hero.speedKmh()),
     destructionUsd: s.destructionUsd,
     wantedStars: s.wanted.stars,
@@ -253,7 +275,11 @@ function tickFrame(s: GameSession, dt: number): void {
     lifetimeDestructionUsd: lifetimeDestruction,
     dronesDestroyed: s.dronesDestroyed,
     loadingTip: currentLoadingTip(),
-    manifestHints: (getManifestSuggestions() ?? []).slice(0, 3).map((s) => s.title)
+    manifestHints: (getManifestSuggestions() ?? []).slice(0, 3).map((s) => s.title),
+    orbitProgress: chron.orbitProgress,
+    chronoArmed: chron.chronoArmed,
+    chronoFrozen: chron.chronoFrozen,
+    worldGeneration: worldGeneration()
   });
 }
 

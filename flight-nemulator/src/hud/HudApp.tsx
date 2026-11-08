@@ -31,6 +31,10 @@ export type GameHudSnapshot = {
   dronesDestroyed?: number;
   loadingTip?: string;
   manifestHints?: string[];
+  orbitProgress?: number;
+  chronoArmed?: boolean;
+  chronoFrozen?: boolean;
+  worldGeneration?: number;
 };
 
 function formatUsd(n: number): string {
@@ -111,8 +115,16 @@ export function HudApp() {
         <p className="hud-hint">Free games: {snap.manifestHints.join(' · ')}</p>
       )}
       {snap.loadingTip && <p className="hud-hint">{snap.loadingTip}</p>}
+      {snap.orbitProgress !== undefined && snap.orbitProgress > 0.05 && (
+        <p className="hud-hint hud-chrono">
+          World orbit {Math.round((snap.orbitProgress ?? 0) * 100)}%
+          {snap.chronoArmed ? ' — TIME STOPPED · E shatter Earth' : ''}
+          {snap.chronoFrozen && !snap.chronoArmed ? ' — chrono slip' : ''}
+          {typeof snap.worldGeneration === 'number' ? ` · gen ${snap.worldGeneration}` : ''}
+        </p>
+      )}
       <p className="hud-hint">
-        WASD steer · Space/Ctrl altitude · Shift boost · F fire · Q throw · E super · P photo
+        WASD steer · boost high around Earth (400+ km/h) · E super / shatter · P photo
       </p>
 
       <TouchPad />

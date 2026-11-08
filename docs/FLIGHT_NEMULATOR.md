@@ -18,7 +18,7 @@ Production build: `npm run build` → `dist/` (static deploy like `drive-world`)
 
 | Area | Behavior |
 |------|----------|
-| World | Full open procedural metro (~4 km) with **district home bases** (Stark Spire, Cave of Night, Planet Watch, Ki Plateau, …) |
+| World | **One Earth** — nine homage cities on a ~14 km ring; fly between cells, orbit fast (400+ km/h, high altitude) to **chrono-freeze** drones, **E Super** to shatter the planet and rebuild (generation counter) |
 | Flight | Third-person **realistic arcade** 6DOF — cruise and absurd boost bands |
 | Destruction | Ram **destructibles** only; chunk debris on capable hardware, instant vanish on low tier |
 | Ruins | Buildings **stay ruined** for the session |
