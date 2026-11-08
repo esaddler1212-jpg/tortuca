@@ -22,7 +22,9 @@ Console tile: [Tortuca Console](../games-hub/README.md) → **Battleworld**.
 4. Finalem — hero **pair boss** wave 10, or **villain apex** interceptor for absorb legends.
 5. Fate — save ≥52% or villain remake / God Emperor / annihilate.
 
-Progress: `arc-progress.ts` (local) + optional `POST /api/flight-nemulator-lattice` (Netlify Blobs).
+Progress: `arc-progress.ts` (local) + `pullBattleworldLatticeCloud` on boot (merge) + `POST /api/flight-nemulator-lattice` (Netlify Blobs).
+
+**Production Tortuca:** `BATTLEWORLD_LATTICE_REQUIRE_SESSION=true` (set in root `netlify.toml` production context). Signed-in saves use account-scoped Blobs keys (`X-Alfred-Session` + Google session). Standalone `flight-nemulator/` deploy stays anonymous token sync.
 
 ## Docs map
 
@@ -40,7 +42,7 @@ Progress: `arc-progress.ts` (local) + optional `POST /api/flight-nemulator-latti
 | `POST /api/flight-nemulator-research` | Homage-safe hero drafts |
 | `GET/POST /api/flight-nemulator-lattice` | Optional arc beat cloud sync |
 
-Client env: `VITE_FN_RESEARCH_URL`, `VITE_BATTLEWORLD_LATTICE_URL`.
+Client env: `VITE_FN_RESEARCH_URL`, `VITE_BATTLEWORLD_LATTICE_URL`. Lattice fetches send `X-Alfred-Session` when the console shell has `alfred-session-id` in localStorage.
 
 ## CI
 

@@ -4,6 +4,8 @@
 
 Default buildings, heroes, and drones are procedural primitives in `flight-nemulator/src/`.
 
+| `heroes/tin-aviator.glb` | Tortuca first-party low-poly pilot mesh (`npm run build:hero-glb`) | CC0 |
+
 ## Optional CC0 (install scripts)
 
 | Pack | Source | License |

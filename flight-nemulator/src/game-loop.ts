@@ -124,7 +124,10 @@ import {
   tryArcDistrictInteract,
   villainRunwayHudLine
 } from './battleworld-arcs';
-import { pullBattleworldLatticeCloud } from './battleworld-lattice-cloud';
+import {
+  consumeLatticeCloudLabel,
+  pullBattleworldLatticeCloud
+} from './battleworld-lattice-cloud';
 import { battleworldRoleBlurb } from './battleworld';
 import {
   createInfinityStoneState,
@@ -221,7 +224,7 @@ export async function startGame(app: AppBase): Promise<void> {
 
   const tier = detectQualityTier();
   const heroSpec = pickHero();
-  void pullBattleworldLatticeCloud(heroSpec.id);
+  await pullBattleworldLatticeCloud(heroSpec.id);
   enforceAlignmentForHero(heroSpec.id);
   const heroForm = resolveHeroForm(heroSpec, storedFormId(heroSpec));
   const spawn = spawnAtHome(heroSpec.districtId);
@@ -858,6 +861,7 @@ function tickFrame(s: GameSession, dt: number): void {
         ? latticeHudLine(battleworldLatticeStrength())
         : null,
     latticeBeatChip: latticeBeatChip(s.heroSpec.id, s.playerRole),
+    latticeCloudHint: consumeLatticeCloudLabel(),
     villainRunwayHint: villainRunwayHudLine(s.heroSpec.id, s.wave),
     chapterHint: nextBattleworldChapterHint(
       s.heroSpec.id,

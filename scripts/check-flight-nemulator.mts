@@ -73,6 +73,12 @@ const pairBoss = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-pair-bo
 });
 if (pairBoss.status !== 0) process.exit(pairBoss.status ?? 1);
 
+const lattice = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-battleworld-lattice.mts')], {
+  cwd: root,
+  stdio: 'inherit'
+});
+if (lattice.status !== 0) process.exit(lattice.status ?? 1);
+
 const arcs = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-battleworld-arcs.mts')], {
   cwd: root,
   stdio: 'inherit'

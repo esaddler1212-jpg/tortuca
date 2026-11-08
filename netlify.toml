@@ -3,6 +3,9 @@
   publish = "dist"
   functions = "netlify/functions"
 
+[context.production.environment]
+  BATTLEWORLD_LATTICE_REQUIRE_SESSION = "true"
+
 # Web research + Claude can exceed the default 10s Lambda limit.
 [functions."business-research"]
   timeout = 26

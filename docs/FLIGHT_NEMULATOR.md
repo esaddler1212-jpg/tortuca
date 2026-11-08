@@ -66,7 +66,7 @@ Production build: `npm run build` → `dist/` (static deploy like `drive-world`)
 |------|-------|
 | Multiplayer | Not started |
 | Mission chapters / checkpoint races | Light chapter HUD only — no drive-world races |
-| Blockbench hero GLBs for full roster | `public/models/heroes/` pipeline only — **0** bundled GLBs |
+| Blockbench hero GLBs for full roster | **1** pilot (`tin-aviator.glb`, script `npm run build:hero-glb`); rest procedural |
 | X-Men tier B+ backlog (`FLIGHT_NEMULATOR_XMEN_RESEARCH.md`) | Tier A slice shipped; rest research |
 | Lattice cloud pull on boot + auth | POST sync shipped; Tortuca session gate optional |
 | `manifest-updates.json` | v3 real IDs; full OTA skin pipeline still stub |

@@ -14,6 +14,42 @@ export type ArcBeat =
   | 'home-mark'
   | 'villain-apex';
 
+const ALL_BEATS: ArcBeat[] = [
+  'pair-down',
+  'territory-clear',
+  'stone-linked',
+  'world-saved',
+  'corps-oath',
+  'squad-clash',
+  'hunt-ascended',
+  'home-mark',
+  'villain-apex'
+];
+
+function isArcBeat(b: string): b is ArcBeat {
+  return (ALL_BEATS as string[]).includes(b);
+}
+
+/** Merge remote lattice snapshot (max lattice, union beats). Returns true if local state changed. */
+export function mergeLatticeFromCloud(heroId: string, lattice: number, beats: string[]): boolean {
+  let changed = false;
+  const local = battleworldLatticeStrength();
+  const remote = Number.isFinite(lattice) ? Math.max(0, Math.min(999, lattice)) : 0;
+  if (remote > local) {
+    localStorage.setItem(LATTICE_KEY, String(remote));
+    changed = true;
+  }
+  for (const raw of beats) {
+    if (!isArcBeat(raw)) continue;
+    const key = `${PREFIX}${heroId}-${raw}`;
+    if (localStorage.getItem(key) !== '1') {
+      localStorage.setItem(key, '1');
+      changed = true;
+    }
+  }
+  return changed;
+}
+
 export function recordArcBeat(heroId: string, beat: ArcBeat): void {
   localStorage.setItem(`${PREFIX}${heroId}-${beat}`, '1');
   const n = battleworldLatticeStrength();
@@ -43,19 +79,8 @@ export function maybeRecordTerritoryClear(
 }
 
 export function arcBeatsForHero(heroId: string): Set<ArcBeat> {
-  const beats: ArcBeat[] = [
-    'pair-down',
-    'territory-clear',
-    'stone-linked',
-    'world-saved',
-    'corps-oath',
-    'squad-clash',
-    'hunt-ascended',
-    'home-mark',
-    'villain-apex'
-  ];
   const out = new Set<ArcBeat>();
-  for (const b of beats) {
+  for (const b of ALL_BEATS) {
     if (hasArcBeat(heroId, b)) out.add(b);
   }
   return out;

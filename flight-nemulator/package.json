@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --open",
-    "build": "tsc --noEmit && vite build",
+    "build:hero-glb": "node scripts/build-tin-aviator-glb.mjs",
+    "build": "npm run build:hero-glb && tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test:smoke": "node scripts/smoke-boot.mjs"

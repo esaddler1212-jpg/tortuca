@@ -1,4 +1,5 @@
-import { arcBeatsForHero, battleworldLatticeStrength } from './arc-progress';
+import { arcBeatsForHero, battleworldLatticeStrength, mergeLatticeFromCloud } from './arc-progress';
+import { latticeFetchHeaders, latticeRequestHeaders } from './tortuca-auth';
 
 const SYNC_KEY = 'flight-nemulator-lattice-sync-token';
 const LATTICE_URL =
@@ -8,6 +9,13 @@ const LATTICE_URL =
   '/api/flight-nemulator-lattice';
 
 let syncTimer: ReturnType<typeof setTimeout> | null = null;
+let lastPullLabel: string | null = null;
+
+export function consumeLatticeCloudLabel(): string | null {
+  const v = lastPullLabel;
+  lastPullLabel = null;
+  return v;
+}
 
 function syncToken(): string {
   let t = localStorage.getItem(SYNC_KEY);
@@ -29,19 +37,18 @@ export function queueBattleworldLatticeCloud(heroId: string): void {
 export async function pullBattleworldLatticeCloud(heroId: string): Promise<boolean> {
   if (!navigator.onLine) return false;
   try {
-    const res = await fetch(`${LATTICE_URL}?heroId=${encodeURIComponent(heroId)}&token=${encodeURIComponent(syncToken())}`);
+    const q = `heroId=${encodeURIComponent(heroId)}&token=${encodeURIComponent(syncToken())}`;
+    const res = await fetch(`${LATTICE_URL}?${q}`, { headers: latticeFetchHeaders() });
+    if (res.status === 401) {
+      lastPullLabel = 'Sign in on Tortuca to sync lattice';
+      return false;
+    }
     if (!res.ok) return false;
     const data = (await res.json()) as { lattice?: number; beats?: string[] };
     if (!data || Object.keys(data).length === 0) return false;
-    if (typeof data.lattice === 'number') {
-      localStorage.setItem('flight-nemulator-battleworld-lattice', String(data.lattice));
-    }
-    if (data.beats?.length) {
-      for (const beat of data.beats) {
-        localStorage.setItem(`flight-nemulator-arc-beat-${heroId}-${beat}`, '1');
-      }
-    }
-    return true;
+    const merged = mergeLatticeFromCloud(heroId, Number(data.lattice) || 0, data.beats ?? []);
+    if (merged) lastPullLabel = 'Lattice synced from cloud';
+    return merged;
   } catch {
     return false;
   }
@@ -50,9 +57,9 @@ export async function pullBattleworldLatticeCloud(heroId: string): Promise<boole
 async function pushBattleworldLatticeCloud(heroId: string): Promise<void> {
   const beats = [...arcBeatsForHero(heroId)];
   try {
-    await fetch(LATTICE_URL, {
+    const res = await fetch(LATTICE_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: latticeRequestHeaders(),
       body: JSON.stringify({
         token: syncToken(),
         heroId,
@@ -60,6 +67,7 @@ async function pushBattleworldLatticeCloud(heroId: string): Promise<void> {
         beats
       })
     });
+    if (res.status === 401) lastPullLabel = 'Sign in on Tortuca to save lattice';
   } catch {
     /* offline-first */
   }
