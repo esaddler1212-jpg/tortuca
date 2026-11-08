@@ -1,0 +1,136 @@
+{
+  "catalogVersion": 1,
+  "upstream": "https://github.com/Kavex/GameDev-Resources",
+  "targets": ["drive-world", "flight-nemulator"],
+  "entries": [
+    {
+      "id": "kenney-assets",
+      "kavexTier": "triangular_flag_on_post",
+      "title": "Kenney Assets",
+      "url": "https://kenney.nl/assets",
+      "licenseNote": "CC0 on most packs; already used for Car Kit in drive-world",
+      "use": ["3d-vehicles", "3d-city", "audio-ui"],
+      "install": "tools/gamedev-resources/install-free-packs.sh"
+    },
+    {
+      "id": "poly-pizza",
+      "kavexTier": "free",
+      "title": "Poly Pizza",
+      "url": "https://poly.pizza",
+      "licenseNote": "Creative Commons; check per model",
+      "use": ["3d-props", "low-poly-heroes"]
+    },
+    {
+      "id": "polyhaven",
+      "kavexTier": "free",
+      "title": "Poly Haven",
+      "url": "https://polyhaven.com",
+      "licenseNote": "CC0 HDRIs, textures, models",
+      "use": ["pbr-sky", "materials", "hero-props"]
+    },
+    {
+      "id": "ambientcg",
+      "kavexTier": "free",
+      "title": "AmbientCG",
+      "url": "https://ambientcg.com",
+      "licenseNote": "CC0 PBR materials",
+      "use": ["building-materials", "ground"]
+    },
+    {
+      "id": "opengameart",
+      "kavexTier": "free",
+      "title": "OpenGameArt",
+      "url": "https://opengameart.org",
+      "licenseNote": "Per-asset license",
+      "use": ["2d-hud", "audio", "3d"]
+    },
+    {
+      "id": "freesound",
+      "kavexTier": "free",
+      "title": "Freesound",
+      "url": "https://freesound.org",
+      "licenseNote": "CC-BY/CC0 per sound — attribution when required",
+      "use": ["sfx-destruction", "sfx-flight"]
+    },
+    {
+      "id": "freepd",
+      "kavexTier": "free",
+      "title": "FreePD",
+      "url": "https://freepd.com",
+      "licenseNote": "Public domain music",
+      "use": ["music-ambient"]
+    },
+    {
+      "id": "gamesounds-xyz",
+      "kavexTier": "free",
+      "title": "GameSounds.xyz",
+      "url": "https://gamesounds.xyz",
+      "licenseNote": "Check per archive",
+      "use": ["sfx-reference"]
+    },
+    {
+      "id": "matcaps",
+      "kavexTier": "free",
+      "title": "Matcaps (nidorx)",
+      "url": "https://github.com/nidorx/matcaps",
+      "licenseNote": "Open matcap library",
+      "use": ["stylized-hero-shaders"]
+    },
+    {
+      "id": "playcanvas",
+      "kavexTier": "free",
+      "title": "PlayCanvas",
+      "url": "https://playcanvas.com",
+      "licenseNote": "Engine OSS; cloud editor has free tier limits",
+      "use": ["runtime"]
+    },
+    {
+      "id": "threejs",
+      "kavexTier": "open_source",
+      "title": "Three.js",
+      "url": "https://threejs.org",
+      "licenseNote": "MIT",
+      "use": ["reference", "gltf-loaders"]
+    },
+    {
+      "id": "ecs-lib",
+      "kavexTier": "open_source",
+      "title": "ecs-lib",
+      "url": "https://github.com/nidorx/ecs-lib",
+      "licenseNote": "TypeScript ECS — optional future refactor",
+      "use": ["architecture"]
+    },
+    {
+      "id": "3d-game-shaders-for-beginners",
+      "kavexTier": "free",
+      "title": "3D Game Shaders For Beginners",
+      "url": "https://github.com/lettier/3d-game-shaders-for-beginners",
+      "licenseNote": "Educational",
+      "use": ["vfx-trails", "destruction-juice"]
+    },
+    {
+      "id": "bfxr-jfxr",
+      "kavexTier": "free",
+      "title": "Bfxr / jfxr",
+      "url": "https://jfxr.frozenfractal.com",
+      "licenseNote": "Generate custom CC0-style SFX in browser",
+      "use": ["sfx-prototype"]
+    },
+    {
+      "id": "game-icons",
+      "kavexTier": "free",
+      "title": "Game Icons",
+      "url": "https://game-icons.net",
+      "licenseNote": "CC BY 3.0 — attribute in credits",
+      "use": ["hud-icons"]
+    },
+    {
+      "id": "glueit",
+      "kavexTier": "free",
+      "title": "GlueIT",
+      "url": "https://github.com/Kavex/GlueIT",
+      "licenseNote": "Spritesheet tool from same author as resource list",
+      "use": ["2d-atlas"]
+    }
+  ]
+}
