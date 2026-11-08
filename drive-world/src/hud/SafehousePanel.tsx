@@ -1,12 +1,22 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import type { HudSnapshot } from '../game-bridge';
 import { requestClaimSafehouse, requestSetHomeSafehouse } from '../game-bridge';
 import { DISTRICT_LABELS } from '../landmark-registry';
-import { listSelectableSafehouses, resolveHomeSafehouse } from '../safehouse-registry';
+import {
+  dwellingKindLabel,
+  listSelectableSafehouses,
+  resolveHomeSafehouse,
+  suggestCustomCondoName
+} from '../safehouse-registry';
 
 export function SafehousePanel({ snap }: { snap: HudSnapshot }) {
-  const [customName, setCustomName] = useState('My pull-off');
+  const suggested = suggestCustomCondoName(snap.playerX, snap.playerZ);
+  const [customName, setCustomName] = useState(suggested);
+
+  useEffect(() => {
+    if (snap.mph < 12) setCustomName(suggestCustomCondoName(snap.playerX, snap.playerZ));
+  }, [snap.playerX, snap.playerZ, snap.mph]);
   if (!snap.progress || snap.phase !== 'home' || snap.ridingWaymo) return null;
 
   const progress = snap.progress;
@@ -17,6 +27,7 @@ export function SafehousePanel({ snap }: { snap: HudSnapshot }) {
     <details className="safehouse-panel" open={snap.nearGarage}>
       <summary>
         Home: {home.name}
+        <span className="dwelling-tag"> · {dwellingKindLabel(home.kind)}</span>
         {snap.atSafehouse && !snap.nearGarage ? ' · nearby' : ''}
       </summary>
       {choices.length > 0 ? (
@@ -29,7 +40,7 @@ export function SafehousePanel({ snap }: { snap: HudSnapshot }) {
                 onClick={() => requestSetHomeSafehouse(h.id)}
               >
                 {h.name}
-                {h.custom ? ' ★' : ''} — {DISTRICT_LABELS[h.district]}
+                {h.custom ? ' ★' : ''} · {dwellingKindLabel(h.kind)} — {DISTRICT_LABELS[h.district]}
               </button>
             </li>
           ))}
@@ -47,9 +58,9 @@ export function SafehousePanel({ snap }: { snap: HudSnapshot }) {
             />
           </label>
           <button type="button" className="sync-btn" onClick={() => requestClaimSafehouse(customName)}>
-            Claim this spot as safehouse
+            Claim condo here
           </button>
-          <p className="sync-msg">Saves where you are parked — becomes home + garage.</p>
+          <p className="sync-msg">Penthouses are regional unlocks; anywhere else you park becomes a condo garage.</p>
         </div>
       )}
     </details>

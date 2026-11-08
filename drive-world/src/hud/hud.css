@@ -209,6 +209,11 @@
   padding: 0;
 }
 
+.dwelling-tag {
+  opacity: 0.85;
+  font-weight: 500;
+}
+
 .safehouse-panel {
   pointer-events: auto;
   width: 100%;

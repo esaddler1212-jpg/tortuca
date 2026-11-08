@@ -27,7 +27,7 @@ Flight without a keyboard: use **⤒ / ⤓** on the touch pad. Photo mode and HU
 
 ### Home & custom safehouses
 
-After the intro Waymo ride, **Vallejo harbor** is your default home. In the HUD **Home** panel you can switch to other preset safehouses as you complete regions, or park below **12 mph** and **claim** a custom spot (up to five). Garage, respawn, and the minimap home marker follow your chosen home.
+Default home is the **Vallejo estate** with a **Fast & Furious–style garage**. Regional unlocks add **penthouses** (SF, Oakland, Walnut Creek, Marin, Napa, San José) and **condos** on the Peninsula and other districts. Park below **12 mph** to **claim a condo** anywhere else (up to five customs). Garage, respawn, and the minimap home marker follow your chosen home.
 
 ## Deploy
 
