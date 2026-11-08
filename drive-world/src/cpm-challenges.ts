@@ -97,7 +97,8 @@ export const TIME_ATTACKS: TimeAttackDef[] = [
 
 export type CpmZoneHit =
   | { kind: 'drift'; pad: DriftPadDef; score: number }
-  | { kind: 'drag-start'; strip: DragStripDef }
+  | { kind: 'drag-countdown'; strip: DragStripDef; step: number }
+  | { kind: 'drag-go'; strip: DragStripDef }
   | { kind: 'drag-finish'; strip: DragStripDef; etSec: number }
   | { kind: 'time-gate'; attack: TimeAttackDef; gateIndex: number }
   | { kind: 'time-finish'; attack: TimeAttackDef; ms: number };

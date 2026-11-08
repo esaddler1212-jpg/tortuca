@@ -67,6 +67,7 @@ import {
 import { bindDriveKeys, pollDriveInput } from './game-input';
 import {
   playLandmarkChime,
+  playRaceTreeBeep,
   playVistaChime,
   playWaymoArrival,
   setMasterVolume,
@@ -85,14 +86,18 @@ import { nearestStreetLabel } from './street-name-registry';
 import { COLLECTIBLES, FAST_TRAVEL, SCENIC_ROUTES, SPEED_TRAPS } from './world-extras';
 import { createPhotoCamera } from './photo-mode';
 import { updateAmbientTraffic } from './build-world-extras';
+import { TIME_ATTACKS } from './cpm-challenges';
 import {
   applyCpmHit,
   flushDriftBest,
+  dragTreeHudLabel,
   freshCpmRuntime,
+  nearestDriftPad,
   tickDriftScore,
   tickDragStrip,
   tickTimeAttack
 } from './cpm-scoring';
+import { applyCameraFovBoost, pulseVehicleUnderglow } from './drive-feel';
 import { freshTaxiRuntime, tickTaxiContract } from './cpm-taxi';
 import { dynoSheet } from './vehicle-dyno';
 import { bayRegionsGated, syncVallejoMissionSteps, VALLEJO_CHAPTER_STEPS } from './mission-chapters';
@@ -173,6 +178,8 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   let meetHoldT = 0;
   let lastYawDeg = 0;
   let yawSampleReady = false;
+  let nitroCharge = 1;
+  let nitroBoosting = false;
   const photoKeys = { fwd: false, back: false, left: false, right: false, up: false, down: false };
   const CALDECOTT = { x: 392, z: 265 };
   let autopilotActive = false;
@@ -466,6 +473,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       const p = vehicle()!.getPosition();
       photo.pos.set(p.x, p.y + 8, p.z);
     }
+    app.timeScale = photoMode ? 0.38 : 1;
     publishHud({ photoMode });
     document.body.classList.toggle('photo-mode', photoMode);
   };
@@ -760,7 +768,8 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         | { fire?: (e: string, ...args: number[]) => void }
         | undefined;
       fs?.fire?.('flight:controls', drive.steering, drive.throttle, drive.vertical);
-      fs?.fire?.('flight:nitro', drive.nitro ? 1.65 : 1);
+      const flightNitro = drive.nitro && nitroCharge > 0.04 ? 1.55 + nitroCharge * 0.35 : 1;
+      fs?.fire?.('flight:nitro', flightNitro);
       player?.lights.setBrake(drive.throttle === 0 && drive.steering === 0 && drive.vertical === 0);
     } else {
       let steering = drive.steering;
@@ -774,7 +783,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       if (steering !== 0 || throttle !== 0) {
         vs?.fire?.('vehicle:controls', steering, throttle);
       }
-      vs?.fire?.('vehicle:nitro', drive.nitro ? 1.65 : 1);
+      vs?.fire?.('vehicle:nitro', 1);
       player?.lights.setBrake(throttle === 0 && steering === 0);
     }
 
@@ -834,7 +843,24 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       speedEl.textContent = aerial
         ? `${mph.toFixed(0)} mph · ${getVehicleSpec(progress.activeVehicleId!).locomotion === 'helicopter' ? 'Heli' : 'Hover'}`
         : `${mph.toFixed(0)} mph`;
-      updateEngineAudio(mph, true, exhaustGain);
+      updateEngineAudio(mph, true, exhaustGain * (nitroBoosting ? 1.14 : 1));
+      if (!aerial) {
+        const wantsNitro = drive.nitro && !onAutopilot;
+        nitroBoosting = wantsNitro && nitroCharge > 0.035;
+        const vs = scriptInstance(ent, 'vehicle') as { fire?: (e: string, ...args: number[]) => void } | undefined;
+        const mul = nitroBoosting ? 1.52 + nitroCharge * 0.38 : 1;
+        vs?.fire?.('vehicle:nitro', mul);
+        if (nitroBoosting) nitroCharge = Math.max(0, nitroCharge - dt * 0.44);
+        else nitroCharge = Math.min(1, nitroCharge + dt * (mph > 28 ? 0.2 : 0.11));
+        pulseVehicleUnderglow(ent, nitroBoosting);
+        applyCameraFovBoost(camera, nitroBoosting, dt);
+      } else if (drive.nitro && nitroCharge > 0.04) {
+        nitroBoosting = true;
+        nitroCharge = Math.max(0, nitroCharge - dt * 0.35);
+      } else {
+        nitroBoosting = false;
+        nitroCharge = Math.min(1, nitroCharge + dt * 0.14);
+      }
     }
 
     progress = heatDecay(progress, mph, dt);
@@ -958,7 +984,8 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         progress = flushDriftBest(progress, padBefore, driftScoreBefore);
         const nextBest = progress.cpmDriftBests[padBefore] ?? 0;
         if (nextBest > prevBest) {
-          ui.showToast('Drift PB', `${padBefore} · ${nextBest}`);
+          ui.showToast('Drift PB', `${padBefore} · ${nextBest}`, 6200);
+          playVistaChime();
           progress = appendJournal(progress, { kind: 'cpm', id: padBefore, label: `Drift ${nextBest}` });
         }
       }
@@ -966,16 +993,23 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       const nowMs = performance.now();
       const dragOut = tickDragStrip(cpmRuntime, pos.x, pos.z, mph, nowMs);
       cpmRuntime = dragOut.rt;
-      if (dragOut.hit?.kind === 'drag-start') {
-        ui.showToast('Drag tree', 'Launch — stay straight');
+      if (dragOut.hit?.kind === 'drag-countdown') {
+        playRaceTreeBeep(false);
+      }
+      if (dragOut.hit?.kind === 'drag-go') {
+        playRaceTreeBeep(true);
+        ui.showToast('GO!', `${dragOut.hit.strip.name} — nail the finish beam`);
       }
       if (dragOut.hit?.kind === 'drag-finish') {
         const prevEt = progress.cpmDragBestET;
+        const pb = prevEt == null || dragOut.hit.etSec < prevEt;
         progress = applyCpmHit(progress, dragOut.hit);
         ui.showToast(
-          'Quarter mile',
-          `${dragOut.hit.etSec.toFixed(2)}s${prevEt == null || dragOut.hit.etSec < prevEt ? ' · PB' : ''}`
+          pb ? 'Personal best!' : 'Quarter mile',
+          `${dragOut.hit.etSec.toFixed(2)}s · ${dragOut.hit.strip.name}`,
+          pb ? 6800 : 4200
         );
+        if (pb) playLandmarkChime();
         progress = appendJournal(progress, {
           kind: 'cpm',
           id: dragOut.hit.strip.id,
@@ -990,12 +1024,15 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       }
       if (timeOut.hit?.kind === 'time-finish') {
         const prevMs = progress.cpmTimeAttackMs[timeOut.hit.attack.id];
+        const pb = prevMs == null || timeOut.hit.ms < prevMs;
         progress = applyCpmHit(progress, timeOut.hit);
         const sec = (timeOut.hit.ms / 1000).toFixed(2);
         ui.showToast(
-          'Time attack',
-          `${timeOut.hit.attack.name} ${sec}s${prevMs == null || timeOut.hit.ms < prevMs ? ' · PB' : ''}`
+          pb ? 'Horizon split PB!' : 'Time attack',
+          `${timeOut.hit.attack.name} · ${sec}s`,
+          pb ? 6500 : 4200
         );
+        if (pb) playLandmarkChime();
         progress = appendJournal(progress, {
           kind: 'cpm',
           id: timeOut.hit.attack.id,
@@ -1034,6 +1071,14 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       syncMissionProgress();
     }
 
+    const driftPad = nearestDriftPad(pos.x, pos.z);
+    const driftGoal = driftPad?.goalScore ?? 500;
+    const taId = cpmRuntime.timeAttackId;
+    const taDef = taId ? TIME_ATTACKS.find((t) => t.id === taId) : null;
+    const frameMs = performance.now();
+    const taElapsed =
+      cpmRuntime.timeLapStartMs != null && taId ? frameMs - cpmRuntime.timeLapStartMs : null;
+    const heatHunted = (progress.heatLevel ?? 0) >= 4.1;
     publishHud({
       playerX: pos.x,
       playerZ: pos.z,
@@ -1073,7 +1118,18 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       navTarget: manualNav,
       navTurnLabel,
       navRoutePoints,
-      storefrontStripLabel: strip ? `${strip.label} — ${strip.shops[0] ?? 'shops'}` : null
+      storefrontStripLabel: strip ? `${strip.label} — ${strip.shops[0] ?? 'shops'}` : null,
+      nitroPercent: Math.round(nitroCharge * 100),
+      nitroBoosting,
+      driftScore: progress.phase === 'home' ? cpmRuntime.driftScore : 0,
+      driftGoal,
+      driftPadName: driftPad?.name ?? null,
+      dragTreeLabel: progress.phase === 'home' ? dragTreeHudLabel(cpmRuntime, frameMs) : null,
+      timeAttackElapsedMs: taElapsed,
+      timeAttackProgress: taDef
+        ? `gate ${Math.min(cpmRuntime.timeGateIndex, taDef.gates.length)}/${taDef.gates.length}`
+        : null,
+      heatHunted
     });
 
     statsT += dt;

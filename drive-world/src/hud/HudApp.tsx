@@ -154,11 +154,57 @@ function HeatMeter({ snap }: { snap: HudSnapshot }) {
   if (heat < 0.35 || snap.ridingWaymo) return null;
   const pct = Math.min(100, (heat / 5) * 100);
   return (
-    <div className="heat-meter" title="Speed-trap heat">
+    <div className={`heat-meter ${snap.heatHunted ? 'hunted' : ''}`} title="Speed-trap heat">
       Heat: {heatLabel(heat)} ({Math.round(pct)}%)
       <div className="heat-bar">
         <div className="heat-fill" style={{ width: `${pct}%` }} />
       </div>
+    </div>
+  );
+}
+
+function RacingHud({ snap }: { snap: HudSnapshot }) {
+  if (snap.photoMode || snap.ridingWaymo || snap.phase !== 'home') return null;
+  const drift = snap.driftScore ?? 0;
+  const showDrift = drift > 2 || snap.driftPadName;
+  const nitro = snap.nitroPercent ?? 100;
+  const showNitro = !snap.flightMode && nitro < 99.5;
+  const tree = snap.dragTreeLabel;
+  const showTree = Boolean(tree);
+  const time = snap.timeAttackElapsedMs;
+  const showTime = time != null && time > 0;
+  if (!showDrift && !showNitro && !showTree && !showTime) return null;
+  const driftPct = snap.driftGoal ? Math.min(100, (drift / snap.driftGoal) * 100) : Math.min(100, drift / 10);
+  return (
+    <div className="racing-hud" aria-live="polite">
+      {showTree ? (
+        <div className="race-strip drag-tree">{tree === 'GO' ? 'GO!' : tree}</div>
+      ) : null}
+      {showDrift ? (
+        <div className="race-strip drift">
+          Drift {Math.round(drift)}
+          {snap.driftPadName ? ` · ${snap.driftPadName}` : ''}
+          <div className="race-bar">
+            <div className="race-bar-fill drift" style={{ width: `${driftPct}%` }} />
+          </div>
+        </div>
+      ) : null}
+      {showTime ? (
+        <div className="race-strip">
+          Time {(time! / 1000).toFixed(2)}s {snap.timeAttackProgress ? `· ${snap.timeAttackProgress}` : ''}
+        </div>
+      ) : null}
+      {showNitro ? (
+        <div className="race-strip nitro">
+          N₂O {snap.nitroBoosting ? 'BOOST' : 'Tank'} {Math.round(nitro)}%
+          <div className="race-bar">
+            <div
+              className="race-bar-fill nitro"
+              style={{ width: `${nitro}%`, opacity: snap.nitroBoosting ? 1 : 0.85 }}
+            />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -174,7 +220,7 @@ function MissionBoard({ snap }: { snap: HudSnapshot }) {
   const taxiOffer = snap.progress ? nextTaxiContract(snap.progress, 'vallejo') : null;
   return (
     <details className="mission-panel" open>
-      <summary>Missions (CPM board)</summary>
+      <summary>Missions · CPM · Horizon · MC</summary>
       {taxiOffer && !snap.progress?.activeTaxiId ? (
         <button
           type="button"
@@ -411,6 +457,7 @@ export function HudApp() {
       {snap.flightMode && !snap.photoMode && (
         <p className="flight-hint">Space/⤒ climb · Ctrl/⤓ sink · WASD · Shift boost</p>
       )}
+      <RacingHud snap={snap} />
       <HeatMeter snap={snap} />
       {snap.settings.fuelSimEnabled && snap.phase === 'home' && !snap.photoMode && (
         <div className="fuel-meter" aria-label="Fuel">

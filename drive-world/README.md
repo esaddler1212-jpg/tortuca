@@ -4,6 +4,8 @@ Open-world **Bay Area night driving** prototype (PlayCanvas + Ammo + React HUD).
 
 Folder name remains `drive-world/` for Netlify base-directory wiring; the product name is **City Nights**.
 
+**Feel target:** CPM2 skill loops + Forza festival polish + Midnight Club Bay-night boost & heat. See [`docs/CITY_NIGHTS_FEEL.md`](../docs/CITY_NIGHTS_FEEL.md).
+
 ## Local dev
 
 ```bash

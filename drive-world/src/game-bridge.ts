@@ -49,6 +49,16 @@ export type HudSnapshot = {
   navTurnLabel?: string;
   navRoutePoints?: { x: number; z: number }[];
   storefrontStripLabel?: string | null;
+  /** 0–100 nitro tank (Midnight Club–style boost) */
+  nitroPercent?: number;
+  nitroBoosting?: boolean;
+  driftScore?: number;
+  driftGoal?: number;
+  driftPadName?: string | null;
+  dragTreeLabel?: string | null;
+  timeAttackElapsedMs?: number | null;
+  timeAttackProgress?: string | null;
+  heatHunted?: boolean;
 };
 
 export type TouchDrive = {

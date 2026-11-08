@@ -225,6 +225,75 @@
   transition: width 0.2s ease;
 }
 
+.heat-meter.hunted {
+  animation: heat-pulse 0.9s ease-in-out infinite;
+}
+
+@keyframes heat-pulse {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.35);
+  }
+}
+
+.racing-hud {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+  pointer-events: none;
+}
+
+.race-strip {
+  font-size: 0.78rem;
+  padding: 0.25rem 0.45rem;
+  border-radius: 6px;
+  background: rgba(4, 8, 18, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.race-strip.drift {
+  border-color: rgba(120, 200, 255, 0.45);
+}
+
+.race-strip.nitro {
+  border-color: rgba(255, 120, 60, 0.5);
+}
+
+.race-strip.drag-tree {
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-align: center;
+  color: #ffee55;
+  text-shadow: 0 0 12px rgba(255, 200, 60, 0.6);
+  border-color: rgba(255, 230, 80, 0.55);
+}
+
+.race-bar {
+  height: 7px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 3px;
+}
+
+.race-bar-fill {
+  height: 100%;
+  transition: width 0.08s linear;
+}
+
+.race-bar-fill.drift {
+  background: linear-gradient(90deg, #44aaff, #a8ff44);
+}
+
+.race-bar-fill.nitro {
+  background: linear-gradient(90deg, #ff6622, #ffee00);
+}
+
 .mission-panel {
   pointer-events: auto;
   width: 100%;

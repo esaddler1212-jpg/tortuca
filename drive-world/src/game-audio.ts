@@ -47,6 +47,22 @@ export function updateEngineAudio(mph: number, driving: boolean, exhaustGain = 1
   engineOsc.frequency.setTargetAtTime(hz, ctx.currentTime, 0.05);
 }
 
+export function playRaceTreeBeep(go = false): void {
+  const c = ensureContext();
+  if (!c) return;
+  if (c.state === 'suspended') void c.resume();
+  const o = c.createOscillator();
+  const g = c.createGain();
+  o.type = 'square';
+  o.frequency.value = go ? 880 : 440;
+  g.gain.value = (go ? 0.11 : 0.07) * masterVolume;
+  g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + (go ? 0.32 : 0.12));
+  o.connect(g);
+  g.connect(c.destination);
+  o.start();
+  o.stop(c.currentTime + (go ? 0.35 : 0.14));
+}
+
 export function playLandmarkChime(): void {
   const c = ensureContext();
   if (!c) return;

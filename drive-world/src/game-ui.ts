@@ -21,7 +21,7 @@ export type GameUi = {
   setVehicleName(name: string): void;
   setProgressSummary(progress: SavedProgress): void;
   setAutonomousMode(active: boolean): void;
-  showToast(title: string, body: string): void;
+  showToast(title: string, body: string, durationMs?: number): void;
   setGarageVisible(
     visible: boolean,
     progress: SavedProgress,
@@ -92,13 +92,15 @@ export function wireGameUi(): GameUi {
     setAutonomousMode(active: boolean) {
       hudEl.classList.toggle('autonomous', active);
     },
-    showToast(title: string, body: string) {
+    showToast(title: string, body: string, durationMs = 4200) {
       toastEl.hidden = false;
+      toastEl.classList.toggle('toast-celebrate', durationMs > 5000);
       toastEl.innerHTML = `<strong>${title}</strong><p>${body}</p>`;
       window.clearTimeout(toastTimer);
       toastTimer = window.setTimeout(() => {
         toastEl.hidden = true;
-      }, 4200);
+        toastEl.classList.remove('toast-celebrate');
+      }, durationMs);
     },
     setGarageVisible(visible, progress, onSelect, serviceMode = 'garage', siteName) {
       garageEl.hidden = !visible;

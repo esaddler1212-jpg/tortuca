@@ -31,6 +31,9 @@ export type CpmRuntime = {
   driftPadId: string | null;
   dragStripId: string | null;
   dragLaunchT: number | null;
+  dragStagingStripId: string | null;
+  dragStageStep: number | null;
+  dragStageUntilMs: number | null;
   timeAttackId: string | null;
   timeGateIndex: number;
   timeLapStartMs: number | null;
@@ -42,6 +45,9 @@ export function freshCpmRuntime(): CpmRuntime {
     driftPadId: null,
     dragStripId: null,
     dragLaunchT: null,
+    dragStagingStripId: null,
+    dragStageStep: null,
+    dragStageUntilMs: null,
     timeAttackId: null,
     timeGateIndex: 0,
     timeLapStartMs: null
@@ -74,6 +80,41 @@ export function tickDriftScore(
   return { ...rt, driftPadId: pad.id, driftScore: score };
 }
 
+function tickDragStaging(rt: CpmRuntime, nowMs: number): { rt: CpmRuntime; hit?: CpmZoneHit } {
+  if (!rt.dragStagingStripId || rt.dragLaunchT != null) return { rt };
+  if (rt.dragStageUntilMs == null || nowMs < rt.dragStageUntilMs) return { rt };
+  const strip = DRAG_STRIPS.find((s) => s.id === rt.dragStagingStripId);
+  if (!strip) return { rt: freshCpmRuntime() };
+  const step = rt.dragStageStep ?? 0;
+  if (step > 1) {
+    const next = step - 1;
+    return {
+      rt: { ...rt, dragStageStep: next, dragStageUntilMs: nowMs + 580 },
+      hit: { kind: 'drag-countdown', strip, step: next }
+    };
+  }
+  return {
+    rt: {
+      ...rt,
+      dragLaunchT: nowMs,
+      dragStagingStripId: null,
+      dragStageStep: null,
+      dragStageUntilMs: null
+    },
+    hit: { kind: 'drag-go', strip }
+  };
+}
+
+export function dragTreeHudLabel(rt: CpmRuntime, nowMs: number): string | null {
+  if (rt.dragStagingStripId && rt.dragLaunchT == null) {
+    const step = rt.dragStageStep;
+    if (step != null && step > 0) return String(step);
+    return '…';
+  }
+  if (rt.dragLaunchT != null && rt.dragStripId && nowMs - rt.dragLaunchT < 1400) return 'GO';
+  return null;
+}
+
 export function tickDragStrip(
   rt: CpmRuntime,
   px: number,
@@ -81,11 +122,22 @@ export function tickDragStrip(
   mph: number,
   nowMs: number
 ): { rt: CpmRuntime; hit?: CpmZoneHit } {
+  const staged = tickDragStaging(rt, nowMs);
+  rt = staged.rt;
+  if (staged.hit) return staged;
+
   for (const strip of DRAG_STRIPS) {
-    if (crossStartGate(px, pz, strip) && mph > 8 && rt.dragStripId !== strip.id) {
+    if (crossStartGate(px, pz, strip) && mph > 8 && !rt.dragStripId && !rt.dragStagingStripId) {
       return {
-        rt: { ...rt, dragStripId: strip.id, dragLaunchT: nowMs },
-        hit: { kind: 'drag-start', strip }
+        rt: {
+          ...rt,
+          dragStripId: strip.id,
+          dragStagingStripId: strip.id,
+          dragStageStep: 3,
+          dragStageUntilMs: nowMs + 520,
+          dragLaunchT: null
+        },
+        hit: { kind: 'drag-countdown', strip, step: 3 }
       };
     }
     if (rt.dragStripId === strip.id && rt.dragLaunchT != null && crossFinishGate(px, pz, strip)) {
