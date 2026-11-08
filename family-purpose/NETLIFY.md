@@ -89,21 +89,21 @@ In the Netlify dashboard: **Storage → Blobs** (store name `family-purpose-back
 | Upload always fails | Check URL ends with `/api/family-purpose-backup`, key matches env var, redeploy after setting env. |
 | Only Downloads, no upload | **Backup upload URL** empty in Settings — intentional. |
 
-## Connect IRIS (Alfred) and the BOYS student app
+## Connect IRIS (Alfred) and VantageGames
 
-Family Purpose is one Netlify site; **IRIS** and **BOYS** use separate sites in the same GitHub repo (`tortuca`).
+Family Purpose, **Alfred**, and **VantageGames** are separate Netlify sites in the same GitHub repo (`tortuca`).
 
 | App | Netlify base directory | What to configure |
 | --- | --- | --- |
 | **IRIS / Alfred** | repo root (`/`) | `FAMILY_PURPOSE_BACKUP_KEY` — **same secret** as this site. Optional: `WOODHOUSE_FAMILY_PURPOSE_URL` = this site’s URL. In IRIS **Settings → Woodhouse**, register Family Purpose or paste this site URL. |
-| **VantageGames** | `vantage-games/` | Own Netlify site (`build:with-console`). No Alfred env. BOYS APIs on this site still power Family Purpose Group tab if you use curriculum. |
-| **Family Purpose (this site)** | `family-purpose/` | `FAMILY_PURPOSE_BACKUP_KEY`. In app **Settings**: backup upload URL + key; **BOYS class code** (`PURPOSE-A` / `B` / `C`). |
+| **VantageGames** | `vantage-games/` | Games launcher only (`build:with-console`). No Alfred or curriculum env. |
+| **Family Purpose (this site)** | `family-purpose/` | `FAMILY_PURPOSE_BACKUP_KEY`. In app **Settings**: backup upload URL + key; **BOYS class code** (`PURPOSE-A` / `B` / `C`) if you use Group curriculum. |
 
 After deploy:
 
 1. Open Family Purpose on the Chromebook once on Wi‑Fi and **install** the PWA.
 2. Paste backup URL + key on phone and laptop so check-ins merge in the cloud.
-3. (Optional) If you still use BOYS curriculum, confirm Group → **Curriculum responses** loads — not required for Battleworld portal.
+3. (Optional) If you use BOYS curriculum, confirm Group → **Curriculum responses** loads on **this** Family Purpose site.
 4. Open IRIS during school hours — you should see Family Purpose **counts only** (no student names) on the Woodhouse dashboard once a backup has synced.
 
 ## Local preview (development)
