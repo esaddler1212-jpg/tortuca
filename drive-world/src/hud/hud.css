@@ -177,6 +177,56 @@
   bottom: 2.5rem;
 }
 
+.minimap-vista {
+  fill: rgba(120, 200, 255, 0.55);
+}
+
+.minimap-vista.done {
+  fill: rgba(200, 230, 255, 0.35);
+}
+
+.minimap-vista-pulse {
+  fill: none;
+  stroke: rgba(255, 200, 120, 0.45);
+  stroke-width: 1.5;
+}
+
+.vista-hint {
+  font-size: 0.85rem;
+  padding: 0.35rem 0.5rem;
+  width: 100%;
+  background: rgba(20, 28, 40, 0.75);
+  border-radius: 6px;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #8ec8ff;
+  cursor: pointer;
+  text-decoration: underline;
+  font: inherit;
+  padding: 0;
+}
+
+.music-panel,
+.journal-panel {
+  pointer-events: auto;
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  background: rgba(8, 12, 20, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.82rem;
+}
+
+.music-actions {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  margin: 0.35rem 0;
+}
+
 .autopilot-btn.on {
   border-color: rgba(120, 200, 255, 0.75);
   color: #a8e4ff;

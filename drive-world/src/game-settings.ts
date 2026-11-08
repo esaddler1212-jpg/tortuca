@@ -1,3 +1,4 @@
+import type { AutopilotPreset } from './autopilot-cruise';
 import type { MusicStationId } from './game-music';
 
 export type GameSettings = {
@@ -8,6 +9,8 @@ export type GameSettings = {
   musicVolume: number;
   musicStation: MusicStationId;
   musicEnabled: boolean;
+  musicUsePlaylist: boolean;
+  autopilotPreset: AutopilotPreset;
 };
 
 const KEY = 'drive-world-settings-v1';
@@ -19,7 +22,9 @@ const defaults: GameSettings = {
   photoSensitivity: 1,
   musicVolume: 0.55,
   musicStation: 'ambient',
-  musicEnabled: true
+  musicEnabled: true,
+  musicUsePlaylist: false,
+  autopilotPreset: 'tour'
 };
 
 export function loadSettings(): GameSettings {

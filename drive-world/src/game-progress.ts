@@ -49,6 +49,13 @@ export function normalizeCameraMode(mode: string | undefined): CameraMode {
 
 export type VehicleStats = { miles: number; topMph: number };
 
+export type JournalEntry = {
+  t: number;
+  kind: 'landmark' | 'vista' | 'scenic';
+  id: string;
+  label: string;
+};
+
 export type SavedProgress = {
   version: 5;
   phase: GamePhase;
@@ -69,6 +76,7 @@ export type SavedProgress = {
   /** Speed-trap heat 0–5 */
   heatLevel: number;
   visitedVistaIds: string[];
+  journal: JournalEntry[];
 };
 
 const STORAGE_KEY = 'drive-world-progress-v5';
@@ -92,7 +100,8 @@ function defaultProgress(): SavedProgress {
     scenicProgress: {},
     vehicleStats: {},
     heatLevel: 0,
-    visitedVistaIds: []
+    visitedVistaIds: [],
+    journal: []
   };
 }
 
@@ -110,6 +119,7 @@ function withV5Defaults(p: Partial<SavedProgress> & { version: number }): SavedP
     vehicleStats: p.vehicleStats ?? {},
     heatLevel: typeof p.heatLevel === 'number' ? p.heatLevel : 0,
     visitedVistaIds: p.visitedVistaIds ?? [],
+    journal: p.journal ?? [],
     cameraMode: normalizeCameraMode(p.cameraMode)
   };
 }

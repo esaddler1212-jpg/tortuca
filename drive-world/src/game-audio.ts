@@ -62,6 +62,50 @@ export function playLandmarkChime(): void {
   o.stop(c.currentTime + 0.4);
 }
 
+let heatSirenT = 0;
+
+export function tickHeatSiren(heat: number, dt: number): void {
+  if (heat < 3.6) return;
+  heatSirenT += dt;
+  if (heatSirenT < 9) return;
+  heatSirenT = 0;
+  playHeatSiren();
+}
+
+export function playHeatSiren(): void {
+  const c = ensureContext();
+  if (!c) return;
+  if (c.state === 'suspended') void c.resume();
+  const o = c.createOscillator();
+  const g = c.createGain();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(280, c.currentTime);
+  o.frequency.exponentialRampToValueAtTime(220, c.currentTime + 0.35);
+  g.gain.value = 0.04 * masterVolume;
+  g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.5);
+  o.connect(g);
+  g.connect(c.destination);
+  o.start();
+  o.stop(c.currentTime + 0.55);
+}
+
+export function playVistaChime(): void {
+  const c = ensureContext();
+  if (!c) return;
+  if (c.state === 'suspended') void c.resume();
+  const o = c.createOscillator();
+  const g = c.createGain();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(660, c.currentTime);
+  o.frequency.exponentialRampToValueAtTime(880, c.currentTime + 0.25);
+  g.gain.value = 0.1 * masterVolume;
+  g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.55);
+  o.connect(g);
+  g.connect(c.destination);
+  o.start();
+  o.stop(c.currentTime + 0.6);
+}
+
 export function playWaymoArrival(): void {
   const c = ensureContext();
   if (!c) return;

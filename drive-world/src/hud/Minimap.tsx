@@ -1,4 +1,5 @@
 import type { HudSnapshot } from '../game-bridge';
+import { CRUISE_VISTAS } from '../cruise-vistas';
 import { LANDMARKS, VALLEJO_SAFEHOUSE } from '../landmark-registry';
 import { WORLD_HALF_M } from '../world-config';
 
@@ -14,13 +15,24 @@ function mapY(wz: number): number {
 
 export function Minimap({ snap }: { snap: HudSnapshot }) {
   const visited = new Set(snap.progress?.visitedLandmarkIds ?? []);
+  const vistas = new Set(snap.progress?.visitedVistaIds ?? []);
   const next = snap.nextLandmark;
+  const pulse = snap.atVista ? 4 + Math.sin((snap.vistaPulse ?? 0) * 4) * 2 : 0;
 
   return (
     <div className="minimap-wrap">
       <div className="minimap-title">City Nights map</div>
       <svg width={SIZE} height={SIZE} className="minimap" aria-hidden>
         <rect x={0} y={0} width={SIZE} height={SIZE} className="minimap-bg" />
+        {CRUISE_VISTAS.map((v) => (
+          <circle
+            key={v.id}
+            cx={mapX(v.x)}
+            cy={mapY(v.z)}
+            r={vistas.has(v.id) ? 2 : 2.8}
+            className={vistas.has(v.id) ? 'minimap-vista done' : 'minimap-vista'}
+          />
+        ))}
         {LANDMARKS.map((lm) => (
           <circle
             key={lm.id}
@@ -46,6 +58,14 @@ export function Minimap({ snap }: { snap: HudSnapshot }) {
             className="minimap-route"
           />
         )}
+        {pulse > 0 ? (
+          <circle
+            cx={mapX(snap.playerX)}
+            cy={mapY(snap.playerZ)}
+            r={pulse + 6}
+            className="minimap-vista-pulse"
+          />
+        ) : null}
         <circle
           cx={mapX(snap.playerX)}
           cy={mapY(snap.playerZ)}

@@ -1,9 +1,11 @@
-import type { GamePhase, SavedProgress } from './game-progress';
+import type { AutopilotPreset } from './autopilot-cruise';
+import type { CameraMode, GamePhase, SavedProgress } from './game-progress';
+import { loadSettings } from './game-settings';
 import type { LandmarkDef } from './landmark-registry';
 import type { GameSettings } from './game-settings';
 import type { DistrictId } from './world-config';
 
-export type CameraMode = 'chase' | 'cockpit' | 'drone';
+export type { CameraMode };
 
 export type HudSnapshot = {
   playerX: number;
@@ -21,6 +23,12 @@ export type HudSnapshot = {
   settings: GameSettings;
   flightMode?: boolean;
   autopilotActive?: boolean;
+  autopilotPreset?: AutopilotPreset;
+  atVista?: boolean;
+  vistaName?: string | null;
+  vistaPulse?: number;
+  nearGarageReplay?: boolean;
+  district?: DistrictId;
 };
 
 export type TouchDrive = {
@@ -33,13 +41,6 @@ export type TouchDrive = {
 };
 
 type HudListener = (snap: HudSnapshot) => void;
-
-const defaultSettings: GameSettings = {
-  masterVolume: 0.85,
-  fogQuality: 'med',
-  showTraffic: true,
-  photoSensitivity: 1
-};
 
 let snapshot: HudSnapshot = {
   playerX: 0,
@@ -54,7 +55,7 @@ let snapshot: HudSnapshot = {
   waterPhase: 0,
   photoMode: false,
   nearGarage: false,
-  settings: defaultSettings,
+  settings: loadSettings(),
   flightMode: false
 };
 
@@ -65,6 +66,10 @@ let toggleCameraHandler: (() => void) | null = null;
 let togglePhotoHandler: (() => void) | null = null;
 let fastTravelHandler: ((d: DistrictId) => void) | null = null;
 let toggleAutopilotHandler: (() => void) | null = null;
+let cycleAutopilotPresetHandler: (() => void) | null = null;
+let savePhotoCardHandler: (() => void) | null = null;
+let waymoReplayHandler: (() => void) | null = null;
+let vistaCamHandler: (() => void) | null = null;
 
 let touchDrive: TouchDrive = { up: false, down: false, left: false, right: false, climb: false, descend: false };
 
@@ -105,6 +110,38 @@ export function registerToggleAutopilot(fn: () => void): void {
 
 export function requestToggleAutopilot(): void {
   toggleAutopilotHandler?.();
+}
+
+export function registerCycleAutopilotPreset(fn: () => void): void {
+  cycleAutopilotPresetHandler = fn;
+}
+
+export function requestCycleAutopilotPreset(): void {
+  cycleAutopilotPresetHandler?.();
+}
+
+export function registerSavePhotoCard(fn: () => void): void {
+  savePhotoCardHandler = fn;
+}
+
+export function requestSavePhotoCard(): void {
+  savePhotoCardHandler?.();
+}
+
+export function registerWaymoReplay(fn: () => void): void {
+  waymoReplayHandler = fn;
+}
+
+export function requestWaymoReplay(): void {
+  waymoReplayHandler?.();
+}
+
+export function registerVistaCam(fn: () => void): void {
+  vistaCamHandler = fn;
+}
+
+export function requestVistaCam(): void {
+  vistaCamHandler?.();
 }
 
 export function requestSkipWaymo(): void {

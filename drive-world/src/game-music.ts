@@ -1,6 +1,7 @@
 /** Procedural night cruise radio — no licensed audio files. */
 
 import { loadSettings, saveSettings, type GameSettings } from './game-settings';
+import type { DistrictId } from './world-config';
 
 export type MusicStationId = 'off' | 'ambient' | 'synth' | 'lofi' | 'pulse';
 
@@ -17,6 +18,20 @@ let masterGain: GainNode | null = null;
 let nodes: AudioNode[] = [];
 let station: MusicStationId = 'ambient';
 let playing = false;
+let regionFilterHz = 420;
+
+const REGION_TONE: Partial<Record<DistrictId, number>> = {
+  sf: 520,
+  marin: 380,
+  eastBay: 450,
+  vallejo: 400,
+  peninsula: 480,
+  southBay: 620
+};
+
+export function setMusicDistrict(district: DistrictId | null): void {
+  regionFilterHz = district ? (REGION_TONE[district] ?? 420) : 420;
+}
 
 function ensureCtx(): AudioContext | null {
   if (ctx) return ctx;
@@ -66,7 +81,7 @@ function addOsc(
 function buildStation(c: AudioContext, id: MusicStationId, bus: GainNode): void {
   const filter = c.createBiquadFilter();
   filter.type = 'lowpass';
-  filter.frequency.value = id === 'synth' ? 680 : 420;
+  filter.frequency.value = (id === 'synth' ? 680 : regionFilterHz) * (id === 'lofi' ? 0.85 : 1);
   filter.Q.value = 0.7;
   filter.connect(bus);
   nodes.push(filter);
@@ -114,17 +129,44 @@ function applyGainFromSettings(): void {
   masterGain.gain.setTargetAtTime(playing && station !== 'off' ? vol : 0, ctx.currentTime, 0.12);
 }
 
-export function unlockMusic(): void {
+async function playlistMode(): Promise<boolean> {
+  const s = loadSettings();
+  if (!s.musicUsePlaylist) return false;
+  const { loadPlaylistCatalog, playPlaylist, playlistAvailable } = await import('./music-playlist');
+  await loadPlaylistCatalog();
+  if (!playlistAvailable()) return false;
+  stopNodes();
+  playing = true;
+  station = 'ambient';
+  return playPlaylist(0);
+}
+
+export async function unlockMusic(): Promise<void> {
+  const s = loadSettings();
+  if (s.musicEnabled === false) return;
+  if (await playlistMode()) {
+    applyGainFromSettings();
+    return;
+  }
   const c = ensureCtx();
   if (!c) return;
   if (c.state === 'suspended') void c.resume();
-  const s = loadSettings();
-  if (s.musicEnabled !== false && s.musicStation !== 'off') {
-    void startMusic(s.musicStation ?? 'ambient');
-  }
+  if (s.musicStation !== 'off') void startMusic(s.musicStation ?? 'ambient');
 }
 
-export function startMusic(next: MusicStationId): void {
+export async function startMusic(next: MusicStationId): Promise<void> {
+  const s = loadSettings();
+  if (s.musicUsePlaylist && next !== 'off') {
+    const { playPlaylist } = await import('./music-playlist');
+    stopNodes();
+    playing = await playPlaylist(0);
+    station = next;
+    saveSettings({ ...s, musicStation: next, musicEnabled: true, musicUsePlaylist: true });
+    applyGainFromSettings();
+    return;
+  }
+  const { stopPlaylist } = await import('./music-playlist');
+  stopPlaylist();
   const c = ensureCtx();
   if (!c || !masterGain) return;
   if (c.state === 'suspended') void c.resume();
@@ -135,7 +177,6 @@ export function startMusic(next: MusicStationId): void {
     buildStation(c, next, masterGain);
   }
   applyGainFromSettings();
-  const s = loadSettings();
   saveSettings({ ...s, musicStation: next, musicEnabled: next !== 'off' });
 }
 
@@ -184,4 +225,5 @@ export function onMasterVolumeChanged(master: number): void {
       masterGain.gain.setTargetAtTime(vol, ctx.currentTime, 0.08);
     }
   }
+  void import('./music-playlist').then((m) => m.setPlaylistVolume());
 }

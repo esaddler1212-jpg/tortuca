@@ -5,8 +5,12 @@ import {
   requestFastTravel,
   requestSkipWaymo,
   requestToggleCamera,
+  requestCycleAutopilotPreset,
+  requestSavePhotoCard,
   requestToggleAutopilot,
   requestTogglePhoto,
+  requestVistaCam,
+  requestWaymoReplay,
   setTouchDrive,
   subscribeHud,
   type HudSnapshot
@@ -27,6 +31,9 @@ import {
   pushCloudProgress
 } from '../game-cloud-save';
 import { loadProgress, saveProgress } from '../game-progress';
+import { cameraModeLabel } from '../camera-profiles';
+import { JournalPanel } from './JournalPanel';
+import { MusicPanel } from './MusicPanel';
 
 function NavHint({ snap }: { snap: HudSnapshot }) {
   const next = snap.nextLandmark;
@@ -241,8 +248,7 @@ export function HudApp() {
       )}
       <div className="hud-toolbar">
         <button type="button" className="cam-toggle" onClick={() => requestToggleCamera()}>
-          Camera:{' '}
-          {snap.cameraMode === 'cockpit' ? 'Cockpit' : snap.cameraMode === 'drone' ? 'Drone' : 'Chase'} (C)
+          Camera: {cameraModeLabel(snap.cameraMode)} (C)
         </button>
         <button type="button" className="cam-toggle" onClick={() => requestTogglePhoto()}>
           Photo {snap.photoMode ? 'ON' : ''} (P)
@@ -254,26 +260,48 @@ export function HudApp() {
             className={`cam-toggle autopilot-btn ${snap.autopilotActive ? 'on' : ''}`}
             onClick={() => requestToggleAutopilot()}
           >
-            {snap.autopilotActive ? 'Autopilot ON (T)' : 'Autopilot (T)'}
+            {snap.autopilotActive ? `Autopilot ${snap.autopilotPreset ?? 'tour'} (T)` : 'Autopilot (T)'}
+          </button>
+        )}
+        {snap.progress?.activeVehicleId === 'bonus-night-coil' && snap.phase === 'home' && (
+          <button type="button" className="cam-toggle" onClick={() => requestCycleAutopilotPreset()}>
+            Preset (Y)
           </button>
         )}
       </div>
       {!snap.photoMode && <Minimap snap={snap} />}
+      {snap.atVista && !snap.photoMode && (
+        <div className="vista-hint">
+          <strong>{snap.vistaName}</strong> — slow orbit · <button type="button" className="link-btn" onClick={() => requestVistaCam()}>Vista cam (V)</button>
+        </div>
+      )}
       <NavHint snap={snap} />
       {snap.flightMode && !snap.photoMode && (
         <p className="flight-hint">Space/⤒ climb · Ctrl/⤓ sink · WASD · Shift boost</p>
       )}
       <HeatMeter snap={snap} />
+      <MusicPanel />
+      <JournalPanel snap={snap} />
       <MissionBoard snap={snap} />
       <StatsPanel snap={snap} />
       <SettingsPanel />
       <FastTravel snap={snap} />
+      {snap.nearGarageReplay && snap.phase === 'home' && !snap.ridingWaymo && (
+        <button type="button" className="skip-waymo" onClick={() => requestWaymoReplay()}>
+          Replay Waymo intro route
+        </button>
+      )}
       {!snap.photoMode && <LandmarkPanel snap={snap} />}
       {showTouch && snap.phase === 'home' && !snap.ridingWaymo && (
         <TouchControlsImpl flight={!!snap.flightMode} />
       )}
       {snap.photoMode && (
-        <p className="photo-hint">WASD move · Q/E altitude · P exit · Screenshot: system capture</p>
+        <p className="photo-hint">
+          WASD move · Q/E altitude · P exit ·{' '}
+          <button type="button" className="link-btn" onClick={() => requestSavePhotoCard()}>
+            Save cruise card
+          </button>
+        </p>
       )}
     </div>
   );

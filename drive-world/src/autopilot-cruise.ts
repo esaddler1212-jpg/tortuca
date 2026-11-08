@@ -1,7 +1,16 @@
 import { Vec3, type Entity } from 'playcanvas';
 
 import { hillOffsetM } from './bay-terrain';
+import { CRUISE_VISTAS } from './cruise-vistas';
 import { FREEWAY_101, FREEWAY_24, FREEWAY_280, FREEWAY_880, FREEWAY_I80 } from './world-config';
+
+export type AutopilotPreset = 'tour' | 'chill' | 'scenic';
+
+const PRESET_SPEED: Record<AutopilotPreset, number> = {
+  tour: 34,
+  chill: 11,
+  scenic: 18
+};
 
 export type CruisePathPoint = { x: number; z: number; y?: number };
 
@@ -44,14 +53,38 @@ export type AutopilotCruise = {
   loop: boolean;
 };
 
-export function createAutopilotCruise(speedMps = 32): AutopilotCruise {
+export function buildAutopilotScenicPath(): CruisePathPoint[] {
+  const path: CruisePathPoint[] = [];
+  for (const v of CRUISE_VISTAS) {
+    path.push({ x: v.x, z: v.z });
+  }
+  if (path.length) path.push({ ...path[0]! });
+  return path;
+}
+
+export function pathForAutopilotPreset(preset: AutopilotPreset): CruisePathPoint[] {
+  if (preset === 'scenic') return buildAutopilotScenicPath();
+  return buildAutopilotBayLoop();
+}
+
+export function createAutopilotCruise(speedMps = 32, path?: CruisePathPoint[]): AutopilotCruise {
   return {
-    path: buildAutopilotBayLoop(),
+    path: path ?? buildAutopilotBayLoop(),
     seg: 0,
     segT: 0,
     speedMps,
     loop: true
   };
+}
+
+export function createAutopilotCruisePreset(preset: AutopilotPreset): AutopilotCruise {
+  return createAutopilotCruise(PRESET_SPEED[preset], pathForAutopilotPreset(preset));
+}
+
+export function cycleAutopilotPreset(current: AutopilotPreset): AutopilotPreset {
+  const order: AutopilotPreset[] = ['chill', 'tour', 'scenic'];
+  const i = order.indexOf(current);
+  return order[(i + 1) % order.length]!;
 }
 
 export function autopilotMph(cruise: AutopilotCruise): number {

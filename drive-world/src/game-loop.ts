@@ -7,15 +7,21 @@ import {
   publishHud,
   registerFastTravel,
   registerSkipWaymo,
+  registerCycleAutopilotPreset,
+  getHudSnapshot,
+  registerSavePhotoCard,
   registerToggleAutopilot,
   registerToggleCamera,
-  registerTogglePhoto
+  registerTogglePhoto,
+  registerVistaCam,
+  registerWaymoReplay
 } from './game-bridge';
 import {
   loadProgress,
   resetProgress,
   setActiveVehicle,
   visitLandmark,
+  visitCruiseVista,
   chooseGarageCar,
   finishWaymoRide,
   getVehicleCustomization,
@@ -33,8 +39,21 @@ import {
   type SavedProgress
 } from './game-progress';
 import { bindDriveKeys, pollDriveInput } from './game-input';
-import { playLandmarkChime, playWaymoArrival, setMasterVolume, unlockAudio, updateEngineAudio } from './game-audio';
-import { loadSettings } from './game-settings';
+import {
+  playLandmarkChime,
+  playVistaChime,
+  playWaymoArrival,
+  setMasterVolume,
+  tickHeatSiren,
+  unlockAudio,
+  updateEngineAudio
+} from './game-audio';
+import { applyDriveCamera, CAMERA_CYCLE, cameraModeLabel } from './camera-profiles';
+import { appendJournal } from './cruise-journal';
+import { nearestCruiseVista, type CruiseVistaDef } from './cruise-vistas';
+import { loadSettings, saveSettings } from './game-settings';
+import { setMusicDistrict, unlockMusic } from './game-music';
+import { saveCruisePhotoCard } from './photo-share';
 import { districtAt, fogDistances, regionalFogStrength } from './regional-weather';
 import { COLLECTIBLES, FAST_TRAVEL, SCENIC_ROUTES, SPEED_TRAPS } from './world-extras';
 import { createPhotoCamera } from './photo-mode';
@@ -43,9 +62,11 @@ import { missionTextForPhase, wireGameUi } from './game-ui';
 import { DISTRICT_LABELS, LANDMARKS, VALLEJO_SAFEHOUSE } from './landmark-registry';
 import { nextUnvisitedLandmark } from './landmark-navigation';
 import {
-  createAutopilotCruise,
+  createAutopilotCruisePreset,
+  cycleAutopilotPreset,
   stepAutopilotCruise,
-  type AutopilotCruise
+  type AutopilotCruise,
+  type AutopilotPreset
 } from './autopilot-cruise';
 import {
   AUTOPILOT_VEHICLE_ID,
@@ -90,16 +111,21 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   const photoKeys = { fwd: false, back: false, left: false, right: false, up: false, down: false };
   const CALDECOTT = { x: 392, z: 265 };
   let autopilotActive = false;
-  let autopilot: AutopilotCruise = createAutopilotCruise(34);
+  let autopilot: AutopilotCruise = createAutopilotCruisePreset('tour');
   let rbTypeBeforeAutopilot: string | null = null;
   let cameraBeforeAutopilot: CameraMode | null = null;
+  let vistaLookTarget: CruiseVistaDef | null = null;
+  let cameraBeforeVista: CameraMode | null = null;
+  let waymoSightseeing: WaymoRide | null = null;
+  let sightseeing = false;
+  let lastDistrict: DistrictId | null = null;
 
   const stopAutopilot = (restoreCamera = true) => {
     if (!autopilotActive) return;
     autopilotActive = false;
     const ent = vehicle();
     const rb = ent?.rigidbody;
-    if (rb && rbTypeBeforeAutopilot) rb.type = rbTypeBeforeAutopilot;
+    if (rb && rbTypeBeforeAutopilot) rb.type = rbTypeBeforeAutopilot as 'dynamic' | 'kinematic' | 'static';
     rbTypeBeforeAutopilot = null;
     if (restoreCamera && cameraBeforeAutopilot) {
       cameraMode = cameraBeforeAutopilot;
@@ -116,7 +142,8 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     const ent = vehicle();
     if (!ent) return;
     if (!autopilotActive) {
-      autopilot = createAutopilotCruise(34);
+      const preset = loadSettings().autopilotPreset ?? 'tour';
+      autopilot = createAutopilotCruisePreset(preset);
       autopilotActive = true;
       cameraBeforeAutopilot = cameraMode;
       cameraMode = 'cockpit';
@@ -124,9 +151,9 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       const rb = ent.rigidbody;
       if (rb) {
         rbTypeBeforeAutopilot = rb.type;
-        rb.type = 'kinematic';
+        rb.type = 'kinematic' as const;
       }
-      ui.showToast('Night Cruise', 'Autopilot bay loop — press T for manual');
+      ui.showToast('Night Cruise', `${preset} autopilot — Y preset · T manual`);
       publishHud({ autopilotActive: true, cameraMode });
     } else {
       stopAutopilot(true);
@@ -145,6 +172,12 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     if (e.key === 'p' || e.key === 'P') togglePhoto();
     if (e.key === 't' || e.key === 'T') {
       if (!e.repeat) toggleAutopilot();
+    }
+    if (e.key === 'y' || e.key === 'Y') {
+      if (!e.repeat) cycleAutopilotPresetSetting();
+    }
+    if (e.key === 'v' || e.key === 'V') {
+      if (!e.repeat) toggleVistaCam();
     }
     if (photoMode) {
       if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') photoKeys.fwd = true;
@@ -244,6 +277,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     ui.showToast('You’re driving', 'Hit every beacon in a region to unlock that region’s car.');
     ui.setProgressSummary(progress);
     unlockAudio();
+    void unlockMusic();
   };
 
   const endWaymoRide = () => {
@@ -273,11 +307,41 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     publishHud({ ridingWaymo: true, phase: 'waymo_ride', progress });
   };
 
-  const cameraCycle: CameraMode[] = ['chase', 'cockpit', 'drone'];
+  const cycleAutopilotPresetSetting = () => {
+    const s = loadSettings();
+    const next = cycleAutopilotPreset(s.autopilotPreset ?? 'tour');
+    saveSettings({ ...s, autopilotPreset: next });
+    settings = loadSettings();
+    if (autopilotActive) {
+      autopilot = createAutopilotCruisePreset(next);
+    }
+    ui.showToast('Autopilot preset', next);
+    publishHud({ autopilotPreset: next, settings });
+  };
+
+  const toggleVistaCam = () => {
+    const ent = vehicle();
+    if (!ent || progress.phase !== 'home') return;
+    const pos = ent.getPosition();
+    const near = nearestCruiseVista(pos.x, pos.z);
+    if (!near) return;
+    if (cameraMode === 'vista') {
+      cameraMode = cameraBeforeVista ?? 'chase';
+      vistaLookTarget = null;
+      cameraBeforeVista = null;
+    } else {
+      cameraBeforeVista = cameraMode;
+      cameraMode = 'vista';
+      vistaLookTarget = near.vista;
+    }
+    progress = setCameraMode(progress, cameraMode);
+    publishHud({ cameraMode });
+  };
 
   const toggleCamera = () => {
-    const idx = cameraCycle.indexOf(cameraMode);
-    cameraMode = cameraCycle[(idx + 1) % cameraCycle.length];
+    const idx = CAMERA_CYCLE.indexOf(cameraMode);
+    cameraMode = CAMERA_CYCLE[(idx + 1) % CAMERA_CYCLE.length] ?? 'chase';
+    vistaLookTarget = null;
     progress = setCameraMode(progress, cameraMode);
     publishHud({ cameraMode });
   };
@@ -301,6 +365,51 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
 
   registerTogglePhoto(togglePhoto);
   registerToggleAutopilot(toggleAutopilot);
+  registerCycleAutopilotPreset(cycleAutopilotPresetSetting);
+  registerVistaCam(toggleVistaCam);
+
+  registerSavePhotoCard(() => {
+    const ent = vehicle();
+    if (!ent || !photoMode) return;
+    const pos = ent.getPosition();
+    const near = nearestCruiseVista(pos.x, pos.z);
+    const dist = districtAt(pos.x, pos.z);
+    const place =
+      near?.vista.name ??
+      nextUnvisitedLandmark(progress.visitedLandmarkIds, pos.x, pos.z)?.name ??
+      DISTRICT_LABELS[dist];
+    const vid = progress.activeVehicleId;
+    void saveCruisePhotoCard({
+      vehicleName: vid ? getVehicleSpec(vid).name : 'Cruiser',
+      mph: getHudSnapshot().mph,
+      placeLabel: place,
+      subtitle: near?.vista.tagline
+    });
+  });
+
+  const endWaymoSightseeing = () => {
+    waymoSightseeing?.destroy();
+    waymoSightseeing = null;
+    sightseeing = false;
+    const ent = vehicle();
+    if (ent) ent.enabled = true;
+    publishHud({ ridingWaymo: false });
+  };
+
+  const startWaymoSightseeing = () => {
+    if (progress.phase !== 'home' || !nearGarage || sightseeing || ridingWaymo) return;
+    const ent = vehicle();
+    if (!ent) return;
+    stopAutopilot(true);
+    ent.enabled = false;
+    sightseeing = true;
+    const path = [...buildWaymoRidePath()].reverse();
+    waymoSightseeing = spawnWaymoRide(app, path);
+    ui.showToast('Waymo memory', 'Passenger replay from safehouse — scenic loop');
+    publishHud({ ridingWaymo: true });
+  };
+
+  registerWaymoReplay(startWaymoSightseeing);
 
   registerFastTravel((district: DistrictId) => {
     if (!progress.unlockedRegionIds.includes(district) || !vehicle() || progress.phase !== 'home') return;
@@ -348,12 +457,6 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
 
   resumeFromSave();
 
-  const chaseOffset = new Vec3(0, 3.2, 7.5);
-  const cockpitOffset = new Vec3(0, 0.95, 0.15);
-  const droneHeight = 24;
-  const droneBack = 10;
-  const lookAhead = 12;
-  let droneCamPos = new Vec3();
   const camera = app.root.findByName('camera') as Entity | null;
   const bay = app.root.findByName('sf-bay') as Entity | null;
 
@@ -403,6 +506,42 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       return;
     }
 
+    if (sightseeing && waymoSightseeing) {
+      const still = waymoSightseeing.update(dt);
+      const pos = waymoSightseeing.root.getPosition();
+      const forward = waymoSightseeing.root.forward;
+      const passenger = waymoPassengerCameraOffset();
+      const target = new Vec3(
+        pos.x - forward.x * passenger.offset.z + forward.x * 0.15,
+        pos.y + passenger.offset.y,
+        pos.z - forward.z * passenger.offset.z
+      );
+      camera.setPosition(target);
+      const look = new Vec3(
+        pos.x + forward.x * passenger.lookAhead,
+        pos.y + 0.6,
+        pos.z + forward.z * passenger.lookAhead
+      );
+      camera.lookAt(look);
+      speedEl.textContent = `${waymoSightseeing.currentMph.toFixed(0)} mph · Waymo memory`;
+      publishHud({
+        playerX: pos.x,
+        playerZ: pos.z,
+        yaw: waymoSightseeing.root.getEulerAngles().y,
+        mph: waymoSightseeing.currentMph,
+        phase: progress.phase,
+        ridingWaymo: true,
+        progress,
+        nextLandmark: null,
+        cameraMode: 'cockpit',
+        waterPhase: waterT,
+        nearGarageReplay: nearGarage
+      });
+      updateEngineAudio(waymoSightseeing.currentMph, false);
+      if (!still) endWaymoSightseeing();
+      return;
+    }
+
     const ent = vehicle();
     if (!ent) return;
 
@@ -410,6 +549,10 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
 
     const posTrack = ent.getPosition();
     const district = districtAt(posTrack.x, posTrack.z);
+    if (district !== lastDistrict) {
+      lastDistrict = district;
+      setMusicDistrict(district);
+    }
     const fogStrength = regionalFogStrength(district);
     const fog = fogDistances(fogStrength, settings.fogQuality);
     app.scene.fogStart = fog.start;
@@ -478,32 +621,28 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   }
 
     const pos = ent.getPosition();
-    const forward = ent.forward;
-    const right = ent.right;
-    if (cameraMode === 'drone') {
-      const goal = new Vec3(
-        pos.x - forward.x * droneBack,
-        pos.y + droneHeight,
-        pos.z - forward.z * droneBack
-      );
-      droneCamPos.lerp(goal, Math.min(1, dt * 4.5));
-      camera.setPosition(droneCamPos);
-      const look = new Vec3(pos.x + forward.x * 6, pos.y + 0.6, pos.z + forward.z * 6);
-      camera.lookAt(look);
-    } else {
-      const offset = cameraMode === 'cockpit' ? cockpitOffset : chaseOffset;
-      const camBack = cameraMode === 'cockpit' ? 0 : offset.z;
-      const target = new Vec3(
-        pos.x - forward.x * camBack + right.x * offset.x,
-        pos.y + offset.y,
-        pos.z - forward.z * camBack + right.z * offset.x
-      );
-      camera.setPosition(target);
-      const lookDist = cameraMode === 'cockpit' ? 32 : lookAhead;
-      const look = new Vec3(pos.x + forward.x * lookDist, pos.y + 0.75, pos.z + forward.z * lookDist);
-      camera.lookAt(look);
-      droneCamPos.copy(target);
+    const vistaNear = nearestCruiseVista(pos.x, pos.z);
+    let activeCam = cameraMode;
+    if (
+      vistaNear &&
+      mph < 4 &&
+      !onAutopilot &&
+      !aerial &&
+      cameraMode !== 'vista' &&
+      cameraMode !== 'cockpit' &&
+      cameraMode !== 'drone'
+    ) {
+      activeCam = 'orbit';
     }
+    const vistaLook =
+      cameraMode === 'vista' && (vistaLookTarget ?? vistaNear?.vista)
+        ? {
+            x: (vistaLookTarget ?? vistaNear!.vista).lookAtX,
+            y: hillOffsetM((vistaLookTarget ?? vistaNear!.vista).lookAtX, (vistaLookTarget ?? vistaNear!.vista).lookAtZ) + 12,
+            z: (vistaLookTarget ?? vistaNear!.vista).lookAtZ
+          }
+        : null;
+    applyDriveCamera(camera, ent, activeCam, dt, vistaLook);
 
     if (!onAutopilot) {
       const vehScript = ent.script?.vehicle as { speed?: number; brakingVisual?: boolean } | undefined;
@@ -518,6 +657,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
 
     progress = heatDecay(progress, mph, dt);
     progress = heatFromSpeedTrap(progress, mph, pos.x, pos.z);
+    tickHeatSiren(progress.heatLevel ?? 0, dt);
     cloudSaveT += dt;
     if (cloudSaveT > 50 && progress.phase === 'home') {
       cloudSaveT = 0;
@@ -541,9 +681,15 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       waterPhase: waterT,
       photoMode: false,
       nearGarage,
+      nearGarageReplay: nearGarage,
       settings,
       flightMode: aerial,
-      autopilotActive: onAutopilot
+      autopilotActive: onAutopilot,
+      autopilotPreset: settings.autopilotPreset,
+      atVista: Boolean(vistaNear && mph < 14),
+      vistaName: vistaNear?.vista.name ?? null,
+      vistaPulse: waterT,
+      district: district ?? undefined
     });
 
     statsT += dt;
@@ -575,6 +721,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         const d = Math.hypot(pos.x - lm.x, pos.z - lm.z);
         if (d > lm.visitRadius) continue;
         progress = visitLandmark(progress, lm.id);
+        progress = appendJournal(progress, { kind: 'landmark', id: lm.id, label: lm.name });
         playLandmarkChime();
         ui.setProgressSummary(progress);
         ui.showToast('Landmark logged', lm.name);
@@ -587,6 +734,17 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         }
         ui.setProgressSummary(progress);
         if (nearGarage) refreshGarageUi();
+      }
+
+      if (vistaNear && mph < 18) {
+        const v = vistaNear.vista;
+        if (!progress.visitedVistaIds.includes(v.id)) {
+          progress = visitCruiseVista(progress, v.id);
+          progress = appendJournal(progress, { kind: 'vista', id: v.id, label: v.name });
+          playVistaChime();
+          ui.showToast('Vista logged', v.tagline);
+          ui.setProgressSummary(progress);
+        }
       }
 
       for (const c of COLLECTIBLES) {
@@ -632,6 +790,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         if (!pt) {
           const hadSky = progress.unlockedVehicleIds.includes('bonus-skyway-hover');
           progress = completeScenicRoute(progress, route.id);
+          progress = appendJournal(progress, { kind: 'scenic', id: route.id, label: route.name });
           progress = tryUnlockSkywayHover(progress);
           ui.showToast('Scenic route', route.name);
           if (!hadSky && progress.unlockedVehicleIds.includes('bonus-skyway-hover')) {
@@ -644,6 +803,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
           if ((progress.scenicProgress[route.id] ?? 0) >= route.points.length) {
             const hadSky = progress.unlockedVehicleIds.includes('bonus-skyway-hover');
             progress = completeScenicRoute(progress, route.id);
+            progress = appendJournal(progress, { kind: 'scenic', id: route.id, label: route.name });
             progress = tryUnlockSkywayHover(progress);
             ui.showToast('Scenic complete', route.name);
             if (!hadSky && progress.unlockedVehicleIds.includes('bonus-skyway-hover')) {
@@ -661,7 +821,10 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     publishHud({ settings });
   }) as EventListener);
 
-  window.addEventListener('pointerdown', () => unlockAudio(), { once: true });
+  window.addEventListener('pointerdown', () => {
+    unlockAudio();
+    void unlockMusic();
+  }, { once: true });
 
   return { get vehicle() { return player?.entity ?? null; }, progress };
 }

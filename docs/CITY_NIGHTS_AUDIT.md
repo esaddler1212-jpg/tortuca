@@ -45,13 +45,13 @@ Compared to *Forza Horizon*, *TDU*, *Need for Speed*, *Cruis’n* / arcade roame
 | Map / GPS voice | React minimap + nav hint |
 | Photo / social | Photo mode (local) |
 | Licensed cars | CC0 + homages |
-| Cloud save | No |
+| Cloud save | Sync key + Netlify Blobs |
 | Controller remap | Partial (gamepad + defaults) |
 | Mobile flight | Touch drive only on ground |
 
-**Shipped (post-audit wave):** mission board HUD, speed-trap heat meter, lazy GLB boot load + per-vehicle fetch, Caldecott tunnel fog/exposure fade, touch climb/sink for flight, Netlify Blobs cloud sync key, GitHub `city-nights` build workflow.
+**Shipped (cruise wave):** vistas + journal, multi-camera cruise, procedural + playlist music, photo cruise card, heat siren flavor, Night Coil autopilot presets (chill/tour/scenic), Waymo memory replay at garage, CI build, HUD code-split chunks.
 
-**Still optional:** full Tortuca Google-session cloud (cross-origin cookies), police chase AI, lazy code-split HUD.
+**Still optional:** full Tortuca Google-session cloud, police chase AI, user MP3 playlist content (drop files in `public/music/`).
 
 ## Cleanup backlog (engineering)
 
