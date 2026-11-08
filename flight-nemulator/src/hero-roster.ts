@@ -71,9 +71,9 @@ export const HERO_ROSTER: HeroSpec[] = [
   {
     id: 'emerald-pilot',
     codename: 'Emerald Pilot',
-    tagline: 'Will-powered constructs',
+    tagline: 'Hal Jordan — will-powered constructs',
     districtId: 'coast-city',
-    homeLabel: 'Watchtower Dock',
+    homeLabel: 'Coast Watchtower Dock',
     powers: ['ring'],
     flight: { cruiseKmh: 380, boostKmh: 2100, agility: 1.05, mass: 88 },
     energy: { staminaMax: 110, regenPerSec: 22, superCooldownSec: 18, primaryCooldownSec: 0.28 },
@@ -83,6 +83,57 @@ export const HERO_ROSTER: HeroSpec[] = [
       { id: 'hard', label: 'Hard-light shell', speedMul: 0.92, powerMul: 1.25, color: [0.15, 0.85, 0.55] }
     ],
     defaultFormId: 'marine',
+    aerial: 'ring'
+  },
+  {
+    id: 'jade-architect',
+    codename: 'Jade Architect',
+    tagline: 'John Stewart — structural lattice ring',
+    districtId: 'coast-city',
+    homeLabel: 'Sector Fabricator Bay',
+    powers: ['ring'],
+    flight: { cruiseKmh: 370, boostKmh: 2050, agility: 0.98, mass: 92 },
+    energy: { staminaMax: 115, regenPerSec: 21, superCooldownSec: 19, primaryCooldownSec: 0.3 },
+    smashRadius: 3.8,
+    forms: [
+      { id: 'architect', label: 'Architect', speedMul: 1, powerMul: 1.12, color: [0.04, 0.48, 0.22] },
+      { id: 'sniper', label: 'Sniper construct', speedMul: 0.95, powerMul: 1.28, color: [0.08, 0.35, 0.18] }
+    ],
+    defaultFormId: 'architect',
+    aerial: 'ring'
+  },
+  {
+    id: 'garnet-brawler',
+    codename: 'Garnet Brawler',
+    tagline: 'Guy Gardner — knuckle construct rush',
+    districtId: 'coast-city',
+    homeLabel: 'Sector Gym Ring',
+    powers: ['ring'],
+    flight: { cruiseKmh: 365, boostKmh: 1980, agility: 1.08, mass: 96 },
+    energy: { staminaMax: 105, regenPerSec: 24, superCooldownSec: 16, primaryCooldownSec: 0.22 },
+    smashRadius: 3.6,
+    forms: [
+      { id: 'brawler', label: 'Brawler', speedMul: 1.05, powerMul: 1.15, color: [0.12, 0.52, 0.2] },
+      { id: 'red-hot', label: 'Red-hot will', speedMul: 1.12, powerMul: 1.25, color: [0.72, 0.18, 0.12] }
+    ],
+    defaultFormId: 'brawler',
+    aerial: 'ring'
+  },
+  {
+    id: 'spectrum-artist',
+    codename: 'Spectrum Artist',
+    tagline: 'Kyle Rayner — artist ring imagination',
+    districtId: 'coast-city',
+    homeLabel: 'Studio Loft Bay',
+    powers: ['ring'],
+    flight: { cruiseKmh: 375, boostKmh: 2080, agility: 1.1, mass: 86 },
+    energy: { staminaMax: 112, regenPerSec: 23, superCooldownSec: 17, primaryCooldownSec: 0.26 },
+    smashRadius: 3.4,
+    forms: [
+      { id: 'artist', label: 'Artist', speedMul: 1, powerMul: 1.05, color: [0.06, 0.58, 0.28] },
+      { id: 'white', label: 'White-light echo', speedMul: 1.08, powerMul: 1.22, color: [0.92, 0.94, 0.96] }
+    ],
+    defaultFormId: 'artist',
     aerial: 'ring'
   },
   {
@@ -528,6 +579,40 @@ export const HERO_ROSTER: HeroSpec[] = [
     ],
     defaultFormId: 'feather',
     aerial: 'native'
+  },
+  {
+    id: 'golden-sentry',
+    codename: 'Golden Sentry',
+    tagline: 'Void-touched golden zenith',
+    districtId: 'watchtower-annex',
+    homeLabel: 'Helicarrier Crown',
+    powers: ['beam', 'telekinesis'],
+    flight: { cruiseKmh: 440, boostKmh: 2550, agility: 1.05, mass: 90 },
+    energy: { staminaMax: 148, regenPerSec: 26, superCooldownSec: 15, primaryCooldownSec: 0.28 },
+    smashRadius: 4.2,
+    forms: [
+      { id: 'hero', label: 'Golden hero', speedMul: 1, powerMul: 1.2, color: [0.92, 0.82, 0.35] },
+      { id: 'void', label: 'Void whisper', speedMul: 1.15, powerMul: 1.45, color: [0.12, 0.1, 0.14] }
+    ],
+    defaultFormId: 'hero',
+    aerial: 'native'
+  },
+  {
+    id: 'magnet-sovereign',
+    codename: 'Magnet Sovereign',
+    tagline: 'Magnetic field supremacy',
+    districtId: 'sokovia-memorial',
+    homeLabel: 'Sentinel Memorial',
+    powers: ['telekinesis', 'beam'],
+    flight: { cruiseKmh: 360, boostKmh: 2000, agility: 0.95, mass: 100 },
+    energy: { staminaMax: 130, regenPerSec: 22, superCooldownSec: 18, primaryCooldownSec: 0.3 },
+    smashRadius: 3.7,
+    forms: [
+      { id: 'helmet', label: 'Crimson helmet', speedMul: 1, powerMul: 1.1, color: [0.72, 0.12, 0.15] },
+      { id: 'master', label: 'Master of magnetism', speedMul: 0.95, powerMul: 1.3, color: [0.55, 0.15, 0.65] }
+    ],
+    defaultFormId: 'helmet',
+    aerial: 'magnet'
   }
 ];
 

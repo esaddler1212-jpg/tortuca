@@ -4,13 +4,18 @@ Homage codenames only. **Removed playables:** Hawkeye, Ant-Man, Captain Marvel, 
 
 Regenerate: `tsx scripts/audit-aerial-roster.mts` · X-Men research: [`FLIGHT_NEMULATOR_XMEN_RESEARCH.md`](./FLIGHT_NEMULATOR_XMEN_RESEARCH.md)
 
-## Playable heroes (28)
+## Playable heroes (33)
 
 | Codename | Mutates from | U |
 |----------|--------------|---|
 | Solar Apex | Superman | DC |
 | Solar Envoy | Supergirl | DC |
-| Emerald Pilot | Green Lantern | DC |
+| Emerald Pilot | Green Lantern (Hal Jordan) | DC |
+| Jade Architect | Green Lantern (John Stewart) | DC |
+| Garnet Brawler | Green Lantern (Guy Gardner) | DC |
+| Spectrum Artist | Green Lantern (Kyle Rayner) | DC |
+| Magnet Sovereign | Magneto | Marvel |
+| Golden Sentry | Sentry | Marvel |
 | Velocity Streak | The Flash | DC |
 | Shade Knight | Batman | DC |
 | Martian Strider | Martian Manhunter | DC |

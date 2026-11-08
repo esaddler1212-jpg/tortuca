@@ -9,7 +9,10 @@ export interface MutationMeta {
 
 export const HERO_MUTATIONS: Record<string, MutationMeta> = {
   'solar-apex': { mutatesFrom: 'Superman', universe: 'dc' },
-  'emerald-pilot': { mutatesFrom: 'Green Lantern', universe: 'dc' },
+  'emerald-pilot': { mutatesFrom: 'Green Lantern (Hal Jordan)', universe: 'dc' },
+  'jade-architect': { mutatesFrom: 'Green Lantern (John Stewart)', universe: 'dc' },
+  'garnet-brawler': { mutatesFrom: 'Green Lantern (Guy Gardner)', universe: 'dc' },
+  'spectrum-artist': { mutatesFrom: 'Green Lantern (Kyle Rayner)', universe: 'dc' },
   'tin-aviator': { mutatesFrom: 'Iron Man', universe: 'marvel' },
   'chrome-sage': { mutatesFrom: 'Vision', universe: 'marvel' },
   'storm-hammer': { mutatesFrom: 'Thor', universe: 'marvel' },
@@ -35,7 +38,9 @@ export const HERO_MUTATIONS: Record<string, MutationMeta> = {
   'sorcerer-apex': { mutatesFrom: 'Doctor Strange', universe: 'marvel' },
   'sky-tyrant': { mutatesFrom: 'Hawkman', universe: 'dc' },
   'phoenix-ember': { mutatesFrom: 'Jean Grey / Phoenix', universe: 'marvel' },
-  'wing-archon': { mutatesFrom: 'Angel / Archangel', universe: 'marvel' }
+  'wing-archon': { mutatesFrom: 'Angel / Archangel', universe: 'marvel' },
+  'golden-sentry': { mutatesFrom: 'Sentry', universe: 'marvel' },
+  'magnet-sovereign': { mutatesFrom: 'Magneto', universe: 'marvel' }
 };
 
 export const VILLAIN_MUTATIONS: Record<string, MutationMeta> = {
