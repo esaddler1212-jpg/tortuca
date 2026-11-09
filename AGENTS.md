@@ -39,6 +39,7 @@ This repo runs **Iris** (voice chief of staff), **eleven module specialists** (`
 - Do not embed third-party agent marketplaces (Voicebox, n8n flows, etc.) into the PWA unless requested — optional docs/links only.
 - Before opening a PR: `npm run test:os` (build, time, iris, research, HUD audit, cross-device audit, guardrails, flight-nemulator, gamedev-resources catalog).
 - **PlayCanvas asset index:** `gamedev-resources/` (Kavex, [public-apis](https://github.com/public-apis/public-apis), [game-engines](https://github.com/collections/game-engines), [Blockbench](https://github.com/JannisX11/blockbench)) — [`docs/GAMEDEV_RESOURCES.md`](docs/GAMEDEV_RESOURCES.md). Optional CC0 installs: `bash tools/gamedev-resources/install-free-packs.sh`.
+- **Game finish program:** [`docs/GAME_FINISH_PROGRAM.md`](docs/GAME_FINISH_PROGRAM.md). Pick a slice id (`cn-d01` … `bw-d10`). **Nightshift** → `drive-world/`; **Skyring** → `flight-nemulator/`. After the slice, run `npm run game-finish:report -- --agent nightshift|skyring --slice <id> --status done --summary "…"` and commit `shared/game-finish-status.json`. Iris reads progress on Alfred (Team → Game studio). No `consult_specialist` — status is in Right now.
 
 ## Testing
 
