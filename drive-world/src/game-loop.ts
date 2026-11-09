@@ -96,7 +96,8 @@ import {
   CAMERA_CYCLE,
   cameraModeLabel
 } from './camera-profiles';
-import { activeSprintLabel, freshSprintRuntime, tickLandmarkSprint } from './landmark-sprints';
+import { activeSprintLabel, freshSprintRuntime, LANDMARK_SPRINTS, tickLandmarkSprint } from './landmark-sprints';
+import { sprintLineProgress } from './sprint-line';
 import { chapterObjectivePin } from './mission-nav';
 import { tryUnlockCraftVehicles } from './craft-vehicle-unlocks';
 import { tryAwardDistrictMeetBadge, tryUnlockDistrictMeetVehicles } from './district-meets';
@@ -1439,7 +1440,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       if (sprintOut.progress !== progress) progress = sprintOut.progress;
       if (sprintOut.toast) {
         ui.showToast(sprintOut.toast.title, sprintOut.toast.body, 4800);
-        if (sprintOut.toast.title.includes('PB')) playVistaChime();
+        if (sprintOut.toast.title.includes('PB') || sprintOut.toast.title.includes('Ghost')) playVistaChime();
       }
 
       syncMissionProgress();
@@ -1473,6 +1474,14 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     } else if (taDef && taElapsed != null && taElapsed > 0) {
       const prog = Math.min(0.99, cpmRuntime.timeGateIndex / taDef.gates.length);
       ghostRivalLabel = ghostHudLabel(progress, 'time', taDef.id, prog, taElapsed);
+    } else if (sprintRuntime.sprintId) {
+      const sprint = LANDMARK_SPRINTS.find((s) => s.id === sprintRuntime.sprintId);
+      if (sprint?.ghostTape && sprintRuntime.startedMs != null) {
+        const elapsed = frameMs - sprintRuntime.startedMs;
+        const prog = sprintLineProgress(pos.x, pos.z, sprint.start, sprint.finish);
+        sampleGhostRun(prog, elapsed);
+        ghostRivalLabel = ghostHudLabel(progress, 'time', sprint.id, prog, elapsed);
+      }
     }
     publishHud({
       playerX: pos.x,
