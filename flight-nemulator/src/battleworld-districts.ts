@@ -27,6 +27,25 @@ export const UNIVERSE_RIM_RGB: Record<BattleworldUniverse, [number, number, numb
   golden: [0.85, 0.68, 0.22]
 };
 
+export const UNIVERSE_LABEL: Record<BattleworldUniverse, string> = {
+  marvel: 'Marvel rim',
+  dc: 'DC rim',
+  dbz: 'DBZ rim',
+  indie: 'Indie rim',
+  cyber: 'Cyber rim',
+  golden: 'Golden-age rim'
+};
+
+/** Ambient sky lift per universe (orbit read). */
+export const UNIVERSE_SKY_AMBIENT: Record<BattleworldUniverse, [number, number, number]> = {
+  marvel: [0.32, 0.14, 0.16],
+  dc: [0.14, 0.2, 0.38],
+  dbz: [0.38, 0.26, 0.1],
+  indie: [0.22, 0.18, 0.34],
+  cyber: [0.2, 0.22, 0.28],
+  golden: [0.34, 0.28, 0.12]
+};
+
 export const UNIVERSE_FOG_TINT: Record<BattleworldUniverse, [number, number, number]> = {
   marvel: [0.06, 0.03, 0.08],
   dc: [0.03, 0.05, 0.12],

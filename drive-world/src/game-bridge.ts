@@ -73,6 +73,12 @@ export type HudSnapshot = {
   flightPrompt?: { label: string; ready: boolean; detail?: string } | null;
   /** Cinematic flight in progress (0–1 fade to black between legs). */
   flightCinematic?: { label: string; fade: number } | null;
+  /** Bay-wide street rep 0–100 */
+  streetRepPercent?: number;
+  streetRepRankLabel?: string;
+  /** Current district rep when driving */
+  regionRepPercent?: number;
+  regionRepLabel?: string;
 };
 
 export type TouchDrive = {

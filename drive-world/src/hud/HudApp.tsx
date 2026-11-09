@@ -116,7 +116,7 @@ function HudDrawerTabs({ snap }: { snap: HudSnapshot }) {
         {tab === 'garage' && (
           <>
             {snap.garageInteriorCam ? <div className="sprint-armed">Garage interior cam</div> : null}
-            <RecordsPanel snap={snap} />
+            <RecordsPanel snap={snap} streetRep={snap.streetRepPercent} streetRank={snap.streetRepRankLabel} />
             <SafehousePanel snap={snap} />
           </>
         )}
@@ -231,7 +231,15 @@ function LandmarkPanel({ snap }: { snap: HudSnapshot }) {
   );
 }
 
-function RecordsPanel({ snap }: { snap: HudSnapshot }) {
+function RecordsPanel({
+  snap,
+  streetRep,
+  streetRank
+}: {
+  snap: HudSnapshot;
+  streetRep?: number;
+  streetRank?: string;
+}) {
   const p = snap.progress;
   if (!p) return null;
   const synced = syncVallejoMissionSteps(p);
@@ -246,6 +254,9 @@ function RecordsPanel({ snap }: { snap: HudSnapshot }) {
         <li>Landmarks {p.visitedLandmarkIds.length}</li>
         <li>Garage unlocks {p.unlockedVehicleIds.length}</li>
         <li>Regions {p.unlockedRegionIds.length} / 6</li>
+        <li>
+          Street rep {streetRep ?? 0}% · {streetRank ?? 'Rookie'}
+        </li>
         <li>Parking ★ {parkStars}</li>
         <li>Speed traps logged {traps}</li>
         <li>Heat peak {p.heatPeakEver?.toFixed(1) ?? '0'} / 5</li>
@@ -282,6 +293,23 @@ function StatsPanel({ snap }: { snap: HudSnapshot }) {
   return (
     <div className="stats-panel">
       Miles: {st.miles.toFixed(2)} · Top: {Math.round(st.topMph)} mph
+    </div>
+  );
+}
+
+function StreetRepMeter({ snap }: { snap: HudSnapshot }) {
+  if (snap.ridingWaymo || snap.photoMode || snap.phase !== 'home' || snap.flightMode) return null;
+  const rep = snap.streetRepPercent ?? 0;
+  const rank = snap.streetRepRankLabel ?? 'Rookie';
+  const region = snap.regionRepLabel;
+  return (
+    <div className="street-rep-meter" title="Street rep — region landmarks, tacos, unlocks">
+      <span className="street-rep-rank">{rank}</span>
+      <span className="street-rep-pct">{rep}% Bay</span>
+      {region ? <span className="street-rep-region">{region}</span> : null}
+      <div className="street-rep-bar">
+        <div className="street-rep-fill" style={{ width: `${rep}%` }} />
+      </div>
     </div>
   );
 }
@@ -695,6 +723,7 @@ export function HudApp() {
         <p className="flight-hint">Space/⤒ climb · Ctrl/⤓ sink · WASD · Shift boost</p>
       )}
       <RacingHud snap={snap} />
+      <StreetRepMeter snap={snap} />
       <HeatMeter snap={snap} />
       {snap.settings.fuelSimEnabled && snap.phase === 'home' && !snap.photoMode && (
         <div className="fuel-meter" aria-label="Fuel">

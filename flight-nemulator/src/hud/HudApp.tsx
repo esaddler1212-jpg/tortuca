@@ -104,6 +104,9 @@ export type GameHudSnapshot = {
   cutsceneSide?: 'hero' | 'foe' | 'narrator' | 'ally' | null;
   cutsceneQueued?: number;
   autosaveHint?: string | null;
+  districtUniverse?: string | null;
+  districtUniverseLabel?: string | null;
+  universeRimCss?: string | null;
 };
 
 function formatUsd(n: number): string {
@@ -146,6 +149,14 @@ export function HudApp() {
             </div>
           )}
           <div className="hud-tag">{snap.district}</div>
+          {snap.districtUniverseLabel && snap.universeRimCss && (
+            <div
+              className="hud-tag hud-universe-rim"
+              style={{ borderColor: snap.universeRimCss, boxShadow: `0 0 12px ${snap.universeRimCss}55` }}
+            >
+              {snap.districtUniverseLabel}
+            </div>
+          )}
         </div>
         <div className="hud-panel">
           <div>{snap.speedKmh} km/h</div>
