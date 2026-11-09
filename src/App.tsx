@@ -65,6 +65,7 @@ import { GlassModule, HudTabBar, MoreSheet, type TabBadge } from "./components/h
 import { hudGauges } from "../shared/hudGauges";
 import { HUD_MORE, HUD_TABS, moduleContextForIris, type HudModuleId } from "../shared/hudModules";
 import { teamOpsContextForAsk } from "../shared/irisTeamActivity";
+import { gameFinishForAskExtra } from "./lib/gameFinishContext";
 import { shopifyContextForIris } from "../shared/shopify";
 import { specialistById } from "../shared/irisTeam";
 import { useShopifyStore } from "./hooks/useShopifyStore";
@@ -547,6 +548,7 @@ export default function App() {
                             }),
                             shoppingContext(shoppingItems),
                             teamOpsContextForAsk(),
+                            gameFinishForAskExtra(),
                             shopifyContextForIris(shopifyStore),
                           ].filter(Boolean);
                         })(),

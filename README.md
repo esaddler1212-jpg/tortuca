@@ -57,7 +57,7 @@ Scrollable title cards → **City Nights** and **Battleworld** (bundled via `bui
 
 See [`vantage-games/README.md`](vantage-games/README.md) and [`docs/VANTAGE_GAMES_DEPLOY.md`](docs/VANTAGE_GAMES_DEPLOY.md).
 
-Production: **`vantagegames1`** — base directory **`vantage-games`** (not `drive-world`).
+Production: **`vantagegames1`** — base directory **`vantage-games`** (not `drive-world`). Finish slices: [`docs/GAME_FINISH_PROGRAM.md`](docs/GAME_FINISH_PROGRAM.md) (Nightshift / Skyring → Iris).
 
 ## License
 

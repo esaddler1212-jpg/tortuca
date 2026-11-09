@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "updatedAt": "2026-11-08T23:00:00.000Z",
+  "activeSlice": {
+    "nightshift": "cn-d01",
+    "skyring": "bw-d01"
+  },
+  "sliceState": {
+    "cn-d01": { "status": "active" },
+    "cn-d02": { "status": "pending" },
+    "cn-d03": { "status": "pending" },
+    "cn-d04": { "status": "pending" },
+    "cn-d05": { "status": "pending" },
+    "cn-d06": { "status": "pending" },
+    "cn-d07": { "status": "pending" },
+    "cn-d08": { "status": "pending" },
+    "cn-d09": { "status": "pending" },
+    "cn-d10": { "status": "pending" },
+    "bw-d01": { "status": "active" },
+    "bw-d02": { "status": "pending" },
+    "bw-d03": { "status": "pending" },
+    "bw-d04": { "status": "pending" },
+    "bw-d05": { "status": "pending" },
+    "bw-d06": { "status": "pending" },
+    "bw-d07": { "status": "pending" },
+    "bw-d08": { "status": "pending" },
+    "bw-d09": { "status": "pending" },
+    "bw-d10": { "status": "pending" }
+  },
+  "reports": []
+}
