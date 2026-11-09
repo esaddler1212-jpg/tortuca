@@ -268,4 +268,4 @@ html {
 .hud-callout { stroke-dasharray: 400; stroke-dashoffset: 400; animation: hud-callout-in 0.9s 0.2s ease-out forwards; }
 @keyframes hud-callout-in { to { stroke-dashoffset: 0; } }
 /* Leave room for the bottom tab bar + iPhone home bar. */
-.hud-with-tabbar { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+.hud-with-tabbar { padding-bottom: calc(140px + env(safe-area-inset-bottom)); }

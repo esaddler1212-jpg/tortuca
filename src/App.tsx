@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNow } from "./hooks/useNow";
 import { nextWakeDay } from "../shared/bedtime";
 import { dayKey, localHour, weekdayOfDay, zonedDateTime } from "../shared/timezone";
@@ -66,6 +66,7 @@ import { assessOvercommitment } from "./lib/overcommitment";
 import { HudHeader, type SystemStatus } from "./components/hud/HudHeader";
 import { CoreRing } from "./components/hud/CoreRing";
 import { HudCore, HudCoreCompact } from "./components/hud/HudCore";
+import { IrisDock } from "./components/hud/IrisDock";
 import { UpNextPanel, UrgentLine } from "./components/hud/HudHome";
 import { GlassModule, HudTabBar, MoreSheet, type TabBadge } from "./components/hud/HudNav";
 import { hudGauges, type GaugeId } from "../shared/hudGauges";
@@ -401,6 +402,17 @@ export default function App() {
   }, [leaveBy, todayTimeline, now, pulseUrgent, pulse, settings.timezone]);
 
   const [activePlanet, setActivePlanet] = useState<SolarPlanetId | null>(null);
+  // Is Iris's big ring on screen? If not, a small one floats above the tab bar.
+  const coreRef = useRef<HTMLDivElement>(null);
+  const [coreOnScreen, setCoreOnScreen] = useState(true);
+  useEffect(() => {
+    const el = coreRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    // Counts as on screen while at least a third of the ring is visible below the header.
+    const io = new IntersectionObserver(([e]) => setCoreOnScreen(e.isIntersecting), { threshold: 0.33, rootMargin: "-64px 0px -60px 0px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [activePlanet]);
   const [moreOpen, setMoreOpen] = useState(false);
 
   /** Open a module (tab, corner readout, More, or Iris's open_planet). */
@@ -721,11 +733,13 @@ export default function App() {
       <main className={`mx-auto px-4 py-4 space-y-4 hud-with-tabbar ${activePlanet ? "max-w-[1100px]" : "max-w-[560px]"}`}>
         {activePlanet ? (
           <>
+            <div ref={coreRef}>
             <HudCoreCompact
               core={coreRing}
               readout={gauges.find((g) => g.id === (activePlanet as GaugeId))?.value ?? (SOLAR_PLANETS.find((p) => p.id === activePlanet)?.label ?? "").toUpperCase()}
               alert={badges[activePlanet]?.alert}
             />
+            </div>
             <ConversationCaptions convo={convo} googleConnected={connected} />
             <GlassModule key={activePlanet} id={activePlanet} onClose={closeModule}>
               {renderPlanetModule(activePlanet)}
@@ -733,7 +747,9 @@ export default function App() {
           </>
         ) : (
           <>
-            <HudCore gauges={gauges} core={coreRing} onOpen={(id) => focusPlanet(id)} />
+            <div ref={coreRef}>
+              <HudCore gauges={gauges} core={coreRing} onOpen={(id) => focusPlanet(id)} />
+            </div>
             <ConversationCaptions convo={convo} googleConnected={connected} />
             <UrgentLine items={urgentItems} />
             <CommandBar
@@ -763,6 +779,8 @@ export default function App() {
         )}
       </main>
 
+      {/* Iris stays reachable when her ring is off-screen (modules, scrolled down). */}
+      <IrisDock convo={convo} visible={!coreOnScreen && !moreOpen} />
       <MoreSheet open={moreOpen} badges={badges} onPick={focusPlanet} onClose={() => setMoreOpen(false)} />
       <HudTabBar active={activePlanet} moreOpen={moreOpen} badges={badges} onTab={onTab} onMore={() => setMoreOpen((o) => !o)} />
 
