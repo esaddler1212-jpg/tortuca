@@ -94,5 +94,7 @@ export interface AlfredUserData {
   liveCommute?: { minutes: number; text?: string; fetchedAt: string };
   /** Brand channel registry + outbound drafts (see shared/channels.ts). */
   channels?: unknown;
+  /** Today's Vantage Point paper, delivered by the separate daily newspaper job (see shared/vantagePaper.ts). */
+  vantagePaper?: import("./vantagePaper").StoredVantagePaper;
   updatedAt: string;
 }

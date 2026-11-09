@@ -32,6 +32,8 @@ import * as Ex from "../shared/exercises.ts";
 import { buildFamilyPurposeWoodhouseNode } from "../netlify/functions/_family-purpose-woodhouse.ts";
 import { mergeBackups } from "../netlify/functions/_fp-backup.ts";
 import { readFileSync } from "node:fs";
+import { isVantagePaperEdition, isFreshVantagePaper } from "../shared/vantagePaper.ts";
+import { buildVantagePaperBrief } from "../src/lib/spokenBrief.ts";
 
 const TZ = "America/Los_Angeles";
 const settings = { ...DEFAULT_SETTINGS }; // wake 04:15 weekdays, 08:00 days off, 7.5h sleep
@@ -437,6 +439,40 @@ check(
 
 // Times on screen use the IRIS time zone, not the device's (iMac, travel).
 check("clock: event and leave-by times in IRIS time zone", [clockTime("2026-11-04T19:00:00Z", "America/Los_Angeles"), clockTime(new Date("2026-11-04T15:20:00Z"), "America/Los_Angeles"), clockTime("bad", TZ)], ["11:00 AM", "7:20 AM", ""]);
+
+// ── Vantage Point paper: delivered by the separate daily newspaper job, used
+// while fresh, falls back to Iris's own briefing otherwise.
+check("vantage paper: valid edition needs a real date", [isVantagePaperEdition({ date: "2026-11-09" }), isVantagePaperEdition({ date: "not-a-date" }), isVantagePaperEdition({}), isVantagePaperEdition(null), isVantagePaperEdition("2026-11-09")], [true, false, false, false, false]);
+
+const paperToday = { edition: { date: "2026-11-09", dateline: "Monday, November 9, 2026" }, url: "https://claude.ai/artifact/Krc9x2BhnadEb3SXbH4FvR", fetchedAt: "2026-11-09T14:00:00Z" };
+const paperYesterday = { ...paperToday, edition: { ...paperToday.edition, date: "2026-11-08" } };
+check("vantage paper: today's edition is fresh", isFreshVantagePaper(paperToday, TZ, new Date("2026-11-09T20:00:00Z")), true);
+check("vantage paper: yesterday's edition is stale", isFreshVantagePaper(paperYesterday, TZ, new Date("2026-11-09T20:00:00Z")), false);
+check("vantage paper: nothing stored is never fresh", isFreshVantagePaper(null, TZ, new Date("2026-11-09T20:00:00Z")), false);
+
+const fullPaper = {
+  url: "https://claude.ai/artifact/Krc9x2BhnadEb3SXbH4FvR",
+  fetchedAt: "2026-11-09T14:00:00Z",
+  edition: {
+    date: "2026-11-09",
+    dateline: "Monday, November 9, 2026",
+    day: { note: "A light day.", attention: [{ title: "Reply to Jordan" }, { title: "Field trip forms" }] },
+    lead: { kicker: "AI", headline: "Model labs race ahead", dek: "What it means for the next move." },
+    watching: "The jobs report Friday.",
+    frontier: [{ field: "Robotics", headline: "Humanoids get cheaper" }],
+    founder: { title: "North Star: lock the pilot site" },
+    tasks: [{ title: "Follow up with Jordan", status: "active" }, { title: "Draft the deck", status: "waiting" }],
+    idea: { title: "Process over outcome", book: "Atomic Habits" },
+    quote: { text: "Do the work.", author: "Someone Wise" },
+  },
+};
+const brief = buildVantagePaperBrief(fullPaper);
+check("vantage paper → brief: needs-attention leads", brief.lines[0], { label: "Needs attention", text: "Reply to Jordan · Field trip forms" });
+check("vantage paper → brief: carries the lead, frontier, founder, tasks, quote", brief.lines.map((l) => l.label), ["Needs attention", "Your day", "AI", "Worth watching", "Frontier Desk", "Founder Desk", "On your list", "Thought for the day", "Quote of the day"]);
+check("vantage paper → brief: spoken reads naturally, no raw bullets", /Here's today's Vantage Point, boss, Monday, November 9, 2026\. Needs attention: Reply to Jordan, Field trip forms\./.test(brief.spoken), true);
+
+const emptyPaper = { url: "https://claude.ai/artifact/Krc9x2BhnadEb3SXbH4FvR", fetchedAt: "2026-11-09T14:00:00Z", edition: { date: "2026-11-09" } };
+check("vantage paper → brief: quiet morning still reads fine", buildVantagePaperBrief(emptyPaper).lines, [{ label: "Needs attention", text: "Nothing needs you this morning." }]);
 
 if (failures) {
   console.error(`\n${failures} check(s) failed`);
