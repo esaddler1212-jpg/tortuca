@@ -1,6 +1,6 @@
 import { Color, type AppBase } from 'playcanvas';
 import type { BattleworldUniverse } from './battleworld';
-import { UNIVERSE_FOG_TINT } from './battleworld-districts';
+import { UNIVERSE_FOG_TINT, UNIVERSE_SKY_AMBIENT } from './battleworld-districts';
 import type { QualityTier } from './quality-tier';
 
 /** Poly Haven CC0 — remote equirectangular (no local install). */
@@ -43,6 +43,7 @@ export async function fetchBayWeatherMood(): Promise<{ cloud: number; wind: numb
 }
 
 let lastUniverseFog: BattleworldUniverse | null = null;
+let lastUniverseSky: BattleworldUniverse | null = null;
 
 /** Subtle fog tint when flying over a Marvel / DC / DBZ district. */
 export function applyBattleworldUniverseFog(app: AppBase, universe: BattleworldUniverse): void {
@@ -55,6 +56,20 @@ export function applyBattleworldUniverseFog(app: AppBase, universe: BattleworldU
     Math.min(1, base.g + g),
     Math.min(1, base.b + b)
   );
+}
+
+/** Sky + ambient tint when over a district (pairs with colored planet rim). */
+export function applyBattleworldUniverseSky(app: AppBase, universe: BattleworldUniverse): void {
+  if (lastUniverseSky === universe) return;
+  lastUniverseSky = universe;
+  const [r, g, b] = UNIVERSE_SKY_AMBIENT[universe];
+  const base = app.scene.ambientLight ?? new Color(0.28, 0.3, 0.38);
+  app.scene.ambientLight = new Color(
+    Math.min(1, base.r * 0.55 + r),
+    Math.min(1, base.g * 0.55 + g),
+    Math.min(1, base.b * 0.55 + b)
+  );
+  app.scene.exposure = universe === 'dbz' ? 1.12 : universe === 'dc' ? 1.02 : 1.08;
 }
 
 export function applyWeatherMood(app: AppBase, mood: { cloud: number; wind: number } | null): void {

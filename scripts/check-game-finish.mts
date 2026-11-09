@@ -8,6 +8,8 @@ import {
   gameFinishContextForAsk,
   type GameFinishStatusFile,
 } from "../shared/gameFinishProgram.ts";
+import { bayStreetRepPercent, regionRepPercent, streetRepRankFor } from "../drive-world/src/street-rep.ts";
+import type { SavedProgress } from "../drive-world/src/game-progress.ts";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const statusPath = path.join(root, "shared/game-finish-status.json");
@@ -33,5 +35,49 @@ const iris = gameFinishContextForAsk(status);
 ok("Iris line mentions Nightshift", iris.includes("Nightshift"));
 ok("Iris line mentions Skyring", iris.includes("Skyring"));
 ok("Iris line under length", iris.length < 1200);
+
+const stub: SavedProgress = {
+  version: 9,
+  phase: "home",
+  activeVehicleId: "starter-sedan",
+  unlockedVehicleIds: [],
+  visitedLandmarkIds: ["transamerica"],
+  tacoTrucksFound: ["sf"],
+  unlockedRegionIds: ["sf"],
+  safehouseReached: true,
+  customizations: {},
+  lastPose: null,
+  cameraMode: "chase",
+  collectedIds: [],
+  unlockedPaintIds: [],
+  speedTrapBests: {},
+  scenicCompleted: [],
+  scenicProgress: {},
+  vehicleStats: {},
+  heatLevel: 0,
+  heatPeakEver: 0,
+  visitedVistaIds: [],
+  journal: [],
+  homeSafehouseId: "vallejo-safehouse",
+  unlockedSafehouseIds: ["vallejo-safehouse"],
+  customSafehouses: [],
+  fuelLevel: 1,
+  parkingStars: {},
+  missionStepsCompleted: [],
+  cpmDriftBests: {},
+  cpmTimeAttackMs: {},
+  cpmDragBestET: null,
+  cpmGhostTapes: {},
+  landmarkSprintMs: {},
+  taxiCompletedIds: [],
+  dynoRunCount: 0,
+  meetBadges: [],
+  activeTaxiId: null,
+  tokyoLandmarkIds: [],
+  tokyoFlights: 0,
+  streetRepPeak: 0,
+};
+ok("street rep SF partial", regionRepPercent(stub, "sf") > 0 && regionRepPercent(stub, "sf") < 100);
+ok("street rep rank", streetRepRankFor(bayStreetRepPercent(stub)).label.length > 2);
 
 if (failed) process.exitCode = 1;

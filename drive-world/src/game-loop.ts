@@ -53,6 +53,7 @@ import {
   tryUnlockCompletedRegions,
   findTacoTruck,
   saveProgress,
+  consumeStreetRepRankToast,
   tryUnlockNightCoil,
   tryUnlockSkywayHover,
   saveLastPose,
@@ -136,6 +137,7 @@ import { dynoSheet } from './vehicle-dyno';
 import { bayRegionsGated, syncVallejoMissionSteps, VALLEJO_CHAPTER_STEPS } from './mission-chapters';
 import { missionTextForPhase, wireGameUi } from './game-ui';
 import { DISTRICT_LABELS, LANDMARKS } from './landmark-registry';
+import { bayStreetRepPercent, regionRepLabel, regionRepPercent, streetRepRankFor } from './street-rep';
 import {
   claimCustomSafehouse,
   ensureSafehouseUnlocks,
@@ -1545,7 +1547,18 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
               ready: false,
               detail: `Cars ${st.cars}/${st.carsTotal} · Regions ${st.regions}/${st.regionsTotal}`
             };
-      })()
+      })(),
+      streetRepPercent: progress.phase === 'home' ? bayStreetRepPercent(progress) : undefined,
+      streetRepRankLabel:
+        progress.phase === 'home' ? streetRepRankFor(bayStreetRepPercent(progress)).label : undefined,
+      regionRepPercent:
+        progress.phase === 'home' && district
+          ? regionRepPercent(progress, district)
+          : undefined,
+      regionRepLabel:
+        progress.phase === 'home' && district
+          ? regionRepLabel(district, regionRepPercent(progress, district))
+          : undefined
     });
 
     statsT += dt;
@@ -1591,6 +1604,11 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
             : `Bonus flight after every car (${st.cars}/${st.carsTotal}) + region (${st.regions}/${st.regionsTotal})`
         );
       } else if (!atGate) flightGateHintShown = false;
+    }
+
+    const rankToast = consumeStreetRepRankToast();
+    if (rankToast) {
+      ui.showToast('Street rank', rankToast.label, 5200);
     }
 
     if (progress.phase === 'home' && !inTokyo) {
