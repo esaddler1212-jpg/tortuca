@@ -1,11 +1,14 @@
 {
-  "version": 1,
+  "version": 3,
   "characters": [
-    { "id": "star-sentinel", "codename": "Star Sentinel" },
-    { "id": "circuit-ghost", "codename": "Circuit Ghost" }
+    { "id": "frost-monarch", "codename": "Frost Monarch" },
+    { "id": "cable-echo", "codename": "Cable Echo" },
+    { "id": "banshee-wail", "codename": "Banshee Wail" }
   ],
   "skins": [
     { "id": "tin-aviator-mk50", "heroId": "tin-aviator", "label": "Nanite gold" },
-    { "id": "ki-wanderer-ascended", "heroId": "ki-wanderer", "label": "Ascended aura" }
+    { "id": "ki-wanderer-ascended", "heroId": "ki-wanderer", "label": "Ascended aura" },
+    { "id": "frost-monarch-diamond", "heroId": "frost-monarch", "label": "Diamond queen" },
+    { "id": "phoenix-ember-corona", "heroId": "phoenix-ember", "label": "Corona flare" }
   ]
 }

@@ -1,0 +1,50 @@
+{
+  "catalogVersion": 1,
+  "upstream": "https://github.com/collections/game-engines",
+  "scrapedNote": "Official GitHub collection page; our browser stack is PlayCanvas (not always listed on the collection page).",
+  "recommendedForTortuca": [
+    {
+      "id": "playcanvas",
+      "repo": "playcanvas/engine",
+      "url": "https://github.com/playcanvas/engine",
+      "use": "drive-world, flight-nemulator",
+      "status": "active"
+    },
+    {
+      "id": "babylonjs",
+      "repo": "BabylonJS/Babylon.js",
+      "url": "https://github.com/BabylonJS/Babylon.js",
+      "use": "reference-comparison",
+      "status": "active"
+    },
+    {
+      "id": "threejs",
+      "repo": "mrdoob/three.js",
+      "url": "https://github.com/mrdoob/three.js",
+      "use": "reference-gltf",
+      "status": "active"
+    }
+  ],
+  "collectionRepos": [
+    { "repo": "4ian/GDevelop", "notes": "No-code + export; good for rapid prototypes" },
+    { "repo": "AtomicGameEngine/AtomicGameEngine", "notes": "C++ component engine" },
+    { "repo": "BabylonJS/Babylon.js", "notes": "WebGL/WebGPU; strong glTF" },
+    { "repo": "cocos2d/cocos2d-x", "notes": "2D/3D mobile" },
+    { "repo": "gameplay3d/gameplay", "notes": "Legacy 3D mobile" },
+    { "repo": "Gamua/Starling-Framework", "notes": "2D GPU Flash successor" },
+    { "repo": "godotengine/godot", "notes": "OSS Godot 4; export HTML5 possible" },
+    { "repo": "jMonkeyEngine/jmonkeyengine", "notes": "Java 3D" },
+    { "repo": "libgdx/libgdx", "notes": "Java cross-platform" },
+    { "repo": "melonjs/melonJS", "notes": "2D HTML5" },
+    { "repo": "methusalah/OpenRTS", "notes": "RTS framework" },
+    { "repo": "MonoGame/MonoGame", "notes": "XNA successor" },
+    { "repo": "phaserjs/phaser", "notes": "2D HTML5/WebGL" },
+    { "repo": "SFTtech/openage", "notes": "AOE-like OSS" },
+    { "repo": "spring/spring", "notes": "RTS engine" },
+    { "repo": "superpowers/superpowers-core", "notes": "Collaborative 2D/3D IDE" },
+    { "repo": "TorqueGameEngines/Torque2D", "notes": "2D" },
+    { "repo": "TorqueGameEngines/Torque3D", "notes": "3D" },
+    { "repo": "turbulenz/turbulenz_engine", "notes": "WebGL JS engine (reference)" },
+    { "repo": "urho3d/urho3d", "notes": "C++ lightweight 3D" }
+  ]
+}

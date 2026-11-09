@@ -1,5 +1,5 @@
 import { Entity, Vec3, type AppBase } from 'playcanvas';
-import type { HeroSpec } from './hero-roster';
+import type { HeroForm, HeroSpec, PowerKind } from './hero-roster';
 import type { DestructibleTag } from './build-city';
 import { carveCrater } from './destruction';
 import type { QualityTier } from './quality-tier';
@@ -10,6 +10,10 @@ export type EnemyDrone = {
   speed: number;
 };
 
+export function waveDroneCount(wave: number, wantedStars: number): number {
+  return 3 + Math.min(12, wave) + wantedStars * 2;
+}
+
 export function spawnWaveDrones(app: AppBase, root: Entity, origin: Vec3, count: number): EnemyDrone[] {
   const out: EnemyDrone[] = [];
   for (let i = 0; i < count; i++) {
@@ -18,7 +22,11 @@ export function spawnWaveDrones(app: AppBase, root: Entity, origin: Vec3, count:
     ent.setLocalPosition(origin.x + Math.cos(angle) * 80, origin.y + 40 + i * 3, origin.z + Math.sin(angle) * 80);
     ent.setLocalScale(3.5, 1.2, 3.5);
     root.addChild(ent);
-    out.push({ entity: ent, hp: 3, speed: 28 + Math.random() * 12 });
+    out.push({
+      entity: ent,
+      hp: 3 + Math.floor(count / 4),
+      speed: 28 + Math.random() * 12 + count * 0.35
+    });
   }
   return out;
 }
@@ -41,20 +49,65 @@ export function tickDrones(drones: EnemyDrone[], heroPos: Vec3, dt: number, root
   return kills;
 }
 
+export function activeKitPrimary(hero: HeroSpec, form?: HeroForm): PowerKind {
+  return form?.kitPrimary ?? hero.powers[0] ?? 'beam';
+}
+
+function primaryDamageForKind(p: PowerKind, powerMul: number, dmgMul = 1): number {
+  const base =
+    p === 'repulsor'
+      ? 2.2
+      : p === 'thunder'
+        ? 2.5
+        : p === 'ki'
+          ? 2.8
+          : p === 'ring'
+            ? 2
+            : p === 'web'
+              ? 1.2
+              : p === 'telekinesis'
+                ? 1.8
+                : 1.6;
+  return base * powerMul * dmgMul;
+}
+
+function primaryReachForKind(p: PowerKind, rangeMul = 1): number {
+  const base = p === 'web' ? 85 : p === 'ki' ? 150 : 120;
+  return base * rangeMul;
+}
+
+export function primaryStrikeParams(
+  hero: HeroSpec,
+  powerMul: number,
+  form?: HeroForm
+): { range: number; cone: number; dmg: number; primary: PowerKind } {
+  const primary = activeKitPrimary(hero, form);
+  const baseCone = primary === 'thunder' ? 42 : primary === 'repulsor' ? 28 : 25;
+  const cone = baseCone * (form?.coneMul ?? 1);
+  return {
+    range: primaryReachForKind(primary, form?.rangeMul ?? 1),
+    cone,
+    dmg: primaryDamageForKind(primary, powerMul, form?.dmgMul ?? 1),
+    primary
+  };
+}
+
+/** @deprecated use primaryStrikeParams + faction-npcs.damageNpcsInCone */
 export function firePrimary(
   hero: HeroSpec,
   heroPos: Vec3,
   aim: Vec3,
-  drones: EnemyDrone[]
+  drones: EnemyDrone[],
+  powerMul: number
 ): number {
   let hits = 0;
-  const range = 120;
+  const { range, cone, dmg } = primaryStrikeParams(hero, powerMul);
   for (const d of drones) {
     const p = d.entity.getPosition();
-  const dist = new Vec3(p.x - aim.x, p.y - aim.y, p.z - aim.z).length();
+    const dist = new Vec3(p.x - aim.x, p.y - aim.y, p.z - aim.z).length();
     const toDrone = new Vec3(p.x - heroPos.x, p.y - heroPos.y, p.z - heroPos.z).length();
-    if (toDrone < range && dist < 25) {
-      d.hp -= hero.powers.includes('repulsor') ? 2 : 1;
+    if (toDrone < range && dist < cone) {
+      d.hp -= dmg;
       hits++;
     }
   }
@@ -69,7 +122,7 @@ export function throwProp(
   let nearest: DestructibleTag | null = null;
   let nd = Infinity;
   for (const tag of tags) {
-    if (!tag.intact) continue;
+    if (!tag.intact || tag.immune) continue;
     const p = tag.entity.getPosition();
     const d = new Vec3(p.x - heroPos.x, p.y - heroPos.y, p.z - heroPos.z).length();
     if (d < 40 && d < nd) {

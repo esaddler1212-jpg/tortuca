@@ -70,7 +70,7 @@ export function checkHeroSmash(
   if (speedKmh < 80) return { costUsd: 0, count: 0 };
   const r2 = radius * radius;
   for (const tag of tags) {
-    if (!tag.intact) continue;
+    if (!tag.intact || tag.immune) continue;
     const p = tag.entity.getPosition();
     const dx = p.x - heroPos.x;
     const dy = p.y - heroPos.y;
@@ -97,7 +97,7 @@ export function carveCrater(
   let count = 0;
   const r2 = radius * radius;
   for (const tag of tags) {
-    if (!tag.intact) continue;
+    if (!tag.intact || tag.immune) continue;
     const p = tag.entity.getPosition();
     const dx = p.x - aim.x;
     const dz = p.z - aim.z;

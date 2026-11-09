@@ -84,9 +84,15 @@
 
     <script>
       (function () {
-        if (!/\/city-nights(\/|$)/.test(location.pathname)) return;
+        var p = location.pathname;
+        var hub = /\/console\/city-nights(\/|$)/.test(p)
+          ? '/console/'
+          : /\/city-nights(\/|$)/.test(p)
+            ? '../'
+            : '';
+        if (!hub) return;
         var a = document.createElement('a');
-        a.href = '../';
+        a.href = hub;
         a.textContent = '◯ Console';
         a.setAttribute('aria-label', 'Back to Tortuca Console');
         a.style.cssText =

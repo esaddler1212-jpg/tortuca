@@ -308,7 +308,7 @@ export function buildMissionBoard(
         fleet >= 8
           ? 'Fast family fleet complete — fly home from Haneda when ready'
           : synced.tokyoFlights === 0
-            ? 'SFO gate is open — stop on the pink pad, press F'
+            ? 'SFO gate is open — stop on the orange pad, press F'
             : 'Each landmark unlocks the next FF tribute ride (fan tribute)'
     });
   }

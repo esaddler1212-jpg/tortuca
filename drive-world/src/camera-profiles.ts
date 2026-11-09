@@ -131,7 +131,7 @@ const profiles: Record<CameraMode, CameraProfile> = {
 };
 
 let orbitAngle = 0;
-let smoothPos = new Vec3();
+const smoothPos = new Vec3();
 
 export function cameraProfile(mode: CameraMode): CameraProfile {
   return profiles[mode] ?? profiles.chase;

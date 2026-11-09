@@ -10,6 +10,7 @@ import {
   type AppBase
 } from 'playcanvas';
 import { DISTRICTS, WORLD_HALF_M, type DistrictSpec } from './districts';
+import type { QualityTier } from './quality-tier';
 
 export type DestructibleTag = {
   entity: Entity;
@@ -18,6 +19,12 @@ export type DestructibleTag = {
   w: number;
   h: number;
   d: number;
+  /** Home bases and landmarks — ram does not demolish */
+  immune?: boolean;
+};
+
+export type BuildCityOptions = {
+  tier: QualityTier;
 };
 
 const destructibles: DestructibleTag[] = [];
@@ -76,8 +83,26 @@ function districtAt(x: number, z: number): DistrictSpec | null {
   return null;
 }
 
-export function buildMetropolis(app: AppBase, root: Entity): void {
+export function districtIdAtPosition(x: number, z: number): string | null {
+  return districtAt(x, z)?.id ?? null;
+}
+
+function gridStep(tier: QualityTier): number {
+  if (tier === 'low') return 160;
+  if (tier === 'high') return 78;
+  return 110;
+}
+
+function skipChance(tier: QualityTier): number {
+  if (tier === 'low') return 0.38;
+  if (tier === 'high') return 0.16;
+  return 0.22;
+}
+
+export function buildMetropolis(app: AppBase, root: Entity, opts: BuildCityOptions): void {
   destructibles.length = 0;
+  const step = gridStep(opts.tier);
+  const skipBelow = skipChance(opts.tier);
 
   const ground = new Entity('ground');
   ground.setLocalScale(WORLD_HALF_M * 2, 1, WORLD_HALF_M * 2);
@@ -89,13 +114,13 @@ export function buildMetropolis(app: AppBase, root: Entity): void {
   ground.addComponent('render', { meshInstances: [new MeshInstance(gMesh, gMat)] });
   root.addChild(ground);
 
-  const step = 55;
   for (let x = -WORLD_HALF_M + step; x < WORLD_HALF_M; x += step) {
     for (let z = -WORLD_HALF_M + step; z < WORLD_HALF_M; z += step) {
       const dist = districtAt(x, z);
       const mul = dist?.skylineMul ?? 0.65;
       const r = hash2(x, z);
-      if (r < 0.22) continue;
+      if (!dist && r < 0.68) continue;
+      if (dist && r < skipBelow) continue;
       const w = 18 + r * 22;
       const h = (14 + hash2(z, x) * 90) * mul;
       const d = 16 + hash2(x + z, x - z) * 20;
@@ -123,21 +148,39 @@ export function buildMetropolis(app: AppBase, root: Entity): void {
     home.setLocalPosition(d.center.x, towerH / 2, d.center.z);
     home.setLocalScale(40, towerH, 40);
     const hm = new StandardMaterial();
-    hm.emissive = new Color(d.accent[0] * 0.4, d.accent[1] * 0.4, d.accent[2] * 0.4);
+    hm.emissive = new Color(d.accent[0] * 0.55, d.accent[1] * 0.55, d.accent[2] * 0.55);
     hm.diffuse = new Color(d.accent[0], d.accent[1], d.accent[2]);
     hm.update();
     const mesh = makeBoxMesh(app, 1, 1, 1);
     home.addComponent('render', { meshInstances: [new MeshInstance(mesh, hm)] });
     root.addChild(home);
-    destructibles.push({
-      entity: home,
-      costUsd: 2_500_000,
-      intact: true,
-      w: 40,
-      h: towerH,
-      d: 40
-    });
+
+    const pad = new Entity(`pad-${d.id}`);
+    pad.setLocalPosition(d.center.x, 0.4, d.center.z + 34);
+    pad.setLocalScale(52, 0.35, 52);
+    const pm = new StandardMaterial();
+    pm.emissive = new Color(d.accent[0] * 0.25, d.accent[1] * 0.25, d.accent[2] * 0.25);
+    pm.diffuse = new Color(0.15, 0.17, 0.2);
+    pm.update();
+    pad.addComponent('render', { meshInstances: [new MeshInstance(makeBoxMesh(app, 1, 1, 1), pm)] });
+    root.addChild(pad);
+
+    if (d.id === 'gotham-nights') {
+      const cave = new Entity('cave-mouth');
+      cave.setLocalPosition(d.center.x - 55, 12, d.center.z - 40);
+      cave.setLocalScale(36, 22, 28);
+      const cm = new StandardMaterial();
+      cm.diffuse = new Color(0.04, 0.05, 0.08);
+      cm.emissive = new Color(0.02, 0.05, 0.12);
+      cm.update();
+      cave.addComponent('render', { meshInstances: [new MeshInstance(makeBoxMesh(app, 1, 1, 1), cm)] });
+      root.addChild(cave);
+    }
   }
+}
+
+export function districtCenters(): { x: number; z: number; label: string }[] {
+  return DISTRICTS.map((d) => ({ x: d.center.x, z: d.center.z, label: d.label }));
 }
 
 export function spawnSimpleCars(app: AppBase, root: Entity, count: number): Entity[] {
