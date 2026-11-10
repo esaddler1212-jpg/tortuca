@@ -10,6 +10,8 @@ import {
 } from "../shared/gameFinishProgram.ts";
 import { bayStreetRepPercent, regionRepPercent, streetRepRankFor } from "../drive-world/src/street-rep.ts";
 import type { SavedProgress } from "../drive-world/src/game-progress.ts";
+import { BOOST_FOV } from "../drive-world/src/nitro-zone-feel.ts";
+import { BATTLEWORLD_CHAPTER_CHAIN_1_3 } from "../flight-nemulator/src/battleworld-chapters.ts";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const statusPath = path.join(root, "shared/game-finish-status.json");
@@ -79,5 +81,11 @@ const stub: SavedProgress = {
 };
 ok("street rep SF partial", regionRepPercent(stub, "sf") > 0 && regionRepPercent(stub, "sf") < 100);
 ok("street rep rank", streetRepRankFor(bayStreetRepPercent(stub)).label.length > 2);
+
+ok("lush nitro fov punch", BOOST_FOV.lush > BOOST_FOV.balanced);
+ok(
+  "battleworld chapters 1-3 chain",
+  BATTLEWORLD_CHAPTER_CHAIN_1_3.join(",") === "intro,territory,stones"
+);
 
 if (failed) process.exitCode = 1;

@@ -132,7 +132,7 @@ import {
   tickDragStrip,
   tickTimeAttack
 } from './cpm-scoring';
-import { applyCameraFovBoost, pulseVehicleUnderglow } from './drive-feel';
+import { applyNitroZoneFeel, nitroZoneActive } from './nitro-zone-feel';
 import { freshTaxiRuntime, tickTaxiContract } from './cpm-taxi';
 import { dynoSheet } from './vehicle-dyno';
 import { bayRegionsGated, syncVallejoMissionSteps, VALLEJO_CHAPTER_STEPS } from './mission-chapters';
@@ -1144,8 +1144,14 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         else nitroCharge = Math.min(1, nitroCharge + dt * (mph > 28 ? 0.2 : 0.11));
         if (nitroBoosting && !wasNitroBoosting) hapticNitro();
         wasNitroBoosting = nitroBoosting;
-        pulseVehicleUnderglow(ent, nitroBoosting);
-        applyCameraFovBoost(camera, nitroBoosting, dt);
+        applyNitroZoneFeel(
+          app,
+          camera,
+          ent,
+          nitroBoosting,
+          dt,
+          settings.bayQualityPreset ?? 'balanced'
+        );
       } else if (drive.nitro && nitroCharge > 0.04) {
         nitroBoosting = true;
         if (!wasNitroBoosting) hapticNitro();
@@ -1526,6 +1532,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       storefrontStripLabel: strip ? `${strip.label} — ${strip.shops[0] ?? 'shops'}` : null,
       nitroPercent: Math.round(nitroCharge * 100),
       nitroBoosting,
+      nitroZoneActive: nitroZoneActive(settings.bayQualityPreset ?? 'balanced', nitroBoosting),
       driftScore: progress.phase === 'home' ? cpmRuntime.driftScore : 0,
       driftGoal,
       driftPadName: driftPad?.name ?? null,

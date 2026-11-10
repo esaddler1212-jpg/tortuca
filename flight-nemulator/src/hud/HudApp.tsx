@@ -98,6 +98,8 @@ export type GameHudSnapshot = {
   villainRunwayHint?: string | null;
   chapterHint?: string | null;
   chapterChip?: string | null;
+  chapterChainChip?: string | null;
+  chapterChainObjective?: string | null;
   cutsceneActive?: boolean;
   cutsceneSpeaker?: string | null;
   cutsceneText?: string | null;
@@ -255,6 +257,14 @@ export function HudApp() {
           </p>
         )}
         {snap.villainRunwayHint && <p className="hud-tag hud-hint">{snap.villainRunwayHint}</p>}
+        {snap.chapterChainChip && (
+          <p className="hud-tag hud-lattice-chip" title="Chapters 1–3 chain">
+            Story {snap.chapterChainChip}
+          </p>
+        )}
+        {snap.chapterChainObjective && (
+          <p className="hud-tag hud-hint hud-chapter-chain">{snap.chapterChainObjective}</p>
+        )}
         {snap.chapterChip && (
           <p className="hud-tag hud-lattice-chip" title="Battleworld chapter ladder">
             Chapters {snap.chapterChip}

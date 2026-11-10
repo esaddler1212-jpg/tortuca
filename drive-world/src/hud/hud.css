@@ -312,6 +312,12 @@
   border-color: rgba(255, 120, 60, 0.5);
 }
 
+.race-strip.nitro.nitro-zone {
+  border-color: rgba(180, 100, 255, 0.75);
+  box-shadow: 0 0 18px rgba(140, 80, 255, 0.35);
+  color: #f0e8ff;
+}
+
 .race-strip.drag-tree {
   font-size: 1.45rem;
   font-weight: 700;

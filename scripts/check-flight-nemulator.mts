@@ -100,6 +100,12 @@ const arcs = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-battleworld
 });
 if (arcs.status !== 0) process.exit(arcs.status ?? 1);
 
+const chapters = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-battleworld-chapters.mts')], {
+  cwd: root,
+  stdio: 'inherit'
+});
+if (chapters.status !== 0) process.exit(chapters.status ?? 1);
+
 const infinity = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-infinity-stones.mts')], {
   cwd: root,
   stdio: 'inherit'
