@@ -69,6 +69,9 @@ import { gameFinishForAskExtra } from "./lib/gameFinishContext";
 import { shopifyContextForIris } from "../shared/shopify";
 import { specialistById } from "../shared/irisTeam";
 import { useShopifyStore } from "./hooks/useShopifyStore";
+import { useTierA } from "./hooks/useTierA";
+import { TierAPanel } from "./components/TierAPanel";
+import { tierAContextForIris } from "../shared/tierAOps";
 import {
   LazyBusinessResearcherPanel,
   LazyChannelsPanel,
@@ -105,6 +108,7 @@ export default function App() {
   const { todos, pending, done, add, toggle, setTodos } = useTodos();
   const { connected, accountEmail, connect, disconnect, connectionError } = useGoogleIntegration();
   const channelAgent = useChannels(accountEmail);
+  const { tierA, patchTierA } = useTierA();
   const { allEvents } = useSchedule(connected);
   const { messages, unread, loading: emailsLoading, error: emailsError, refresh: refreshEmails } = useEmails(connected);
   const { snapshot: rawWoodhouse, loading: woodhouseLoading, error: woodhouseError } = useWoodhouse();
@@ -550,6 +554,7 @@ export default function App() {
                             teamOpsContextForAsk(),
                             gameFinishForAskExtra(),
                             shopifyContextForIris(shopifyStore),
+                            tierAContextForIris(tierA),
                           ].filter(Boolean);
                         })(),
                       }),
@@ -724,6 +729,12 @@ export default function App() {
               // Things that need you sit above the list; everything else goes below it.
               afterGreeting={
                 <>
+                  <TierAPanel
+                    tierA={tierA}
+                    patchTierA={patchTierA}
+                    timeZone={settings.timezone}
+                    onOpenChannels={() => focusModule("channels")}
+                  />
                   {isVantageMode(mode) && <VantageBriefingPanel lines={vantage.lines} spoken={vantage.spoken} />}
                   {overcommitment && <OvercommitmentBanner warning={overcommitment} />}
                   {showWindDown && <WindDownBanner bedtime={bedtime} timeZone={settings.timezone} />}
