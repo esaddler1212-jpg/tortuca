@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-09T00:31:55.896Z",
+  "updatedAt": "2026-11-09T14:24:56.093Z",
   "activeSlice": {
-    "nightshift": "cn-d02",
-    "skyring": "bw-d02"
+    "nightshift": "cn-d03",
+    "skyring": "bw-d03"
   },
   "sliceState": {
     "cn-d01": {
@@ -12,10 +12,12 @@
       "note": "Street rep meter: Bay %, ranks, HUD bar, save peak"
     },
     "cn-d02": {
-      "status": "active"
+      "status": "done",
+      "completedAt": "2026-11-09T14:24:55.892Z",
+      "note": "I-80 ghost sprint: line progress, rival HUD, PB tape + Ghost rival beaten toast"
     },
     "cn-d03": {
-      "status": "pending"
+      "status": "active"
     },
     "cn-d04": {
       "status": "pending"
@@ -44,10 +46,12 @@
       "note": "Universe sky ambient + HUD rim chip per district"
     },
     "bw-d02": {
-      "status": "active"
+      "status": "done",
+      "completedAt": "2026-11-09T14:24:56.092Z",
+      "note": "solar-apex.glb hero mesh via build-hero-glbs + path override"
     },
     "bw-d03": {
-      "status": "pending"
+      "status": "active"
     },
     "bw-d04": {
       "status": "pending"
@@ -72,6 +76,18 @@
     }
   },
   "reports": [
+    {
+      "agent": "skyring",
+      "sliceId": "bw-d02",
+      "at": "2026-11-09T14:24:56.093Z",
+      "summary": "solar-apex.glb hero mesh via build-hero-glbs + path override"
+    },
+    {
+      "agent": "nightshift",
+      "sliceId": "cn-d02",
+      "at": "2026-11-09T14:24:55.892Z",
+      "summary": "I-80 ghost sprint: line progress, rival HUD, PB tape + Ghost rival beaten toast"
+    },
     {
       "agent": "skyring",
       "sliceId": "bw-d01",
