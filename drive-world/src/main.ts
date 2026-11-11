@@ -36,7 +36,7 @@ import { applyFrameCap, applyResolutionScale, installRenderCap } from './console
 import { loadSettings, type GameSettings } from './game-settings';
 import { setMasterVolume, setSfxVolume } from './game-audio';
 import { tryMergeCloudOnBoot } from './game-cloud-save';
-import { preloadBootVehicleModels } from './vehicle-gltf';
+import { preloadAllVehicleModels, preloadBootVehicleModels, preloadGarageStarterModels } from './vehicle-gltf';
 import { mountReactHud } from './hud/mount';
 import { NIGHT_AMBIENT, NIGHT_SKY } from './night-palette';
 import { WORLD_HALF_M } from './world-config';
@@ -126,9 +126,13 @@ try {
 }
 try {
   await preloadBootVehicleModels(app);
+  await preloadGarageStarterModels(app);
 } catch (err) {
   console.warn('[city-nights] Boot vehicle models failed to preload; block fallback only.', err);
 }
+void preloadAllVehicleModels(app).catch(() => {
+  console.warn('[city-nights] Background vehicle preload incomplete.');
+});
 
 buildDrivingWorld(app);
 

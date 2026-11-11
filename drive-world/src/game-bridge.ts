@@ -133,6 +133,7 @@ let claimSafehouseHandler: ((name: string) => void) | null = null;
 let startTaxiHandler: ((contractId: string) => void) | null = null;
 let dynoPullHandler: (() => void) | null = null;
 let boardFlightHandler: (() => void) | null = null;
+let vehicleSwapHandler: ((vehicleId: string) => void) | null = null;
 
 let touchDrive: TouchDrive = {
   up: false,
@@ -320,4 +321,12 @@ export function registerBoardFlight(fn: () => void): void {
 
 export function requestBoardFlight(): void {
   boardFlightHandler?.();
+}
+
+export function registerVehicleSwap(fn: (vehicleId: string) => void): void {
+  vehicleSwapHandler = fn;
+}
+
+export function requestVehicleSwap(vehicleId: string): void {
+  vehicleSwapHandler?.(vehicleId);
 }

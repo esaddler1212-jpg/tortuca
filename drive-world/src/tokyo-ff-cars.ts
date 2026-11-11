@@ -2,7 +2,10 @@
  * Tokyo bonus rides — Fast & Furious / Tokyo Drift fan tributes (not affiliated).
  * One car unlocks per Tokyo landmark; capstone at Odaiba.
  */
+import type { SavedProgress } from './game-progress';
+
 export const TOKYO_FF_GARAGE_LABEL = 'Tokyo · Fast & Furious garage';
+export const TOKYO_MINIMAP_TITLE = 'Tokyo · FF bonus map';
 
 export const TOKYO_LANDMARK_VEHICLE: Record<string, string> = {
   'tk-shibuya': 'tokyo-drift-monarch',
@@ -24,6 +27,10 @@ export function isTokyoBonusVehicle(id: string): boolean {
 
 export function tokyoVehicleForLandmark(landmarkId: string): string | null {
   return TOKYO_LANDMARK_VEHICLE[landmarkId] ?? null;
+}
+
+export function tokyoFleetUnlockedCount(progress: SavedProgress): number {
+  return ALL_TOKYO_VEHICLE_IDS.filter((id) => progress.unlockedVehicleIds.includes(id)).length;
 }
 
 /** F&F palette for Daikoku PA props (diffuse, emissive, intensity). */

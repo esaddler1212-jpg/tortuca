@@ -1,3 +1,4 @@
+import { tokyoFleetUnlockedCount } from './tokyo-ff-cars';
 import { TOKYO_LANDMARKS, tokyoUnlockStatus } from './tokyo-map';
 import {
   AUTOPILOT_VEHICLE_ID,
@@ -324,16 +325,17 @@ export function buildMissionBoard(
     });
   } else {
     const logged = synced.tokyoLandmarkIds.length;
+    const fleet = tokyoFleetUnlockedCount(synced);
     lines.push({
       id: 'tokyo-landmarks',
-      label: `Tokyo landmarks ${logged}/${TOKYO_LANDMARKS.length}`,
-      done: logged >= TOKYO_LANDMARKS.length,
+      label: `Tokyo FF fleet ${fleet}/8 · landmarks ${logged}/${TOKYO_LANDMARKS.length}`,
+      done: fleet >= 8 && logged >= TOKYO_LANDMARKS.length,
       hint:
-        logged >= TOKYO_LANDMARKS.length
-          ? 'Fast family fleet complete — Shuto Night Runner ready'
+        fleet >= 8
+          ? 'Fast family fleet complete — fly home from Haneda when ready'
           : synced.tokyoFlights === 0
-            ? 'SFO gate is open — stop on the pink pad, press F'
-            : 'Each Tokyo landmark unlocks one FF tribute ride'
+            ? 'SFO gate is open — stop on the orange pad, press F'
+            : 'Each landmark unlocks the next FF tribute ride (fan tribute)'
     });
   }
 

@@ -8,9 +8,13 @@
   flex-direction: column;
   align-items: flex-end;
   gap: 0.5rem;
-  max-width: 200px;
+  max-width: 220px;
   color: #e8f4ff;
   font-size: 0.75rem;
+}
+
+.react-hud--map-open {
+  max-width: min(300px, 92vw);
 }
 
 .react-hud button {
@@ -141,6 +145,99 @@
 .minimap-ghost-circuit.done {
   stroke: rgba(120, 255, 200, 0.9);
   stroke-width: 2.4;
+}
+
+.minimap-freeway {
+  stroke: rgba(255, 140, 60, 0.72);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
+.minimap-district {
+  fill: rgba(50, 70, 110, 0.12);
+  stroke: rgba(100, 140, 200, 0.22);
+  stroke-width: 0.6;
+}
+
+.minimap-district-label {
+  fill: rgba(200, 220, 255, 0.55);
+  font-size: 7px;
+  font-family: system-ui, sans-serif;
+  text-anchor: middle;
+}
+
+.map-tab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.map-tab-panel .minimap-wrap {
+  align-self: center;
+}
+
+.map-legend {
+  margin: 0;
+  font-size: 0.68rem;
+  opacity: 0.82;
+  text-align: center;
+}
+
+.fleet-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.fleet-card {
+  text-align: left;
+  padding: 0.4rem 0.45rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(12, 18, 28, 0.92);
+  color: #e8f4ff;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.fleet-card.active {
+  border-color: rgba(120, 200, 255, 0.65);
+  background: rgba(24, 48, 80, 0.95);
+  cursor: default;
+}
+
+.fleet-card:disabled {
+  opacity: 0.95;
+}
+
+.fleet-card-name {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.fleet-card-tag {
+  display: block;
+  font-size: 0.65rem;
+  opacity: 0.75;
+}
+
+.fleet-hint {
+  margin: 0 0 0.35rem;
+  font-size: 0.7rem;
+  opacity: 0.88;
+}
+
+.settings-quick {
+  padding: 0.35rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 0.35rem;
+}
+
+.settings-quick-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
 }
 
 .minimap-route {

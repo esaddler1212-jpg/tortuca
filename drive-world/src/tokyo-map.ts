@@ -4,6 +4,8 @@
  */
 import { Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
 
+import { addHeightfieldPatch } from './build-bay-ground';
+import { hash2 } from './night-palette';
 import { SFO_AIRPORT_LOT } from './landmark-registry';
 import type { SavedProgress } from './game-progress';
 import { VEHICLE_CATALOG } from './vehicle-catalog';
@@ -49,7 +51,7 @@ export function isInTokyo(x: number, z: number): boolean {
   return Math.abs(x - TOKYO_CENTER.x) < TOKYO_HALF_M + 200 && Math.abs(z - TOKYO_CENTER.z) < TOKYO_HALF_M + 200;
 }
 
-/** Every Bay car (Tokyo reward excluded) + all six regions. */
+/** Every Bay car (all `tokyo-*` ids excluded) + all six regions. */
 export function tokyoUnlockStatus(progress: SavedProgress): {
   unlocked: boolean;
   cars: number;
@@ -129,12 +131,12 @@ export function buildSfoFlightGate(app: AppBase): void {
   const pad = new Entity('sfo-tokyo-gate-pad');
   pad.setLocalScale(SFO_FLIGHT_GATE.radius * 1.4, 0.06, SFO_FLIGHT_GATE.radius * 1.4);
   pad.setPosition(SFO_FLIGHT_GATE.x, 0.04, SFO_FLIGHT_GATE.z);
-  pad.addComponent('render', { type: 'box', material: mat([0.05, 0.03, 0.08], [0.9, 0.2, 0.6], 0.5) });
+  pad.addComponent('render', { type: 'box', material: mat([0.06, 0.03, 0.02], [0.98, 0.42, 0.08], 0.55) });
   gate.addChild(pad);
   const sign = new Entity('sfo-tokyo-gate-sign');
   sign.setLocalScale(14, 4, 0.4);
   sign.setPosition(SFO_FLIGHT_GATE.x, 7, SFO_FLIGHT_GATE.z + SFO_FLIGHT_GATE.radius * 0.7);
-  sign.addComponent('render', { type: 'box', material: mat([0.1, 0.05, 0.1], [1, 0.3, 0.7], 0.9) });
+  sign.addComponent('render', { type: 'box', material: mat([0.08, 0.04, 0.02], [1, 0.45, 0.1], 0.95) });
   gate.addChild(sign);
   app.root.addChild(gate);
 }
@@ -172,9 +174,21 @@ export function buildTokyo(app: AppBase): void {
     return e;
   };
 
-  const ground = mat([0.035, 0.035, 0.05]);
   const half = TOKYO_HALF_M + 80;
-  add('tokyo-ground', 0, -0.35, 0, half * 2, 0.4, half * 2, ground, true);
+  const tokyoHeight = (wx: number, wz: number) =>
+    Math.sin(wx * 0.003) * 1.1 + Math.cos(wz * 0.0025) * 0.85 + (hash2(wx * 0.15, wz * 0.15) - 0.5) * 0.7 - 0.06;
+  const patch = 520;
+  for (let lz = -half; lz < half; lz += patch) {
+    for (let lx = -half; lx < half; lx += patch) {
+      const wx = cx + lx;
+      const wz = cz + lz;
+      const w = Math.min(patch, half - lx);
+      const d = Math.min(patch, half - lz);
+      const g = mat([0.035, 0.035, 0.05]);
+      addHeightfieldPatch(app, root, wx, wz, Math.max(w, d), 10, tokyoHeight, g, `tokyo-ground-${lx}-${lz}`, false);
+    }
+  }
+  add('tokyo-ground', 0, -0.35, 0, half * 2, 0.4, half * 2, mat([0.035, 0.035, 0.05]), true);
 
   const wall = mat([0.08, 0.06, 0.1], [0.6, 0.2, 0.9], 0.35);
   for (const s of [-1, 1]) {
