@@ -16,6 +16,7 @@ import { nextUnvisitedLandmark } from './landmark-navigation';
 import type { SavedProgress } from './game-progress';
 import { nearestGasStationAnywhere } from './bay-navigation';
 import { DRIFT_PADS, DRAG_STRIPS, TIME_ATTACKS } from './cpm-challenges';
+import { LANDMARK_SPRINTS } from './landmark-sprints';
 import { TAXI_CONTRACTS, nextTaxiContract } from './cpm-taxi';
 import { LANDMARK_PARKING, parkingSpotsCleared, parkingSpotCount } from './landmark-parking';
 import {
@@ -186,6 +187,20 @@ export function buildMissionBoard(
       label: `Drag: ${strip.name}`,
       done: et != null,
       hint: et != null ? `Best ${et.toFixed(2)} s` : 'Stage at the yellow tree'
+    });
+  }
+
+  for (const sprint of LANDMARK_SPRINTS) {
+    const ms = synced.landmarkSprintMs[sprint.id];
+    lines.push({
+      id: `sprint-${sprint.id}`,
+      label: sprint.ghostTape ? `Ghost: ${sprint.name}` : `Sprint: ${sprint.name}`,
+      done: ms != null && ms > 0,
+      hint: ms
+        ? `PB ${(ms / 1000).toFixed(2)} s`
+        : sprint.ghostTape
+          ? `Roll through start on I-80 (12+ mph)`
+          : `Arm at ${sprint.fromLabel}`
     });
   }
 

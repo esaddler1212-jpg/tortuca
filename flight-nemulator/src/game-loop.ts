@@ -122,7 +122,12 @@ import {
   maybeRecordTerritoryClear,
   recordArcBeat
 } from './arc-progress';
-import { nextBattleworldChapterHint, battleworldChapterChip } from './battleworld-chapters';
+import {
+  battleworldChapterChip,
+  battleworldOpeningChapterChip,
+  battleworldOpeningChapterObjective,
+  nextBattleworldChapterHint
+} from './battleworld-chapters';
 import {
   characterArcHudLine,
   latticeHudLine,
@@ -192,9 +197,10 @@ import { fetchManifestIfOnline, getManifestSuggestions } from './updates';
 import { attachHeroGltf } from './hero-gltf';
 import { placeKenneyLandmarks } from './build-city-kenney';
 import { placeWorldGachaTowns } from './build-city-worldgacha';
-import { universeForDistrict } from './battleworld-districts';
+import { UNIVERSE_LABEL, UNIVERSE_RIM_RGB, universeForDistrict } from './battleworld-districts';
 import {
   applyBattleworldUniverseFog,
+  applyBattleworldUniverseSky,
   applySkyEnvironment,
   applyWeatherMood,
   fetchBayWeatherMood
@@ -528,7 +534,9 @@ function tickFrame(s: GameSession, dt: number): void {
   }
 
   const districtHere = districtIdAtPosition(pos.x, pos.z);
-  applyBattleworldUniverseFog(s.app, universeForDistrict(districtHere));
+  const districtUniverse = universeForDistrict(districtHere);
+  applyBattleworldUniverseFog(s.app, districtUniverse);
+  applyBattleworldUniverseSky(s.app, districtUniverse);
   if (input.interact && tryInteractInfinityStone(s.infinity, pos, s.playerRole, s.heroSpec.id)) {
     recordArcBeat(s.heroSpec.id, 'stone-linked');
     if (playerInfinityStoneCount() >= 6) recordArcBeat(s.heroSpec.id, 'hunt-ascended');
@@ -1025,6 +1033,16 @@ function tickFrame(s: GameSession, dt: number): void {
       isVillainOnlyHero(s.heroSpec.id)
     ),
     chapterChip: battleworldChapterChip(s.heroSpec.id, s.playerRole, isVillainOnlyHero(s.heroSpec.id)),
+    chapterChainChip: battleworldOpeningChapterChip(
+      s.heroSpec.id,
+      s.playerRole,
+      isVillainOnlyHero(s.heroSpec.id)
+    ),
+    chapterChainObjective: battleworldOpeningChapterObjective(
+      s.heroSpec.id,
+      s.playerRole,
+      isVillainOnlyHero(s.heroSpec.id)
+    ),
     alignmentNote: canPickAlignment(s.heroSpec.id)
       ? 'Doom: toggle Hero or Villain below'
       : s.heroSpec.id === VENOM_PLAYABLE_ID
@@ -1033,6 +1051,12 @@ function tickFrame(s: GameSession, dt: number): void {
           ? 'Absorb fallen foes to copy powers'
           : null,
     autosaveHint: s.autosaveHint,
+    districtUniverse: districtUniverse,
+    districtUniverseLabel: UNIVERSE_LABEL[districtUniverse],
+    universeRimCss: (() => {
+      const [r, g, b] = UNIVERSE_RIM_RGB[districtUniverse];
+      return `rgb(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)})`;
+    })(),
     ...cutsceneHudFields()
   });
 }

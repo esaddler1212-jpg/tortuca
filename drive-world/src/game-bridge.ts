@@ -53,6 +53,8 @@ export type HudSnapshot = {
   /** 0–100 nitro tank (Midnight Club–style boost) */
   nitroPercent?: number;
   nitroBoosting?: boolean;
+  /** Lush preset + boost — MC Nitro Zone grade */
+  nitroZoneActive?: boolean;
   driftScore?: number;
   driftGoal?: number;
   driftPadName?: string | null;
@@ -73,6 +75,12 @@ export type HudSnapshot = {
   flightPrompt?: { label: string; ready: boolean; detail?: string } | null;
   /** Cinematic flight in progress (0–1 fade to black between legs). */
   flightCinematic?: { label: string; fade: number } | null;
+  /** Bay-wide street rep 0–100 */
+  streetRepPercent?: number;
+  streetRepRankLabel?: string;
+  /** Current district rep when driving */
+  regionRepPercent?: number;
+  regionRepLabel?: string;
 };
 
 export type TouchDrive = {

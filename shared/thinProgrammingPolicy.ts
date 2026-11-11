@@ -19,6 +19,11 @@ export const SESSION_REQUIRED_HANDLERS = [
   "watch-now",
   "weekly-audit",
   "flight-nemulator-lattice",
+  "calendar-apply",
+  "sms-link",
+  "wearable-ingest",
+  "inbox-triage",
+  "voice-call",
 ] as const;
 
 /** Intentionally callable without Google session (public data or OAuth setup). */
@@ -32,6 +37,8 @@ export const PUBLIC_API_HANDLERS = [
   "session",
   "woodhouse",
   "stocks",
+  "twilio-inbound",
+  "twilio-voice-twiml",
 ] as const;
 
 /**
@@ -50,6 +57,7 @@ export const CLIENT_FETCHES_REQUIRE_AUTH = [
   { file: "src/hooks/useCommute.ts", needle: "/api/commute", headerFn: "authHeaders" },
   { file: "src/lib/google.ts", needle: "/gmail", headerFn: "authHeaders" },
   { file: "src/hooks/useStocks.ts", needle: "/api/stocks", headerFn: "authHeaders" },
+  { file: "src/lib/tierAApi.ts", needle: "/api/", headerFn: "authHeaders" },
 ] as const;
 
 /** Scheduled / background jobs that should exist in netlify/functions. */
@@ -60,6 +68,7 @@ export const SCHEDULED_HANDLERS = [
   "watchers-scheduled",
   "morning-digest",
   "weekly-audit-scheduled",
+  "sms-digest-scheduled",
 ] as const;
 
 export function handlerSourceRequiresSessionCheck(source: string): boolean {

@@ -54,6 +54,7 @@ import {
   tryUnlockCompletedRegions,
   findTacoTruck,
   saveProgress,
+  consumeStreetRepRankToast,
   tryUnlockNightCoil,
   tryUnlockSkywayHover,
   saveLastPose,
@@ -96,7 +97,8 @@ import {
   CAMERA_CYCLE,
   cameraModeLabel
 } from './camera-profiles';
-import { activeSprintLabel, freshSprintRuntime, tickLandmarkSprint } from './landmark-sprints';
+import { activeSprintLabel, freshSprintRuntime, LANDMARK_SPRINTS, tickLandmarkSprint } from './landmark-sprints';
+import { sprintLineProgress } from './sprint-line';
 import { chapterObjectivePin } from './mission-nav';
 import { tryUnlockCraftVehicles } from './craft-vehicle-unlocks';
 import { tryAwardDistrictMeetBadge, tryUnlockDistrictMeetVehicles } from './district-meets';
@@ -131,12 +133,13 @@ import {
   tickDragStrip,
   tickTimeAttack
 } from './cpm-scoring';
-import { applyCameraFovBoost, pulseVehicleUnderglow } from './drive-feel';
+import { applyNitroZoneFeel, nitroZoneActive } from './nitro-zone-feel';
 import { freshTaxiRuntime, tickTaxiContract } from './cpm-taxi';
 import { dynoSheet } from './vehicle-dyno';
 import { bayRegionsGated, syncVallejoMissionSteps, VALLEJO_CHAPTER_STEPS } from './mission-chapters';
 import { missionTextForPhase, wireGameUi } from './game-ui';
 import { DISTRICT_LABELS, LANDMARKS } from './landmark-registry';
+import { bayStreetRepPercent, regionRepLabel, regionRepPercent, streetRepRankFor } from './street-rep';
 import {
   claimCustomSafehouse,
   ensureSafehouseUnlocks,
@@ -1154,8 +1157,14 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         else nitroCharge = Math.min(1, nitroCharge + dt * (mph > 28 ? 0.2 : 0.11));
         if (nitroBoosting && !wasNitroBoosting) hapticNitro();
         wasNitroBoosting = nitroBoosting;
-        pulseVehicleUnderglow(ent, nitroBoosting);
-        applyCameraFovBoost(camera, nitroBoosting, dt);
+        applyNitroZoneFeel(
+          app,
+          camera,
+          ent,
+          nitroBoosting,
+          dt,
+          settings.bayQualityPreset ?? 'balanced'
+        );
       } else if (drive.nitro && nitroCharge > 0.04) {
         nitroBoosting = true;
         if (!wasNitroBoosting) hapticNitro();
@@ -1450,7 +1459,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       if (sprintOut.progress !== progress) progress = sprintOut.progress;
       if (sprintOut.toast) {
         ui.showToast(sprintOut.toast.title, sprintOut.toast.body, 4800);
-        if (sprintOut.toast.title.includes('PB')) playVistaChime();
+        if (sprintOut.toast.title.includes('PB') || sprintOut.toast.title.includes('Ghost')) playVistaChime();
       }
 
       syncMissionProgress();
@@ -1484,6 +1493,14 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     } else if (taDef && taElapsed != null && taElapsed > 0) {
       const prog = Math.min(0.99, cpmRuntime.timeGateIndex / taDef.gates.length);
       ghostRivalLabel = ghostHudLabel(progress, 'time', taDef.id, prog, taElapsed);
+    } else if (sprintRuntime.sprintId) {
+      const sprint = LANDMARK_SPRINTS.find((s) => s.id === sprintRuntime.sprintId);
+      if (sprint?.ghostTape && sprintRuntime.startedMs != null) {
+        const elapsed = frameMs - sprintRuntime.startedMs;
+        const prog = sprintLineProgress(pos.x, pos.z, sprint.start, sprint.finish);
+        sampleGhostRun(prog, elapsed);
+        ghostRivalLabel = ghostHudLabel(progress, 'time', sprint.id, prog, elapsed);
+      }
     }
     publishHud({
       playerX: pos.x,
@@ -1528,6 +1545,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       storefrontStripLabel: strip ? `${strip.label} — ${strip.shops[0] ?? 'shops'}` : null,
       nitroPercent: Math.round(nitroCharge * 100),
       nitroBoosting,
+      nitroZoneActive: nitroZoneActive(settings.bayQualityPreset ?? 'balanced', nitroBoosting),
       driftScore: progress.phase === 'home' ? cpmRuntime.driftScore : 0,
       driftGoal,
       driftPadName: driftPad?.name ?? null,
@@ -1558,7 +1576,18 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
               ready: false,
               detail: `Cars ${st.cars}/${st.carsTotal} · Regions ${st.regions}/${st.regionsTotal}`
             };
-      })()
+      })(),
+      streetRepPercent: progress.phase === 'home' ? bayStreetRepPercent(progress) : undefined,
+      streetRepRankLabel:
+        progress.phase === 'home' ? streetRepRankFor(bayStreetRepPercent(progress)).label : undefined,
+      regionRepPercent:
+        progress.phase === 'home' && district
+          ? regionRepPercent(progress, district)
+          : undefined,
+      regionRepLabel:
+        progress.phase === 'home' && district
+          ? regionRepLabel(district, regionRepPercent(progress, district))
+          : undefined
     });
 
     statsT += dt;
@@ -1609,6 +1638,11 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
             : `Bonus flight after every car (${st.cars}/${st.carsTotal}) + region (${st.regions}/${st.regionsTotal})`
         );
       } else if (!atGate) flightGateHintShown = false;
+    }
+
+    const rankToast = consumeStreetRepRankToast();
+    if (rankToast) {
+      ui.showToast('Street rank', rankToast.label, 5200);
     }
 
     if (progress.phase === 'home' && !inTokyo) {

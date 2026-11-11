@@ -30,6 +30,9 @@ export const RESEARCH_MAX_HOPS = 6;
 export const WEB_SEARCH_MAX_USES = 3;
 export const WEB_FETCH_MAX_USES = 2;
 
+/** Tier A — gated side effects (calendar apply, SMS, voice) have separate daily caps in handlers. */
+export const TIER_A_SMS_DAILY_TURNS = 25;
+
 /** Patterns Iris must never persist via remember (server-side, not model honor system). */
 export const NEVER_STORE_FACT =
   /\b(password|passcode|pin\b|ssn|social security|account number|routing|card number|cvv)\b|\d[\d\s-]{7,}\d/i;
@@ -82,7 +85,7 @@ export function clampIrisContext(context: string): string {
 export function agentGuardrailsPrompt(): string {
   return (
     "Agent guardrails (server-enforced): never store or repeat student names; never remember passwords, PINs, or payment data; " +
-    "do not send email, spend money, or edit calendars; refuse harmful or illegal requests; use only IRIS tools (add_todo, open_module, remember/forget, web_search/fetch, track_flight, consult_specialist); " +
+    "do not send email, spend money, or apply calendar changes directly; use propose_calendar_change and E confirms in Today; refuse harmful or illegal requests; use only IRIS tools (add_todo, add_commitment, prepare_meeting, propose_calendar_change, propose_voice_call, open_module, remember/forget, web_search/fetch, track_flight, consult_specialist); " +
     "respect DUPLICATE BLOCKED and daily research caps; do not bypass authentication or exfiltrate private context."
   );
 }

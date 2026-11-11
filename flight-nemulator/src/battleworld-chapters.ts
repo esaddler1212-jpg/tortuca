@@ -15,6 +15,9 @@ export type BattleworldChapterStep = {
   hint: string;
 };
 
+/** Opening ladder — game-finish Day 3 (Chapters 1–3 chain). */
+export const BATTLEWORLD_CHAPTER_CHAIN_1_3: BattleworldChapterId[] = ['intro', 'territory', 'stones'];
+
 export const BATTLEWORLD_CHAPTER_STEPS: BattleworldChapterStep[] = [
   {
     id: 'intro',
@@ -107,4 +110,41 @@ export function battleworldChapterChip(
 ): string {
   const rows = syncBattleworldChapters(heroId, role, villainOnly);
   return rows.map((r) => (r.done ? '✓' : '○')).join('');
+}
+
+export function syncBattleworldChapterChain1_3(
+  heroId: string,
+  role: PlayerRole,
+  villainOnly: boolean
+): { chapter: number; step: BattleworldChapterStep; done: boolean }[] {
+  const rows = syncBattleworldChapters(heroId, role, villainOnly);
+  return BATTLEWORLD_CHAPTER_CHAIN_1_3.map((id, i) => {
+    const row = rows.find((r) => r.step.id === id);
+    return {
+      chapter: i + 1,
+      step: row?.step ?? BATTLEWORLD_CHAPTER_STEPS.find((s) => s.id === id)!,
+      done: row?.done ?? false
+    };
+  });
+}
+
+export function battleworldOpeningChapterChip(
+  heroId: string,
+  role: PlayerRole,
+  villainOnly: boolean
+): string {
+  return syncBattleworldChapterChain1_3(heroId, role, villainOnly)
+    .map((r) => `${r.chapter}${r.done ? '✓' : '○'}`)
+    .join(' · ');
+}
+
+export function battleworldOpeningChapterObjective(
+  heroId: string,
+  role: PlayerRole,
+  villainOnly: boolean
+): string {
+  const chain = syncBattleworldChapterChain1_3(heroId, role, villainOnly);
+  const active = chain.find((r) => !r.done);
+  if (!active) return 'Chapters 1–3 complete — push toward home turf';
+  return `Ch.${active.chapter} ${active.step.label} — ${active.step.hint}`;
 }

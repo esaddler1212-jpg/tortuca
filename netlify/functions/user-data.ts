@@ -3,6 +3,7 @@ import { getValidSession, initBlobs, sessionHeader } from "./_shared";
 import { loadUserData, mergeSubs, pushTargets, resolveDataKey, saveUserData } from "./_userData";
 import type { AlfredUserData } from "../../shared/userDataTypes";
 import { mergeDelegateHistories } from "../../shared/irisTeamActivity";
+import { mergeTierA } from "../../shared/tierAOps";
 
 export const handler: Handler = async (event) => {
   initBlobs(event);
@@ -57,6 +58,7 @@ export const handler: Handler = async (event) => {
       pushSubscriptions: incoming.pushSubscription
         ? mergeSubs(pushTargets(existing), [incoming.pushSubscription])
         : pushTargets(existing),
+      tierA: incoming.tierA ? mergeTierA(existing.tierA, incoming.tierA) : existing.tierA,
       updatedAt: new Date().toISOString(),
     };
     await saveUserData(key, merged);

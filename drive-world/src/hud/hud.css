@@ -302,6 +302,46 @@
   gap: 0.5rem;
 }
 
+.street-rep-meter {
+  width: 100%;
+  font-size: 0.78rem;
+  margin: 0.2rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.65rem;
+  align-items: baseline;
+  color: rgba(255, 220, 160, 0.95);
+}
+
+.street-rep-rank {
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.street-rep-pct {
+  opacity: 0.85;
+}
+
+.street-rep-region {
+  font-size: 0.72rem;
+  opacity: 0.75;
+  flex: 1 1 100%;
+}
+
+.street-rep-bar {
+  flex: 1 1 100%;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.street-rep-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b, #fbbf24, #fef08a);
+  transition: width 0.35s ease;
+}
+
 .heat-meter {
   width: 100%;
   font-size: 0.82rem;
@@ -367,6 +407,12 @@
 
 .race-strip.nitro {
   border-color: rgba(255, 120, 60, 0.5);
+}
+
+.race-strip.nitro.nitro-zone {
+  border-color: rgba(180, 100, 255, 0.75);
+  box-shadow: 0 0 18px rgba(140, 80, 255, 0.35);
+  color: #f0e8ff;
 }
 
 .race-strip.drag-tree {

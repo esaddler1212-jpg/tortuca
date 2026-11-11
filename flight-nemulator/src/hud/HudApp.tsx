@@ -98,12 +98,17 @@ export type GameHudSnapshot = {
   villainRunwayHint?: string | null;
   chapterHint?: string | null;
   chapterChip?: string | null;
+  chapterChainChip?: string | null;
+  chapterChainObjective?: string | null;
   cutsceneActive?: boolean;
   cutsceneSpeaker?: string | null;
   cutsceneText?: string | null;
   cutsceneSide?: 'hero' | 'foe' | 'narrator' | 'ally' | null;
   cutsceneQueued?: number;
   autosaveHint?: string | null;
+  districtUniverse?: string | null;
+  districtUniverseLabel?: string | null;
+  universeRimCss?: string | null;
 };
 
 function formatUsd(n: number): string {
@@ -146,6 +151,14 @@ export function HudApp() {
             </div>
           )}
           <div className="hud-tag">{snap.district}</div>
+          {snap.districtUniverseLabel && snap.universeRimCss && (
+            <div
+              className="hud-tag hud-universe-rim"
+              style={{ borderColor: snap.universeRimCss, boxShadow: `0 0 12px ${snap.universeRimCss}55` }}
+            >
+              {snap.districtUniverseLabel}
+            </div>
+          )}
         </div>
         <div className="hud-panel">
           <div>{snap.speedKmh} km/h</div>
@@ -244,6 +257,14 @@ export function HudApp() {
           </p>
         )}
         {snap.villainRunwayHint && <p className="hud-tag hud-hint">{snap.villainRunwayHint}</p>}
+        {snap.chapterChainChip && (
+          <p className="hud-tag hud-lattice-chip" title="Chapters 1–3 chain">
+            Story {snap.chapterChainChip}
+          </p>
+        )}
+        {snap.chapterChainObjective && (
+          <p className="hud-tag hud-hint hud-chapter-chain">{snap.chapterChainObjective}</p>
+        )}
         {snap.chapterChip && (
           <p className="hud-tag hud-lattice-chip" title="Battleworld chapter ladder">
             Chapters {snap.chapterChip}
