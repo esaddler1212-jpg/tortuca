@@ -34,6 +34,7 @@ const required = [
   'src/battleworld.ts',
   'src/battleworld-districts.ts',
   'src/battleworld-chapters.ts',
+  'src/wave-combat-juice.ts',
   'src/battleworld-lattice-cloud.ts',
   'src/hero-villain-apex.ts',
   'src/battleworld-arcs.ts',
@@ -99,6 +100,12 @@ const arcs = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-battleworld
   stdio: 'inherit'
 });
 if (arcs.status !== 0) process.exit(arcs.status ?? 1);
+
+const waveJuice = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-wave-combat-juice.mts')], {
+  cwd: root,
+  stdio: 'inherit'
+});
+if (waveJuice.status !== 0) process.exit(waveJuice.status ?? 1);
 
 const chapters = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-battleworld-chapters.mts')], {
   cwd: root,

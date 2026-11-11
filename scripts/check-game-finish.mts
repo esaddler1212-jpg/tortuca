@@ -12,6 +12,9 @@ import { bayStreetRepPercent, regionRepPercent, streetRepRankFor } from "../driv
 import type { SavedProgress } from "../drive-world/src/game-progress.ts";
 import { BOOST_FOV } from "../drive-world/src/nitro-zone-feel.ts";
 import { BATTLEWORLD_CHAPTER_CHAIN_1_3 } from "../flight-nemulator/src/battleworld-chapters.ts";
+import { GHOST_SPRINT_CIRCUIT } from "../drive-world/src/sprint-circuit-roster.ts";
+import { PAIR_BOSS_WAVE } from "../flight-nemulator/src/hero-pair-boss.ts";
+import { waveCombatHudChip, combatJuicePhase } from "../flight-nemulator/src/wave-combat-juice.ts";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const statusPath = path.join(root, "shared/game-finish-status.json");
@@ -86,6 +89,12 @@ ok("lush nitro fov punch", BOOST_FOV.lush > BOOST_FOV.balanced);
 ok(
   "battleworld chapters 1-3 chain",
   BATTLEWORLD_CHAPTER_CHAIN_1_3.join(",") === "intro,territory,stones"
+);
+
+ok("ghost sprint circuit trio", GHOST_SPRINT_CIRCUIT.length === 3);
+ok(
+  "wave-10 combat chip",
+  waveCombatHudChip(combatJuicePhase(PAIR_BOSS_WAVE, true, false), PAIR_BOSS_WAVE)?.includes("PAIR")
 );
 
 if (failed) process.exitCode = 1;

@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-10T15:30:43.960Z",
+  "updatedAt": "2026-11-11T14:46:10.156Z",
   "activeSlice": {
-    "nightshift": "cn-d04",
-    "skyring": "bw-d04"
+    "nightshift": "cn-d05",
+    "skyring": "bw-d05"
   },
   "sliceState": {
     "cn-d01": {
@@ -22,10 +22,12 @@
       "note": "Nitro Zone: Lush FOV punch, exposure + canvas grade, HUD stripe"
     },
     "cn-d04": {
-      "status": "active"
+      "status": "done",
+      "completedAt": "2026-11-11T14:46:09.948Z",
+      "note": "3 ghost circuits on minimap + roster; Estate & Bridge ghost sprints"
     },
     "cn-d05": {
-      "status": "pending"
+      "status": "active"
     },
     "cn-d06": {
       "status": "pending"
@@ -58,10 +60,12 @@
       "note": "Chapters 1–3 chain: Story chip + objective HUD, arc beat wiring tests"
     },
     "bw-d04": {
-      "status": "active"
+      "status": "done",
+      "completedAt": "2026-11-11T14:46:10.156Z",
+      "note": "Wave-10 juice: HUD chip, rumble ramp, pair-boss hit shake"
     },
     "bw-d05": {
-      "status": "pending"
+      "status": "active"
     },
     "bw-d06": {
       "status": "pending"
@@ -80,6 +84,18 @@
     }
   },
   "reports": [
+    {
+      "agent": "skyring",
+      "sliceId": "bw-d04",
+      "at": "2026-11-11T14:46:10.156Z",
+      "summary": "Wave-10 juice: HUD chip, rumble ramp, pair-boss hit shake"
+    },
+    {
+      "agent": "nightshift",
+      "sliceId": "cn-d04",
+      "at": "2026-11-11T14:46:09.949Z",
+      "summary": "3 ghost circuits on minimap + roster; Estate & Bridge ghost sprints"
+    },
     {
       "agent": "skyring",
       "sliceId": "bw-d03",

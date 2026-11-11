@@ -16,6 +16,7 @@ import type { SavedProgress } from './game-progress';
 import { nearestGasStationAnywhere } from './bay-navigation';
 import { DRIFT_PADS, DRAG_STRIPS, TIME_ATTACKS } from './cpm-challenges';
 import { LANDMARK_SPRINTS } from './landmark-sprints';
+import { GHOST_SPRINT_CIRCUIT } from './sprint-circuit-roster';
 import { TAXI_CONTRACTS, nextTaxiContract } from './cpm-taxi';
 import { LANDMARK_PARKING, parkingSpotsCleared, parkingSpotCount } from './landmark-parking';
 import {
@@ -188,6 +189,16 @@ export function buildMissionBoard(
       hint: et != null ? `Best ${et.toFixed(2)} s` : 'Stage at the yellow tree'
     });
   }
+
+  lines.push({
+    id: 'ghost-circuit-roster',
+    label: 'Ghost circuit (3 routes)',
+    done: GHOST_SPRINT_CIRCUIT.every((s) => (synced.landmarkSprintMs[s.id] ?? 0) > 0),
+    hint: GHOST_SPRINT_CIRCUIT.map((s, i) => {
+      const ms = synced.landmarkSprintMs[s.id];
+      return `${i + 1}. ${ms ? `${(ms / 1000).toFixed(1)}s` : 'open'}`;
+    }).join(' · ')
+  });
 
   for (const sprint of LANDMARK_SPRINTS) {
     const ms = synced.landmarkSprintMs[sprint.id];

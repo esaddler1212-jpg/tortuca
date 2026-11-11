@@ -42,6 +42,8 @@ export type GameHudSnapshot = {
   destructionUsd: number;
   wantedStars: number;
   wave: number;
+  waveCombatChip?: string | null;
+  combatJuiceHot?: boolean;
   stamina: number;
   staminaMax: number;
   superReady: boolean;
@@ -164,7 +166,15 @@ export function HudApp() {
           <div>{snap.speedKmh} km/h</div>
           <div>Damage {formatUsd(snap.destructionUsd)}</div>
           <div className="wanted">Wanted {stars}</div>
-          <div>Wave {snap.wave}</div>
+          <div>
+            Wave {snap.wave}
+            {snap.waveCombatChip ? (
+              <span className={snap.combatJuiceHot ? 'hud-wave-combat hot' : 'hud-wave-combat'}>
+                {' '}
+                · {snap.waveCombatChip}
+              </span>
+            ) : null}
+          </div>
           <div>
             Energy {snap.stamina}/{snap.staminaMax}
           </div>

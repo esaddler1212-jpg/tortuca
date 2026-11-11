@@ -2,6 +2,8 @@ import type { HudSnapshot } from '../game-bridge';
 import { CRUISE_VISTAS } from '../cruise-vistas';
 import { TACO_TRUCKS } from '../city-taco-trucks';
 import { LANDMARKS } from '../landmark-registry';
+import { GHOST_SPRINT_CIRCUIT } from '../sprint-circuit-roster';
+import type { GhostCircuitMapLine } from '../sprint-circuit-roster';
 import { CITY_HUBS } from '../city-map-registry';
 import { NAMED_STREETS } from '../street-registry';
 import { homeServicePoint, resolveHomeSafehouse } from '../safehouse-registry';
@@ -96,7 +98,15 @@ export function Minimap({ snap }: { snap: HudSnapshot }) {
 
   return (
     <div className="minimap-wrap">
-      <div className="minimap-title">City Nights map</div>
+      <div className="minimap-title">
+        City Nights map
+        {snap.ghostCircuitRoster ? (
+          <span className="minimap-ghost-roster" title="Ghost sprint PBs">
+            {' '}
+            · {snap.ghostCircuitRoster}
+          </span>
+        ) : null}
+      </div>
       <svg width={SIZE} height={SIZE} className="minimap" aria-hidden>
         <rect x={0} y={0} width={SIZE} height={SIZE} className="minimap-bg" />
         {CITY_HUBS.map((hub) => (
@@ -176,6 +186,30 @@ export function Minimap({ snap }: { snap: HudSnapshot }) {
           transform={`rotate(45 ${mapX(SFO_FLIGHT_GATE.x)} ${mapY(SFO_FLIGHT_GATE.z)})`}
           className={tokyoReady ? 'minimap-tokyo-gate ready' : 'minimap-tokyo-gate'}
         />
+        {(snap.ghostCircuitRoutes?.length
+          ? snap.ghostCircuitRoutes
+          : GHOST_SPRINT_CIRCUIT.map((s) => ({
+              id: s.id,
+              name: s.name,
+              x1: s.start.x,
+              z1: s.start.z,
+              x2: s.finish.x,
+              z2: s.finish.z,
+              pbMs: 0
+            }))
+        ).map((route: GhostCircuitMapLine) => {
+            const { x1, z1, x2, z2, pbMs: pb } = route;
+            return (
+              <line
+                key={`ghost-${route.id}`}
+                x1={mapX(x1)}
+                y1={mapY(z1)}
+                x2={mapX(x2)}
+                y2={mapY(z2)}
+                className={pb > 0 ? 'minimap-ghost-circuit done' : 'minimap-ghost-circuit'}
+              />
+            );
+        })}
         {GAS_STATIONS.map((g) => (
           <circle
             key={g.id}
