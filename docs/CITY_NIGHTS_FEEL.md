@@ -30,7 +30,7 @@ City Nights is built as a **solo** mashup of three reference games. Features map
 |------|---------|
 | Open districts & fast travel | `world-extras.ts`, gated until Chapter 1 done |
 | **N₂O tank** + underglow pulse | `nitroCharge` in `game-loop.ts`, `drive-feel.ts` |
-| FOV punch on boost | `applyCameraFovBoost` |
+| FOV punch + **Nitro Zone** grade (Lush) | `nitro-zone-feel.ts` — exposure + canvas grade at boost |
 | Speed-trap **heat** | `game-heat.ts`, hunted pulse at high heat |
 | Underglow & exhaust tuning | Garage sliders → `vehicle-factory.ts` |
 | Street names & radio | `street-name-registry.ts`, `game-music.ts` |

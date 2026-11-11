@@ -363,8 +363,9 @@ function RacingHud({ snap }: { snap: HudSnapshot }) {
         </div>
       ) : null}
       {showNitro ? (
-        <div className="race-strip nitro">
-          N₂O {snap.nitroBoosting ? 'BOOST' : 'Tank'} {Math.round(nitro)}%
+        <div className={`race-strip nitro${snap.nitroZoneActive ? ' nitro-zone' : ''}`}>
+          {snap.nitroZoneActive ? 'NITRO ZONE' : `N₂O ${snap.nitroBoosting ? 'BOOST' : 'Tank'}`}{' '}
+          {Math.round(nitro)}%
           <div className="race-bar">
             <div
               className="race-bar-fill nitro"

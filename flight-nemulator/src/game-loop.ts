@@ -122,7 +122,12 @@ import {
   maybeRecordTerritoryClear,
   recordArcBeat
 } from './arc-progress';
-import { nextBattleworldChapterHint, battleworldChapterChip } from './battleworld-chapters';
+import {
+  battleworldChapterChip,
+  battleworldOpeningChapterChip,
+  battleworldOpeningChapterObjective,
+  nextBattleworldChapterHint
+} from './battleworld-chapters';
 import {
   characterArcHudLine,
   latticeHudLine,
@@ -1028,6 +1033,16 @@ function tickFrame(s: GameSession, dt: number): void {
       isVillainOnlyHero(s.heroSpec.id)
     ),
     chapterChip: battleworldChapterChip(s.heroSpec.id, s.playerRole, isVillainOnlyHero(s.heroSpec.id)),
+    chapterChainChip: battleworldOpeningChapterChip(
+      s.heroSpec.id,
+      s.playerRole,
+      isVillainOnlyHero(s.heroSpec.id)
+    ),
+    chapterChainObjective: battleworldOpeningChapterObjective(
+      s.heroSpec.id,
+      s.playerRole,
+      isVillainOnlyHero(s.heroSpec.id)
+    ),
     alignmentNote: canPickAlignment(s.heroSpec.id)
       ? 'Doom: toggle Hero or Villain below'
       : s.heroSpec.id === VENOM_PLAYABLE_ID
