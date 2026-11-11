@@ -36,7 +36,7 @@ City Nights is a **browser PlayCanvas** night-drive RPG across the Bay Area. Thi
 
 - Chase camera collision raycast ignored the **player’s own collider**, clamping follow distance to ~2.8 m—fixed by excluding the vehicle entity (and Tokyo ground) from occluders.
 - Console-feel branch: render cap via `renderNextFrame`, pause uses `timeScale` + drive lock, gamepad RT/LT no longer overwritten by `VehicleControls`.
-- Tokyo unlock: **every catalog vehicle except Shuto Night Runner** + **all six regions** → pink **SFO gate** → **F** or **D-pad ↑** to board.
+- Tokyo flight: **all Bay catalog vehicles** (exclude every `tokyo-*` id) + **all six regions** → **SFO FF gate** → **F** or **D-pad ↑**. In Tokyo, **each of 8 landmarks unlocks one Fast & Furious fan-tribute car** (capstone **Shuto Night Runner** at Odaiba).
 
 ## Recommended next slices (hours-scale, browser-safe)
 
@@ -51,5 +51,6 @@ City Nights is a **browser PlayCanvas** night-drive RPG across the Bay Area. Thi
 ## Tests
 
 - `drive-world`: `npm run test:playtest` (console feel + chase cam)
-- `drive-world`: `npm run test:tokyo` (unlock gate, flight, landmarks, return)
+- `drive-world`: `npm run test:wiring` (landmark ↔ car static audit), `npm run test:tokyo` (gate, FF fleet 8/8, return flight)
+- `drive-world`: `npm run test:city-nights` (wiring + smoke + playtest + tokyo)
 - Repo root: `npm run test:os` before merge

@@ -1,7 +1,8 @@
 import { Color, StandardMaterial, type AppBase, type Asset, type Entity } from 'playcanvas';
 
 import { appliedTuning } from './vehicle-customization';
-import { glbPathForVehicle as pathForId } from './vehicle-gltf-paths';
+import { GARAGE_STARTER_IDS } from './vehicle-catalog';
+import { glbPathForVehicle as pathForId, VEHICLE_GLB } from './vehicle-gltf-paths';
 
 export { VEHICLE_GLB, glbPathForVehicle } from './vehicle-gltf-paths';
 
@@ -28,6 +29,17 @@ function loadUrl(app: AppBase, url: string): Promise<void> {
 /** Small first paint — starter sedan + hover mesh shared by Waymo path. */
 export function preloadBootVehicleModels(app: AppBase): Promise<void> {
   return Promise.all(BOOT_PATHS.map((url) => loadUrl(app, url))).then(() => undefined);
+}
+
+/** Car picker + first drives use Kenney GLBs (avoid block-body fallback). */
+export function preloadGarageStarterModels(app: AppBase): Promise<void> {
+  return ensureVehicleModelsLoaded(app, [...GARAGE_STARTER_IDS]);
+}
+
+/** Background load of every catalog mesh so swaps stay on GLB bodies. */
+export function preloadAllVehicleModels(app: AppBase): Promise<void> {
+  const ids = Object.keys(VEHICLE_GLB).filter((k) => k !== 'default');
+  return ensureVehicleModelsLoaded(app, ids);
 }
 
 export async function ensureVehicleModelLoaded(app: AppBase, vehicleId: string): Promise<void> {

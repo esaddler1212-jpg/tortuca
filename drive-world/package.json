@@ -10,8 +10,10 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test:smoke": "node scripts/smoke-boot.mjs",
+    "test:wiring": "node scripts/check-tokyo-wiring.mjs",
     "test:playtest": "node scripts/playtest-browser.mjs",
-    "test:tokyo": "node scripts/playtest-tokyo.mjs"
+    "test:tokyo": "npm run test:wiring && node scripts/playtest-tokyo.mjs",
+    "test:city-nights": "npm run test:wiring && npm run test:smoke && npm run test:playtest && npm run test:tokyo"
   },
   "dependencies": {
     "@netlify/blobs": "^8.2.0",

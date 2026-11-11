@@ -38,7 +38,8 @@ import {
   registerWaymoReplay,
   registerStartTaxi,
   registerDynoPull,
-  registerBoardFlight
+  registerBoardFlight,
+  registerVehicleSwap
 } from './game-bridge';
 import {
   loadProgress,
@@ -797,6 +798,18 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     ui.showToast(dir === 'toTokyo' ? 'SFO → Haneda' : 'Haneda → SFO', 'Night flight — A / Skip to land now');
   };
   registerBoardFlight(boardFlight);
+  registerVehicleSwap((id) => {
+    if (progress.phase !== 'home' || ridingWaymo || flight || photoMode) return;
+    if (!progress.unlockedVehicleIds.includes(id)) return;
+    if (id === progress.activeVehicleId) return;
+    if (getHudSnapshot().mph > 12) {
+      ui.showToast('Slow down', 'Stop to swap cars.');
+      return;
+    }
+    void swapVehicle(id);
+    ui.showToast('Switched', getVehicleSpec(id).name);
+    if (nearGarage) refreshGarageUi();
+  });
 
   const resumeFromSave = () => {
     progress = tryUnlockNightCoil(progress);
@@ -1598,12 +1611,17 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         progress = visitTokyoLandmark(progress, lm.id);
         playLandmarkChime();
         const rideId = tokyoVehicleForLandmark(lm.id);
-        if (rideId && !progress.unlockedVehicleIds.includes(rideId)) {
+        const hadRide = rideId ? progress.unlockedVehicleIds.includes(rideId) : true;
+        if (rideId && !hadRide) {
           progress = unlockVehicle(progress, rideId);
-          const ride = getVehicleSpec(rideId);
-          ui.showToast('Fast family unlock', `${ride.name} — ${ride.tagline}`);
         }
-        ui.showToast(`Tokyo · ${lm.name}`, `${progress.tokyoLandmarkIds.length}/${TOKYO_LANDMARKS.length} — ${lm.blurb}`);
+        const progressLine = `${progress.tokyoLandmarkIds.length}/${TOKYO_LANDMARKS.length} — ${lm.blurb}`;
+        if (rideId && !hadRide) {
+          const ride = getVehicleSpec(rideId);
+          ui.showToast(`Tokyo · ${lm.name}`, `✦ ${ride.name} — ${progressLine}`);
+        } else {
+          ui.showToast(`Tokyo · ${lm.name}`, progressLine);
+        }
         ui.setProgressSummary(progress);
       }
     }
