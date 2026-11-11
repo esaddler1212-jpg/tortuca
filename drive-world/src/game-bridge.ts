@@ -66,6 +66,9 @@ export type HudSnapshot = {
   pinnedChapterLabel?: string | null;
   pinnedChapterHint?: string | null;
   landmarkSprintLabel?: string | null;
+  /** Ghost circuit minimap segments (3 routes). */
+  ghostCircuitRoutes?: { id: string; name: string; x1: number; z1: number; x2: number; z2: number; pbMs: number }[];
+  ghostCircuitRoster?: string | null;
   garageInteriorCam?: boolean;
   gamepadConnected?: boolean;
   simPaused?: boolean;

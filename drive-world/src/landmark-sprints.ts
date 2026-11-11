@@ -30,7 +30,8 @@ export const LANDMARK_SPRINTS: LandmarkSprintDef[] = [
     fromLabel: 'Vallejo estate',
     toLabel: 'Mare Island crane',
     start: { x: 500, z: 900, radius: 38 },
-    finish: { x: 420, z: 1020, radius: 42 }
+    finish: { x: 420, z: 1020, radius: 42 },
+    ghostTape: true
   },
   {
     id: 'mare-carquinez',
@@ -46,7 +47,8 @@ export const LANDMARK_SPRINTS: LandmarkSprintDef[] = [
     fromLabel: 'Golden Gate south',
     toLabel: 'Twin Peaks vista',
     start: { x: -920, z: -520, radius: 48 },
-    finish: { x: -780, z: -380, radius: 44 }
+    finish: { x: -780, z: -380, radius: 44 },
+    ghostTape: true
   }
 ];
 

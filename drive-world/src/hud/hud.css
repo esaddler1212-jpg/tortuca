@@ -128,6 +128,25 @@
   stroke-width: 1.2;
 }
 
+.minimap-ghost-roster {
+  font-size: 0.65rem;
+  font-weight: 500;
+  opacity: 0.85;
+  color: #c9b0ff;
+}
+
+.minimap-ghost-circuit {
+  stroke: rgba(200, 120, 255, 0.85);
+  stroke-width: 2.2;
+  stroke-dasharray: 5 4;
+  pointer-events: none;
+}
+
+.minimap-ghost-circuit.done {
+  stroke: rgba(120, 255, 200, 0.9);
+  stroke-width: 2.4;
+}
+
 .minimap-freeway {
   stroke: rgba(255, 140, 60, 0.72);
   stroke-width: 2.4;

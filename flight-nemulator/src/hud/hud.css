@@ -5,6 +5,17 @@
   font-size: 14px;
 }
 
+.hud-wave-combat {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #c8d8ff;
+}
+
+.hud-wave-combat.hot {
+  color: #ffb0a8;
+  text-shadow: 0 0 10px rgba(255, 90, 70, 0.45);
+}
+
 .cutscene-overlay {
   pointer-events: auto;
   position: absolute;

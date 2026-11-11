@@ -8,7 +8,15 @@ export function Minimap({ snap }: { snap: HudSnapshot }) {
   const title = snap.inTokyo ? TOKYO_MINIMAP_TITLE : 'City Nights map';
   return (
     <div className="minimap-wrap">
-      <div className="minimap-title">{title}</div>
+      <div className="minimap-title">
+        {title}
+        {!snap.inTokyo && snap.ghostCircuitRoster ? (
+          <span className="minimap-ghost-roster" title="Ghost sprint PBs">
+            {' '}
+            · {snap.ghostCircuitRoster}
+          </span>
+        ) : null}
+      </div>
       <BayMap snap={snap} size={SIZE} />
     </div>
   );

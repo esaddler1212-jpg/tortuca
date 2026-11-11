@@ -208,6 +208,11 @@ import {
 import { currentLoadingTip } from './loading-tips';
 import { loadCustomHeroes, customHeroToSpec } from './custom-hero';
 import { addScreenShake, consumeShake, spawnBoostTrail, spawnCraterMarker, tickTrails } from './vfx';
+import {
+  combatJuicePhase,
+  combatJuiceShakeTick,
+  waveCombatHudChip
+} from './wave-combat-juice';
 import { bootAudioFromGesture, playBlast, playSmash, playSuper, playWaveAlert, playWhoosh } from './game-audio';
 import { loadSessionStats, saveSessionStats, type SessionStats } from './session-persist';
 
@@ -230,6 +235,7 @@ export type GameSession = {
   foesStopped: number;
   worldFate: WorldFateState;
   pairBoss: { spawned: boolean; defeated: boolean; warned: boolean };
+  lastPairBossHp: number | null;
   lanternKeeper: import('./solar-lantern-arc').LanternKeeper | null;
   territory: TerritoryState;
   infinity: InfinityStoneState;
@@ -376,6 +382,7 @@ export async function startGame(app: AppBase): Promise<void> {
     foesStopped: 0,
     worldFate: createWorldFate(),
     pairBoss: { spawned: false, defeated: false, warned: false },
+    lastPairBossHp: null,
     lanternKeeper:
       heroSpec.id === SOLAR_HERO_ID &&
       playerRole === 'hero' &&
@@ -775,8 +782,18 @@ function tickFrame(s: GameSession, dt: number): void {
     const batch = spawnFactionWave(s.app, s.root, pos, count, s.playerRole, s.heroSpec.id, s.wave);
     s.factionNpcs.push(...batch);
     playWaveAlert();
+    if (s.wave >= PAIR_BOSS_WAVE - 1) addScreenShake(s.wave >= PAIR_BOSS_WAVE ? 0.42 : 0.22);
   }
   }
+
+  const pairIncomingJuice =
+    (s.playerRole === 'hero' || isVillainOnlyHero(s.heroSpec.id)) &&
+    s.pairBoss.warned &&
+    !s.pairBoss.spawned &&
+    !s.pairBoss.defeated;
+  const juicePhase = combatJuicePhase(s.wave, pairBossAlive, pairIncomingJuice);
+  const juiceRumble = combatJuiceShakeTick(juicePhase, dt);
+  if (juiceRumble > 0) addScreenShake(juiceRumble);
 
   if (pairBossNpc) {
     const bp = pairBossNpc.entity.getPosition();
@@ -785,6 +802,12 @@ function tickFrame(s: GameSession, dt: number): void {
       const res = s.heroForm.resilienceMul ?? 1;
       s.hero.stamina = Math.max(0, s.hero.stamina - (10 * simDt) / res);
     }
+    if (s.lastPairBossHp != null && pairBossNpc.hp < s.lastPairBossHp - 0.5) {
+      addScreenShake(0.12);
+    }
+    s.lastPairBossHp = pairBossNpc.hp;
+  } else {
+    s.lastPairBossHp = null;
   }
   tickInfinityStonePhase(s.infinity, dt, s.factionNpcs, s.app, s.root);
 
@@ -917,6 +940,13 @@ function tickFrame(s: GameSession, dt: number): void {
   const chron = getChronoState();
   const bossForHud = s.factionNpcs.find((n) => n.isPairBoss);
   const bossAliveHud = s.pairBoss.spawned && !s.pairBoss.defeated && !!bossForHud;
+  const pairIncomingHud =
+    (s.playerRole === 'hero' || isVillainOnlyHero(s.heroSpec.id)) &&
+    s.pairBoss.warned &&
+    !s.pairBoss.spawned &&
+    !s.pairBoss.defeated;
+  const hudJuicePhase = combatJuicePhase(s.wave, bossAliveHud, pairIncomingHud);
+  const waveCombatChip = waveCombatHudChip(hudJuicePhase, s.wave);
   setHudSnapshot({
     heroName: s.heroSpec.codename,
     codename: s.heroSpec.tagline,
@@ -925,6 +955,8 @@ function tickFrame(s: GameSession, dt: number): void {
     destructionUsd: s.destructionUsd,
     wantedStars: s.wanted.stars,
     wave: s.wave,
+    waveCombatChip,
+    combatJuiceHot: hudJuicePhase === 'pair-duel' || hudJuicePhase === 'finale',
     stamina: Math.round(s.hero.stamina),
     staminaMax: s.heroSpec.energy.staminaMax,
     superReady: s.hero.canSuper(),

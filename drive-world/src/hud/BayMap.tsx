@@ -8,6 +8,7 @@ import { homeServicePoint, resolveHomeSafehouse } from '../safehouse-registry';
 import { GAS_STATIONS } from '../gas-stations';
 import { DISTRICTS, FREEWAY_ROUTES, WORLD_HALF_M } from '../world-config';
 import { TOKYO_MINIMAP_TITLE } from '../tokyo-ff-cars';
+import { GHOST_SPRINT_CIRCUIT } from '../sprint-circuit-roster';
 import { HANEDA_PAD, SFO_FLIGHT_GATE, TOKYO_CENTER, TOKYO_HALF_M, TOKYO_LANDMARKS, tokyoUnlockStatus } from '../tokyo-map';
 
 const HALF = WORLD_HALF_M;
@@ -191,6 +192,27 @@ function BayMapBody({ snap, size, showDistrictLabels }: { snap: HudSnapshot; siz
         transform={`rotate(45 ${mapX(SFO_FLIGHT_GATE.x, size)} ${mapY(SFO_FLIGHT_GATE.z, size)})`}
         className={tokyoReady ? 'minimap-tokyo-gate ready' : 'minimap-tokyo-gate'}
       />
+      {(snap.ghostCircuitRoutes?.length
+        ? snap.ghostCircuitRoutes
+        : GHOST_SPRINT_CIRCUIT.map((s) => ({
+            id: s.id,
+            name: s.name,
+            x1: s.start.x,
+            z1: s.start.z,
+            x2: s.finish.x,
+            z2: s.finish.z,
+            pbMs: 0
+          }))
+      ).map((route) => (
+        <line
+          key={`ghost-${route.id}`}
+          x1={mapX(route.x1, size)}
+          y1={mapY(route.z1, size)}
+          x2={mapX(route.x2, size)}
+          y2={mapY(route.z2, size)}
+          className={route.pbMs > 0 ? 'minimap-ghost-circuit done' : 'minimap-ghost-circuit'}
+        />
+      ))}
       {GAS_STATIONS.map((g) => (
         <circle key={g.id} cx={mapX(g.x, size)} cy={mapY(g.z, size)} r={2.2} className="minimap-gas" />
       ))}

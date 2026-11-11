@@ -99,6 +99,7 @@ import {
 } from './camera-profiles';
 import { activeSprintLabel, freshSprintRuntime, LANDMARK_SPRINTS, tickLandmarkSprint } from './landmark-sprints';
 import { sprintLineProgress } from './sprint-line';
+import { ghostCircuitMapLines, ghostCircuitRosterLabel } from './sprint-circuit-roster';
 import { chapterObjectivePin } from './mission-nav';
 import { tryUnlockCraftVehicles } from './craft-vehicle-unlocks';
 import { tryAwardDistrictMeetBadge, tryUnlockDistrictMeetVehicles } from './district-meets';
@@ -1561,6 +1562,9 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       pinnedChapterLabel: chapterPin?.label ?? null,
       pinnedChapterHint: chapterPin?.hint ?? null,
       landmarkSprintLabel: activeSprintLabel(sprintRuntime),
+      ghostCircuitRoutes: progress.phase === 'home' ? ghostCircuitMapLines(progress) : [],
+      ghostCircuitRoster:
+        progress.phase === 'home' ? `Ghost circuit ${ghostCircuitRosterLabel(progress)}` : null,
       garageInteriorCam: estateGarage,
       inTokyo,
       flightCinematic: null,
