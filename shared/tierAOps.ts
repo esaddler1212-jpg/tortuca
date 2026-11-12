@@ -99,12 +99,23 @@ export interface VoiceCallProposal {
   placedAt?: string;
 }
 
+export const TIER_A_LINK_CODE_TTL_MS = 60 * 60 * 1000;
+export const TIER_A_LINK_FAIL_LIMIT = 12;
+
 export interface SmsLinkState {
   enabled: boolean;
   phoneE164?: string;
+  /** Uppercase code; expires at linkCodeExpiresAt */
   linkCode?: string;
+  linkCodeExpiresAt?: string;
   linkedAt?: string;
   lastDigestDate?: string;
+}
+
+export function smsLinkCodeValid(sms: SmsLinkState | undefined, code: string): boolean {
+  if (!sms?.linkCode || !sms.linkCodeExpiresAt) return false;
+  if (sms.linkCode.toUpperCase() !== code.toUpperCase()) return false;
+  return Date.now() < new Date(sms.linkCodeExpiresAt).getTime();
 }
 
 export interface TierAState {

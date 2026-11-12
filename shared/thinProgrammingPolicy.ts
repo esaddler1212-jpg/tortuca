@@ -24,6 +24,7 @@ export const SESSION_REQUIRED_HANDLERS = [
   "wearable-ingest",
   "inbox-triage",
   "voice-call",
+  "inbox-triage-draft",
 ] as const;
 
 /** Intentionally callable without Google session (public data or OAuth setup). */

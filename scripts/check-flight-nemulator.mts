@@ -61,6 +61,12 @@ for (const f of required) {
   }
 }
 
+const playcanvas = path.join(app, 'node_modules', 'playcanvas');
+if (!existsSync(playcanvas)) {
+  const install = spawnSync('npm', ['ci'], { cwd: app, stdio: 'inherit' });
+  if (install.status !== 0) process.exit(install.status ?? 1);
+}
+
 const loadouts = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-hero-loadouts.mts')], {
   cwd: root,
   stdio: 'inherit'
