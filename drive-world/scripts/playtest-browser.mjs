@@ -175,10 +175,30 @@ await sleep(3000);
 const u1 = await state();
 check('uncapped: sim still ticks (no maxDeltaTime freeze)', u1.frame > u0.frame && u1.timeScale === 1);
 
-await tap(9);
+// Frame-cap tests leave HUD on Missions; START toggles map pause — wait on CI Chromium.
+await page.evaluate(() => window.dispatchEvent(new CustomEvent('drive-world:hud-tab', { detail: 'missions' })));
+await sleep(400);
+const waitPaused = () =>
+  page.waitForFunction(
+    () => window.__cityNights?.app?.timeScale === 0 && window.__cityNights?.hud()?.simPaused === true,
+    { timeout: 8000 }
+  );
+const waitRunning = () =>
+  page.waitForFunction(
+    () => window.__cityNights?.app?.timeScale === 1 && !window.__cityNights?.hud()?.simPaused,
+    { timeout: 8000 }
+  );
+
+await press(9, true);
+await waitPaused().catch(() => {});
+await press(9, false);
+await sleep(400);
 const g2 = await state();
 check('pad Menu pauses', g2.timeScale === 0 && g2.simPaused === true);
-await tap(1);
+await press(1, true);
+await waitRunning().catch(() => {});
+await press(1, false);
+await sleep(400);
 const g3 = await state();
 check('pad B resumes', g3.timeScale === 1 && !g3.simPaused);
 check('pad glyphs shown', (await hud()).gamepadConnected === true);
