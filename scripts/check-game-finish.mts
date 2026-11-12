@@ -15,6 +15,9 @@ import { BATTLEWORLD_CHAPTER_CHAIN_1_3 } from "../flight-nemulator/src/battlewor
 import { GHOST_SPRINT_CIRCUIT } from "../drive-world/src/sprint-circuit-roster.ts";
 import { PAIR_BOSS_WAVE } from "../flight-nemulator/src/hero-pair-boss.ts";
 import { waveCombatHudChip, combatJuicePhase } from "../flight-nemulator/src/wave-combat-juice.ts";
+import { FREEWAY_DRONE_BUDGET } from "../drive-world/src/freeway-traffic-drones.ts";
+import { villainsWithBundledGlb } from "../flight-nemulator/src/villain-gltf-paths.ts";
+import { glbPathForHero } from "../flight-nemulator/src/hero-gltf-paths.ts";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const statusPath = path.join(root, "shared/game-finish-status.json");
@@ -92,6 +95,9 @@ ok(
 );
 
 ok("ghost sprint circuit trio", GHOST_SPRINT_CIRCUIT.length === 3);
+ok("freeway drone chromebook cap", FREEWAY_DRONE_BUDGET.chromebook === 3);
+ok("hero glb wall-crawler", glbPathForHero("wall-crawler").endsWith("wall-crawler.glb"));
+ok("nemesis glb wired", villainsWithBundledGlb().length >= 1);
 ok(
   "wave-10 combat chip",
   waveCombatHudChip(combatJuicePhase(PAIR_BOSS_WAVE, true, false), PAIR_BOSS_WAVE)?.includes("PAIR")

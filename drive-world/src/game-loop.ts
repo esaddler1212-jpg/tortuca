@@ -170,6 +170,7 @@ import type { VehicleCustomization } from './vehicle-customization';
 import { pushCloudProgress } from './game-cloud-save';
 import { flushSessionTelemetry, installSessionTelemetryFlush, markSessionBoot } from './session-telemetry';
 import { updateHubStreetTraffic } from './hub-street-traffic';
+import { updateFreewayTrafficDrones } from './freeway-traffic-drones';
 import { heatDecay, heatFromSpeedTrap } from './game-heat';
 import { createPlayerVehicle, destroyPlayerVehicle, type PlayerVehicle } from './vehicle-factory';
 import { ensureVehicleModelLoaded, ensureVehicleModelsLoaded } from './vehicle-gltf';
@@ -1010,6 +1011,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
 
     worldTime += dt;
     updateAmbientTraffic(dt, settings.showTraffic);
+    updateFreewayTrafficDrones(dt, settings.showTraffic);
     updateHubStreetTraffic(dt, settings.showTraffic);
     const sideshowSite = updateSideshowMeets(dt, worldTime, settings.showSideshow);
     const posEarly = ent.getPosition();

@@ -35,6 +35,8 @@ const required = [
   'src/battleworld-districts.ts',
   'src/battleworld-chapters.ts',
   'src/wave-combat-juice.ts',
+  'src/villain-gltf.ts',
+  'src/villain-gltf-paths.ts',
   'src/battleworld-lattice-cloud.ts',
   'src/hero-villain-apex.ts',
   'src/battleworld-arcs.ts',
