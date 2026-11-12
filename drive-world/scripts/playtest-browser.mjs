@@ -86,12 +86,6 @@ const press = (i, on) =>
     },
     [i, on]
   );
-const tap = async (i) => {
-  await press(i, true);
-  await sleep(900);
-  await press(i, false);
-  await sleep(900);
-};
 const g0 = await state();
 await press(7, true);
 await sleep(4000);
@@ -177,11 +171,35 @@ await sleep(3000);
 const u1 = await state();
 check('uncapped: sim still ticks (no maxDeltaTime freeze)', u1.frame > u0.frame && u1.timeScale === 1);
 
-await tap(9);
-const g2 = await state();
+// After frame-cap tests, headless CI can throttle rAF; hold Menu until pause (rising-edge needs a tick).
+await sleep(process.env.GITHUB_ACTIONS ? 2000 : 400);
+const pauseWaitMs = process.env.GITHUB_ACTIONS ? 22_000 : 12_000;
+await press(9, true);
+let g2;
+try {
+  await page.waitForFunction(
+    () => window.__cityNights.app.timeScale === 0 && window.__cityNights.hud().simPaused === true,
+    { timeout: pauseWaitMs, polling: 50 }
+  );
+  g2 = await state();
+} catch {
+  g2 = await state();
+}
+await press(9, false);
 check('pad Menu pauses', g2.timeScale === 0 && g2.simPaused === true);
-await tap(1);
-const g3 = await state();
+
+await press(1, true);
+let g3;
+try {
+  await page.waitForFunction(
+    () => window.__cityNights.app.timeScale === 1 && !window.__cityNights.hud().simPaused,
+    { timeout: pauseWaitMs, polling: 50 }
+  );
+  g3 = await state();
+} catch {
+  g3 = await state();
+}
+await press(1, false);
 check('pad B resumes', g3.timeScale === 1 && !g3.simPaused);
 check('pad glyphs shown', (await hud()).gamepadConnected === true);
 if (shot) await page.screenshot({ path: `${shot}/playtest-gamepad.png` });
