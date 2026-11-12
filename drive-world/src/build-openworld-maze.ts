@@ -19,6 +19,11 @@ export async function buildOpenworldCherryPickMaze(
     console.info('[openworld] maze skipped on Chromebook preset (perf budget)');
     return 0;
   }
+  // Headless playtest (Puppeteer): hundreds of static bodies stall physics in CI.
+  if (typeof navigator !== 'undefined' && navigator.webdriver) {
+    console.info('[openworld] maze skipped under automation (playtest)');
+    return 0;
+  }
   const maze = await fetchDefaultMazeBitmap();
   buildMazeWallSegments(app, maze, {
     mazeSize: OPENWORLD_MAZE_SIZE,
