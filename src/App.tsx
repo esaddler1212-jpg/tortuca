@@ -7,6 +7,7 @@ import { useFocusChoice } from "./hooks/useFocusChoice";
 import { useVoiceOutput } from "./hooks/useVoiceOutput";
 import { buildDailyBrief, buildVantageBrief, buildVantagePaperBrief } from "./lib/spokenBrief";
 import { isFreshVantagePaper, type StoredVantagePaper } from "../shared/vantagePaper";
+import { matchTodo } from "../shared/irisReminders";
 import { usePlan } from "./hooks/usePlan";
 import { SparkCard } from "./components/SparkCard";
 import { PulsePanel } from "./components/PulsePanel";
@@ -500,6 +501,11 @@ export default function App() {
     timeZone: settings.timezone,
     today,
     onAddTodo: (title, dueDate) => add(title, dueDate),
+    onCompleteTodo: (title) => {
+      const hit = matchTodo(pending, title);
+      if (hit) toggle(hit.id);
+    },
+    onAddShopping: (item) => addShopping(item),
     location: { lat: settings.latitude, lon: settings.longitude },
     // "Save this conversation?" → yes: the transcript becomes a memo.
     onSaveTranscript: (text) =>

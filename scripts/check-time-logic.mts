@@ -35,6 +35,7 @@ import { buildFamilyPurposeWoodhouseNode } from "../netlify/functions/_family-pu
 import { mergeBackups } from "../netlify/functions/_fp-backup.ts";
 import * as Voices from "../shared/irisVoices.ts";
 import { readFileSync } from "node:fs";
+import * as Rem from "../shared/irisReminders.ts";
 import { isVantagePaperEdition, isFreshVantagePaper } from "../shared/vantagePaper.ts";
 import { buildVantagePaperBrief } from "../src/lib/spokenBrief.ts";
 
@@ -518,6 +519,28 @@ check("vantage paper → brief: quiet morning still reads fine", buildVantagePap
   check("iris voice: Google US English recommended", Voices.isRecommendedIrisVoice("Google US English"), true);
   const mockVoice = { name: "Samantha (Enhanced) (en-US)", lang: "en-US" } as SpeechSynthesisVoice;
   check("iris voice label includes tier", Voices.irisVoiceOptionLabel(mockVoice, "American").includes("Enhanced"), true);
+}
+
+// ── Iris timed reminders + checking off to-dos by voice
+{
+  const now = new Date("2026-11-12T20:00:00Z"); // Thu noon PST
+  const at4 = Rem.reminderInstant("2026-11-12", "16:00", TZ, now);
+  check("reminder: 4 PM today in IRIS time zone", at4, "2026-11-13T00:00:00.000Z");
+  check("reminder: single-digit hour ok", Rem.reminderInstant("2026-11-13", "9:05", TZ, now), "2026-11-13T17:05:00.000Z");
+  check("reminder: past, garbage or far-future times rejected", [Rem.reminderInstant("2026-11-12", "08:00", TZ, now), Rem.reminderInstant("tomorrow", "4pm", TZ, now), Rem.reminderInstant("2027-11-12", "08:00", TZ, now)], [null, null, null]);
+  let list = Rem.addReminder(undefined, "  Call Mike about the shoot ", at4!, now);
+  list = Rem.addReminder(list, "call mike about the shoot", at4!, now);
+  check("reminder: saying it twice saves it once", [list.length, list[0].text], [1, "Call Mike about the shoot"]);
+  const t = (iso: string) => new Date(iso);
+  check("reminder: not due 30 min early", Rem.dueReminders(list, t("2026-11-12T23:30:00Z")).length, 0);
+  check("reminder: fires within 5 min of the time", [Rem.dueReminders(list, t("2026-11-12T23:56:00Z")).length, Rem.dueReminders(list, t("2026-11-13T00:07:00Z")).length], [1, 1]);
+  check("reminder: never fires twice", Rem.dueReminders(list.map((r) => ({ ...r, sentAt: "2026-11-13T00:00:00Z" })), t("2026-11-13T00:07:00Z")).length, 0);
+  check("reminder: too stale to send (notifications were off for hours)", Rem.dueReminders(list, t("2026-11-13T07:00:00Z")).length, 0);
+  check("reminder: sent ones cleared after 2 days", Rem.pruneReminders(list.map((r) => ({ ...r, sentAt: "2026-11-13T00:00:00Z" })), t("2026-11-15T01:00:00Z")).length, 0);
+  check("reminder: reads naturally", [Rem.reminderWhen(at4!, TZ, now), Rem.reminderWhen("2026-11-13T17:05:00Z", TZ, now), Rem.reminderWhen("2026-11-20T17:00:00Z", TZ, now)], ["today 4:00 PM", "tomorrow 9:05 AM", "Fri, Nov 20 9:00 AM"]);
+  check("reminder: Iris's notes list what's set", Rem.remindersContext(list, TZ, now), "Reminders set (his phone gets a notification then): Call Mike about the shoot (today 4:00 PM).");
+  const todos = [{ id: "a", title: "Send sponsor deck v2 to Jordan" }, { id: "b", title: "Call Mike about the shoot" }, { id: "c", title: "Gym · legs" }];
+  check("check off: exact, partial, and no-match", [Rem.matchTodo(todos, "Call Mike about the shoot")?.id, Rem.matchTodo(todos, "the sponsor deck")?.id, Rem.matchTodo(todos, "legs")?.id, Rem.matchTodo(todos, "buy groceries")], ["b", "a", "c", null]);
 }
 
 if (failures) {
