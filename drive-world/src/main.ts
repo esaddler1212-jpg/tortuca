@@ -29,6 +29,7 @@ import {
 
 import { buildDrivingWorld } from './build-world';
 import { startGameSession } from './game-loop';
+import { installOpenworldDevCommands } from './openworldjs/dev-commands';
 import { getHudSnapshot } from './game-bridge';
 import { installMobileShell } from './install-mobile-shell';
 import { isIOS, recommendedPixelRatio } from './mobile-platform';
@@ -52,6 +53,7 @@ await new Promise<void>((resolve) => {
 
 installMobileShell();
 mountReactHud();
+installOpenworldDevCommands();
 
 const canvas = document.getElementById('application-canvas') as HTMLCanvasElement;
 const speedEl = document.getElementById('speed') as HTMLParagraphElement;
