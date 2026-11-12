@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="description" content="Tortuca Console — City Nights and Flight Nemulator." />
+    <meta name="theme-color" content="#0c1838" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Tortuca Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div class="ps-bg" aria-hidden="true"></div>
+    <div class="motion-noise" aria-hidden="true"></div>
+    <header class="ps-top">
+      <div class="ps-tabs">
+        <span class="ps-tab is-active">Games</span>
+        <span class="ps-tab">Media</span>
+        <span class="ps-tab ps-tab--muted">Settings</span>
+      </div>
+      <time class="ps-clock" id="clock"></time>
+    </header>
+
+    <main class="ps-main">
+      <p class="ps-welcome" id="welcome">Good evening</p>
+      <h1 class="ps-title">Games</h1>
+      <div class="ps-rail-wrap">
+        <div class="ps-rail" id="game-rail" role="listbox" aria-label="Game library"></div>
+      </div>
+      <section class="ps-detail" id="game-detail" aria-live="polite"></section>
+    </main>
+
+    <footer class="ps-hint" id="hints" aria-hidden="true">
+      <span>← →</span> Browse
+      <span class="sep">·</span>
+      <span>Enter</span> Play
+      <span class="sep">·</span>
+      <span>Esc</span> (nothing)
+    </footer>
+
+    <script>
+      (function () {
+        if (!/^\/console(\/|$)/.test(location.pathname)) return;
+        var a = document.createElement('a');
+        a.href = '/';
+        a.textContent = '◯ VantageGames';
+        a.setAttribute('aria-label', 'Back to VantageGames');
+        a.className = 'console-vantage-home';
+        a.style.cssText =
+          'position:fixed;z-index:9999;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));' +
+          'font:600 11px/1 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;color:#e8eef8;' +
+          'padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.22);background:rgba(8,12,20,.55);backdrop-filter:blur(8px)';
+        document.body.appendChild(a);
+      })();
+    </script>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

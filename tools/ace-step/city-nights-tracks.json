@@ -1,0 +1,25 @@
+{
+  "tracks": [
+    {
+      "file": "vallejo-night-haze.ogg",
+      "title": "Vallejo night haze",
+      "prompt": "Instrumental lo-fi electronic, 92 BPM, night city drive, no vocals, warm synth pads, subtle sub-bass, SF Bay fog, neon street reflections, loopable 90 seconds",
+      "bpm": 92,
+      "duration": 95
+    },
+    {
+      "file": "freeway-neon-drift.ogg",
+      "title": "Freeway neon drift",
+      "prompt": "Instrumental synthwave night driving, 96 BPM, no vocals, highway ambience, soft sidechain pulse, chrome reflections, 90 second loop",
+      "bpm": 96,
+      "duration": 95
+    },
+    {
+      "file": "marin-fog-cruise.ogg",
+      "title": "Marin fog cruise",
+      "prompt": "Instrumental ambient downtempo, 88 BPM, no vocals, coastal fog, muted piano pads, gentle rain texture, golden gate night mood, 90 second loop",
+      "bpm": 88,
+      "duration": 95
+    }
+  ]
+}

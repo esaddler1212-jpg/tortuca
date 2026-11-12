@@ -1,5 +1,17 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { SOLAR_PLANET_IDS, solarPlanetContextForIris } from "../../shared/solarPlanets";
+import { HUD_MODULE_IDS, moduleContextForIris } from "../../shared/hudModules";
+import { teamContextForIris, type IrisSpecialistId, isIrisSpecialistId } from "../../shared/irisTeam";
+import { specialistEnumForTool } from "./_irisSpecialists";
+import {
+  DELEGATE_MAX_REPORT_CHARS,
+  IRIS_MAX_CONTEXT_CHARS,
+  IRIS_MAX_HOPS,
+  IRIS_MAX_TODO_TITLE_CHARS,
+  safeFact,
+} from "../../shared/agentGuardrails";
+import type { TierAToolBatch } from "./_tierAApply";
+import { emptyTierABatch } from "./_tierAApply";
+import type { CalendarProposalKind } from "../../shared/tierAOps";
 
 /** Iris's brain: persona, tools, and one conversational turn (with web search). */
 
@@ -16,13 +28,14 @@ You are speaking out loud through a phone or computer speaker, in a back-and-for
 - Warm, sharp and direct, with a little wit, like a trusted chief of staff who knows the business inside out. Call him "boss" now and then (not every sentence); never "sir".
 - Use the "Right now" notes for anything about his day, schedule, weather, plans or goals. If something isn't in the notes, say you don't have it rather than guessing.
 - When E asks you to remember, add or remind him of something to do, call add_todo (one call per item) and confirm it briefly.
-- When E asks to open, show, pull up, or go to part of IRIS (today's list, plan, email channels, research, hub, meals, apps, vitals, ECS log), call open_planet with the best-matching module and say briefly that you're bringing it up.
+- When E asks to open, show, pull up, or go to part of IRIS (today's list, plan, inbox, drafts, research, team roster, hub, meals, apps, vitals, ECS log), call open_module with the best-matching module id and say briefly that you're bringing it up.
 - Never ask for or repeat students' names or personal details from Family Purpose; refer to "a student".
 - For news, scores, prices, store hours, events, people, or anything current you don't already know, use web_search; use web_fetch to read a specific page E names. Then answer in a sentence or two, naming the source out loud ("per KQED"), never reading URLs. Don't search for things in the "Right now" notes.
 - When E tells you something lasting about himself, his work or his preferences (routines, people by role, how he likes things), or says "remember", call remember with one short fact in third person ("E meets the $BAY sponsor every other Thursday"). When he says to forget something, call forget. Use what you remember naturally; don't recite the list. Never remember students' names or details, passwords, or account or card numbers.
 - The notes also show E's inbox (senders and subjects only, not the email text), recent memos, money this month, gym week and shopping list. Answer from them ("anything from Jordan?", "what's on my list?", "how much did I spend on food?"). School and family emails and memos are withheld on purpose: if asked, say there are some and E can check them in the Inbox or the Family Purpose app. You can't read or send email.
+- Answer module domains (today, inbox, vitals, plan, apps, hub, meals, team roster, ECS) directly from Right now — do not call consult_specialist for those. consult_specialist is only for Scout (sourced business research) or Scribe (draft an email in Drafts).
 - When E asks where a flight is, when it lands, or how high it is ("where's UA 123?"), call track_flight with the flight number and answer from its result in a sentence or two. For ISS or satellite sightings, use the "Right now" notes.
-- You can't send email, change the calendar or spend money; say so and offer to add it as a to-do instead.
+- You can't send email or spend money. For calendar creates, moves, or declines, call propose_calendar_change — E confirms in Today before anything hits Google Calendar. For promises to people, call add_commitment. Before important meetings, call prepare_meeting with a short objective and talking points. For an approved phone script, call propose_voice_call — E confirms before dialing.
 Latency-sensitive; begin your visible answer immediately.`;
 
 export const ADD_TODO = {
@@ -56,21 +69,120 @@ export const TRACK_FLIGHT = {
   },
 };
 
-export const OPEN_PLANET = {
-  name: "open_planet",
+export const CONSULT_SPECIALIST = {
+  name: "consult_specialist",
   description:
-    "Bring an IRIS console module to the front of the solar system UI. Use when E asks to open, show, or go to part of the app.",
+    "Rare delegation only. Scout: live web business research (saves Hub memo). Scribe: create a pending email draft in Drafts. Do not use for inbox, today, vitals, plan, hub, meals, apps, or team — answer those from Right now yourself.",
   strict: true,
   input_schema: {
     type: "object" as const,
     properties: {
-      planet: {
+      specialist: {
         type: "string",
-        enum: SOLAR_PLANET_IDS,
-        description: `Module id. Hints: ${solarPlanetContextForIris()}`,
+        enum: specialistEnumForTool(),
+        description: "scout or scribe only.",
+      },
+      task: { type: "string", description: "What you need them to do." },
+      query: { type: "string", description: "Scout only: research question (defaults to task)." },
+      area: {
+        type: "string",
+        description: "Scout only: ECS area (General, ECS, Tortuga, North Star, Easy Supply, 2EASY, Personal).",
       },
     },
-    required: ["planet"],
+    required: ["specialist", "task"],
+    additionalProperties: false,
+  },
+};
+
+export const ADD_COMMITMENT = {
+  name: "add_commitment",
+  description: "Record a promise E made to someone (commitment ledger on Today). Use when E says he told someone he'd do something by a date.",
+  strict: true,
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      promise: { type: "string", description: "What E promised to do." },
+      owed_to: { type: "string", description: "Person or org E owes it to." },
+      due: { type: "string", description: "Optional due date YYYY-MM-DD." },
+    },
+    required: ["promise", "owed_to"],
+    additionalProperties: false,
+  },
+};
+
+export const PREPARE_MEETING = {
+  name: "prepare_meeting",
+  description: "Save a meeting prep pack (objective, talking points, risks) for an upcoming event E names.",
+  strict: true,
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      title: { type: "string", description: "Meeting title." },
+      objective: { type: "string", description: "One sentence goal for the meeting." },
+      talking_points: { type: "array", items: { type: "string" }, description: "Up to 5 bullets." },
+      risks: { type: "array", items: { type: "string" }, description: "Optional risks or open loops." },
+      event_id: { type: "string", description: "Google calendar event id if known." },
+      starts_at: { type: "string", description: "ISO start time if known." },
+    },
+    required: ["title", "objective", "talking_points"],
+    additionalProperties: false,
+  },
+};
+
+export const PROPOSE_CALENDAR_CHANGE = {
+  name: "propose_calendar_change",
+  description:
+    "Propose a calendar create, move, or decline for E to confirm in Today (never applies immediately). Use create for new events; move when rescheduling; decline to cancel.",
+  strict: true,
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      kind: { type: "string", enum: ["create", "move", "decline"], description: "Type of change." },
+      title: { type: "string", description: "Event title." },
+      event_id: { type: "string", description: "Existing event id for move/decline." },
+      start: { type: "string", description: "For create: start ISO datetime." },
+      end: { type: "string", description: "For create: end ISO datetime." },
+      new_start: { type: "string", description: "For move: new start ISO." },
+      new_end: { type: "string", description: "For move: new end ISO." },
+      location: { type: "string", description: "Optional location." },
+      description: { type: "string", description: "Optional description." },
+    },
+    required: ["kind", "title"],
+    additionalProperties: false,
+  },
+};
+
+export const PROPOSE_VOICE_CALL = {
+  name: "propose_voice_call",
+  description: "Queue an outbound phone call script for E to approve before Twilio dials.",
+  strict: true,
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      to_number: { type: "string", description: "E.164 or US number to call." },
+      label: { type: "string", description: "Short label, e.g. school office." },
+      script: { type: "string", description: "What Iris should say when they answer (short)." },
+    },
+    required: ["to_number", "label", "script"],
+    additionalProperties: false,
+  },
+};
+
+export const OPEN_MODULE = {
+  name: "open_module",
+  description:
+    "Bring an IRIS HUD module to the front (tab bar or More sheet). Use when E asks to open, show, or go to part of the app.",
+  strict: true,
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      module: {
+        type: "string",
+        enum: HUD_MODULE_IDS,
+        description: `Module id. Hints: ${moduleContextForIris()}`,
+      },
+    },
+    required: ["module"],
     additionalProperties: false,
   },
 };
@@ -91,20 +203,7 @@ export const MEMORY_TOOLS = [
   FACT_TOOL("forget", "Forget remembered facts about something E asks you to forget.", "about"),
 ];
 
-/** Things Iris must never store, whatever the model decides. */
-const NEVER_STORE = /\b(password|passcode|pin\b|ssn|social security|account number|routing|card number|cvv)\b|\d[\d\s-]{7,}\d/i;
-export function safeFact(fact: string): string | null {
-  const f = fact.trim().replace(/\s+/g, " ").slice(0, 200);
-  return f.length >= 4 && !NEVER_STORE.test(f) ? f : null;
-}
-
-/** Facts matching a "forget …" request (shared words, ignoring filler). */
-export function matchesForget(fact: string, about: string): boolean {
-  const words = about.toLowerCase().split(/[^a-z0-9$]+/).filter((w) => w.length > 2 && !/^(the|that|this|about|thing|stuff|with|and|for)$/.test(w));
-  if (!words.length) return false;
-  const f = fact.toLowerCase();
-  return words.filter((w) => f.includes(w)).length >= Math.ceil(words.length / 2);
-}
+export { matchesForget, safeFact } from "../../shared/agentGuardrails";
 
 /** Claude-hosted web tools: search the web and read pages (no server of ours needed). */
 export const WEB_TOOLS = [
@@ -154,7 +253,15 @@ export async function runIris(
   turns: IrisTurn[],
   context: string,
   memory: string[] = [],
-  tools: { trackFlight?: (flight: string) => Promise<string> } = {},
+  tools: {
+    trackFlight?: (flight: string) => Promise<string>;
+    consultSpecialist?: (input: {
+      specialist: IrisSpecialistId;
+      task: string;
+      query?: string;
+      area?: string;
+    }) => Promise<{ summary: string; module: string | null; specialist: IrisSpecialistId; deduped?: boolean }>;
+  } = {},
 ): Promise<{
   reply: string;
   todos: IrisTodo[];
@@ -162,18 +269,26 @@ export async function runIris(
   forget: string[];
   searched: boolean;
   refused: boolean;
-  planet: string | null;
+  module: string | null;
+  specialist: IrisSpecialistId | null;
+  delegateReport: string | null;
+  delegateDeduped: boolean;
   usage: IrisTurnUsage;
+  tierA: TierAToolBatch;
 }> {
   const messages: Anthropic.Beta.BetaMessageParam[] = turns.map((t) => ({ role: t.role, content: t.content }));
   const texts: string[] = [];
   const todos: IrisTodo[] = [];
+  const tierA = emptyTierABatch();
   const remember: string[] = [];
   const forget: string[] = [];
   let searched = false;
-  let planet: string | null = null;
+  let module: string | null = null;
+  let specialist: IrisSpecialistId | null = null;
+  let delegateReport: string | null = null;
+  let delegateDeduped = false;
   const usage: IrisTurnUsage = { model: MODEL, inTok: 0, outTok: 0, cacheRead: 0, cacheWrite: 0, searches: 0, fetches: 0, tools: [], hops: 0 };
-  for (let hop = 0; hop < 4; hop++) {
+  for (let hop = 0; hop < IRIS_MAX_HOPS; hop++) {
     const response = await client.beta.messages.create({
       model: MODEL,
       max_tokens: 2048,
@@ -182,10 +297,22 @@ export async function runIris(
       output_config: { effort: "low" },
       system: [
         { type: "text", text: PERSONA, cache_control: { type: "ephemeral" } },
-        { type: "text", text: `Right now:\n${context.slice(0, 8000)}` },
+        { type: "text", text: teamContextForIris(), cache_control: { type: "ephemeral" } },
+        { type: "text", text: `Right now:\n${context.slice(0, IRIS_MAX_CONTEXT_CHARS)}` },
         ...(memory.length ? [{ type: "text" as const, text: `What you remember about E:\n${memory.map((m) => `- ${m}`).join("\n")}` }] : []),
       ],
-      tools: [ADD_TODO, OPEN_PLANET, ...(tools.trackFlight ? [TRACK_FLIGHT] : []), ...MEMORY_TOOLS, ...WEB_TOOLS],
+      tools: [
+        ADD_TODO,
+        ADD_COMMITMENT,
+        PREPARE_MEETING,
+        PROPOSE_CALENDAR_CHANGE,
+        PROPOSE_VOICE_CALL,
+        OPEN_MODULE,
+        ...(tools.trackFlight ? [TRACK_FLIGHT] : []),
+        ...(tools.consultSpecialist ? [CONSULT_SPECIALIST] : []),
+        ...MEMORY_TOOLS,
+        ...WEB_TOOLS,
+      ],
       messages,
     });
     // Numbers only, for the usage log (never the words).
@@ -199,7 +326,9 @@ export async function runIris(
     usage.searches += u?.server_tool_use?.web_search_requests ?? 0;
     usage.fetches += u?.server_tool_use?.web_fetch_requests ?? 0;
     for (const b of response.content) if (b.type === "tool_use") usage.tools.push(b.name);
-    if (response.stop_reason === "refusal") return { reply: "", todos: [], remember: [], forget: [], searched, refused: true, planet: null, usage };
+    if (response.stop_reason === "refusal") {
+      return { reply: "", todos: [], remember: [], forget: [], searched, refused: true, module: null, specialist: null, delegateReport: null, delegateDeduped: false, usage, tierA: emptyTierABatch() };
+    }
     for (const b of response.content) {
       if (b.type === "text") texts.push(b.text);
       else if (b.type === "server_tool_use") searched = true;
@@ -212,27 +341,110 @@ export async function runIris(
       } else if (b.type === "tool_use" && b.name === "add_todo") {
         const i = b.input as { title?: unknown; due?: unknown };
         if (typeof i.title === "string" && i.title.trim()) {
-          todos.push({ title: i.title.trim().slice(0, 140), due: i.due === "today" || i.due === "tomorrow" ? i.due : "none" });
+          todos.push({ title: i.title.trim().slice(0, IRIS_MAX_TODO_TITLE_CHARS), due: i.due === "today" || i.due === "tomorrow" ? i.due : "none" });
         }
-      } else if (b.type === "tool_use" && b.name === "open_planet") {
-        const p = String((b.input as { planet?: unknown }).planet ?? "").trim();
-        if (SOLAR_PLANET_IDS.includes(p as (typeof SOLAR_PLANET_IDS)[number])) planet = p;
+      } else if (b.type === "tool_use" && b.name === "open_module") {
+        const id = String((b.input as { module?: unknown }).module ?? "").trim();
+        if (HUD_MODULE_IDS.includes(id as (typeof HUD_MODULE_IDS)[number])) module = id;
+      } else if (b.type === "tool_use" && b.name === "add_commitment") {
+        const i = b.input as { promise?: unknown; owed_to?: unknown; due?: unknown };
+        tierA.commitments.push({
+          promise: String(i.promise ?? ""),
+          owed_to: String(i.owed_to ?? ""),
+          due: typeof i.due === "string" ? i.due : undefined,
+        });
+      } else if (b.type === "tool_use" && b.name === "prepare_meeting") {
+        const i = b.input as {
+          title?: unknown;
+          objective?: unknown;
+          talking_points?: unknown;
+          risks?: unknown;
+          event_id?: unknown;
+          starts_at?: unknown;
+        };
+        tierA.meetingPreps.push({
+          title: String(i.title ?? ""),
+          objective: String(i.objective ?? ""),
+          talking_points: Array.isArray(i.talking_points) ? i.talking_points.map(String) : [],
+          risks: Array.isArray(i.risks) ? i.risks.map(String) : [],
+          event_id: typeof i.event_id === "string" ? i.event_id : undefined,
+          starts_at: typeof i.starts_at === "string" ? i.starts_at : undefined,
+        });
+      } else if (b.type === "tool_use" && b.name === "propose_calendar_change") {
+        const i = b.input as {
+          kind?: unknown;
+          title?: unknown;
+          event_id?: unknown;
+          start?: unknown;
+          end?: unknown;
+          new_start?: unknown;
+          new_end?: unknown;
+          location?: unknown;
+          description?: unknown;
+        };
+        const kind = i.kind === "create" || i.kind === "move" || i.kind === "decline" ? (i.kind as CalendarProposalKind) : "create";
+        tierA.calendarProposals.push({
+          kind,
+          title: String(i.title ?? ""),
+          event_id: typeof i.event_id === "string" ? i.event_id : undefined,
+          start: typeof i.start === "string" ? i.start : undefined,
+          end: typeof i.end === "string" ? i.end : undefined,
+          new_start: typeof i.new_start === "string" ? i.new_start : undefined,
+          new_end: typeof i.new_end === "string" ? i.new_end : undefined,
+          location: typeof i.location === "string" ? i.location : undefined,
+          description: typeof i.description === "string" ? i.description : undefined,
+        });
+      } else if (b.type === "tool_use" && b.name === "propose_voice_call") {
+        const i = b.input as { to_number?: unknown; label?: unknown; script?: unknown };
+        tierA.voiceCalls.push({
+          to_number: String(i.to_number ?? ""),
+          label: String(i.label ?? ""),
+          script: String(i.script ?? ""),
+        });
       }
     }
-    const lookups = response.content.filter((b) => b.type === "tool_use" && b.name === "track_flight");
-    if (response.stop_reason === "tool_use" && lookups.length && tools.trackFlight) {
-      // Iris needs the flight data to answer: run it and hand the results back.
-      // Every tool call in the turn gets a result (the app runs the others).
+    const toolUses = response.content.filter((b) => b.type === "tool_use");
+    const needsClientRun = toolUses.some(
+      (b) =>
+        (b.name === "track_flight" && tools.trackFlight) ||
+        (b.name === "consult_specialist" && tools.consultSpecialist),
+    );
+    if (response.stop_reason === "tool_use" && needsClientRun) {
       messages.push({ role: "assistant", content: response.content as Anthropic.Beta.BetaContentBlockParam[] });
       const results: Anthropic.Beta.BetaToolResultBlockParam[] = [];
-      for (const b of response.content) {
-        if (b.type !== "tool_use") continue;
+      for (const b of toolUses) {
         let content = "Done.";
-        if (b.name === "track_flight") {
+        if (b.name === "track_flight" && tools.trackFlight) {
           try {
             content = await tools.trackFlight(String((b.input as { flight?: unknown }).flight ?? ""));
           } catch {
             content = "The flight tracker isn't answering right now.";
+          }
+        } else if (b.name === "consult_specialist" && tools.consultSpecialist) {
+          const i = b.input as { specialist?: unknown; task?: unknown; query?: unknown; area?: unknown };
+          const id = String(i.specialist ?? "").trim();
+          const task = String(i.task ?? "").trim();
+          if (!isIrisSpecialistId(id) || !task) {
+            content = "Need a valid specialist and task.";
+          } else {
+            try {
+              const r = await tools.consultSpecialist({
+                specialist: id,
+                task,
+                query: typeof i.query === "string" ? i.query : undefined,
+                area: typeof i.area === "string" ? i.area : undefined,
+              });
+              content = r.summary;
+              if (r.module && HUD_MODULE_IDS.includes(r.module as (typeof HUD_MODULE_IDS)[number])) module = r.module;
+              if (r.deduped) {
+                delegateDeduped = true;
+              } else {
+                specialist = r.specialist;
+                delegateReport = r.summary.slice(0, DELEGATE_MAX_REPORT_CHARS);
+              }
+            } catch {
+              content = "That specialist couldn't finish right now.";
+            }
           }
         }
         results.push({ type: "tool_result", tool_use_id: b.id, content });
@@ -244,5 +456,5 @@ export async function runIris(
     // Long search: hand the partial turn back so Claude picks up where it left off.
     messages.push({ role: "assistant", content: response.content as Anthropic.Beta.BetaContentBlockParam[] });
   }
-  return { reply: forVoice(texts.join(" ")), todos, remember, forget, searched, refused: false, planet, usage };
+  return { reply: forVoice(texts.join(" ")), todos, remember, forget, searched, refused: false, module, specialist, delegateReport, delegateDeduped, usage, tierA };
 }

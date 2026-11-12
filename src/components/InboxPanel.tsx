@@ -12,6 +12,7 @@ interface Props {
   timeZone: string;
   onRefresh: () => void;
   onConnectGoogle: () => void;
+  onOpenDrafts?: () => void;
   onAddTodo: (title: string) => void;
 }
 
@@ -35,7 +36,7 @@ function when(iso: string, timeZone: string): string {
 }
 
 /** Inbox module: newest mail, unread first filter, open in Gmail, turn into a to-do. */
-export function InboxPanel({ messages, unread, loading, error, googleConnected, timeZone, onRefresh, onConnectGoogle, onAddTodo }: Props) {
+export function InboxPanel({ messages, unread, loading, error, googleConnected, timeZone, onRefresh, onConnectGoogle, onOpenDrafts, onAddTodo }: Props) {
   const [onlyUnread, setOnlyUnread] = useState(false);
   const [added, setAdded] = useState<Set<string>>(new Set());
 
@@ -89,6 +90,9 @@ export function InboxPanel({ messages, unread, loading, error, googleConnected, 
             </button>
           </div>
           {error && <p className="text-xs text-amber-300/90">{error}</p>}
+          {loading && !messages.length && (
+            <p className="py-4 text-center text-sm text-alfred-mist animate-pulse">Loading mail…</p>
+          )}
           {!shown.length && !loading && (
             <p className="flex items-center gap-2 py-4 text-sm text-alfred-mist">
               <Mail className="h-4 w-4" aria-hidden /> {onlyUnread ? "No unread mail." : "Inbox clear."}
@@ -139,7 +143,19 @@ export function InboxPanel({ messages, unread, loading, error, googleConnected, 
               </li>
             ))}
           </ul>
-          <p className="text-[11px] text-alfred-mist">Newest 12 from Gmail · refreshes every 5 minutes while open. Write replies by brand in Drafts.</p>
+          <p className="text-[11px] text-alfred-mist">
+            Newest 12 from Gmail · refreshes every 5 minutes while open.
+            {onOpenDrafts ? (
+              <>
+                {" "}
+                <button type="button" className="text-alfred-gold underline-offset-2 hover:underline" onClick={onOpenDrafts}>
+                  Write by brand in Drafts
+                </button>
+              </>
+            ) : (
+              " Write replies by brand in Drafts."
+            )}
+          </p>
         </div>
       )}
     </HudFrame>

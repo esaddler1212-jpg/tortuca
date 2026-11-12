@@ -35,7 +35,11 @@ export function toSyncedSettings(settings: UserSettings): SyncedUserSettings {
 export async function fetchUserData(): Promise<AlfredUserData | null> {
   await ensureSession();
   const res = await fetch("/api/user-data", { headers: authHeaders() });
-  if (!res.ok) return null;
+  if (!res.ok) {
+    const err = new Error(`user-data GET failed (${res.status})`) as Error & { status?: number };
+    err.status = res.status;
+    throw err;
+  }
   return (await res.json()) as AlfredUserData;
 }
 
@@ -46,22 +50,26 @@ export async function saveUserDataRemote(patch: Partial<AlfredUserData>): Promis
     headers: { ...authHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(patch),
   });
-  if (!res.ok) return null;
+  if (!res.ok) {
+    const err = new Error(`user-data PUT failed (${res.status})`) as Error & { status?: number };
+    err.status = res.status;
+    throw err;
+  }
   const saved = (await res.json()) as AlfredUserData;
   if (saved?.updatedAt) markRemoteStamp(saved.updatedAt);
   return saved;
 }
 
 export async function syncSettings(settings: UserSettings): Promise<void> {
-  await saveUserDataRemote({ settings: toSyncedSettings(settings) });
+  await saveUserDataRemote({ settings: toSyncedSettings(settings) }).catch(() => undefined);
 }
 
 export async function syncTodos(todos: TodoItem[]): Promise<void> {
-  await saveUserDataRemote({ todos });
+  await saveUserDataRemote({ todos }).catch(() => undefined);
 }
 
 export async function syncFitness(logs: import("../types").FitnessLog[]): Promise<void> {
-  await saveUserDataRemote({ fitnessLogs: logs });
+  await saveUserDataRemote({ fitnessLogs: logs }).catch(() => undefined);
 }
 
 export async function fetchVapidPublicKey(): Promise<string | null> {
@@ -110,5 +118,5 @@ export async function savePushSubscription(sub: PushSubscriptionJSON): Promise<v
       endpoint: json.endpoint,
       keys: { p256dh: json.keys.p256dh, auth: json.keys.auth },
     },
-  });
+  }).catch(() => undefined);
 }

@@ -143,7 +143,7 @@ export function useChannels(accountEmail?: string) {
         headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({ draftId: id }),
       });
-      const data = (await res.json()) as { error?: string; ok?: boolean };
+      const data = (await res.json().catch(() => ({}))) as { error?: string; ok?: boolean };
       if (!res.ok) return data.error ?? "Send failed";
       update((s) => ({
         ...s,

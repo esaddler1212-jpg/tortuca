@@ -9,7 +9,7 @@ export type SystemStatus = "ok" | "degraded" | "offline";
 const STATUS_TEXT: Record<SystemStatus, { label: string; dot: string; text: string }> = {
   ok: { label: "Optimal", dot: "bg-cyan-400", text: "text-cyan-300" },
   degraded: { label: "Degraded", dot: "bg-amber-400", text: "text-amber-300" },
-  offline: { label: "Offline", dot: "bg-red-400", text: "text-red-300" },
+  offline: { label: "Network", dot: "bg-red-400", text: "text-red-300" },
 };
 
 function useClock(timeZone: string) {
@@ -38,16 +38,44 @@ interface Props {
   operator: string;
   focusChoice: FocusChoice;
   onFocusChoice: (c: FocusChoice) => void;
+  /** When a module is open, the header ring toggles the Iris voice deck. */
+  moduleOpen?: boolean;
+  irisVoiceDeckOpen?: boolean;
+  onIrisVoiceToggle?: () => void;
 }
 
-export function HudHeader({ timeZone, status, alerts, operator, focusChoice, onFocusChoice }: Props) {
+export function HudHeader({
+  timeZone,
+  status,
+  alerts,
+  operator,
+  focusChoice,
+  onFocusChoice,
+  moduleOpen = false,
+  irisVoiceDeckOpen = false,
+  onIrisVoiceToggle,
+}: Props) {
   const time = useClock(timeZone);
   const s = STATUS_TEXT[status];
   return (
     <header className="safe-top sticky top-0 z-10 border-b border-cyan-400/15 bg-black/80 backdrop-blur-xl">
       <div className="mx-auto max-w-[1400px] px-4 py-3 flex items-center gap-4">
         <div className="flex items-center gap-3 min-w-0">
-          <HudRing className="h-9 w-9 shrink-0" />
+          {moduleOpen && onIrisVoiceToggle ? (
+            <button
+              type="button"
+              onClick={onIrisVoiceToggle}
+              className={`shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 ${
+                irisVoiceDeckOpen ? "ring-2 ring-cyan-400/70 shadow-[0_0_16px_rgb(34_211_238/0.35)]" : ""
+              }`}
+              aria-label={irisVoiceDeckOpen ? "Hide Iris voice panel" : "Open Iris voice panel"}
+              aria-expanded={irisVoiceDeckOpen}
+            >
+              <HudRing className="h-9 w-9" />
+            </button>
+          ) : (
+            <HudRing className="h-9 w-9 shrink-0" />
+          )}
           <div className="min-w-0">
             <h1 className="font-display text-lg sm:text-xl font-bold tracking-[0.3em] text-cyan-300 hud-glow-text">IRIS</h1>
             <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-cyan-400/50 truncate">
@@ -99,10 +127,10 @@ export function HudHeader({ timeZone, status, alerts, operator, focusChoice, onF
             </select>
             <ChevronDown className="pointer-events-none absolute right-2 h-3.5 w-3.5 text-cyan-300/70" aria-hidden />
           </label>
-          <span className="relative flex h-11 w-11 items-center justify-center text-cyan-300/80" aria-label={`${alerts} alerts`} title={`${alerts} urgent`}>
-            <Bell className="h-5 w-5" />
+          <span className="relative flex h-11 w-11 items-center justify-center text-cyan-300/80" role="status" title={`${alerts} urgent`}>
+            <Bell className="h-5 w-5" aria-hidden />
             {alerts > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-cyan-400 text-[10px] font-mono text-black leading-4 text-center">
+              <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-cyan-400 text-[10px] font-mono text-black leading-4 text-center" aria-label={`${alerts} urgent alerts`}>
                 {alerts}
               </span>
             )}

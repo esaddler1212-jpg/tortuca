@@ -78,3 +78,21 @@ export function shoppingContext(items: { name: string; inPantry: boolean }[]): s
   if (!need.length) return "Shopping list: empty.";
   return `Shopping list (${need.length}): ${need.slice(0, 25).map((n) => clip(n, 30)).join(", ")}${need.length > 25 ? ", …" : ""}.`;
 }
+
+/** AI & drone watchlist (Hub Money tab / Finnhub). */
+export function stocksContext(snapshot: {
+  watchlist: { symbol: string; changePercent: number; theme: string }[];
+  upcomingIpos: { name: string; symbol: string; date: string }[];
+  dataSource?: string;
+  demoFallback?: boolean;
+} | null | undefined): string {
+  if (!snapshot?.watchlist?.length) return "";
+  const movers = [...snapshot.watchlist]
+    .sort((a, b) => Math.abs(b.changePercent) - Math.abs(a.changePercent))
+    .slice(0, 3)
+    .map((m) => `${m.symbol} ${m.changePercent >= 0 ? "up" : "down"} ${Math.abs(m.changePercent).toFixed(1)}%`);
+  const ipo = snapshot.upcomingIpos[0];
+  const ipoLine = ipo ? ` IPO watch: ${ipo.name} (${ipo.symbol}) ~${ipo.date}.` : "";
+  const demo = snapshot.dataSource === "demo" || snapshot.demoFallback ? " (demo quotes)" : "";
+  return `Markets (Money tab watchlist)${demo}: ${movers.join(", ")}.${ipoLine}`;
+}

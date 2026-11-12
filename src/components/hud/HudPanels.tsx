@@ -20,20 +20,38 @@ const fmtTime = (iso: string, timeZone: string) => {
 
 export function VitalsPanel({
   weather,
+  weatherLoading = false,
+  weatherError = null,
   city,
   fitness,
 }: {
   weather: WeatherSnapshot | null;
+  weatherLoading?: boolean;
+  weatherError?: string | null;
   city: string;
   fitness: FitnessStatus;
 }) {
   const weekTotal = Object.values(fitness.weekCounts).reduce((a, b) => a + b, 0);
+  const weatherLine = weatherLoading
+    ? "…"
+    : weatherError
+      ? "--"
+      : weather
+        ? `${Math.round(weather.temperature)}°`
+        : "--";
+  const weatherSub = weatherLoading
+    ? "Loading weather"
+    : weatherError
+      ? "Try again soon"
+      : weather
+        ? weatherLabel(weather.weatherCode)
+        : "No data";
   return (
     <HudFrame title="Vitals" tag={city}>
       <p className="font-mono text-[11px] uppercase tracking-widest text-cyan-400/50">Outside</p>
       <p className="font-display text-3xl text-cyan-300 hud-glow-text">
-        {weather ? `${Math.round(weather.temperature)}°` : "--"}
-        <span className="ml-2 font-mono text-xs text-cyan-100/70">{weather ? weatherLabel(weather.weatherCode) : "No data"}</span>
+        {weatherLine}
+        <span className="ml-2 font-mono text-xs text-cyan-100/70">{weatherSub}</span>
       </p>
       <div className="grid grid-cols-2 gap-2 mt-3">
         <div className="hud-tile">
@@ -56,19 +74,48 @@ export function VitalsPanel({
 
 export function NetworkPanel({
   woodhouse,
+  loading = false,
+  error = null,
   googleConnected,
+  onConnectGoogle,
+  onOpenTeam,
 }: {
   woodhouse: WoodhouseOrchestrationSnapshot | null;
+  loading?: boolean;
+  error?: string | null;
   googleConnected: boolean;
+  onConnectGoogle?: () => void;
+  onOpenTeam?: () => void;
 }) {
   const nodes = woodhouse?.nodes ?? [];
   const online = nodes.filter((n) => n.ok).length;
   return (
-    <HudFrame title="Network" tag={`Woodhouse ${online}/${nodes.length}`}>
+    <HudFrame title="Woodhouse" tag={loading ? "Syncing…" : `${online}/${nodes.length} online`}>
+      {loading && !nodes.length ? (
+        <p className="py-6 text-center font-mono text-[11px] uppercase tracking-wider text-cyan-400/50 animate-pulse">
+          Syncing apps…
+        </p>
+      ) : null}
+      {error && !nodes.length ? (
+        <p className="text-sm text-amber-200/90 mb-2">{error}</p>
+      ) : null}
       <ul className="space-y-1.5 font-mono text-xs">
         {nodes.map((n) => (
           <li key={n.registryId} className="flex items-center justify-between gap-2">
-            <span className="truncate text-cyan-100/85">{n.displayName}</span>
+            {n.ok && n.baseUrl ? (
+              <a
+                href={n.baseUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="truncate text-cyan-100/85 hover:text-cyan-200 underline-offset-2 hover:underline"
+              >
+                {n.displayName}
+              </a>
+            ) : (
+              <span className="truncate text-cyan-100/85" title={n.error ?? undefined}>
+                {n.displayName}
+              </span>
+            )}
             {n.ok ? (
               <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-cyan-400" aria-label="online" />
             ) : (
@@ -76,7 +123,11 @@ export function NetworkPanel({
             )}
           </li>
         ))}
-        {!nodes.length && <li className="text-cyan-400/50">No apps registered</li>}
+        {!nodes.length && (
+          <li className="text-cyan-400/50">
+            No Woodhouse nodes — set WOODHOUSE_NODES on Netlify or add URLs in Settings.
+          </li>
+        )}
         <li className="flex items-center justify-between gap-2 border-t border-cyan-400/10 pt-1.5">
           <span className="text-cyan-100/85">Google</span>
           {googleConnected ? (
@@ -90,6 +141,34 @@ export function NetworkPanel({
           )}
         </li>
       </ul>
+      {!googleConnected && onConnectGoogle ? (
+        <button type="button" className="btn-gold mt-3 w-full text-xs sm:w-auto" onClick={onConnectGoogle}>
+          Connect Google
+        </button>
+      ) : null}
+      {onOpenTeam ? (
+        <button type="button" className="mt-4 w-full rounded-md border border-sky-400/30 px-3 py-2 text-left text-xs text-sky-100/90 hover:border-sky-300/50" onClick={onOpenTeam}>
+          <span className="font-mono uppercase tracking-wider text-sky-400/80">Iris team</span>
+          <span className="block text-alfred-mist mt-0.5">Org chart, specialists, last delegate →</span>
+        </button>
+      ) : null}
+      <p className="mt-4 text-[10px] leading-relaxed text-cyan-400/45 font-mono">
+        Optional on your machine (not required):{" "}
+        <a href="https://voicebox.sh" target="_blank" rel="noopener noreferrer" className="text-cyan-400/70 hover:underline">
+          Voicebox
+        </a>{" "}
+        for local cloned TTS ·{" "}
+        <a href="https://github.com/MAL19INDUSTRIES/JARVIS-OS-V.2" target="_blank" rel="noopener noreferrer" className="text-cyan-400/70 hover:underline">
+          JARVIS-OS
+        </a>{" "}
+        (Gemini desktop —{" "}
+        <code className="text-cyan-400/55">npm run jarvis-os-v2:bootstrap</code>, cherry-pick in{" "}
+        <code className="text-cyan-400/55">jarvis-os-v2/CHERRY_PICK.md</code>) · server{" "}
+        <a href="https://github.com/esaddler1212-jpg/tortuca/blob/main/docs/SERVER_PLAN.md" target="_blank" rel="noopener noreferrer" className="text-cyan-400/70 hover:underline">
+          n8n
+        </a>{" "}
+        for scheduled Shopify/Gmail workflows.
+      </p>
     </HudFrame>
   );
 }
@@ -163,7 +242,7 @@ export function LogPanel({
             <span className={l.tone === "alert" ? "text-amber-200/90" : "text-cyan-100/85"}>{l.text}</span>
           </li>
         ))}
-        {!lines.length && <li className="text-cyan-400/50">[--:--] ALL QUIET</li>}
+        {!lines.length && <li className="text-cyan-400/50">Nothing on the log right now.</li>}
       </ul>
     </HudFrame>
   );

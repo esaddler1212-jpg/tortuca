@@ -23,13 +23,11 @@ export function MealPrepPanel({ settings, items, onAdd, onToggle, onRemove }: Pr
   const topRecipes = plan.recipes.filter((r) => r.ready || r.score >= 0.5).slice(0, 4);
 
   return (
-    <section
-      className={`panel p-5 ${sunday ? "border-alfred-gold/40 bg-alfred-gold/5" : "border-alfred-border/80"}`}
-    >
-      <h3 className="font-display text-lg text-alfred-gold mb-1 flex items-center gap-2">
+    <section className={`panel-hud p-5 ${sunday ? "border-alfred-gold/40 bg-alfred-gold/5" : ""}`}>
+      <p className="font-display text-lg text-alfred-gold mb-1 flex items-center gap-2">
         {sunday ? <Sparkles className="h-4 w-4" /> : <ChefHat className="h-4 w-4" />}
         {headline}
-      </h3>
+      </p>
       {sunday && (
         <p className="text-xs text-alfred-mist mb-3">
           Check off groceries as you shop — Iris updates meal prep recipes from what&apos;s in your pantry.
@@ -135,8 +133,9 @@ function ShoppingRow({
       </span>
       <button
         type="button"
-        className="text-xs text-alfred-mist/50 opacity-0 group-hover:opacity-100 hover:text-red-300"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded text-xs text-alfred-mist/70 hover:text-red-300 sm:opacity-70"
         onClick={() => onRemove(item.id)}
+        aria-label={`Remove ${item.name}`}
       >
         ×
       </button>

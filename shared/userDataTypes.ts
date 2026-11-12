@@ -57,6 +57,8 @@ export interface SyncedShoppingItem {
   createdAt: string;
 }
 
+import type { TierAState } from "./tierAOps";
+
 /** Plan progress (see shared/plan.ts PlanState); synced across devices. */
 export interface SyncedPlanState {
   done: Record<string, string>;
@@ -96,5 +98,16 @@ export interface AlfredUserData {
   channels?: unknown;
   /** Today's Vantage Point paper, delivered by the separate daily newspaper job (see shared/vantagePaper.ts). */
   vantagePaper?: import("./vantagePaper").StoredVantagePaper;
+  /** Iris specialist delegate log (cross-device dedupe); see shared/irisTeamActivity.ts */
+  irisDelegateHistory?: SyncedIrisDelegateLog[];
+  /** Meeting prep, calendar proposals, SMS, commitments, etc. (see shared/tierAOps.ts). */
+  tierA?: TierAState;
   updatedAt: string;
+}
+
+export interface SyncedIrisDelegateLog {
+  specialist: string;
+  at: string;
+  task?: string;
+  report?: string;
 }

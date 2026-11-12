@@ -10,5 +10,24 @@ tsconfig.tsbuildinfo
 
 # Alfred private profile (never commit)
 USER.local.md
+
+# God's Eye upstream clone (local only; has its own .env and caches)
+gods-eye/gods-eye-view/
+
+# JARVIS-OS-V.2 upstream clone (local Gemini desktop; large venv)
+jarvis-os-v2/JARVIS-OS-V.2/
+herald-os/herald-upstream/
+
+# Local upstream clones (game / media toolchains)
+tools/ace-step/upstream/
+tools/unreal-claude/upstream/
+tools/claude-code-game-studios/upstream/
+tools/audio2face-3d/upstream/
+
+# Futurist Lantern (cloned GLB/WAV; CC BY-NC)
+public/lantern/
+
+# Craft Anything local project (evidence captures; keep findings/*.md only)
+drive-world/research/city-nights-browser/
 __pycache__/
 *.pyc

@@ -1,4 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
+import {
+  isRecommendedIrisVoice,
+  recommendationRank,
+  tierRank,
+} from "../../shared/irisVoices";
+import { chunkForSystemVoice, sanitizeForSpeech } from "../../shared/speechText";
 
 const MUTE_KEY = "alfred-voice-muted";
 const listeners = new Set<(muted: boolean) => void>();
@@ -46,23 +52,30 @@ const FEMALE = /\b(samantha|ava|allison|susan|zoe|nicky|joelle|serena|kate|steph
 
 const VOICE_KEY = "iris-voice"; // per device: each device has its own voices
 const RATE_KEY = "iris-voice-rate";
+const PITCH_KEY = "iris-voice-pitch";
 
-export function getVoicePrefs(): { name: string | null; rate: number } {
+export function getVoicePrefs(): { name: string | null; rate: number; pitch: number } {
   try {
     const rate = Number(localStorage.getItem(RATE_KEY));
-    return { name: localStorage.getItem(VOICE_KEY), rate: rate >= 0.7 && rate <= 1.4 ? rate : 1 };
+    const pitch = Number(localStorage.getItem(PITCH_KEY));
+    return {
+      name: localStorage.getItem(VOICE_KEY),
+      rate: rate >= 0.7 && rate <= 1.4 ? rate : 1,
+      pitch: pitch >= 0.75 && pitch <= 1.25 ? pitch : 1,
+    };
   } catch {
-    return { name: null, rate: 1 };
+    return { name: null, rate: 1, pitch: 1 };
   }
 }
 
-export function setVoicePrefs(prefs: { name?: string | null; rate?: number }) {
+export function setVoicePrefs(prefs: { name?: string | null; rate?: number; pitch?: number }) {
   try {
     if (prefs.name !== undefined) {
       if (prefs.name) localStorage.setItem(VOICE_KEY, prefs.name);
       else localStorage.removeItem(VOICE_KEY);
     }
     if (prefs.rate !== undefined) localStorage.setItem(RATE_KEY, String(prefs.rate));
+    if (prefs.pitch !== undefined) localStorage.setItem(PITCH_KEY, String(prefs.pitch));
   } catch {
     /* storage unavailable */
   }
@@ -85,16 +98,30 @@ export function accentLabel(lang: string): string {
   return map[l] ?? lang;
 }
 
-/** English voices on this device: female voices first, then by accent and name. */
-export function listEnglishVoices(): SpeechSynthesisVoice[] {
+/** English voices on this device — recommended & enhanced first, then accent and name. */
+export function listEnglishVoices(opts: { includeMale?: boolean } = {}): SpeechSynthesisVoice[] {
   if (!speechOutputSupported()) return [];
   const seen = new Set<string>();
   return window.speechSynthesis
     .getVoices()
-    .filter((v) => v.lang.toLowerCase().startsWith("en") && !seen.has(v.name) && seen.add(v.name))
+    .filter((v) => {
+      if (!v.lang.toLowerCase().startsWith("en") || seen.has(v.name)) return false;
+      seen.add(v.name);
+      if (opts.includeMale) return true;
+      if (FEMALE.test(v.name) || isRecommendedIrisVoice(v.name)) return true;
+      return !MALE.test(v.name);
+    })
     .sort((a, b) => {
-      const rank = (v: SpeechSynthesisVoice) => (FEMALE.test(v.name) ? 0 : MALE.test(v.name) ? 2 : 1);
-      return rank(a) - rank(b) || accentLabel(a.lang).localeCompare(accentLabel(b.lang)) || a.name.localeCompare(b.name);
+      const rec = recommendationRank(a.name) - recommendationRank(b.name);
+      if (rec !== 0) return rec;
+      const tier = tierRank(a.name) - tierRank(b.name);
+      if (tier !== 0) return tier;
+      const gender = (v: SpeechSynthesisVoice) => (FEMALE.test(v.name) ? 0 : MALE.test(v.name) ? 2 : 1);
+      return (
+        gender(a) - gender(b) ||
+        accentLabel(a.lang).localeCompare(accentLabel(b.lang)) ||
+        a.name.localeCompare(b.name)
+      );
     });
 }
 
@@ -110,7 +137,9 @@ function pickVoice(): SpeechSynthesisVoice | undefined {
   if (picked) return picked;
   const us = voices.filter((v) => v.lang.replace("_", "-").toLowerCase().startsWith("en-us"));
   return (
+    us.find((v) => /samantha.*enhanced/i.test(v.name)) ??
     us.find((v) => /samantha/i.test(v.name)) ??
+    us.find((v) => /ava.*premium|^ava$/i.test(v.name)) ??
     us.find((v) => FEMALE.test(v.name)) ??
     us.find((v) => !MALE.test(v.name)) ??
     voices.find((v) => v.lang.startsWith("en") && !MALE.test(v.name)) ??
@@ -190,9 +219,10 @@ export function useVoiceOutput() {
     const run = ++speakRun;
     // Sentence-sized pieces: Chrome stops long utterances partway (~15 s),
     // and short pieces let a tap cut her off cleanly.
-    const parts = speechChunks(text);
+    const heraldChunks = chunkForSystemVoice(text);
+    const parts = heraldChunks.length ? heraldChunks : speechChunks(sanitizeForSpeech(text));
     const voice = pickVoice();
-    const rate = getVoicePrefs().rate;
+    const { rate, pitch } = getVoicePrefs();
     let started = false;
     let ended = false;
     const finish = () => {
@@ -211,6 +241,7 @@ export function useVoiceOutput() {
         u.lang = voice.lang;
       }
       u.rate = rate;
+      u.pitch = pitch;
       u.onstart = () => {
         if (run !== speakRun) return;
         setSpeaking(true);

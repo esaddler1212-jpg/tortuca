@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "updatedAt": "2026-11-11T14:46:10.156Z",
+  "activeSlice": {
+    "nightshift": "cn-d05",
+    "skyring": "bw-d05"
+  },
+  "sliceState": {
+    "cn-d01": {
+      "status": "done",
+      "completedAt": "2026-11-09T00:31:55.689Z",
+      "note": "Street rep meter: Bay %, ranks, HUD bar, save peak"
+    },
+    "cn-d02": {
+      "status": "done",
+      "completedAt": "2026-11-09T14:24:55.892Z",
+      "note": "I-80 ghost sprint: line progress, rival HUD, PB tape + Ghost rival beaten toast"
+    },
+    "cn-d03": {
+      "status": "done",
+      "completedAt": "2026-11-10T15:30:43.777Z",
+      "note": "Nitro Zone: Lush FOV punch, exposure + canvas grade, HUD stripe"
+    },
+    "cn-d04": {
+      "status": "done",
+      "completedAt": "2026-11-11T14:46:09.948Z",
+      "note": "3 ghost circuits on minimap + roster; Estate & Bridge ghost sprints"
+    },
+    "cn-d05": {
+      "status": "active"
+    },
+    "cn-d06": {
+      "status": "pending"
+    },
+    "cn-d07": {
+      "status": "pending"
+    },
+    "cn-d08": {
+      "status": "pending"
+    },
+    "cn-d09": {
+      "status": "pending"
+    },
+    "cn-d10": {
+      "status": "pending"
+    },
+    "bw-d01": {
+      "status": "done",
+      "completedAt": "2026-11-09T00:31:55.896Z",
+      "note": "Universe sky ambient + HUD rim chip per district"
+    },
+    "bw-d02": {
+      "status": "done",
+      "completedAt": "2026-11-09T14:24:56.092Z",
+      "note": "solar-apex.glb hero mesh via build-hero-glbs + path override"
+    },
+    "bw-d03": {
+      "status": "done",
+      "completedAt": "2026-11-10T15:30:43.960Z",
+      "note": "Chapters 1–3 chain: Story chip + objective HUD, arc beat wiring tests"
+    },
+    "bw-d04": {
+      "status": "done",
+      "completedAt": "2026-11-11T14:46:10.156Z",
+      "note": "Wave-10 juice: HUD chip, rumble ramp, pair-boss hit shake"
+    },
+    "bw-d05": {
+      "status": "active"
+    },
+    "bw-d06": {
+      "status": "pending"
+    },
+    "bw-d07": {
+      "status": "pending"
+    },
+    "bw-d08": {
+      "status": "pending"
+    },
+    "bw-d09": {
+      "status": "pending"
+    },
+    "bw-d10": {
+      "status": "pending"
+    }
+  },
+  "reports": [
+    {
+      "agent": "skyring",
+      "sliceId": "bw-d04",
+      "at": "2026-11-11T14:46:10.156Z",
+      "summary": "Wave-10 juice: HUD chip, rumble ramp, pair-boss hit shake"
+    },
+    {
+      "agent": "nightshift",
+      "sliceId": "cn-d04",
+      "at": "2026-11-11T14:46:09.949Z",
+      "summary": "3 ghost circuits on minimap + roster; Estate & Bridge ghost sprints"
+    },
+    {
+      "agent": "skyring",
+      "sliceId": "bw-d03",
+      "at": "2026-11-10T15:30:43.960Z",
+      "summary": "Chapters 1–3 chain: Story chip + objective HUD, arc beat wiring tests"
+    },
+    {
+      "agent": "nightshift",
+      "sliceId": "cn-d03",
+      "at": "2026-11-10T15:30:43.777Z",
+      "summary": "Nitro Zone: Lush FOV punch, exposure + canvas grade, HUD stripe"
+    },
+    {
+      "agent": "skyring",
+      "sliceId": "bw-d02",
+      "at": "2026-11-09T14:24:56.093Z",
+      "summary": "solar-apex.glb hero mesh via build-hero-glbs + path override"
+    },
+    {
+      "agent": "nightshift",
+      "sliceId": "cn-d02",
+      "at": "2026-11-09T14:24:55.892Z",
+      "summary": "I-80 ghost sprint: line progress, rival HUD, PB tape + Ghost rival beaten toast"
+    },
+    {
+      "agent": "skyring",
+      "sliceId": "bw-d01",
+      "at": "2026-11-09T00:31:55.896Z",
+      "summary": "Universe sky ambient + HUD rim chip per district"
+    },
+    {
+      "agent": "nightshift",
+      "sliceId": "cn-d01",
+      "at": "2026-11-09T00:31:55.689Z",
+      "summary": "Street rep meter: Bay %, ranks, HUD bar, save peak"
+    }
+  ]
+}

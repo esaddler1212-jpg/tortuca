@@ -18,7 +18,9 @@ import * as Plan from "../shared/plan.ts";
 import * as Sparks from "../shared/sparks.ts";
 import * as Hub from "../shared/hub.ts";
 import * as Usage from "../shared/irisUsage.ts";
-import { matchPlanetFromSpeech, HUD_TABS, HUD_MORE } from "../shared/solarPlanets.ts";
+import { matchModuleFromSpeech, HUD_TABS, HUD_MORE, HUD_MODULE_IDS } from "../shared/hudModules.ts";
+import { IRIS_TEAM, teamCoverageOk } from "../shared/irisTeam.ts";
+import { teamEfficiencySummary, findDuplicateDelegate, duplicateBlockedMessage, type IrisDelegateLog } from "../shared/irisTeamActivity.ts";
 import { hudGauges } from "../shared/hudGauges.ts";
 import { commuteMinutesFor, inCommuteWindow } from "../shared/commute.ts";
 import * as IC from "../shared/irisContext.ts";
@@ -31,6 +33,7 @@ import { buildAskContext } from "../src/lib/askContext.ts";
 import * as Ex from "../shared/exercises.ts";
 import { buildFamilyPurposeWoodhouseNode } from "../netlify/functions/_family-purpose-woodhouse.ts";
 import { mergeBackups } from "../netlify/functions/_fp-backup.ts";
+import * as Voices from "../shared/irisVoices.ts";
 import { readFileSync } from "node:fs";
 import { isVantagePaperEdition, isFreshVantagePaper } from "../shared/vantagePaper.ts";
 import { buildVantagePaperBrief } from "../src/lib/spokenBrief.ts";
@@ -375,9 +378,9 @@ if (!process.env.TIME_CHECK_CHILD) {
 
 // ── Voice → module routing
 check(
-  "planets: inbox, drafts, vitals (Pulse) and today by voice",
-  ["open my inbox", "show my email", "any unread mail", "draft an email to the sponsor", "show the map", "where are the planes", "earthquakes near me", "open today", "show my schedule"].map(matchPlanetFromSpeech),
-  ["inbox", "inbox", "inbox", "channels", "vitals", "vitals", "vitals", "today", "today"],
+  "modules: inbox, drafts, vitals (Pulse), team, and today by voice",
+  ["open my inbox", "show my email", "any unread mail", "draft an email to the sponsor", "show the map", "where are the planes", "earthquakes near me", "open today", "show my schedule", "open the team"].map(matchModuleFromSpeech),
+  ["inbox", "inbox", "inbox", "channels", "vitals", "vitals", "vitals", "today", "today", "team"],
 );
 
 // ── HUD gauges and tabs
@@ -390,7 +393,28 @@ check(
   check("hud: no weather yet", hudGauges({ ...base, temp: undefined, aqi: undefined })[2].value, "--°");
   check("hud: plan month progress", [g.plan.value, Math.round(g.plan.fill * 100)], ["NOV · 2/7", 29]);
   check("hud: empty list reads all clear, urgent shows in caption", [hudGauges({ ...base, todosPending: 0, todosDone: 0 })[0].value, hudGauges({ ...base, urgent: 2 })[0].caption], ["ALL CLEAR", "TODAY · 2 URGENT"]);
-  check("hud: 4 tabs + everything else under More, no module lost", [HUD_TABS.join(","), [...HUD_TABS, ...HUD_MORE].length], ["today,vitals,inbox,plan", 10]);
+  check("hud: 4 tabs + everything else under More, no module lost", [HUD_TABS.join(","), [...HUD_TABS, ...HUD_MORE].length], ["today,vitals,inbox,plan", 11]);
+  check("hud: team module by voice", matchModuleFromSpeech("open the team"), "team");
+  check("hud: every module id is unique", new Set(HUD_MODULE_IDS).size, HUD_MODULE_IDS.length);
+  check("iris team: eleven specialists, one per module", [IRIS_TEAM.length, teamCoverageOk()], [11, true]);
+  check("iris team: woodhouse owns team module", IRIS_TEAM.find((s) => s.id === "woodhouse")?.module, "team");
+  {
+    const hist: IrisDelegateLog[] = [
+      { specialist: "scout", at: new Date().toISOString(), task: "brief on Bay Area doc sponsors", report: "Prior scout brief summary." },
+      { specialist: "scout", at: new Date(Date.now() - 3600_000).toISOString(), task: "research Bay Area documentary sponsors" },
+    ];
+    check("woodhouse: flags similar duplicate delegates", teamEfficiencySummary(hist).includes("Duplicate risk"), true);
+    const blocked = findDuplicateDelegate(hist, "scout", "brief on Bay Area doc sponsors again");
+    check("duplicate: blocks repeat scout within window", Boolean(blocked && blocked.report?.includes("Prior")), true);
+    check(
+      "duplicate: blocked message tells Iris to relay only",
+      duplicateBlockedMessage(hist[0], "America/Los_Angeles").includes("DUPLICATE BLOCKED"),
+      true,
+    );
+  }
+  check("iris team: scout opens research module", IRIS_TEAM.find((s) => s.id === "scout")?.module, "research");
+  check("iris team: ledger owns today", IRIS_TEAM.find((s) => s.id === "ledger")?.module, "today");
+  check("hud: research is in More, not tabs", HUD_MORE.includes("research") && !HUD_TABS.includes("research"), true);
 }
 
 // ── Server-side live commute
@@ -433,6 +457,18 @@ check(
   ], "America/Los_Angeles");
   check("iris sees: memos, skips chat transcripts, withholds school notes", [memos.includes("$BAY episode"), memos.includes("Conversation"), memos.includes("attendance"), memos.includes("1 school-related memo")], [true, false, false, true]);
   check("iris sees: money", IC.moneyContext({ income: 1250, spent: 410.5, net: 839.5, ecsRevenue: 900, topSpend: [["Food", 220], ["Gas", 120]] }, "November", 2000), "Money (November, from the Money tab): in $1,250, out $411, net $840. ECS revenue $900 of $2,000 goal. Top spending: Food $220, Gas $120.");
+  check(
+    "iris sees: markets under money",
+    IC.stocksContext({
+      watchlist: [
+        { symbol: "NVDA", changePercent: 2.1, theme: "ai" },
+        { symbol: "AVAV", changePercent: -1.4, theme: "drones" },
+      ],
+      upcomingIpos: [{ name: "Acme AI", symbol: "ACME", date: "2026-12-01" }],
+      dataSource: "finnhub",
+    }).includes("NVDA up"),
+    true,
+  );
   check("iris sees: gym week", IC.gymContext({ workoutsThisWeek: 1, target: 3, loggedToday: false, next: { title: "Legs", day: "Thu", isToday: false } }), "Gym: 1 of 3 workouts this week. Next session: Legs on Thu.");
   check("iris sees: shopping list (not pantry)", IC.shoppingContext([{ name: "Chicken", inPantry: false }, { name: "Rice", inPantry: true }, { name: "Spinach", inPantry: false }]), "Shopping list (2): Chicken, Spinach.");
 }
@@ -473,6 +509,16 @@ check("vantage paper → brief: spoken reads naturally, no raw bullets", /Here's
 
 const emptyPaper = { url: "https://claude.ai/artifact/Krc9x2BhnadEb3SXbH4FvR", fetchedAt: "2026-11-09T14:00:00Z", edition: { date: "2026-11-09" } };
 check("vantage paper → brief: quiet morning still reads fine", buildVantagePaperBrief(emptyPaper).lines, [{ label: "Needs attention", text: "Nothing needs you this morning." }]);
+// ── Iris voice labels (browser speechSynthesis sorting)
+{
+  check("iris voice tier: premium in name", Voices.voiceTier("Ava (Premium) (en-US)"), "premium");
+  check("iris voice tier: enhanced", Voices.voiceTier("Samantha (Enhanced) (en-US)"), "enhanced");
+  check("iris voice tier: standard default", Voices.voiceTier("Karen"), "standard");
+  check("iris voice rank: Samantha before Karen", Voices.recommendationRank("Samantha") < Voices.recommendationRank("Karen"), true);
+  check("iris voice: Google US English recommended", Voices.isRecommendedIrisVoice("Google US English"), true);
+  const mockVoice = { name: "Samantha (Enhanced) (en-US)", lang: "en-US" } as SpeechSynthesisVoice;
+  check("iris voice label includes tier", Voices.irisVoiceOptionLabel(mockVoice, "American").includes("Enhanced"), true);
+}
 
 if (failures) {
   console.error(`\n${failures} check(s) failed`);

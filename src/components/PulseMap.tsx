@@ -36,9 +36,68 @@ function glyph(text: string, cls: string, rotate?: number, size = 26) {
   });
 }
 
+/** Bay Area framing — no external map tiles (works offline / when CDNs block). */
+const BAY_BOUNDS: L.LatLngBoundsExpression = [
+  [37.32, -122.62],
+  [38.12, -121.68],
+];
+
+/** Rough SF Bay + delta outline for a digital god's-eye read. */
+const BAY_SHORE: L.LatLngExpression[] = [
+  [38.08, -122.52],
+  [37.98, -122.35],
+  [37.88, -122.22],
+  [37.72, -122.18],
+  [37.55, -122.35],
+  [37.48, -122.55],
+  [37.45, -122.85],
+  [37.52, -123.05],
+  [37.72, -122.95],
+  [37.95, -122.72],
+  [38.08, -122.52],
+];
+
+function addDigitalBasemap(map: L.Map): L.LayerGroup {
+  const base = L.layerGroup().addTo(map);
+  L.rectangle(BAY_BOUNDS, {
+    color: "rgba(103, 232, 249, 0.22)",
+    weight: 1,
+    fillColor: "#0a1018",
+    fillOpacity: 0.92,
+  }).addTo(base);
+  L.polygon(BAY_SHORE, {
+    color: "rgba(34, 211, 238, 0.35)",
+    weight: 1.5,
+    fillColor: "rgba(15, 23, 42, 0.55)",
+    fillOpacity: 0.6,
+  }).addTo(base);
+  const south = 37.32;
+  const north = 38.12;
+  const west = -122.62;
+  const east = -121.68;
+  for (let lat = south; lat <= north + 0.001; lat += 0.04) {
+    L.polyline(
+      [
+        [lat, west],
+        [lat, east],
+      ],
+      { color: "rgba(103, 232, 249, 0.07)", weight: 1, interactive: false },
+    ).addTo(base);
+  }
+  for (let lng = west; lng <= east + 0.001; lng += 0.04) {
+    L.polyline(
+      [
+        [south, lng],
+        [north, lng],
+      ],
+      { color: "rgba(103, 232, 249, 0.07)", weight: 1, interactive: false },
+    ).addTo(base);
+  }
+  return base;
+}
+
 /**
- * God's-eye map of the Bay inside IRIS: quakes, fires, commute cams, planes
- * overhead and (with an AISStream key) ships, as tappable markers.
+ * God's-eye map of the Bay inside IRIS: digital grid + markers (no raster tiles).
  */
 export default function PulseMap({ pulse, lat, lon, layers, tracked, onCam }: Props) {
   const box = useRef<HTMLDivElement>(null);
@@ -47,36 +106,66 @@ export default function PulseMap({ pulse, lat, lon, layers, tracked, onCam }: Pr
   const camRef = useRef(onCam);
   camRef.current = onCam;
 
-  // Create the map once.
   useEffect(() => {
-    if (!box.current || map.current) return;
-    const m = L.map(box.current, { zoomControl: false, attributionControl: true }).setView([lat, lon], 10);
+    const el = box.current;
+    if (!el || map.current) return;
+
+    const m = L.map(el, {
+      zoomControl: false,
+      attributionControl: false,
+      preferCanvas: true,
+      maxBounds: BAY_BOUNDS,
+      maxBoundsViscosity: 0.85,
+      minZoom: 8,
+      maxZoom: 14,
+    }).setView([lat, lon], 10);
+
+    L.control
+      .attribution({ position: "bottomleft" })
+      .addTo(m)
+      .setPrefix("")
+      .addAttribution("IRIS digital grid");
+
     L.control.zoom({ position: "bottomright" }).addTo(m);
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-      maxZoom: 18,
-      subdomains: "abcd",
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    }).addTo(m);
+    addDigitalBasemap(m);
     group.current = L.layerGroup().addTo(m);
-    // Camera thumbnails in popups open the big viewer.
-    m.on("popupopen", (e) => {
-      const img = e.popup.getElement()?.querySelector<HTMLImageElement>("img[data-cam]");
+
+    m.on("popupopen", (e: L.LeafletEvent) => {
+      const popupEl = e.popup.getElement();
+      const img = popupEl?.querySelector("img[data-cam]") as HTMLImageElement | null;
       img?.addEventListener("click", () => camRef.current(img.dataset.cam!));
     });
+
+    const fixSize = () => {
+      m.invalidateSize({ animate: false });
+    };
+    fixSize();
+    requestAnimationFrame(fixSize);
+    const t = window.setTimeout(fixSize, 120);
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(fixSize) : null;
+    ro?.observe(el);
+
     map.current = m;
     return () => {
+      window.clearTimeout(t);
+      ro?.disconnect();
       m.remove();
       map.current = null;
+      group.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [lat, lon]);
 
-  // Redraw markers when data or layer toggles change.
+  useEffect(() => {
+    const m = map.current;
+    if (!m) return;
+    m.setView([lat, lon], m.getZoom(), { animate: false });
+    m.invalidateSize({ animate: false });
+  }, [lat, lon]);
+
   useEffect(() => {
     const g = group.current;
     if (!g) return;
     g.clearLayers();
-    // "You" sits under everything and lets taps through to markers nearby.
     L.marker([lat, lon], { icon: glyph("", "pin-you", undefined, 16), keyboard: false, interactive: false, zIndexOffset: -1000 }).addTo(g);
 
     if (layers.quakes) {
@@ -145,12 +234,11 @@ export default function PulseMap({ pulse, lat, lon, layers, tracked, onCam }: Pr
     }
   }, [pulse, lat, lon, layers, tracked]);
 
-  // Bring a tracked flight into view.
   useEffect(() => {
     const m = map.current;
     if (!m || !tracked) return;
-    m.fitBounds(L.latLngBounds([lat, lon], [tracked.lat, tracked.lon]).pad(0.25), { maxZoom: 10 });
+    m.fitBounds(L.latLngBounds([lat, lon], [tracked.lat, tracked.lon]).pad(0.25), { maxZoom: 11 });
   }, [tracked, lat, lon]);
 
-  return <div ref={box} className="pulse-map h-[340px] w-full overflow-hidden rounded-md border border-alfred-border/60" role="region" aria-label="Bay Area map" />;
+  return <div ref={box} className="pulse-map h-[340px] w-full overflow-hidden rounded-md border border-alfred-border/60" role="region" aria-label="Bay Area digital pulse map" />;
 }

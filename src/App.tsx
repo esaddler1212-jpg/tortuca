@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNow } from "./hooks/useNow";
 import { nextWakeDay } from "../shared/bedtime";
 import { dayKey, localHour, weekdayOfDay, zonedDateTime } from "../shared/timezone";
@@ -9,9 +9,7 @@ import { buildDailyBrief, buildVantageBrief, buildVantagePaperBrief } from "./li
 import { isFreshVantagePaper, type StoredVantagePaper } from "../shared/vantagePaper";
 import { usePlan } from "./hooks/usePlan";
 import { SparkCard } from "./components/SparkCard";
-import { HubPanel } from "./components/HubPanel";
 import { PulsePanel } from "./components/PulsePanel";
-import { InboxPanel } from "./components/InboxPanel";
 import { usePulse } from "./hooks/usePulse";
 import { ConversationCaptions } from "./components/ConversationPanel";
 import { useConversation } from "./hooks/useConversation";
@@ -19,18 +17,15 @@ import { buildAskContext } from "./lib/askContext";
 import { weatherLabel } from "./lib/weather";
 import { pulseSummary } from "../shared/pulse";
 import { issContext } from "../shared/skyText";
-import { gymContext, inboxContext, memosContext, moneyContext, shoppingContext } from "../shared/irisContext";
+import { gymContext, inboxContext, memosContext, moneyContext, shoppingContext, stocksContext } from "../shared/irisContext";
 import { useHub } from "./hooks/useHub";
 import { DEFAULT_ROUTINE, gymDayFor, moneyMonth } from "../shared/hub";
-import { PlanPanel } from "./components/PlanPanel";
-import { BusinessResearcherPanel } from "./components/BusinessResearcherPanel";
-import { ChannelsPanel } from "./components/ChannelsPanel";
 import { useBusinessResearch } from "./hooks/useBusinessResearch";
 import { useChannels } from "./hooks/useChannels";
 import { channelsSummary } from "../shared/channels";
 import { fetchUserData } from "./lib/userData";
 import { EMPTY_HUB, type HubState } from "../shared/hub";
-import type { ResearchArea } from "../shared/businessResearch";
+import type { ResearchArea, ResearchTemplate } from "../shared/businessResearch";
 import type { PlanTask, YearGoal } from "../shared/planData";
 import { allGoals, allTasks, goalProgress, handoffQueue, isDone, monthTasks, planTasksDoneOn, sparkDone, todaySpark, weekFocus } from "../shared/plan";
 import { VantageBriefingPanel } from "./components/hud/VantageBriefingPanel";
@@ -38,8 +33,6 @@ import { OvernightDeltaBanner } from "./components/OvernightDeltaBanner";
 import { OvercommitmentBanner } from "./components/OvercommitmentBanner";
 import { MorningRitualModal } from "./components/MorningRitualModal";
 import { WindDownBanner } from "./components/WindDownBanner";
-import { CommandBar } from "./components/CommandBar";
-import { TodayCommandCenter } from "./components/TodayCommandCenter";
 import { WeeklyReview } from "./components/WeeklyReview";
 import { SettingsDrawer } from "./components/SettingsDrawer";
 import { useSettings } from "./hooks/useSettings";
@@ -55,7 +48,6 @@ import { usePushNotifications } from "./hooks/usePushNotifications";
 import { useOvernightDelta } from "./hooks/useOvernightDelta";
 import { useFitness } from "./hooks/useFitness";
 import { useShoppingList } from "./hooks/useShoppingList";
-import { MealPrepPanel } from "./components/MealPrepPanel";
 import { orchestrationToCalendarEvents } from "./lib/familyCalendar";
 import { computeLeaveBy, filterTodayTimeline } from "./lib/leaveBy";
 import { computeSuggestedBedtime, isWindDownTime } from "./lib/bedtime";
@@ -66,12 +58,32 @@ import { buildFitnessStatus } from "./lib/fitness";
 import { assessOvercommitment } from "./lib/overcommitment";
 import { HudHeader, type SystemStatus } from "./components/hud/HudHeader";
 import { CoreRing } from "./components/hud/CoreRing";
-import { HudCore, HudCoreCompact } from "./components/hud/HudCore";
-import { IrisDock } from "./components/hud/IrisDock";
+import { HudCore } from "./components/hud/HudCore";
 import { UpNextPanel, UrgentLine } from "./components/hud/HudHome";
+import { IrisDock } from "./components/hud/IrisDock";
+import { IrisTalkBox } from "./components/IrisTalkBox";
 import { GlassModule, HudTabBar, MoreSheet, type TabBadge } from "./components/hud/HudNav";
-import { hudGauges, type GaugeId } from "../shared/hudGauges";
-import { SOLAR_PLANETS, type SolarPlanetId } from "../shared/solarPlanets";
+import { hudGauges } from "../shared/hudGauges";
+import { HUD_MORE, HUD_TABS, moduleContextForIris, type HudModuleId } from "../shared/hudModules";
+import { teamOpsContextForAsk } from "../shared/irisTeamActivity";
+import { gameFinishForAskExtra } from "./lib/gameFinishContext";
+import { shopifyContextForIris } from "../shared/shopify";
+import { specialistById } from "../shared/irisTeam";
+import { useShopifyStore } from "./hooks/useShopifyStore";
+import { useTierA } from "./hooks/useTierA";
+import { TierAPanel } from "./components/TierAPanel";
+import { tierAContextForIris } from "../shared/tierAOps";
+import {
+  LazyBusinessResearcherPanel,
+  LazyChannelsPanel,
+  LazyHubPanel,
+  LazyInboxPanel,
+  LazyMealPrepPanel,
+  LazyPlanPanel,
+  LazyTodayCommandCenter,
+  ModuleLoading,
+  prefetchHudModules,
+} from "./lazyModules";
 import { FamilyPurposeDebriefBanner } from "./components/FamilyPurposeDebriefBanner";
 import { WeekWeatherPanel } from "./components/hud/WeekWeatherPanel";
 import {
@@ -80,20 +92,28 @@ import {
   RoadmapPanel,
   VitalsPanel,
 } from "./components/hud/HudPanels";
+import { TeamPanel } from "./components/hud/TeamPanel";
+import { EasySupplyStorePanel } from "./components/hud/EasySupplyStorePanel";
 import { InstallAppBanner } from "./components/InstallAppBanner";
-import { solarPlanetContextForIris } from "../shared/solarPlanets";
+import { useHudPrefs } from "./hooks/useHudPrefs";
+import { HudHomeCommandDeck } from "./components/hud/HudHomeCommandDeck";
+import { ParticleCoreBackdrop } from "./components/hud/ParticleCoreBackdrop";
+import { resolveVoicePersona } from "./lib/voicePersona";
 
 export default function App() {
   const { settings, persist, updateCity, saving, error, setError } = useSettings();
+  const { prefs: hudPrefs, update: updateHudPrefs } = useHudPrefs();
   // Re-evaluates all time-of-day logic every minute and when the app is reopened.
   const now = useNow();
   const { weather, loading: weatherLoading, error: weatherError } = useWeather(settings);
   const { todos, pending, done, add, toggle, setTodos } = useTodos();
   const { connected, accountEmail, connect, disconnect, connectionError } = useGoogleIntegration();
   const channelAgent = useChannels(accountEmail);
-  const { allEvents, addLocalEvent } = useSchedule(connected);
+  const { tierA, patchTierA } = useTierA();
+  const { allEvents } = useSchedule(connected);
   const { messages, unread, loading: emailsLoading, error: emailsError, refresh: refreshEmails } = useEmails(connected);
   const { snapshot: rawWoodhouse, loading: woodhouseLoading, error: woodhouseError } = useWoodhouse();
+  const { snapshot: shopifyStore, loading: shopifyLoading, error: shopifyError, reload: reloadShopify } = useShopifyStore(connected);
   // Workday vs off duty: Family Purpose tasks hide on weekends, holidays and after 7 PM.
   // Clock picks the mode; the header's Focus menu can override it until the next switch.
   const autoMode = dayMode(settings.timezone, now);
@@ -107,7 +127,7 @@ export default function App() {
     const themeColor = { school: "#22d3ee", network: "#4ade80", weekend: "#c084fc", holiday: "#c084fc", vantage: "#c084fc" }[mode];
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", themeColor);
   }, [mode]);
-  const { snapshot: stocks, loading: stocksLoading } = useStocks();
+  const { snapshot: stocks, loading: stocksLoading, error: stocksError, refresh: refreshStocks } = useStocks();
   const commute = useCommute(settings, connected);
   const effectiveMinutes = commute.effectiveMinutes;
   const { logs: fitnessLogs, logWorkout, loadRemote: loadFitness } = useFitness(settings);
@@ -115,8 +135,8 @@ export default function App() {
   const bizResearch = useBusinessResearch(settings.timezone);
 
   const runBusinessResearch = useCallback(
-    async (query: string, area: ResearchArea, context?: string) => {
-      const result = await bizResearch.research({ query, area, context });
+    async (query: string, area: ResearchArea, context?: string, template?: ResearchTemplate) => {
+      const result = await bizResearch.research({ query, area, context, template });
       if (result) {
         try {
           const remote = (await fetchUserData())?.hub as HubState | undefined;
@@ -131,7 +151,7 @@ export default function App() {
     },
     [bizResearch, updateHub],
   );
-  const { pulse, error: pulseError } = usePulse(settings.latitude, settings.longitude);
+  const { pulse, error: pulseError, loading: pulseLoading, reload: reloadPulse } = usePulse(settings.latitude, settings.longitude);
   const { items: shoppingItems, add: addShopping, togglePantry, remove: removeShopping, loadRemote: loadShopping } = useShoppingList();
   const { plan, toggleTask: togglePlanTask, addTask: addPlanTask, removeTask: removePlanTask, setGoals: setPlanGoals, setHandoff, setBudget, toggleSpark, shuffleSpark, noteSpark } = usePlan();
 
@@ -149,17 +169,6 @@ export default function App() {
       channelAgent.addDraftForArea(task.area, "", subject, body);
     },
     [channelAgent],
-  );
-
-  const onResearchTask = useCallback(
-    (task: PlanTask, goal?: YearGoal) => {
-      const query = task.deliverable ? `${task.title} — ${task.deliverable}` : task.title;
-      const context = goal ? `Year goal: ${goal.title}` : undefined;
-      void runBusinessResearch(query, task.area, context).then((r) => {
-        if (r) setHandoff(task.id, "review");
-      });
-    },
-    [runBusinessResearch, setHandoff],
   );
 
   // Today's Vantage Point paper, when the separate daily newspaper job has delivered one (shared/vantagePaper.ts).
@@ -302,31 +311,33 @@ export default function App() {
 
 
   const voiceOut = useVoiceOutput();
-  // Today's real paper, if it's actually today's — otherwise Iris builds her own briefing, same as always.
+  // Today's real paper, if it's actually today's; otherwise Iris builds her own briefing, same as always.
   const freshVantagePaper = vantagePaper && isFreshVantagePaper(vantagePaper, settings.timezone, now) ? vantagePaper : null;
-  const vantage = useMemo(() => {
-    if (freshVantagePaper) return buildVantagePaperBrief(freshVantagePaper);
-    return buildVantageBrief({
-      name: displayName,
-      tz: settings.timezone,
-      now,
-      woodhouse,
-      goals: goalLines,
-      weather,
-      events: allSchedule,
-      spark: todaySpark(plan, today),
-      desk: { review: desk.review.length, working: desk.working.length },
-      pulse: pulse
-        ? [
-            pulseSummary(pulse),
-            issContext(pulse.iss, settings.timezone),
-            pulse.ships ? `${pulse.ships.length} ships in the Bay (${pulse.ships.filter((x) => (x.speedKt ?? 0) >= 0.5).length} moving)` : "",
-          ]
-            .filter(Boolean)
-            .join(". ")
-        : undefined,
-    });
-  }, [freshVantagePaper, displayName, settings.timezone, now, woodhouse, goalLines, weather, allSchedule, plan, today, desk, pulse]);
+  const vantage = useMemo(
+    () =>
+      freshVantagePaper ? buildVantagePaperBrief(freshVantagePaper) :
+      buildVantageBrief({
+        name: displayName,
+        tz: settings.timezone,
+        now,
+        woodhouse,
+        goals: goalLines,
+        weather,
+        events: allSchedule,
+        spark: todaySpark(plan, today),
+        desk: { review: desk.review.length, working: desk.working.length },
+        pulse: pulse
+          ? [
+              pulseSummary(pulse),
+              issContext(pulse.iss, settings.timezone),
+              pulse.ships ? `${pulse.ships.length} ships in the Bay (${pulse.ships.filter((x) => (x.speedKt ?? 0) >= 0.5).length} moving)` : "",
+            ]
+              .filter(Boolean)
+              .join(". ")
+          : undefined,
+      }),
+    [freshVantagePaper, displayName, settings.timezone, now, woodhouse, goalLines, weather, allSchedule, plan, today, desk, pulse],
+  );
   // "Brief me": Iris reads today's rundown (or the Vantage briefing in that mode).
   const briefText = () =>
     isVantageMode(mode)
@@ -361,7 +372,7 @@ export default function App() {
   const pulseUrgent = Boolean(pulse && (pulse.alerts.length || (pulse.air && pulse.air.aqi > 100) || pulse.fires.some((f) => f.miles <= 30)));
 
   // Badges for the bottom tab bar and the More sheet.
-  const badges = useMemo<Partial<Record<SolarPlanetId, TabBadge>>>(
+  const badges = useMemo<Partial<Record<HudModuleId, TabBadge>>>(
     () => ({
       today: { alert: urgentCount > 0, count: urgentCount || undefined },
       inbox: { alert: unread > 0, count: unread || undefined },
@@ -391,6 +402,12 @@ export default function App() {
     });
   }, [today, plan, pending, done, urgentCount, unread, weather, pulse, pulseUrgent, fitnessStatus]);
 
+  const dayDoneToday = done.filter((t) => t.completedAt?.startsWith(today)).length;
+  const dayPct = useMemo(() => {
+    const total = pending.length + dayDoneToday;
+    return total ? dayDoneToday / total : gauges.find((g) => g.id === "today")?.fill ?? 0;
+  }, [pending.length, dayDoneToday, gauges]);
+
   // One amber line under the core: what matters right now.
   const urgentItems = useMemo(() => {
     const fmt = (d: Date) => new Intl.DateTimeFormat("en-US", { timeZone: settings.timezone, hour: "numeric", minute: "2-digit" }).format(d);
@@ -405,33 +422,65 @@ export default function App() {
     return items.slice(0, 3);
   }, [leaveBy, todayTimeline, now, pulseUrgent, pulse, settings.timezone]);
 
-  const [activePlanet, setActivePlanet] = useState<SolarPlanetId | null>(null);
-  // Is Iris's big ring on screen? If not, a small one floats above the tab bar.
-  const coreRef = useRef<HTMLDivElement>(null);
-  const [coreOnScreen, setCoreOnScreen] = useState(true);
-  useEffect(() => {
-    const el = coreRef.current;
-    if (!el || typeof IntersectionObserver === "undefined") return;
-    // Counts as on screen while at least a third of the ring is visible below the header.
-    const io = new IntersectionObserver(([e]) => setCoreOnScreen(e.isIntersecting), { threshold: 0.33, rootMargin: "-64px 0px -60px 0px" });
-    io.observe(el);
-    return () => io.disconnect();
-  }, [activePlanet]);
+  const [activeModule, setActiveModule] = useState<HudModuleId | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
+  /** Iris voice deck in modules: hidden until you tap the header ring (or voice goes live). */
+  const [irisVoiceDeckOpen, setIrisVoiceDeckOpen] = useState(false);
 
-  /** Open a module (tab, corner readout, More, or Iris's open_planet). */
-  const focusPlanet = useCallback((id: SolarPlanetId) => {
+  /** Open a module (tab, corner readout, More, or Iris open_module). */
+  const focusModule = useCallback((id: HudModuleId) => {
     setMoreOpen(false);
-    setActivePlanet(id);
+    setActiveModule(id);
     const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     window.scrollTo({ top: 0, behavior: still ? "auto" : "smooth" });
   }, []);
+
+  const onResearchTask = useCallback(
+    (task: PlanTask, goal?: YearGoal) => {
+      focusModule("research");
+      const query = task.deliverable ? `${task.title} — ${task.deliverable}` : task.title;
+      const context = goal ? `Year goal: ${goal.title}` : undefined;
+      void runBusinessResearch(query, task.area, context).then((r) => {
+        if (r) setHandoff(task.id, "review");
+      });
+    },
+    [runBusinessResearch, setHandoff, focusModule],
+  );
+
   const closeModule = useCallback(() => {
-    setActivePlanet(null);
-    window.scrollTo({ top: 0 });
+    setActiveModule(null);
+    setIrisVoiceDeckOpen(false);
+    const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: 0, behavior: still ? "auto" : "smooth" });
   }, []);
+
+  const moduleFromHome = useRef(true);
+  const animateModuleEntry = activeModule !== null && moduleFromHome.current;
+  useEffect(() => {
+    moduleFromHome.current = activeModule === null;
+  }, [activeModule]);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    prefetchHudModules([...HUD_MORE]);
+  }, [moreOpen]);
+
+  useEffect(() => {
+    const warm = () => prefetchHudModules([...HUD_TABS, ...HUD_MORE]);
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(warm);
+      return () => window.cancelIdleCallback(id);
+    }
+    const t = window.setTimeout(warm, 1500);
+    return () => window.clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    if (activeModule === "vitals") void reloadPulse();
+  }, [activeModule, reloadPulse]);
+
   /** Tapping the open tab again closes it. */
-  const onTab = useCallback((id: SolarPlanetId) => (activePlanet === id && !moreOpen ? closeModule() : focusPlanet(id)), [activePlanet, moreOpen, closeModule, focusPlanet]);
+  const onTab = useCallback((id: HudModuleId) => (activeModule === id && !moreOpen ? closeModule() : focusModule(id)), [activeModule, moreOpen, closeModule, focusModule]);
 
   const coreLines: [string, string] =
     systemStatus === "ok" ? ["IRIS", "ONLINE"] : systemStatus === "degraded" ? ["IRIS", "DEGRADED"] : ["IRIS", "OFFLINE"];
@@ -486,7 +535,7 @@ export default function App() {
                         goals: goalLines,
                         desk: { review: desk.review.length, working: desk.working.length },
                         channels: channelsSummary(channelAgent.channels),
-                        solarPlanets: solarPlanetContextForIris(),
+                        modules: moduleContextForIris(),
                         extras: (() => {
                           const tz = settings.timezone;
                           const schoolNames = [settings.schoolName].filter(Boolean) as string[];
@@ -500,6 +549,7 @@ export default function App() {
                               new Date(`${month}-15T12:00:00Z`).toLocaleDateString("en-US", { month: "long", timeZone: "UTC" }),
                               hub.revenueGoal,
                             ),
+                            stocksContext(stocks),
                             gymContext({
                               workoutsThisWeek: Object.values(fitnessStatus.weekCounts).reduce((a, b) => a + b, 0),
                               target: 3,
@@ -507,11 +557,56 @@ export default function App() {
                               next: gym ? { title: gym.plan.title, day: gym.plan.weekday, isToday: gym.isToday } : null,
                             }),
                             shoppingContext(shoppingItems),
+                            teamOpsContextForAsk(),
+                            gameFinishForAskExtra(),
+                            shopifyContextForIris(shopifyStore),
+                            tierAContextForIris(tierA),
                           ].filter(Boolean);
                         })(),
                       }),
-    onOpenPlanet: focusPlanet,
+    onOpenModule: focusModule,
   });
+
+  useEffect(() => {
+    if (activeModule === null) setIrisVoiceDeckOpen(false);
+  }, [activeModule]);
+
+  useEffect(() => {
+    if (activeModule && (convo.active || convo.pendingGreeting)) setIrisVoiceDeckOpen(true);
+  }, [activeModule, convo.active, convo.pendingGreeting]);
+
+  const toggleIrisVoiceDeck = useCallback(() => {
+    if (convo.active || convo.pendingGreeting) return;
+    setIrisVoiceDeckOpen((o) => !o);
+  }, [convo.active, convo.pendingGreeting]);
+
+  const irisCinemaVisible =
+    !moreOpen &&
+    (convo.active ||
+      convo.pendingGreeting ||
+      (activeModule !== null && irisVoiceDeckOpen));
+
+  const voicePersona = resolveVoicePersona(hudPrefs.voicePersona, {
+    voiceDeckOpen: irisCinemaVisible,
+    phaseActive: convo.phase !== "idle",
+    focus: mode,
+  });
+
+  useEffect(() => {
+    document.documentElement.dataset.voicePersona = voicePersona;
+  }, [voicePersona]);
+
+  useEffect(() => {
+    document.documentElement.dataset.systemTier = systemStatus === "ok" ? "ok" : systemStatus;
+  }, [systemStatus]);
+
+  const todayIrisInline = activeModule === "today" && irisCinemaVisible;
+  const mainScrollPad =
+    !irisCinemaVisible
+      ? "hud-with-tabbar"
+      : todayIrisInline
+        ? "hud-with-iris-dock hud-with-iris-dock--today-inline"
+        : "hud-with-iris-dock";
 
   // Iris's ring: the centre of the HUD (tap to talk). Same ring in the full and compact core.
   const coreRing = (
@@ -523,6 +618,7 @@ export default function App() {
       active={convo.active}
       waiting={convo.pendingGreeting}
       onActivate={convo.tap}
+      kara={hudPrefs.combo135 && hudPrefs.karaOrb}
     />
   );
 
@@ -538,15 +634,23 @@ export default function App() {
     </>
   );
 
-  const renderPlanetModule = (id: SolarPlanetId) => {
+  const renderModule = (id: HudModuleId) => {
     switch (id) {
       case "vitals":
         return (
           <>
-            <VitalsPanel weather={weather} city={settings.city} fitness={fitnessStatus} />
+            <VitalsPanel
+              weather={weather}
+              weatherLoading={weatherLoading}
+              weatherError={weatherError}
+              city={settings.city}
+              fitness={fitnessStatus}
+            />
             <PulsePanel
               pulse={pulse}
+              loading={pulseLoading}
               error={pulseError}
+              onRetry={() => void reloadPulse()}
               city={settings.city}
               lat={settings.latitude}
               lon={settings.longitude}
@@ -558,7 +662,7 @@ export default function App() {
         );
       case "inbox":
         return (
-          <InboxPanel
+          <LazyInboxPanel
             messages={messages}
             unread={unread}
             loading={emailsLoading}
@@ -567,11 +671,42 @@ export default function App() {
             timeZone={settings.timezone}
             onRefresh={() => void refreshEmails()}
             onConnectGoogle={() => void connect()}
+            onOpenDrafts={() => focusModule("channels")}
             onAddTodo={(title) => add(title)}
           />
         );
       case "apps":
-        return <NetworkPanel woodhouse={woodhouse} googleConnected={connected} />;
+        return (
+          <>
+            <NetworkPanel
+              woodhouse={woodhouse}
+              loading={woodhouseLoading}
+              error={woodhouseError}
+              googleConnected={connected}
+              onConnectGoogle={() => void connect()}
+              onOpenTeam={() => focusModule("team")}
+            />
+            <EasySupplyStorePanel
+              snapshot={shopifyStore}
+              loading={shopifyLoading}
+              error={shopifyError}
+              onRetry={() => void reloadShopify()}
+            />
+          </>
+        );
+      case "team":
+        return (
+          <TeamPanel
+            timeZone={settings.timezone}
+            onOpenModule={focusModule}
+            onAskSpecialist={(id) => {
+              const s = specialistById(id);
+              if (!s) return;
+              setIrisVoiceDeckOpen(true);
+              convo.send(`Have ${s.name} ${s.delegateWhen.split(".")[0]}.`);
+            }}
+          />
+        );
       case "today":
         return (
           <>
@@ -581,7 +716,7 @@ export default function App() {
               woodhouse={woodhouse}
               familyPurposeAppUrl={familyPurposeAppUrl}
             />
-            <TodayCommandCenter
+            <LazyTodayCommandCenter
               moduleOnly
               settings={settings}
               weather={weather}
@@ -600,6 +735,12 @@ export default function App() {
               // Things that need you sit above the list; everything else goes below it.
               afterGreeting={
                 <>
+                  <TierAPanel
+                    tierA={tierA}
+                    patchTierA={patchTierA}
+                    timeZone={settings.timezone}
+                    onOpenChannels={() => focusModule("channels")}
+                  />
                   {isVantageMode(mode) && (
                     <VantageBriefingPanel
                       lines={vantage.lines}
@@ -621,8 +762,8 @@ export default function App() {
                 </>
               }
               unreadEmails={unread}
-              onOpenInbox={() => focusPlanet("inbox")}
-              onOpenVitals={() => focusPlanet("vitals")}
+              onOpenInbox={() => focusModule("inbox")}
+              onOpenVitals={() => focusModule("vitals")}
               pulseAlert={pulseUrgent ? pulseSummary(pulse!) : undefined}
               actions={todayActions}
               todayTimeline={todayTimeline}
@@ -646,12 +787,21 @@ export default function App() {
               planGoals={planGoalMap}
               onTogglePlanTask={togglePlanTask}
               planDoneToday={planDoneToday}
+              irisTalk={
+                todayIrisInline ? (
+                  <IrisTalkBox
+                    convo={convo}
+                    googleConnected={connected}
+                    onDismiss={() => setIrisVoiceDeckOpen(false)}
+                  />
+                ) : undefined
+              }
             />
           </>
         );
       case "plan":
         return (
-          <PlanPanel
+          <LazyPlanPanel
             key={isVantageMode(mode) ? "plan-year" : "plan-week"}
             initialTab={isVantageMode(mode) ? "year" : "week"}
             plan={plan}
@@ -673,18 +823,18 @@ export default function App() {
         );
       case "research":
         return (
-          <BusinessResearcherPanel
+          <LazyBusinessResearcherPanel
             googleConnected={connected}
             loading={bizResearch.loading}
             error={bizResearch.error}
             last={bizResearch.last}
             onConnectGoogle={() => void connect()}
-            onResearch={(q, a) => runBusinessResearch(q, a)}
+            onResearch={(q, a, t) => runBusinessResearch(q, a, undefined, t)}
           />
         );
       case "hub":
         return (
-          <HubPanel
+          <LazyHubPanel
             key={`hub-${mode}`}
             hub={hub}
             update={updateHub}
@@ -692,14 +842,19 @@ export default function App() {
             mode={mode}
             timeZone={settings.timezone}
             googleConnected={connected}
+            onConnectGoogle={() => void connect()}
             onAddTodo={(title) => add(title)}
             onLogWorkout={logWorkout}
             workoutLoggedToday={fitnessLogs.some((l) => l.date === today)}
+            stocks={stocks}
+            stocksLoading={stocksLoading}
+            stocksError={stocksError}
+            onRefreshStocks={() => void refreshStocks()}
           />
         );
       case "meal":
         return (
-          <MealPrepPanel
+          <LazyMealPrepPanel
             settings={settings}
             items={shoppingItems}
             onAdd={addShopping}
@@ -711,7 +866,7 @@ export default function App() {
         return ecsPanels;
       case "channels":
         return (
-          <ChannelsPanel
+          <LazyChannelsPanel
             state={channelAgent.channels}
             pending={channelAgent.pending}
             googleConnected={connected}
@@ -728,8 +883,38 @@ export default function App() {
     }
   };
 
+  const homeMaxWidth =
+    !activeModule && hudPrefs.combo135 ? "max-w-[1100px]" : activeModule ? "max-w-[1100px]" : "max-w-[560px] md:max-w-[720px]";
+
+  const spark = todaySpark(plan, today);
+  const upNext = (
+    <UpNextPanel
+      todos={pending}
+      onToggle={toggle}
+      spark={spark}
+      sparkDone={sparkDone(plan, today)}
+      onOpenToday={() => focusModule("today")}
+    />
+  );
+
+  const homeCore = (
+    <div className="relative w-full">
+      {hudPrefs.combo135 && hudPrefs.particleViz !== "off" ? (
+        <ParticleCoreBackdrop
+          viz={hudPrefs.particleViz}
+          compact={Boolean(activeModule)}
+          onPick={activeModule ? undefined : (v) => updateHudPrefs({ particleViz: v })}
+        />
+      ) : null}
+      <HudCore gauges={gauges} core={coreRing} onOpen={focusModule} />
+    </div>
+  );
+
   return (
-    <div className="min-h-screen min-h-[100dvh] safe-bottom relative">
+    <div
+      className="min-h-screen min-h-[100dvh] relative"
+      data-hud-skin={hudPrefs.combo135 && hudPrefs.reactorSkin ? "reactor" : undefined}
+    >
       <div className="hud-vignette" aria-hidden />
       <div className="hud-scanline" aria-hidden />
       <HudHeader
@@ -739,47 +924,60 @@ export default function App() {
         operator={displayName ? displayName.slice(0, 1).toUpperCase() + "." : "E."}
         focusChoice={focus.choice}
         onFocusChoice={focus.choose}
+        moduleOpen={activeModule !== null}
+        irisVoiceDeckOpen={irisCinemaVisible}
+        onIrisVoiceToggle={activeModule ? toggleIrisVoiceDeck : undefined}
       />
 
-      <main className={`mx-auto px-4 py-4 space-y-4 hud-with-tabbar ${activePlanet ? "max-w-[1100px]" : "max-w-[560px]"}`}>
-        {activePlanet ? (
+      <main className={`mx-auto px-4 py-4 space-y-4 ${mainScrollPad} ${homeMaxWidth}`}>
+        {activeModule ? (
           <>
-            <div ref={coreRef}>
-            <HudCoreCompact
-              core={coreRing}
-              readout={gauges.find((g) => g.id === (activePlanet as GaugeId))?.value ?? (SOLAR_PLANETS.find((p) => p.id === activePlanet)?.label ?? "").toUpperCase()}
-              alert={badges[activePlanet]?.alert}
-            />
-            </div>
-            <ConversationCaptions convo={convo} googleConnected={connected} />
-            <GlassModule key={activePlanet} id={activePlanet} onClose={closeModule}>
-              {renderPlanetModule(activePlanet)}
+            <GlassModule
+              id={activeModule}
+              systemStatus={systemStatus}
+              onClose={closeModule}
+              animateEntry={animateModuleEntry}
+            >
+              <Suspense fallback={<ModuleLoading />} key={activeModule}>
+                {renderModule(activeModule)}
+              </Suspense>
             </GlassModule>
+          </>
+        ) : hudPrefs.combo135 ? (
+          <>
+            <HudHomeCommandDeck
+              settings={settings}
+              leaveBy={leaveBy}
+              unread={unread}
+              urgent={urgentCount}
+              dayPct={dayPct}
+              woodhouse={woodhouse}
+              core={homeCore}
+              upNext={upNext}
+            />
+            <div className="space-y-4 lg:hidden">
+              {homeCore}
+              {!irisCinemaVisible ? <ConversationCaptions convo={convo} googleConnected={connected} /> : null}
+              <UrgentLine items={urgentItems} />
+              {upNext}
+            </div>
+            <div className="hidden lg:block space-y-4">
+              {!irisCinemaVisible ? <ConversationCaptions convo={convo} googleConnected={connected} /> : null}
+              <UrgentLine items={urgentItems} />
+            </div>
+            <FamilyPurposeDebriefBanner
+              mode={mode}
+              timeZone={settings.timezone}
+              woodhouse={woodhouse}
+              familyPurposeAppUrl={familyPurposeAppUrl}
+            />
           </>
         ) : (
           <>
-            <div ref={coreRef}>
-              <HudCore gauges={gauges} core={coreRing} onOpen={(id) => focusPlanet(id)} />
-            </div>
-            <ConversationCaptions convo={convo} googleConnected={connected} />
+            {homeCore}
+            {!irisCinemaVisible ? <ConversationCaptions convo={convo} googleConnected={connected} /> : null}
             <UrgentLine items={urgentItems} />
-            <CommandBar
-              variant="hud"
-              settings={settings}
-              leaveBy={leaveBy}
-              bedtime={bedtime}
-              onAddTodo={add}
-              onLogWorkout={logWorkout}
-              onAddEvent={addLocalEvent}
-              onAddShopping={addShopping}
-            />
-            <UpNextPanel
-              todos={pending}
-              onToggle={toggle}
-              spark={todaySpark(plan, today)}
-              sparkDone={sparkDone(plan, today)}
-              onOpenToday={() => focusPlanet("today")}
-            />
+            {upNext}
             <FamilyPurposeDebriefBanner
               mode={mode}
               timeZone={settings.timezone}
@@ -790,10 +988,22 @@ export default function App() {
         )}
       </main>
 
-      {/* Iris stays reachable when her ring is off-screen (modules, scrolled down). */}
-      <IrisDock convo={convo} visible={!coreOnScreen && !moreOpen} />
-      <MoreSheet open={moreOpen} badges={badges} onPick={focusPlanet} onClose={() => setMoreOpen(false)} />
-      <HudTabBar active={activePlanet} moreOpen={moreOpen} badges={badges} onTab={onTab} onMore={() => setMoreOpen((o) => !o)} />
+      <IrisDock
+        show={irisCinemaVisible}
+        inlineOnDesktopToday={todayIrisInline}
+        convo={convo}
+        googleConnected={connected}
+        onDismiss={activeModule ? () => setIrisVoiceDeckOpen(false) : undefined}
+      />
+
+      <MoreSheet
+        open={moreOpen}
+        badges={badges}
+        onPick={focusModule}
+        onClose={() => setMoreOpen(false)}
+        irisDockVisible={irisCinemaVisible}
+      />
+      <HudTabBar active={activeModule} moreOpen={moreOpen} badges={badges} onTab={onTab} onMore={() => setMoreOpen((o) => !o)} />
 
       <MorningRitualModal
         settings={settings}
@@ -840,6 +1050,8 @@ export default function App() {
         onDisconnectGoogle={() => void disconnect()}
         saving={saving}
         error={error}
+        hudPrefs={hudPrefs}
+        onHudPrefs={updateHudPrefs}
       />
     </div>
   );

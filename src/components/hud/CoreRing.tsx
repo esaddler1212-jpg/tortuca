@@ -1,6 +1,10 @@
+import { useHudAccent } from "../../hooks/useHudAccent";
 import { useVoiceSignal } from "../../hooks/useVoiceOutput";
+import { KaraFilamentOrb } from "./KaraFilamentOrb";
 
 interface Props {
+  /** K.A.R.A. Original filament orb (combo reactor home). */
+  kara?: boolean;
   /** Two short lines in the centre, e.g. ["IRIS", "ONLINE"] */
   lines: [string, string];
   status: "ok" | "degraded" | "offline";
@@ -23,11 +27,21 @@ const COLOR: Record<Props["status"], string> = {
 };
 
 /** Large animated core ring at the centre of the operator console. */
-export function CoreRing({ lines, status, phase = "idle", replyTick = 0, onActivate, active = false, waiting = false }: Props) {
+export function CoreRing({
+  lines,
+  status,
+  phase = "idle",
+  replyTick = 0,
+  onActivate,
+  active = false,
+  waiting = false,
+  kara = false,
+}: Props) {
   const color = COLOR[status];
   const c = "currentColor";
   // Iris's "face": the core glows and ripples with each word while she speaks.
   const voice = useVoiceSignal();
+  const hudAccent = useHudAccent();
   const talking = voice.speaking || phase === "speaking";
   const listening = phase === "listening";
   const thinking = phase === "thinking";
@@ -43,9 +57,13 @@ export function CoreRing({ lines, status, phase = "idle", replyTick = 0, onActiv
             ? "TAP TO START"
             : lines[1];
   const spokes = [0, 60, 120, 180, 240, 300];
+  const energy = Math.min(
+    1,
+    (talking ? 0.42 : 0) + (listening ? 0.32 : thinking ? 0.22 : 0.06),
+  );
   return (
     <div
-      className={`relative mx-auto aspect-square w-full max-w-[420px] [container-type:inline-size] ${onActivate ? "cursor-pointer select-none rounded-full outline-none focus-visible:ring-2 focus-visible:ring-alfred-gold" : ""}`}
+      className={`relative mx-auto aspect-square w-full max-w-[420px] [container-type:inline-size] ${kara ? "kara-orb-shell" : ""} ${onActivate ? "cursor-pointer select-none rounded-full outline-none focus-visible:ring-2 focus-visible:ring-alfred-gold" : ""}`}
       style={{ color, WebkitTapHighlightColor: "transparent" }}
       aria-label={onActivate ? (waiting && !active ? "Tap to start: Iris has your brief ready" : active ? `Iris is ${label.toLowerCase()}. Tap to ${listening ? "stop listening" : "talk"}` : "Talk to Iris") : `${lines[0]} ${lines[1]}`}
       role={onActivate ? "button" : "img"}
@@ -58,74 +76,103 @@ export function CoreRing({ lines, status, phase = "idle", replyTick = 0, onActiv
         }
       }}
     >
-      <svg viewBox="0 0 400 400" className="h-full w-full" fill="none" aria-hidden>
+      {kara ? (
+        <KaraFilamentOrb
+          energy={energy}
+          voiceTick={voice.tick}
+          listening={listening}
+          thinking={thinking}
+          speaking={talking}
+          focusMode={hudAccent.focus}
+          accent={{ light: hudAccent.light, mid: hudAccent.mid, core: hudAccent.core, deep: hudAccent.deep }}
+        />
+      ) : null}
+      <svg
+        viewBox="0 0 400 400"
+        className={`h-full w-full fill-none ${kara ? "kara-orb-chrome pointer-events-none" : ""}`}
+        aria-hidden
+      >
         <defs>
           <radialGradient id="core-glow" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor={c} stopOpacity="0.18" />
             <stop offset="100%" stopColor={c} stopOpacity="0" />
           </radialGradient>
         </defs>
-        <circle cx="200" cy="200" r="190" fill="url(#core-glow)" className={talking ? "animate-hud-talk-glow" : ""} style={{ transformOrigin: "200px 200px" }} />
-        {/* outer dashed ring, slow spin */}
-        <g className="animate-hud-spin" style={{ transformOrigin: "200px 200px", animationDuration: thinking ? "2.5s" : listening ? "16s" : "40s" }}>
-          <circle cx="200" cy="200" r="188" stroke={c} strokeOpacity="0.55" strokeWidth="2" strokeDasharray="10 8" />
-        </g>
-        <circle cx="200" cy="200" r="166" stroke={c} strokeOpacity="0.35" strokeWidth="1.5" />
-        {/* accent ticks orbiting */}
-        <g className="animate-hud-spin" style={{ transformOrigin: "200px 200px", animationDuration: thinking ? "1.2s" : "14s", animationDirection: thinking ? "reverse" : "normal" }}>
-          <line x1="200" y1="28" x2="200" y2="52" stroke={c} strokeWidth="5" strokeLinecap="round" transform="rotate(-30 200 200)" />
-          <line x1="200" y1="348" x2="200" y2="372" stroke={c} strokeWidth="5" strokeLinecap="round" transform="rotate(-30 200 200)" />
-        </g>
-        {spokes.map((deg) => (
-          <line
-            key={deg}
-            x1="200"
-            y1="34"
-            x2="200"
-            y2="144"
-            stroke={c}
-            strokeOpacity="0.22"
-            strokeWidth="1"
-            transform={`rotate(${deg} 200 200)`}
-          />
-        ))}
-        <circle cx="200" cy="200" r="118" stroke={c} strokeOpacity="0.4" strokeWidth="1.5" />
-        {/* reply burst: one big ripple when Iris's answer lands */}
+        {!kara ? (
+          <circle cx="200" cy="200" r="190" fill="url(#core-glow)" className={talking ? "animate-hud-talk-glow" : ""} style={{ transformOrigin: "200px 200px" }} />
+        ) : null}
+        {!kara ? (
+          <g className="animate-hud-spin" style={{ transformOrigin: "200px 200px", animationDuration: thinking ? "2.5s" : listening ? "16s" : "40s" }}>
+            <circle cx="200" cy="200" r="188" stroke={c} strokeOpacity="0.55" strokeWidth="2" strokeDasharray="10 8" />
+          </g>
+        ) : (
+          <g className="animate-hud-spin" style={{ transformOrigin: "200px 200px", animationDuration: "48s" }}>
+            <circle cx="200" cy="200" r="188" stroke={c} strokeOpacity="0.22" strokeWidth="1" strokeDasharray="4 12" />
+          </g>
+        )}
+        {!kara ? <circle cx="200" cy="200" r="166" stroke={c} strokeOpacity="0.35" strokeWidth="1.5" /> : null}
+        {!kara ? (
+          <>
+            <g className="animate-hud-spin" style={{ transformOrigin: "200px 200px", animationDuration: thinking ? "1.2s" : "14s", animationDirection: thinking ? "reverse" : "normal" }}>
+              <line x1="200" y1="28" x2="200" y2="52" stroke={c} strokeWidth="5" strokeLinecap="round" transform="rotate(-30 200 200)" />
+              <line x1="200" y1="348" x2="200" y2="372" stroke={c} strokeWidth="5" strokeLinecap="round" transform="rotate(-30 200 200)" />
+            </g>
+            {spokes.map((deg) => (
+              <line
+                key={deg}
+                x1="200"
+                y1="34"
+                x2="200"
+                y2="144"
+                stroke={c}
+                strokeOpacity="0.22"
+                strokeWidth="1"
+                transform={`rotate(${deg} 200 200)`}
+              />
+            ))}
+          </>
+        ) : null}
+        {!kara ? <circle cx="200" cy="200" r="118" stroke={c} strokeOpacity="0.4" strokeWidth="1.5" /> : null}
         {replyTick > 0 && (
           <circle key={`burst-${replyTick}`} cx="200" cy="200" r="118" stroke={c} strokeWidth="4" className="animate-hud-burst" style={{ transformOrigin: "200px 200px" }} />
         )}
-        {listening && (
+        {listening && !kara ? (
           <circle cx="200" cy="200" r="80" stroke={c} strokeWidth="2" strokeDasharray="4 6" className="animate-hud-listen" style={{ transformOrigin: "200px 200px" }} />
-        )}
-        <circle
-          cx="200"
-          cy="200"
-          r="56"
-          stroke={c}
-          strokeOpacity={listening || thinking ? 1 : 0.85}
-          strokeWidth={listening ? 4 : 2.5}
-          className={talking ? "" : listening || waiting ? "animate-hud-listen" : "animate-hud-pulse"}
-          style={{ transformOrigin: "200px 200px" }}
-        />
-        {talking && (
-          <circle
-            key={voice.tick}
-            cx="200"
-            cy="200"
-            r="56"
-            stroke={c}
-            strokeWidth="3"
-            className="animate-hud-word"
-            style={{ transformOrigin: "200px 200px" }}
-          />
-        )}
-        <circle cx="200" cy="200" r="48" fill="#000000" fillOpacity="0.85" />
-        {/* Iris — the eye at the center of E universe */}
-        <ellipse cx="200" cy="200" rx="22" ry="16" fill={c} fillOpacity={talking || listening ? 0.35 : 0.22} />
-        <circle cx="200" cy="200" r="10" fill={c} fillOpacity={talking ? 0.95 : 0.75} className={talking ? "animate-hud-pulse" : ""} />
-        <circle cx="204" cy="196" r="3.5" fill="#000000" fillOpacity="0.85" />
+        ) : null}
+        {!kara ? (
+          <>
+            <circle
+              cx="200"
+              cy="200"
+              r="56"
+              stroke={c}
+              strokeOpacity={listening || thinking ? 1 : 0.85}
+              strokeWidth={listening ? 4 : 2.5}
+              className={talking ? "" : listening || waiting ? "animate-hud-listen" : "animate-hud-pulse"}
+              style={{ transformOrigin: "200px 200px" }}
+            />
+            {talking && (
+              <circle
+                key={voice.tick}
+                cx="200"
+                cy="200"
+                r="56"
+                stroke={c}
+                strokeWidth="3"
+                className="animate-hud-word"
+                style={{ transformOrigin: "200px 200px" }}
+              />
+            )}
+            <circle cx="200" cy="200" r="48" fill="#000000" fillOpacity="0.85" />
+            <ellipse cx="200" cy="200" rx="22" ry="16" fill={c} fillOpacity={talking || listening ? 0.35 : 0.22} />
+            <circle cx="200" cy="200" r="10" fill={c} fillOpacity={talking ? 0.95 : 0.75} className={talking ? "animate-hud-pulse" : ""} />
+            <circle cx="204" cy="196" r="3.5" fill="#000000" fillOpacity="0.85" />
+          </>
+        ) : null}
       </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+      <div
+        className={`absolute inset-0 flex flex-col items-center justify-center pointer-events-none ${kara ? "kara-orb-label z-[1]" : ""}`}
+      >
         <span className="font-display text-[4cqw] leading-tight tracking-[0.15em]" style={{ color: c, textShadow: `0 0 12px ${c}` }}>
           {lines[0]}
         </span>

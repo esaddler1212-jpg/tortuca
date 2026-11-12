@@ -19,6 +19,8 @@ Alfred web app (Netlify) ──GET /api/woodhouse──▶ woodhouse_sync.py ─
    └──────────────── same priorities ◀──────── OpenJarvis "Alfred" (briefing, agents, chat)
 ```
 
+**See also:** [JARVIS-OS-V.2](../jarvis-os-v2/) — separate **Gemini Live** desktop upstream (clone + cherry-pick only; does not replace OpenJarvis Alfred or Iris on Netlify). Compare stacks in [`jarvis-os-v2/CHERRY_PICK.md`](../jarvis-os-v2/CHERRY_PICK.md).
+
 ## The hardware reality (iMac 21.5", Late 2012, 8 GB)
 
 This iMac can run Alfred, but expect the following:

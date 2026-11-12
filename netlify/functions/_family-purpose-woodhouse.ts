@@ -1,7 +1,5 @@
 /** Build Family Purpose woodhouse/v2 node from a Family Purpose backup export. */
 
-const FOLLOW_UP_WINDOW_HOURS = 48;
-
 export interface FpFollowUp {
   dueAt: string;
   completedAt?: string;
@@ -69,8 +67,9 @@ function dayKeyOfIso(iso: string, timeZone: string): string {
   return dayKey(new Date(iso), timeZone);
 }
 
-function startOfLocalDay(day: string, timeZone: string): string {
-  return new Date(`${day}T12:00:00`).toISOString();
+/** Noon UTC on `day` — lands on the same calendar day in every US time zone. */
+function middayIso(day: string): string {
+  return new Date(`${day}T12:00:00Z`).toISOString();
 }
 
 function schoolDayInfo(day: string, timeZone: string): { isSchoolDay: boolean; label: string } {
@@ -121,7 +120,7 @@ export function buildFamilyPurposeWoodhouseNode(
     id: `school-${day}`,
     kind: "school_day",
     title: school.label,
-    start: startOfLocalDay(day, timeZone),
+    start: middayIso(day),
     detail: schoolName,
   });
 
@@ -130,7 +129,7 @@ export function buildFamilyPurposeWoodhouseNode(
       id: `group-${session.id}`,
       kind: "group_meeting",
       title: `${groupName} meeting`,
-      start: startOfLocalDay(day, timeZone),
+      start: middayIso(day),
       detail: `${session.attendees.length} signed in`,
     });
   }
@@ -226,14 +225,14 @@ export function demoFamilyPurposeNode(now = new Date()): FpWoodhouseNode {
         id: "school-demo",
         kind: "school_day",
         title: "School day",
-        start: startOfLocalDay(day, "America/Los_Angeles"),
+        start: middayIso(day),
         detail: "Oak Grove Middle School",
       },
       {
         id: "group-demo",
         kind: "group_meeting",
         title: "BOYS Group meeting",
-        start: startOfLocalDay(day, "America/Los_Angeles"),
+        start: middayIso(day),
         detail: "Weekly check-in · plan for 12:30",
       },
       {

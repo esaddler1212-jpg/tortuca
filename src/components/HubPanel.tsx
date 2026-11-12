@@ -41,6 +41,8 @@ import { useSpeechInput } from "../hooks/useSpeechInput";
 import { promptForMemo } from "../lib/promptGenerator";
 import { PromptButton } from "./PromptButton";
 import { GymTab } from "./GymTab";
+import { MoneyMarketUpdate } from "./MoneyMarketUpdate";
+import type { StocksSnapshot } from "../types/stocks";
 
 type Tab = "feed" | "watch" | "gym" | "money" | "memos";
 const TAB_LABEL: Record<Tab, string> = { feed: "Feed", watch: "Watch", gym: "Gym", money: "Money", memos: "Memos" };
@@ -52,11 +54,16 @@ interface Props {
   mode: string;
   timeZone: string;
   googleConnected: boolean;
+  onConnectGoogle?: () => void;
   onAddTodo: (title: string) => void;
   onLogWorkout: (type: "arms" | "legs" | "body" | "cardio") => void;
   /** Workout already logged today (so finishing the routine doesn't log twice). */
   workoutLoggedToday: boolean;
   initialTab?: Tab;
+  stocks?: StocksSnapshot | null;
+  stocksLoading?: boolean;
+  stocksError?: string | null;
+  onRefreshStocks?: () => void;
 }
 
 const newId = (p: string) => `${p}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
@@ -109,7 +116,7 @@ export function HubPanel(props: Props) {
 
 // ── Feed ─────────────────────────────────────────────────────────────────
 
-function FeedTab({ hub, update, googleConnected }: Props) {
+function FeedTab({ hub, update, googleConnected, onConnectGoogle }: Props) {
   const sources = hub.feeds ?? DEFAULT_FEEDS;
   const [topic, setTopic] = useState<FeedTopic | "All">("All");
   const [items, setItems] = useState<(FeedItem & { topic: FeedTopic })[]>([]);
@@ -179,7 +186,16 @@ function FeedTab({ hub, update, googleConnected }: Props) {
           </button>
         ))}
       </div>
-      {!googleConnected && <p className="text-sm text-alfred-mist">Connect Google in Settings to load your feed.</p>}
+      {!googleConnected && (
+        <div className="space-y-2">
+          <p className="text-sm text-alfred-mist">Connect Google to load your feed on the server.</p>
+          {onConnectGoogle ? (
+            <button type="button" className="btn-gold text-xs" onClick={onConnectGoogle}>
+              Connect Google
+            </button>
+          ) : null}
+        </div>
+      )}
       {error && <p className="text-sm text-amber-300/90">{error}</p>}
       {loading && !items.length && <p className="text-sm text-alfred-mist">Loading headlines…</p>}
       <ul className="space-y-2">
@@ -264,7 +280,7 @@ function FeedEditor({ hub, update, onDone }: { hub: HubState; update: Props["upd
 
 // ── Watchers ─────────────────────────────────────────────────────────────
 
-function WatchTab({ hub, update, googleConnected }: Props) {
+function WatchTab({ hub, update, googleConnected, onConnectGoogle }: Props) {
   const [state, setState] = useState<Record<string, WatchResult>>({});
   const [checking, setChecking] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -316,7 +332,16 @@ function WatchTab({ hub, update, googleConnected }: Props) {
       <p className="text-xs text-alfred-mist">
         Iris checks pages every 3 hours and pings your phone when they change. Uptime watchers are checked every 10 minutes and ping you if a site goes down or comes back.
       </p>
-      {!googleConnected && <p className="text-sm text-alfred-mist">Connect Google in Settings to use watchers.</p>}
+      {!googleConnected && (
+        <div className="space-y-2">
+          <p className="text-sm text-alfred-mist">Connect Google to run page watchers.</p>
+          {onConnectGoogle ? (
+            <button type="button" className="btn-gold text-xs" onClick={onConnectGoogle}>
+              Connect Google
+            </button>
+          ) : null}
+        </div>
+      )}
       {msg && <p className="text-xs text-alfred-gold">{msg}</p>}
       <ul className="space-y-2">
         {hub.watchers.map((w) => {
@@ -448,7 +473,7 @@ function UptimeStatus({ r }: { r?: WatchResult }) {
 
 // ── Money ────────────────────────────────────────────────────────────────
 
-function MoneyTab({ hub, update, today }: Props) {
+function MoneyTab({ hub, update, today, stocks, stocksLoading, stocksError, onRefreshStocks }: Props) {
   const month = today.slice(0, 7);
   const sum = useMemo(() => moneyMonth(hub.money, month), [hub.money, month]);
   const [kind, setKind] = useState<"in" | "out">("out");
@@ -499,6 +524,12 @@ function MoneyTab({ hub, update, today }: Props) {
       {sum.topSpend.length > 0 && (
         <p className="text-xs text-alfred-mist">Top spending: {sum.topSpend.map(([c, n]) => `${c} ${money(n)}`).join(" · ")}</p>
       )}
+      <MoneyMarketUpdate
+        snapshot={stocks ?? null}
+        loading={stocksLoading}
+        error={stocksError ?? null}
+        onRefresh={onRefreshStocks}
+      />
       <form
         className="grid gap-2 border-t border-alfred-border/40 pt-3"
         onSubmit={(e) => {

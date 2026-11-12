@@ -3,12 +3,27 @@ import type { Handler } from "@netlify/functions";
 import { getStore } from "@netlify/blobs";
 import { getValidSession, initBlobs, sessionHeader } from "./_shared";
 import { dayKey } from "../../shared/timezone";
-import { matchesForget, runIris } from "./_iris";
+import {
+  ASK_DAILY_TURN_LIMIT,
+  clampIrisContext,
+  DELEGATE_MAX_REPORT_CHARS,
+  DELEGATE_MAX_TASK_CHARS,
+  IRIS_MAX_MEMORY_FACTS,
+  matchesForget,
+  normalizeAskTurns,
+} from "../../shared/agentGuardrails";
+import { MODEL, runIris } from "./_iris";
+import { consultSpecialist } from "./_irisSpecialists";
 import { lookupFlight } from "./_flight";
+import { coords } from "./_pulse";
 import { recordUsage } from "./_irisUsage";
 import type { IrisTrace } from "../../shared/irisUsage";
-import { coords } from "./_pulse";
+import type { IrisSpecialistId } from "../../shared/irisTeam";
+import { isIrisSpecialistId } from "../../shared/irisTeam";
+import { parseDelegateHistory, mergeDelegateHistories, toSyncedDelegateLog } from "../../shared/irisTeamActivity";
 import { loadUserData, resolveDataKey, saveUserData } from "./_userData";
+import { applyTierATools, tierABatchEmpty } from "./_tierAApply";
+import { tierAContextForIris } from "../../shared/tierAOps";
 
 /**
  * POST /api/ask: Iris's conversation brain (Claude). Signed-in only, capped
@@ -16,9 +31,7 @@ import { loadUserData, resolveDataKey, saveUserData } from "./_userData";
  * app (it adds to Do today), so this returns the reply text plus any to-dos.
  */
 
-const DAILY_LIMIT = 150; // turns per account per day: a guard against runaway cost
-const MAX_TURNS = 12;
-const MAX_CHARS = 2000;
+const DAILY_LIMIT = ASK_DAILY_TURN_LIMIT;
 
 type Turn = { role: "user" | "assistant"; content: string };
 
@@ -36,17 +49,13 @@ export const handler: Handler = async (event) => {
   const session = sessionId ? await getValidSession(sessionId) : null;
   if (!sessionId || !session) return json(401, { error: "Connect Google first so only you can talk to Iris." });
 
-  let body: { messages?: Turn[]; context?: string; timeZone?: string; lat?: number; lon?: number };
+  let body: { messages?: Turn[]; context?: string; timeZone?: string; lat?: number; lon?: number; delegateHistory?: unknown };
   try {
     body = JSON.parse(event.body ?? "{}");
   } catch {
     return json(400, { error: "Bad request" });
   }
-  const turns = (body.messages ?? [])
-    .filter((m) => (m.role === "user" || m.role === "assistant") && typeof m.content === "string" && m.content.trim())
-    .slice(-MAX_TURNS)
-    .map((m) => ({ role: m.role, content: m.content.slice(0, MAX_CHARS) }));
-  while (turns.length && turns[0].role !== "user") turns.shift();
+  const turns = normalizeAskTurns(body.messages ?? []);
   if (!turns.length || turns[turns.length - 1].role !== "user") return json(400, { error: "Say something first." });
 
   // Daily cap per account.
@@ -55,24 +64,47 @@ export const handler: Handler = async (event) => {
   const usageKey = `${who}:${dayKey(body.timeZone || "America/Los_Angeles")}`;
   const used = Number((await usage.get(usageKey)) ?? 0);
   if (used >= DAILY_LIMIT) return json(429, { error: "That's my limit for today. Let's pick it up tomorrow." });
-  await usage.set(usageKey, String(used + 1));
 
   // Fail fast (Netlify functions have a time limit); no automatic retries.
-  const client = new Anthropic({ timeout: 24_000, maxRetries: 0 });
+  const client = new Anthropic({ timeout: 52_000, maxRetries: 0 });
   const started = Date.now();
   const tz = body.timeZone || "America/Los_Angeles";
-  const blank = { model: "claude-opus-5-5", inTok: 0, outTok: 0, cacheRead: 0, cacheWrite: 0, searches: 0, fetches: 0, tools: [] as string[], hops: 0 };
+  const blank = { model: MODEL, inTok: 0, outTok: 0, cacheRead: 0, cacheWrite: 0, searches: 0, fetches: 0, tools: [] as string[], hops: 0 };
   const log = (usage: typeof blank, outcome: IrisTrace["outcome"]) =>
     recordUsage(who, { at: new Date().toISOString(), ms: Date.now() - started, ...usage, outcome }, tz);
   try {
     // Iris's memory lives with the account's data (shared by phone and computer).
     const key = await resolveDataKey(sessionId);
-    const memory = ((await loadUserData(key))?.irisMemory ?? []).map((m) => m.fact);
+    const accountData = await loadUserData(key);
+    const memory = (accountData?.irisMemory ?? []).map((m) => m.fact);
     const here = coords({ lat: String(body.lat ?? ""), lon: String(body.lon ?? "") });
-    const { reply: text, todos, remember, forget, refused, planet, usage } = await runIris(client, turns, body.context ?? "", memory, {
-      trackFlight: async (flight) => (await lookupFlight(flight, tz, here.lat, here.lon)).spoken,
-    });
+    const delegateHistory = mergeDelegateHistories(accountData?.irisDelegateHistory, parseDelegateHistory(body.delegateHistory));
+    const tierAHint = tierAContextForIris(accountData?.tierA);
+    const contextBlock = tierAHint ? `${body.context ?? ""}\n${tierAHint}` : body.context ?? "";
+    const { reply: text, todos, remember, forget, refused, module, specialist, delegateReport, delegateDeduped, usage, tierA } = await runIris(
+      client,
+      turns,
+      clampIrisContext(contextBlock),
+      memory,
+      {
+        trackFlight: async (flight) => (await lookupFlight(flight, tz, here.lat, here.lon)).spoken,
+        consultSpecialist: async (input) => {
+          const r = await consultSpecialist(client, {
+            ...input,
+            context: body.context ?? "",
+            sessionId,
+            who,
+            timeZone: tz,
+            delegateHistory,
+            sessionEmail: session.email ?? undefined,
+          });
+          return { summary: r.summary, module: r.module, specialist: r.specialist, deduped: r.deduped };
+        },
+      },
+    );
     await log(usage, refused ? "refused" : "ok");
+    // Count only completed model turns (failures return 502/504 without consuming the daily cap).
+    await usage.set(usageKey, String(used + 1));
     if (refused) return json(200, { reply: "I can't help with that one, boss. Ask me something else?", todos: [] });
     if (remember.length || forget.length) {
       const latest = (await loadUserData(key)) ?? { updatedAt: new Date().toISOString() };
@@ -82,8 +114,25 @@ export const handler: Handler = async (event) => {
           facts.push({ id: `mem-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`, fact, at: new Date().toISOString() });
         }
       }
-      facts = facts.slice(-60);
+      facts = facts.slice(-IRIS_MAX_MEMORY_FACTS);
       await saveUserData(key, { ...latest, irisMemory: facts });
+    }
+    if (specialist && !delegateDeduped && isIrisSpecialistId(specialist)) {
+      const latest = (await loadUserData(key)) ?? { updatedAt: new Date().toISOString() };
+      const lastUser = [...turns].reverse().find((t) => t.role === "user")?.content ?? "";
+      const entry = toSyncedDelegateLog({
+        specialist: specialist as IrisSpecialistId,
+        at: new Date().toISOString(),
+        task: lastUser.slice(0, DELEGATE_MAX_TASK_CHARS),
+        report: delegateReport?.slice(0, DELEGATE_MAX_REPORT_CHARS),
+      });
+      const irisDelegateHistory = mergeDelegateHistories(latest.irisDelegateHistory, [entry]);
+      await saveUserData(key, { ...latest, irisDelegateHistory });
+    }
+    if (!tierABatchEmpty(tierA)) {
+      const latest = (await loadUserData(key)) ?? { updatedAt: new Date().toISOString() };
+      const mergedTierA = applyTierATools(latest.tierA, tierA);
+      await saveUserData(key, { ...latest, tierA: mergedTierA });
     }
     const reply =
       text ||
@@ -94,7 +143,14 @@ export const handler: Handler = async (event) => {
           : forget.length
             ? "Done. I've forgotten it."
             : "Sorry, I lost my train of thought. Say that again?");
-    return json(200, { reply, todos, planet: planet && typeof planet === "string" ? planet : undefined });
+    return json(200, {
+      reply,
+      todos,
+      module: module && typeof module === "string" ? module : undefined,
+      specialist: specialist && typeof specialist === "string" ? specialist : undefined,
+      delegateReport: delegateReport && !delegateDeduped ? delegateReport : undefined,
+      deduped: delegateDeduped || undefined,
+    });
   } catch (error) {
     await log(
       blank,

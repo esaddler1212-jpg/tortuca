@@ -2,7 +2,8 @@
 // (web search with a pause_turn, then a cited answer). No network or API key.
 import http from "node:http";
 import Anthropic from "@anthropic-ai/sdk";
-import { matchesForget, runIris, safeFact } from "../netlify/functions/_iris.ts";
+import { matchesForget, safeFact } from "../shared/agentGuardrails.ts";
+import { runIris } from "../netlify/functions/_iris.ts";
 
 const seen: any[] = [];
 const server = http.createServer((req, res) => {
@@ -34,10 +35,10 @@ const first = seen[0].j;
 ok("calls /v1/messages with the fallback beta", seen[0].path?.startsWith("/v1/messages") && String(seen[0].beta).includes("server-side-fallback-2026-07-01"));
 ok("model claude-opus-5-5, low effort, fallbacks default", first.model === "claude-opus-5-5" && first.output_config?.effort === "low" && first.fallbacks === "default");
 const toolIds = first.tools.map((t: any) => t.type ?? t.name);
-ok("tools: add_todo, open_planet, memory, web_search_20260209, web_fetch_20260209", ["add_todo", "open_planet", "remember", "forget", "web_search_20260209", "web_fetch_20260209"].every((t) => toolIds.includes(t)));
+ok("tools: add_todo, open_module, memory, web_search_20260209, web_fetch_20260209", ["add_todo", "open_module", "remember", "forget", "web_search_20260209", "web_fetch_20260209"].every((t) => toolIds.includes(t)));
 ok("track_flight only offered when the server can run it", !toolIds.includes("track_flight"));
 ok("search located in Vallejo", first.tools.find((t: any) => t.type === "web_search_20260209")?.user_location?.city === "Vallejo");
-ok("persona is cached; day notes are not", first.system[0].cache_control?.type === "ephemeral" && !first.system[1].cache_control);
+ok("persona is cached; day notes are not", first.system[0].cache_control?.type === "ephemeral" && !first.system[2]?.cache_control);
 ok("pause_turn → continued with the partial turn", seen.length === 2 && seen[1].j.messages.at(-1).role === "assistant" && seen[1].j.messages.at(-1).content[0].type === "server_tool_use");
 ok("reports it searched", r.searched === true);
 console.log("  spoken reply:", JSON.stringify(r.reply));
@@ -65,7 +66,7 @@ const m = await runIris(client2, [{ role: "user", content: "remember I meet the 
 server2.close();
 const tools2 = seen2[0].tools.map((t: any) => t.name);
 ok("memory tools offered (remember, forget)", tools2.includes("remember") && tools2.includes("forget"));
-ok("remembered facts reach Iris (uncached block)", /What you remember about E:\n- E likes short briefs/.test(seen2[0].system[2]?.text ?? "") && !seen2[0].system[2]?.cache_control);
+ok("remembered facts reach Iris (uncached block)", /What you remember about E:\n- E likes short briefs/.test(seen2[0].system[3]?.text ?? "") && !seen2[0].system[3]?.cache_control);
 ok("keeps the lasting fact", JSON.stringify(m.remember) === JSON.stringify(["E meets the $BAY sponsor every other Thursday"]));
 ok("refuses to store a PIN", !m.remember.some((f) => /PIN/.test(f)));
 ok("passes the forget request", m.forget[0] === "the gym schedule");

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ChevronDown, X } from "lucide-react";
-import { HUD_MORE as MORE_IDS, HUD_TABS as TAB_IDS, SOLAR_PLANETS, type SolarPlanetId } from "../../../shared/solarPlanets";
+import { HUD_MORE as MORE_IDS, HUD_TABS as TAB_IDS, HUD_MODULES, moduleLabel, type HudModuleId } from "../../../shared/hudModules";
+import type { SystemStatus } from "./HudHeader";
 
-const labelOf = (id: SolarPlanetId) => SOLAR_PLANETS.find((p) => p.id === id)?.label ?? id;
+const labelOf = (id: HudModuleId) => moduleLabel(id);
 
 export interface TabBadge {
   count?: number;
@@ -17,25 +18,29 @@ export function HudTabBar({
   onTab,
   onMore,
 }: {
-  active: SolarPlanetId | null;
+  active: HudModuleId | null;
   moreOpen: boolean;
-  badges: Partial<Record<SolarPlanetId, TabBadge>>;
-  onTab: (id: SolarPlanetId) => void;
+  badges: Partial<Record<HudModuleId, TabBadge>>;
+  onTab: (id: HudModuleId) => void;
   onMore: () => void;
 }) {
   const moreActive = moreOpen || (active !== null && MORE_IDS.includes(active));
   const moreAlert = MORE_IDS.some((id) => badges[id]?.alert);
-  const tab = (key: string, label: string, on: boolean, alert: boolean | undefined, count: number | undefined, onClick: () => void) => (
+  const tab = (key: string, label: string, on: boolean, alert: boolean | undefined, count: number | undefined, onClick: () => void, extra?: { expanded?: boolean }) => (
     <button
       key={key}
       type="button"
       onClick={onClick}
       aria-current={on ? "page" : undefined}
+      aria-expanded={extra?.expanded}
       aria-label={`${label}${count ? `, ${count}` : ""}${alert ? ", needs attention" : ""}`}
       className={`relative flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 border-t-2 font-mono text-[10px] uppercase tracking-[0.12em] transition-colors ${
         on ? (alert ? "border-amber-300 text-amber-200" : "border-cyan-300 text-cyan-50") : alert ? "border-amber-400/60 text-amber-300" : "border-cyan-900/80 text-cyan-300/70"
       }`}
     >
+      {key === "more" && alert && !on ? (
+        <span className="absolute right-[22%] top-2 h-1.5 w-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_#fbbf24]" aria-hidden />
+      ) : null}
       <span>
         {label}
         {count ? <span className="ml-1">{count > 99 ? "99+" : count}</span> : null}
@@ -48,9 +53,9 @@ export function HudTabBar({
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       aria-label="Modules"
     >
-      <div className="mx-auto flex max-w-[640px] gap-1 px-2">
+      <div className="mx-auto flex max-w-[640px] md:max-w-[900px] lg:max-w-[1100px] gap-1 px-2">
         {TAB_IDS.map((id) => tab(id, labelOf(id), active === id && !moreOpen, badges[id]?.alert, badges[id]?.count, () => onTab(id)))}
-        {tab("more", "More", moreActive, moreAlert, undefined, onMore)}
+        {tab("more", "More", moreActive, moreAlert, undefined, onMore, { expanded: moreOpen })}
       </div>
     </nav>
   );
@@ -62,27 +67,34 @@ export function MoreSheet({
   badges,
   onPick,
   onClose,
+  irisDockVisible = false,
 }: {
   open: boolean;
-  badges: Partial<Record<SolarPlanetId, TabBadge>>;
-  onPick: (id: SolarPlanetId) => void;
+  badges: Partial<Record<HudModuleId, TabBadge>>;
+  onPick: (id: HudModuleId) => void;
   onClose: () => void;
+  /** When a module tab is open, Iris sits above the tab bar — lift the sheet so the bottom row isn't covered. */
+  irisDockVisible?: boolean;
 }) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
   }, [open, onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-20 bg-black/55" onClick={onClose} role="presentation">
+    <div className="fixed inset-0 z-[45] bg-black/55" onClick={onClose} role="presentation">
       <div
         role="dialog"
         aria-modal
         aria-label="More modules"
-        className="hud-glass animate-hud-sheet absolute inset-x-3 mx-auto max-w-[560px] p-4"
-        style={{ bottom: "calc(60px + env(safe-area-inset-bottom))" }}
+        className={`hud-glass animate-hud-sheet absolute inset-x-3 mx-auto flex max-w-[560px] md:max-w-[640px] flex-col overflow-hidden p-4 hud-more-sheet ${irisDockVisible ? "hud-more-sheet--iris" : ""}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-3 flex items-center justify-between">
@@ -91,9 +103,9 @@ export function MoreSheet({
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid min-h-0 flex-1 grid-cols-3 gap-2 overflow-y-auto overscroll-contain pb-1">
           {MORE_IDS.map((id) => {
-            const def = SOLAR_PLANETS.find((p) => p.id === id);
+            const def = HUD_MODULES.find((p) => p.id === id);
             const b = badges[id];
             return (
               <button
@@ -105,7 +117,7 @@ export function MoreSheet({
                 }`}
               >
                 <span className="h-1.5 w-6 rounded-full" style={{ background: def?.color }} aria-hidden />
-                <span className="mt-2">{def?.label ?? id}</span>
+                <span className="mt-2 text-center leading-tight">{def?.short ?? def?.label ?? id}</span>
                 {b?.count ? <span className="text-[10px] text-amber-300">{b.count}</span> : null}
               </button>
             );
@@ -117,14 +129,27 @@ export function MoreSheet({
 }
 
 /** A module opened as a glass panel. Swipe down on its header (or tap ✕) to close. */
-export function GlassModule({ id, onClose, children }: { id: SolarPlanetId; onClose: () => void; children: ReactNode }) {
+export function GlassModule({
+  id,
+  onClose,
+  animateEntry = true,
+  systemStatus = "ok",
+  children,
+}: {
+  id: HudModuleId;
+  onClose: () => void;
+  /** Slide-in only when opening from home — not when switching tabs. */
+  animateEntry?: boolean;
+  systemStatus?: SystemStatus;
+  children: ReactNode;
+}) {
   const label = labelOf(id);
   const [drag, setDrag] = useState(0);
   const startY = useRef<number | null>(null);
   const dragRef = useRef(0);
   return (
     <section
-      className="hud-glass hud-glass-module animate-hud-sheet relative"
+      className={`hud-glass hud-glass-module relative ${animateEntry ? "animate-hud-sheet" : ""} ${systemStatus !== "ok" ? "hud-glass--ultron" : ""}`}
       aria-label={`${label} module`}
       style={drag ? { transform: `translateY(${drag}px)`, transition: "none" } : undefined}
     >
@@ -158,7 +183,7 @@ export function GlassModule({ id, onClose, children }: { id: SolarPlanetId; onCl
         </button>
       </header>
       <div className="mx-auto h-1 w-10 -translate-y-1 rounded-full bg-cyan-300/30" aria-hidden />
-      <div className="space-y-4 px-3 pb-4 pt-1 sm:px-4">{children}</div>
+      <div className="space-y-4 px-3 pb-24 pt-1 sm:px-4 sm:pb-28">{children}</div>
     </section>
   );
 }

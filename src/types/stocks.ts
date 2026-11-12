@@ -23,6 +23,9 @@ export interface IpoCandidate {
 export interface StocksSnapshot {
   fetchedAt: string;
   dataSource: "finnhub" | "demo";
+  /** Present when live Finnhub fetch failed but demo numbers are included. */
+  demoFallback?: boolean;
+  error?: string;
   watchlist: StockQuote[];
   upcomingIpos: IpoCandidate[];
 }

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Briefcase, Loader2, Search } from "lucide-react";
-import type { ResearchArea } from "../../shared/businessResearch";
+import type { ResearchArea, ResearchTemplate } from "../../shared/businessResearch";
 import { RESEARCH_PRESETS } from "../../shared/businessResearch";
 import type { BusinessResearchResult } from "../../shared/businessResearch";
 
@@ -11,17 +11,18 @@ interface Props {
   loading: boolean;
   error: string | null;
   last: BusinessResearchResult | null;
-  onResearch: (query: string, area: ResearchArea) => Promise<BusinessResearchResult | null>;
+  onResearch: (query: string, area: ResearchArea, template?: ResearchTemplate) => Promise<BusinessResearchResult | null>;
   onConnectGoogle: () => void;
 }
 
 export function BusinessResearcherPanel({ googleConnected, loading, error, last, onResearch, onConnectGoogle }: Props) {
   const [query, setQuery] = useState("");
   const [area, setArea] = useState<ResearchArea>("ECS");
+  const [template, setTemplate] = useState<ResearchTemplate | undefined>(undefined);
 
   const submit = () => {
     if (!query.trim() || loading) return;
-    void onResearch(query.trim(), area);
+    void onResearch(query.trim(), area, template);
   };
 
   return (
@@ -32,19 +33,21 @@ export function BusinessResearcherPanel({ googleConnected, loading, error, last,
             <Briefcase className="h-4 w-4" aria-hidden /> Business Researcher
           </p>
           <p className="text-sm text-alfred-mist mt-1">
-            Sourced market and ops briefs with live web research — saved to Hub memos.
+            Sourced briefs (consultant, competitive, grant-fit, or evidence-style) with live web research — saved to Hub memos.
           </p>
         </div>
       </div>
 
       {!googleConnected ? (
         <div className="rounded-md border border-amber-400/40 bg-amber-950/20 px-3 py-2 text-sm text-amber-100/90">
-          Connect Google in Settings so reports sync to your account.
+          Connect Google in Settings — research saves to your Hub memos on your account.
           <button type="button" className="btn-gold ml-2 mt-2 w-full sm:w-auto text-xs" onClick={onConnectGoogle}>
             Connect Google
           </button>
         </div>
-      ) : null}
+      ) : (
+        <p className="text-xs text-cyan-400/55 font-mono">Saved to Hub memos on your account · up to 8 runs per day.</p>
+      )}
 
       <div className="flex flex-wrap gap-2">
         {RESEARCH_PRESETS.map((p) => (
@@ -55,6 +58,7 @@ export function BusinessResearcherPanel({ googleConnected, loading, error, last,
             onClick={() => {
               setQuery(p.query);
               setArea(p.area);
+              setTemplate(p.template);
             }}
           >
             {p.label}
@@ -76,6 +80,25 @@ export function BusinessResearcherPanel({ googleConnected, loading, error, last,
             {a}
           </option>
         ))}
+      </select>
+
+      <label className="block text-xs text-alfred-mist" htmlFor="research-template">
+        Brief style
+      </label>
+      <select
+        id="research-template"
+        className="input-field mb-2"
+        value={template ?? "auto"}
+        onChange={(e) => {
+          const v = e.target.value;
+          setTemplate(v === "auto" ? undefined : (v as ResearchTemplate));
+        }}
+      >
+        <option value="auto">Auto from question</option>
+        <option value="brief">Executive brief (SCQA)</option>
+        <option value="competitive">Competitive landscape</option>
+        <option value="grant">Grant / funder fit</option>
+        <option value="evidence">Evidence synthesis</option>
       </select>
 
       <label className="block text-xs text-alfred-mist" htmlFor="research-query">

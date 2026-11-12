@@ -9,19 +9,29 @@ its own README, build, and (typically) its own Netlify site.
 |---------|------|---------|
 | **Alfred** | repo root | Personal command center — email, calendar, weather, Woodhouse app dashboard |
 | **Family Purpose** | [`family-purpose/`](family-purpose/) | Student check-ins, mentoring group sign-in, debriefs, BOYS curriculum API |
-| **BOYS Student** | [`boys-student/`](boys-student/) | Student-facing monthly curriculum app (class code login) |
+| **VantageGames** | [`vantage-games/`](vantage-games/) | Own Netlify site (`vantagegames1`) — City Nights + Battleworld launcher |
 | **Alfred × OpenJarvis** | [`alfred-jarvis/`](alfred-jarvis/) | Local AI assistant (OpenJarvis) personalized as Alfred: briefings, ECS ops, research, career |
+| **God's Eye** | [`gods-eye/`](gods-eye/) | Local 3D globe ([upstream](https://github.com/bilawalsidhu/gods-eye-view)): run on Mac; link from IRIS Pulse — [same Wi‑Fi + remote](gods-eye/README.md) |
+| **JARVIS-OS-V.2** | [`jarvis-os-v2/`](jarvis-os-v2/) | Local Gemini Jarvis ([upstream](https://github.com/MAL19INDUSTRIES/JARVIS-OS-V.2)): clone + [cherry-pick only](jarvis-os-v2/CHERRY_PICK.md) — not Iris |
+| **Herald OS** | [`herald-os/`](herald-os/) | Agent-native desktop ([upstream](https://github.com/iamlukethedev/Herald-OS)): [cherry-pick](herald-os/CHERRY_PICK.md) — speech/TTS helpers only in Iris |
+| **City Nights** | [`drive-world/`](drive-world/) | Open-world Bay Area night driving (PlayCanvas) — **separate Netlify site**; see [`docs/CITY_NIGHTS_DEPLOY.md`](docs/CITY_NIGHTS_DEPLOY.md) |
+| **Battleworld** (Flight Nemulator) | [`flight-nemulator/`](flight-nemulator/) | Homage crossover planet (PlayCanvas) — **separate Netlify site**; see [`docs/BATTLEWORLD.md`](docs/BATTLEWORLD.md) |
+| **Tortuca Console** | [`games-hub/`](games-hub/) | PlayStation-style home for **City Nights** + **Flight Nemulator** (`npm run build:all` in `games-hub/`) |
+
+**Local toolchains** (shallow clone, not shipped): [ACE-Step](tools/ace-step/) music, [Game Studios](tools/claude-code-game-studios/) Claude Code skills, [UnrealClaude](tools/unreal-claude/), [Audio2Face-3D](tools/audio2face-3d/) — index [`docs/UPSTREAM_GAME_TOOLCHAIN.md`](docs/UPSTREAM_GAME_TOOLCHAIN.md).
 
 ### Alfred (repo root)
 
-**Alfred** is your personal command center. It reads email and calendar, tracks
-weather and todos, and—through the **Woodhouse protocol**—shows the status of
-**every app you register**.
+**Alfred / IRIS** is your personal command center on **alfred2** (and locally): Iris voice + HUD home (four corner gauges, bottom tabs Today · Vitals · Inbox · Plan, **More** for Team · Woodhouse · Research · Hub · Meals · Drafts · ECS), Gmail/calendar, Woodhouse app status, **Bay Area Pulse digital map** (no raster tiles), server-side commute sync, Iris specialist team (one per module) with **duplicate delegate prevention** (Woodhouse on Team), and cross-device data in Netlify Blobs. Home uses the core ring and Iris voice — no separate “awaiting command” text box.
+
+**iPad:** Add [IRIS to your Home Screen](https://developer.apple.com/documentation/webkit/promoting_apps_with_smart_app_banners) like any PWA; the UI treats **portrait as a wide phone** (comfortable tap targets, wider main column) and **landscape at ~833px+** as tablet/desktop (two-column Today with Iris talk beside “Do today” when the voice deck is open).
 
 ```bash
 npm install
 npm run dev
 npx netlify dev   # Woodhouse aggregator + Google OAuth
+npm run test:os   # build + time + iris + research + HUD/OS audit + guardrails + thin auditor (see docs/IRIS_MAX_CAPACITY_AUDIT.md)
+# or: npm run build && npm run test:time && npm run test:iris && npm run test:research && npm run test:audit
 ```
 
 Deploy from the **repo root** (default `netlify.toml`). See [WOODHOUSE.md](./WOODHOUSE.md)
@@ -41,15 +51,13 @@ See [`family-purpose/README.md`](family-purpose/README.md).
 
 Deploy as a **separate Netlify site** with base directory `family-purpose`.
 
-### BOYS Student App
+### VantageGames
 
-Students join with a class code (`PURPOSE-A`, `PURPOSE-B`, or `PURPOSE-C`), enter
-name and grade, and submit monthly warm-up and exit ticket responses.
+Scrollable title cards → **City Nights** and **Battleworld** (bundled via `build:with-console`).
 
-See [`boys-student/README.md`](boys-student/README.md).
+See [`vantage-games/README.md`](vantage-games/README.md) and [`docs/VANTAGE_GAMES_DEPLOY.md`](docs/VANTAGE_GAMES_DEPLOY.md).
 
-Deploy as a **separate Netlify site** with base directory `boys-student` and
-`VITE_BOYS_API_URL` set to your Family Purpose site URL.
+Production: **`vantagegames1`** — base directory **`vantage-games`** (not `drive-world`). Finish slices: [`docs/GAME_FINISH_PROGRAM.md`](docs/GAME_FINISH_PROGRAM.md) (Nightshift / Skyring → Iris).
 
 ## License
 
