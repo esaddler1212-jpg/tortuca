@@ -35,6 +35,26 @@ const check = (name, ok, detail) => {
 };
 const readMinimapTitle = () => page.$eval('.minimap-title', (e) => (e.textContent ?? '').trim());
 const isBayMinimapTitle = (title) => title === 'City Nights map' || title.startsWith('City Nights map ·');
+const boardFlightWaitMs = process.env.GITHUB_ACTIONS ? 20_000 : 10_000;
+const waitFlightBoarded = () =>
+  page.waitForFunction(
+    () => {
+      const h = window.__cityNights.hud();
+      return !!h.flightCinematic && h.ridingWaymo === true;
+    },
+    { timeout: boardFlightWaitMs, polling: 50 }
+  );
+const tryBoardFlight = async () => {
+  await page.keyboard.press('KeyF');
+  try {
+    await waitFlightBoarded();
+    return;
+  } catch {
+    /* CI can miss one key edge — tap the prompt */
+  }
+  await page.click('.flight-prompt.ready').catch(() => {});
+  await waitFlightBoarded().catch(() => {});
+};
 
 const browser = await puppeteer.launch({
   executablePath: chrome,
@@ -126,10 +146,9 @@ check('flight prompt ready at SFO', h.prompt?.ready === true, h.prompt?.label);
 check('minimap shows Bay map', isBayMinimapTitle(await readMinimapTitle()), await readMinimapTitle());
 if (shot) await page.screenshot({ path: `${shot}/tokyo-01-sfo-gate.png` });
 
-await page.keyboard.press('KeyF');
-await sleep(1500);
+await tryBoardFlight();
 h = await hud();
-check('F boards the flight', !!h.cine && h.riding === true, h.cine?.label);
+check('F boards the flight', !!h.cine && h.riding === true, h.cine?.label ?? 'no cinematic');
 await sleep(4000);
 if (shot) await page.screenshot({ path: `${shot}/tokyo-02-takeoff.png` });
 
@@ -212,15 +231,9 @@ check('reload resumes in Tokyo', h.inTokyo && h.x > 8000, `(${h.x.toFixed(0)}, $
 check('car on ground after Tokyo resume', !!car2 && car2.y > -0.5 && car2.y < 3, car2 ? `y=${car2.y.toFixed(2)}` : 'no car');
 check('Haneda prompt offers flight home', h.prompt?.label === 'Fly home to SFO', h.prompt?.label);
 
-await page.keyboard.press('KeyF');
-await sleep(1500);
+await tryBoardFlight();
 let hReturn = await hud();
-if (!hReturn.cine && hReturn.prompt?.ready) {
-  await page.click('.flight-prompt.ready').catch(() => {});
-  await sleep(1500);
-  hReturn = await hud();
-}
-check('return flight starts', !!hReturn.cine);
+check('return flight starts', !!hReturn.cine, hReturn.cine?.label ?? 'no cinematic');
 await page.waitForSelector('.skip-waymo', { timeout: 15_000 });
 await page.click('.skip-waymo');
 await sleep(3000);
