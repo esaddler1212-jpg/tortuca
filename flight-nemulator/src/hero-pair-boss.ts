@@ -1,6 +1,7 @@
 import { Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
 import type { FactionNpc } from './faction-npcs';
 import { attachUnitBox } from './primitive-mesh';
+import { attachVillainGltf } from './villain-gltf';
 import { syncFlightAssistVisuals } from './aerial-mobility';
 import { primaryVillainIdForHero } from './roster-expansion';
 import { getVillainClone, VILLAIN_CLONES, type VillainCloneSpec } from './villain-roster';
@@ -71,6 +72,7 @@ export function spawnPairBoss(
   paintBoss(ent, color);
   syncFlightAssistVisuals(app, ent, clone.aerial, color);
   root.addChild(ent);
+  void attachVillainGltf(app, ent, clone.id, color, scale);
   const baseHp = 5 * clone.hpMul * PAIR_BOSS_HP_SCALE;
   return {
     entity: ent,

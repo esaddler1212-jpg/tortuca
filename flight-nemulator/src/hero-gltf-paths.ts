@@ -2,7 +2,8 @@
 
 const OVERRIDES: Record<string, string> = {
   'tin-aviator': './models/heroes/tin-aviator.glb',
-  'solar-apex': './models/heroes/solar-apex.glb'
+  'solar-apex': './models/heroes/solar-apex.glb',
+  'wall-crawler': './models/heroes/wall-crawler.glb'
 };
 
 export function glbPathForHero(heroId: string): string {

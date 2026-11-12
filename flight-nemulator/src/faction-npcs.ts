@@ -6,6 +6,7 @@ import type { PlayerRole } from './player-role';
 import { applyRaiderSiege } from './city-integrity';
 import type { CityIntegrityState } from './city-integrity';
 import { attachUnitBox } from './primitive-mesh';
+import { attachVillainGltf } from './villain-gltf';
 import { siegeTargetInDistrict } from './territory-invasion';
 import { pickHeroInterceptor } from './hero-rivals';
 import { syncFlightAssistVisuals, type AerialMobility } from './aerial-mobility';
@@ -106,6 +107,9 @@ export function spawnFactionWave(
     paintNpc(ent, allegiance, color);
     syncFlightAssistVisuals(app, ent, aerial, color);
     root.addChild(ent);
+    if (allegiance === 'villain') {
+      void attachVillainGltf(app, ent, profileId, color, scale);
+    }
     const baseHp = allegiance === 'villain' ? 4 + Math.floor(count / 3) : 3 + Math.floor(count / 4);
     const baseSpeed =
       allegiance === 'villain' ? 22 + Math.random() * 10 : 28 + Math.random() * 12 + count * 0.3;

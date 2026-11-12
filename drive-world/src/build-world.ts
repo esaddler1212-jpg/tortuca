@@ -28,6 +28,7 @@ import {
   spawnAmbientTraffic
 } from './build-world-extras';
 import { spawnHubStreetTraffic } from './hub-street-traffic';
+import { spawnFreewayTrafficDrones } from './freeway-traffic-drones';
 import { buildSideshowMeets } from './sideshow-meets';
 import { NIGHT_FOG } from './night-palette';
 export function buildDrivingWorld(app: AppBase): void {
@@ -46,6 +47,7 @@ export function buildDrivingWorld(app: AppBase): void {
   buildCollectibles(app);
   buildCruiseVistas(app);
   spawnAmbientTraffic(app, preset);
+  spawnFreewayTrafficDrones(app, preset);
   spawnHubStreetTraffic(app, preset);
   buildSideshowMeets(app);
   buildAllDistricts(app);

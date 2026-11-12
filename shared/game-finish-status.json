@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-11T14:46:10.156Z",
+  "updatedAt": "2026-11-12T13:49:09.844Z",
   "activeSlice": {
-    "nightshift": "cn-d05",
-    "skyring": "bw-d05"
+    "nightshift": "cn-d06",
+    "skyring": "bw-d06"
   },
   "sliceState": {
     "cn-d01": {
@@ -27,10 +27,12 @@
       "note": "3 ghost circuits on minimap + roster; Estate & Bridge ghost sprints"
     },
     "cn-d05": {
-      "status": "active"
+      "status": "done",
+      "completedAt": "2026-11-12T13:49:09.658Z",
+      "note": "Freeway drones I80/880/101; Chromebook cap 3 on main arteries"
     },
     "cn-d06": {
-      "status": "pending"
+      "status": "active"
     },
     "cn-d07": {
       "status": "pending"
@@ -65,10 +67,12 @@
       "note": "Wave-10 juice: HUD chip, rumble ramp, pair-boss hit shake"
     },
     "bw-d05": {
-      "status": "active"
+      "status": "done",
+      "completedAt": "2026-11-12T13:49:09.843Z",
+      "note": "wall-crawler.glb hero #3; krypton-eclipse nemesis GLB + spawn attach"
     },
     "bw-d06": {
-      "status": "pending"
+      "status": "active"
     },
     "bw-d07": {
       "status": "pending"
@@ -84,6 +88,18 @@
     }
   },
   "reports": [
+    {
+      "agent": "skyring",
+      "sliceId": "bw-d05",
+      "at": "2026-11-12T13:49:09.844Z",
+      "summary": "wall-crawler.glb hero #3; krypton-eclipse nemesis GLB + spawn attach"
+    },
+    {
+      "agent": "nightshift",
+      "sliceId": "cn-d05",
+      "at": "2026-11-12T13:49:09.658Z",
+      "summary": "Freeway drones I80/880/101; Chromebook cap 3 on main arteries"
+    },
     {
       "agent": "skyring",
       "sliceId": "bw-d04",
