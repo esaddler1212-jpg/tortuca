@@ -1,12 +1,21 @@
 import type { Handler } from "@netlify/functions";
 import { getStore } from "@netlify/blobs";
+import { buildTierASmsContext } from "../../shared/tierASmsContext";
 import { dayKey } from "../../shared/timezone";
 import { TIER_A_SMS_DAILY_TURNS } from "../../shared/agentGuardrails";
-import { mergeTierA, tierAContextForIris } from "../../shared/tierAOps";
-import { initBlobs, siteUrl } from "./_shared";
-import { listAllUserData, saveUserData } from "./_userData";
+import { mergeTierA, smsLinkCodeValid } from "../../shared/tierAOps";
+import { getValidSession, initBlobs, listConnectedSessions, siteUrl } from "./_shared";
+import { listAllUserData, loadUserData, saveUserData } from "./_userData";
 import { sendTwilioSms, validateTwilioSignature, twilioConfigured } from "./_twilio";
 import { smsAskOneTurn } from "./_tierASmsAsk";
+import {
+  allowSmsLinkAttempt,
+  emailFromAccountKey,
+  indexSmsPhone,
+  recordSmsLinkFail,
+  resolveAccountByPhone,
+} from "./_tierASmsIndex";
+import { fetchInboxHeadlines } from "./_tierASmsInbox";
 
 function formBody(event: { body?: string | null; headers: Record<string, string | undefined> }): Record<string, string> {
   const raw = event.body ?? "";
@@ -21,6 +30,14 @@ function formBody(event: { body?: string | null; headers: Record<string, string 
 function twiml(message: string) {
   const esc = message.replace(/&/g, "&amp;").replace(/</g, "&lt;");
   return `<?xml version="1.0" encoding="UTF-8"?><Response><Message>${esc}</Message></Response>`;
+}
+
+async function sessionForEmail(email: string | null) {
+  if (!email) return null;
+  const sessions = await listConnectedSessions();
+  const row = sessions.find((s) => s.session.email?.toLowerCase() === email.toLowerCase());
+  if (!row) return null;
+  return getValidSession(row.sessionId);
 }
 
 export const handler: Handler = async (event) => {
@@ -38,34 +55,60 @@ export const handler: Handler = async (event) => {
   const from = params.From ?? "";
   const body = (params.Body ?? "").trim();
   const linkMatch = /^LINK\s+(\w+)/i.exec(body);
-
-  const all = await listAllUserData();
-  let accountKey: string | null = null;
-  let data = all[0]?.data;
+  const tzDefault = "America/Los_Angeles";
 
   if (linkMatch) {
     const code = linkMatch[1].toUpperCase();
-    const hit = all.find((u) => u.data.tierA?.sms?.linkCode?.toUpperCase() === code);
-    if (hit) {
-      accountKey = hit.sessionId;
-      data = hit.data;
-      const tierA = mergeTierA(data.tierA, {});
-      tierA.sms = { ...tierA.sms, enabled: true, phoneE164: from, linkedAt: new Date().toISOString(), linkCode: tierA.sms?.linkCode };
-      await saveUserData(accountKey, { ...data, tierA, updatedAt: new Date().toISOString() });
-      await sendTwilioSms(from, "IRIS linked. Text me any time for a short answer.");
-      return { statusCode: 200, headers: { "Content-Type": "text/xml" }, body: twiml("You're linked. Text me anytime.") };
+    if (!(await allowSmsLinkAttempt(from, tzDefault))) {
+      return { statusCode: 200, headers: { "Content-Type": "text/xml" }, body: twiml("Too many tries. Wait until tomorrow.") };
     }
-    return { statusCode: 200, headers: { "Content-Type": "text/xml" }, body: twiml("Unknown link code. Get a fresh code in IRIS → Today → SMS.") };
+    const all = await listAllUserData();
+    const hit = all.find((u) => smsLinkCodeValid(u.data.tierA?.sms, code));
+    if (!hit) {
+      await recordSmsLinkFail(from, tzDefault);
+      return {
+        statusCode: 200,
+        headers: { "Content-Type": "text/xml" },
+        body: twiml("Unknown or expired link code. Get a fresh code in IRIS Today SMS."),
+      };
+    }
+    const accountKey = hit.sessionId;
+    const data = hit.data;
+    const tierA = mergeTierA(data.tierA, {});
+    tierA.sms = {
+      ...tierA.sms,
+      enabled: true,
+      phoneE164: from,
+      linkedAt: new Date().toISOString(),
+      linkCode: undefined,
+      linkCodeExpiresAt: undefined,
+    };
+    await saveUserData(accountKey, { ...data, tierA, updatedAt: new Date().toISOString() });
+    await indexSmsPhone(from, accountKey);
+    await sendTwilioSms(from, "IRIS linked. Text me any time for a short answer.");
+    return { statusCode: 200, headers: { "Content-Type": "text/xml" }, body: twiml("You're linked. Text me anytime.") };
   }
 
-  const match = all.find((u) => u.data.tierA?.sms?.enabled && u.data.tierA.sms.phoneE164 === from);
-  if (!match) {
+  let accountKey = await resolveAccountByPhone(from);
+  if (!accountKey) {
+    const all = await listAllUserData();
+    const match = all.find((u) => u.data.tierA?.sms?.enabled && u.data.tierA.sms.phoneE164 === from);
+    if (match) {
+      accountKey = match.sessionId;
+      await indexSmsPhone(from, accountKey);
+    }
+  }
+  if (!accountKey) {
     return { statusCode: 200, headers: { "Content-Type": "text/xml" }, body: twiml("Unknown number. Link SMS in the IRIS app first.") };
   }
-  accountKey = match.sessionId;
-  data = match.data;
-  const tz = data.settings?.timezone ?? "America/Los_Angeles";
-  const who = match.sessionId;
+
+  const data = await loadUserData(accountKey);
+  if (!data) {
+    return { statusCode: 200, headers: { "Content-Type": "text/xml" }, body: twiml("Account data missing. Open IRIS.") };
+  }
+  const tz = data.settings?.timezone ?? tzDefault;
+  const emailAddr = emailFromAccountKey(accountKey);
+  const who = (emailAddr ?? accountKey).toLowerCase();
   const usage = getStore({ name: "iris-sms-ask-usage" });
   const usageKey = `${who}:${dayKey(tz)}`;
   const used = Number((await usage.get(usageKey)) ?? 0);
@@ -74,7 +117,17 @@ export const handler: Handler = async (event) => {
   }
   await usage.set(usageKey, String(used + 1));
 
-  const ctx = tierAContextForIris(data.tierA);
+  const session = await sessionForEmail(emailAddr);
+  let inbox: Awaited<ReturnType<typeof fetchInboxHeadlines>> = [];
+  if (session?.accessToken) {
+    try {
+      inbox = await fetchInboxHeadlines(session);
+    } catch {
+      inbox = [];
+    }
+  }
+  const schoolNames = data.settings?.schoolName ? [data.settings.schoolName] : [];
+  const ctx = buildTierASmsContext(data, { timeZone: tz, schoolNames, inbox });
   const reply = await smsAskOneTurn(body, ctx);
   return { statusCode: 200, headers: { "Content-Type": "text/xml" }, body: twiml(reply) };
 };

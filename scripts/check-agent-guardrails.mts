@@ -20,6 +20,7 @@ import {
   sanitizeDelegateTask,
 } from "../shared/agentGuardrails.ts";
 import { teamContextForIris } from "../shared/irisTeam.ts";
+import { smsLinkCodeValid } from "../shared/tierAOps.ts";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel: string) => fs.readFileSync(path.join(root, rel), "utf8");
@@ -81,6 +82,14 @@ ok("research memo re-exports daily limit", read("netlify/functions/_researchMemo
 
 ok("weekly-audit GET requires session", read("netlify/functions/weekly-audit.ts").includes("getValidSession"));
 ok("weekly-audit-scheduled uses shared cron", read("netlify/functions/weekly-audit-scheduled.ts").includes("WEEKLY_AUDIT_CRON"));
+
+ok("calendar-apply requires session", read("netlify/functions/calendar-apply.ts").includes("getValidSession"));
+ok("voice twiml uses one-time nonce", read("netlify/functions/twilio-voice-twiml.ts").includes("consumeVoiceTwimlNonce"));
+ok("sms link uses expiry", read("netlify/functions/sms-link.ts").includes("linkCodeExpiresAt"));
+ok("sms context builder exists", fs.existsSync(path.join(root, "shared/tierASmsContext.ts")));
+const validSms = { linkCode: "ABCD", linkCodeExpiresAt: new Date(Date.now() + 60_000).toISOString() };
+ok("smsLinkCodeValid accepts fresh code", smsLinkCodeValid(validSms, "abcd"));
+ok("smsLinkCodeValid rejects expired", smsLinkCodeValid({ linkCode: "X", linkCodeExpiresAt: new Date(0).toISOString() }, "X") === false);
 
 const passed = !process.exitCode;
 console.log(passed ? `\nAgent guardrails audit passed (${checkCount} checks).` : `\nAgent guardrails audit failed (${checkCount} checks run).`);

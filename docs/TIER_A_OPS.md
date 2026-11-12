@@ -17,3 +17,5 @@ All nine Tier A items from competitive research are wired as follows.
 **Blob field:** `AlfredUserData.tierA` (`shared/tierAOps.ts`).
 
 **Netlify env (optional):** `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_SMS_FROM`, `TWILIO_VOICE_FROM`.
+
+**Security (post-audit):** Voice TwiML uses one-time tokens only. SMS link codes expire in 1 hour. See `docs/TIER_A_AUDIT.md`.

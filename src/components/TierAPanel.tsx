@@ -7,6 +7,7 @@ import {
   linkSms,
   placeVoiceCall,
   runInboxTriage,
+  queueTriageDraft,
 } from "../lib/tierAApi";
 
 interface Props {
@@ -186,11 +187,27 @@ export function TierAPanel({ tierA, patchTierA, timeZone, onOpenChannels }: Prop
               <p className={t.urgency === "high" ? "text-alfred-gold" : ""}>
                 {t.from}: {t.subject}
               </p>
-              {t.suggestedReply && onOpenChannels && (
-                <button type="button" className="text-xs text-alfred-mist underline mt-1" onClick={onOpenChannels}>
+              {t.suggestedReply && !t.draftQueuedAt && (
+                <button
+                  type="button"
+                  className="text-xs text-alfred-gold underline mt-1"
+                  disabled={!!busy}
+                  onClick={() =>
+                    run(`draft-${t.id}`, async () => {
+                      await queueTriageDraft(t.id);
+                      patchTierA({
+                        inboxTriage: (tierA.inboxTriage ?? []).map((x) =>
+                          x.id === t.id ? { ...x, draftQueuedAt: new Date().toISOString() } : x,
+                        ),
+                      });
+                      onOpenChannels?.();
+                    })
+                  }
+                >
                   Queue reply in Drafts
                 </button>
               )}
+              {t.draftQueuedAt && <p className="text-[10px] text-alfred-mist mt-1">Draft queued — open Drafts to approve.</p>}
             </div>
           ))}
           <button

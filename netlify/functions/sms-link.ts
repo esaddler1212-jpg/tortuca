@@ -1,7 +1,8 @@
 import type { Handler } from "@netlify/functions";
 import { getValidSession, initBlobs, sessionHeader } from "./_shared";
 import { loadUserData, resolveDataKey, saveUserData } from "./_userData";
-import { mergeTierA, newId } from "../../shared/tierAOps";
+import crypto from "node:crypto";
+import { mergeTierA, TIER_A_LINK_CODE_TTL_MS } from "../../shared/tierAOps";
 
 function json(status: number, body: unknown) {
   return { statusCode: status, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
@@ -27,18 +28,21 @@ export const handler: Handler = async (event) => {
   const tierA = mergeTierA(data.tierA, {});
   const enable = body.enable !== false;
   const phone = body.phone?.replace(/[\s()-]/g, "").trim();
-  const linkCode = tierA.sms?.linkCode ?? Math.random().toString(36).slice(2, 8).toUpperCase();
+  const linkCode = crypto.randomBytes(8).toString("hex").toUpperCase();
+  const linkCodeExpiresAt = new Date(Date.now() + TIER_A_LINK_CODE_TTL_MS).toISOString();
   tierA.sms = {
     ...tierA.sms,
     enabled: enable,
     phoneE164: phone?.startsWith("+") ? phone : phone ? `+1${phone}` : tierA.sms?.phoneE164,
     linkCode,
+    linkCodeExpiresAt,
     linkedAt: tierA.sms?.linkedAt,
   };
   await saveUserData(key, { ...data, tierA, updatedAt: new Date().toISOString() });
   return json(200, {
     ok: true,
     linkCode,
-    hint: `Text LINK ${linkCode} to your IRIS SMS number to finish pairing.`,
+    expiresAt: linkCodeExpiresAt,
+    hint: `Text LINK ${linkCode} to your IRIS SMS number within one hour to finish pairing.`,
   });
 };

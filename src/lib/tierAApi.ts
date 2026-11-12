@@ -23,6 +23,10 @@ export function runInboxTriage() {
   return post<{ ok: boolean; count: number }>("/api/inbox-triage", {});
 }
 
+export function queueTriageDraft(triageId: string) {
+  return post<{ ok: boolean; draftId?: string }>("/api/inbox-triage-draft", { triageId });
+}
+
 export function linkSms(phone?: string, enable = true) {
   return post<{ ok: boolean; linkCode: string; hint: string }>("/api/sms-link", { phone, enable });
 }

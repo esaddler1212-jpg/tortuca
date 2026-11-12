@@ -2,6 +2,7 @@ import type { Handler } from "@netlify/functions";
 import { getValidSession, initBlobs, sessionHeader, siteUrl } from "./_shared";
 import { loadUserData, resolveDataKey, saveUserData } from "./_userData";
 import { placeTwilioCall, twilioConfigured } from "./_twilio";
+import { mintVoiceTwimlNonce, stashVoiceTwimlNonce } from "./_tierAVoiceTwiml";
 
 function json(status: number, body: unknown) {
   return { statusCode: status, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
@@ -30,7 +31,9 @@ export const handler: Handler = async (event) => {
   const call = data?.tierA?.voiceCalls?.find((c) => c.id === callId && c.status === "pending");
   if (!call) return json(404, { error: "Call not found" });
 
-  const twimlUrl = `${siteUrl(event)}/api/twilio-voice-twiml?callId=${encodeURIComponent(callId)}&key=${encodeURIComponent(key)}`;
+  const nonce = mintVoiceTwimlNonce();
+  await stashVoiceTwimlNonce(nonce, key, callId);
+  const twimlUrl = `${siteUrl(event)}/api/twilio-voice-twiml?token=${encodeURIComponent(nonce)}`;
   const ok = await placeTwilioCall(call.toNumber, twimlUrl);
   if (!ok) return json(502, { error: "Twilio call failed" });
 
