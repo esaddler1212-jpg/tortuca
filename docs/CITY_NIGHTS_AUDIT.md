@@ -97,7 +97,7 @@ _Pass 2: boot crash fixes, typecheck gate, layout fix, headless smoke. Prior pas
 | **Fleet / GLB** | Shipped | Starter + background Kenney preload; **Cars** tab `requestVehicleSwap` when slow |
 | **3D ground** | Partial | Heightmapped `build-bay-ground.ts` (visual); flat physics slab + streets for handling |
 | **Tokyo** | Shipped | 8 landmarks → 8 FF cars; heightfield visuals; `test:wiring` + `test:tokyo` |
-| **Game Finish D2–D3** (from `main`) | On branch | Street rep, Nitro Zone HUD, I-80 ghost rival, chapters 1–3 chain |
+| **Game Finish D1–D5** (on `main`) | Shipped | Street rep, Nitro Zone, I-80 ghost, chapters, ghost circuit, Day 5 drones/GLBs (#118–#125) |
 | **Cars tab density** | Watch | Fleet picker + Records + Safehouse after merge — busier than “fleet only” |
 | **CI** | Fragile | Headless Chrome playtests need mph/Δ thresholds (not fixed physics) |
 | **World art** | Open | City blocks still procedural boxes; EarthNG-style meshes not in scope |
