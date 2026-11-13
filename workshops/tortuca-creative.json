@@ -1,0 +1,46 @@
+{
+  "catalogVersion": 1,
+  "description": "Creative workshops — hosted apps and local toolchains for sparks, film, and game art. Nothing here ships inside the Netlify PWA.",
+  "entries": [
+    {
+      "id": "open-generative-ai",
+      "title": "Open Generative AI",
+      "kind": "local",
+      "url": "https://github.com/Anil-matcha/Open-Generative-AI",
+      "hostedUrl": "https://muapi.ai/open-generative-ai",
+      "summary": "MIT studio for image, video, lip sync, and workflows (400+ models via MuAPI BYOK). Desktop supports sd.cpp and Wan2GP local inference.",
+      "bootstrap": "npm run open-generative-ai:bootstrap",
+      "doc": "docs/CREATIVE_WORKSHOPS.md",
+      "cherryPick": "tools/open-generative-ai/CHERRY_PICK.md",
+      "tags": ["image", "video", "spark", "film"]
+    },
+    {
+      "id": "blockbench",
+      "title": "Blockbench",
+      "kind": "workflow",
+      "url": "https://www.blockbench.net",
+      "summary": "Low-poly and Box UV models for PlayCanvas heroes and City Nights props.",
+      "doc": "docs/BLOCKBENCH_WORKFLOW.md",
+      "tags": ["3d", "game", "city-nights"]
+    },
+    {
+      "id": "world-gacha",
+      "title": "World Gacha",
+      "kind": "hosted",
+      "url": "https://tools.oyasumi-gamedev.com/worldgacha/",
+      "summary": "Roll fictional towns, sketch the map, export PNG + GLB for City Nights blockout.",
+      "doc": "docs/WORLDGACHA_WORKFLOW.md",
+      "tags": ["3d", "city", "map"]
+    },
+    {
+      "id": "kenney-packs",
+      "title": "Kenney CC0 packs",
+      "kind": "workflow",
+      "url": "https://kenney.nl/assets",
+      "summary": "Audio, vehicles, and city kits already wired into drive-world and flight-nemulator.",
+      "bootstrap": "bash tools/gamedev-resources/install-free-packs.sh --all",
+      "doc": "docs/GAMEDEV_RESOURCES.md",
+      "tags": ["game", "audio", "3d"]
+    }
+  ]
+}

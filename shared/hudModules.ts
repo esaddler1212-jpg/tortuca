@@ -28,7 +28,7 @@ export const HUD_MODULES: HudModuleDef[] = [
   { id: "team", label: "Team", short: "Team", hint: "Woodhouse: specialist roster, delegate efficiency, duplicate-work checks", color: "#38bdf8" },
   { id: "today", label: "Today", short: "Today", hint: "do today, schedule, todos, leave-by", color: "#fde047" },
   { id: "inbox", label: "Inbox", short: "Inbox", hint: "newest Gmail, unread mail", color: "#fda4af" },
-  { id: "plan", label: "Plan", short: "Plan", hint: "weekly plan, goals, handoffs", color: "#86efac" },
+  { id: "plan", label: "Plan", short: "Plan", hint: "weekly plan, goals, handoffs, creative workshops", color: "#86efac" },
   { id: "hub", label: "Hub", short: "Hub", hint: "memos, gym, watch, routines", color: "#f0abfc" },
   { id: "research", label: "Research", short: "R&D", hint: "business researcher briefs", color: "#fdba74" },
   { id: "meal", label: "Meals", short: "Meals", hint: "shopping list and meal prep", color: "#5eead4" },
@@ -61,6 +61,7 @@ export function matchModuleFromSpeech(text: string): HudModuleId | null {
   if (/\b(channel|draft|write an? email|compose)\b/.test(t)) return "channels";
   if (/\b(inbox|email|e-mail|mail|gmail|unread)\b/.test(t)) return "inbox";
   if (/\b(research|brief me on|market)\b/.test(t)) return "research";
+  if (/\b(workshop|generative ai|open generative)\b/.test(t)) return "plan";
   if (/\b(plan|goal|handoff|week)\b/.test(t) && !/\btoday\b/.test(t)) return "plan";
   if (/\b(hub|memo|gym|watch|routine)\b/.test(t)) return "hub";
   if (/\b(meal|shop|grocery|pantry)\b/.test(t)) return "meal";

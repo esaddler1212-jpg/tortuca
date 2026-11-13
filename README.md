@@ -20,6 +20,8 @@ its own README, build, and (typically) its own Netlify site.
 
 **Local toolchains** (shallow clone, not shipped): [ACE-Step](tools/ace-step/) music, [Game Studios](tools/claude-code-game-studios/) Claude Code skills, [UnrealClaude](tools/unreal-claude/), [Audio2Face-3D](tools/audio2face-3d/) — index [`docs/UPSTREAM_GAME_TOOLCHAIN.md`](docs/UPSTREAM_GAME_TOOLCHAIN.md).
 
+**Creative workshops** (Plan tab in Alfred): image/video tools including [Open Generative AI](tools/open-generative-ai/) — [`docs/CREATIVE_WORKSHOPS.md`](docs/CREATIVE_WORKSHOPS.md).
+
 ### Alfred (repo root)
 
 **Alfred / IRIS** is your personal command center on **alfred2** (and locally): Iris voice + HUD home (four corner gauges, bottom tabs Today · Vitals · Inbox · Plan, **More** for Team · Woodhouse · Research · Hub · Meals · Drafts · ECS), Gmail/calendar, Woodhouse app status, **Bay Area Pulse digital map** (no raster tiles), server-side commute sync, Iris specialist team (one per module) with **duplicate delegate prevention** (Woodhouse on Team), and cross-device data in Netlify Blobs. Home uses the core ring and Iris voice — no separate “awaiting command” text box.
