@@ -171,35 +171,40 @@ await sleep(3000);
 const u1 = await state();
 check('uncapped: sim still ticks (no maxDeltaTime freeze)', u1.frame > u0.frame && u1.timeScale === 1);
 
-// After frame-cap tests, headless CI can throttle rAF; hold Menu until pause (rising-edge needs a tick).
+// Frame-cap tests can leave HUD off Missions; reset then hold Menu until pause on slow CI rAF.
+await page.evaluate(() => window.dispatchEvent(new CustomEvent('drive-world:hud-tab', { detail: 'missions' })));
 await sleep(process.env.GITHUB_ACTIONS ? 2000 : 400);
 const pauseWaitMs = process.env.GITHUB_ACTIONS ? 22_000 : 12_000;
-await press(9, true);
-let g2;
-try {
-  await page.waitForFunction(
-    () => window.__cityNights.app.timeScale === 0 && window.__cityNights.hud().simPaused === true,
+const waitPaused = () =>
+  page.waitForFunction(
+    () => window.__cityNights?.app?.timeScale === 0 && window.__cityNights?.hud()?.simPaused === true,
     { timeout: pauseWaitMs, polling: 50 }
   );
-  g2 = await state();
+const waitRunning = () =>
+  page.waitForFunction(
+    () => window.__cityNights?.app?.timeScale === 1 && !window.__cityNights?.hud()?.simPaused,
+    { timeout: pauseWaitMs, polling: 50 }
+  );
+
+await press(9, true);
+try {
+  await waitPaused();
 } catch {
-  g2 = await state();
+  /* fall through — assert below */
 }
 await press(9, false);
+await sleep(400);
+const g2 = await state();
 check('pad Menu pauses', g2.timeScale === 0 && g2.simPaused === true);
-
 await press(1, true);
-let g3;
 try {
-  await page.waitForFunction(
-    () => window.__cityNights.app.timeScale === 1 && !window.__cityNights.hud().simPaused,
-    { timeout: pauseWaitMs, polling: 50 }
-  );
-  g3 = await state();
+  await waitRunning();
 } catch {
-  g3 = await state();
+  /* fall through */
 }
 await press(1, false);
+await sleep(400);
+const g3 = await state();
 check('pad B resumes', g3.timeScale === 1 && !g3.simPaused);
 check('pad glyphs shown', (await hud()).gamepadConnected === true);
 if (shot) await page.screenshot({ path: `${shot}/playtest-gamepad.png` });

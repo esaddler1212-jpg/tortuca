@@ -1,7 +1,7 @@
 import { Color, Entity, StandardMaterial, type AppBase } from 'playcanvas';
 
 import type { BayQualityPreset } from './bay-quality';
-import { hillOffsetM } from './bay-terrain';
+import { snapToBayGround } from './openworldjs/ground-snap';
 import { FREEWAY_101, FREEWAY_880, FREEWAY_I80 } from './world-config';
 
 type FreewayDrone = {
@@ -108,7 +108,7 @@ export function updateFreewayTrafficDrones(dt: number, enabled: boolean): void {
     const b = drone.path[drone.seg + 1];
     const x = a.x + (b.x - a.x) * drone.t;
     const z = a.z + (b.z - a.z) * drone.t;
-    drone.root.setPosition(x, hillOffsetM(x, z) + 2.8, z);
+    drone.root.setPosition(x, snapToBayGround(x, z, 2.8), z);
     const dx = b.x - a.x;
     const dz = b.z - a.z;
     drone.root.setEulerAngles(-8, (Math.atan2(dx, dz) * 180) / Math.PI, 0);

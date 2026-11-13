@@ -30,6 +30,7 @@ import {
 import { spawnHubStreetTraffic } from './hub-street-traffic';
 import { spawnFreewayTrafficDrones } from './freeway-traffic-drones';
 import { buildSideshowMeets } from './sideshow-meets';
+import { buildOpenworldCherryPickMaze } from './build-openworld-maze';
 import { NIGHT_FOG } from './night-palette';
 export function buildDrivingWorld(app: AppBase): void {
   app.scene.fog.type = FOG_LINEAR;
@@ -60,4 +61,7 @@ export function buildDrivingWorld(app: AppBase): void {
   buildMissionSites(app);
   const lamps = freewayLampBudget(loadSettings().bayQualityPreset);
   buildFreewayLamps(app, lamps.spacing, lamps.limit);
+  void buildOpenworldCherryPickMaze(app, preset).catch((err) => {
+    console.warn('[openworld] maze load failed', err);
+  });
 }

@@ -33,7 +33,7 @@ const check = (name, ok, detail) => {
   results.push(ok);
   console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${detail ? ` — ${detail}` : ''}`);
 };
-const readMinimapTitle = () => page.$eval('.minimap-title', (e) => (e.textContent ?? '').trim());
+const readMinimapTitle = () => page.$eval('.minimap-wrap .minimap-title', (e) => (e.textContent ?? '').trim());
 const isBayMinimapTitle = (title) => title === 'City Nights map' || title.startsWith('City Nights map ·');
 const boardFlightWaitMs = process.env.GITHUB_ACTIONS ? 20_000 : 10_000;
 const waitFlightBoarded = () =>
@@ -54,6 +54,11 @@ const tryBoardFlight = async () => {
   }
   await page.click('.flight-prompt.ready').catch(() => {});
   await waitFlightBoarded().catch(() => {});
+};
+
+const bayMinimapTitle = async () => {
+  await page.waitForSelector('.minimap-wrap .minimap-title', { timeout: 15_000 });
+  return isBayMinimapTitle(await readMinimapTitle());
 };
 
 const browser = await puppeteer.launch({
@@ -143,7 +148,7 @@ await boot();
 let h = await hud();
 check('resume parked at SFO gate', Math.hypot(h.x + 420, h.z + 1260) < 30, `(${h.x.toFixed(0)}, ${h.z.toFixed(0)})`);
 check('flight prompt ready at SFO', h.prompt?.ready === true, h.prompt?.label);
-check('minimap shows Bay map', isBayMinimapTitle(await readMinimapTitle()), await readMinimapTitle());
+check('minimap shows Bay map', await bayMinimapTitle(), await readMinimapTitle());
 if (shot) await page.screenshot({ path: `${shot}/tokyo-01-sfo-gate.png` });
 
 await tryBoardFlight();
@@ -239,7 +244,7 @@ await page.click('.skip-waymo');
 await sleep(3000);
 h = await hud();
 check('Land now returns to SFO', !h.inTokyo && Math.hypot(h.x + 420, h.z + 1260) < 40, `(${h.x.toFixed(0)}, ${h.z.toFixed(0)})`);
-check('minimap back to Bay', isBayMinimapTitle(await readMinimapTitle()), await readMinimapTitle());
+check('minimap back to Bay', await bayMinimapTitle(), await readMinimapTitle());
 if (shot) await page.screenshot({ path: `${shot}/tokyo-06-back-at-sfo.png` });
 
 check('no page errors', errors.length === 0, [...new Set(errors)].slice(0, 3).join(' | '));
