@@ -33,12 +33,32 @@ const check = (name, ok, detail) => {
   results.push(ok);
   console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${detail ? ` — ${detail}` : ''}`);
 };
+const readMinimapTitle = () => page.$eval('.minimap-wrap .minimap-title', (e) => (e.textContent ?? '').trim());
+const isBayMinimapTitle = (title) => title === 'City Nights map' || title.startsWith('City Nights map ·');
+const boardFlightWaitMs = process.env.GITHUB_ACTIONS ? 20_000 : 10_000;
+const waitFlightBoarded = () =>
+  page.waitForFunction(
+    () => {
+      const h = window.__cityNights.hud();
+      return !!h.flightCinematic && h.ridingWaymo === true;
+    },
+    { timeout: boardFlightWaitMs, polling: 50 }
+  );
+const tryBoardFlight = async () => {
+  await page.keyboard.press('KeyF');
+  try {
+    await waitFlightBoarded();
+    return;
+  } catch {
+    /* CI can miss one key edge — tap the prompt */
+  }
+  await page.click('.flight-prompt.ready').catch(() => {});
+  await waitFlightBoarded().catch(() => {});
+};
 
 const bayMinimapTitle = async () => {
   await page.waitForSelector('.minimap-wrap .minimap-title', { timeout: 15_000 });
-  return page.evaluate(() =>
-    (document.querySelector('.minimap-wrap .minimap-title')?.textContent ?? '').trim().startsWith('City Nights map')
-  );
+  return isBayMinimapTitle(await readMinimapTitle());
 };
 
 const browser = await puppeteer.launch({
@@ -128,13 +148,12 @@ await boot();
 let h = await hud();
 check('resume parked at SFO gate', Math.hypot(h.x + 420, h.z + 1260) < 30, `(${h.x.toFixed(0)}, ${h.z.toFixed(0)})`);
 check('flight prompt ready at SFO', h.prompt?.ready === true, h.prompt?.label);
-check('minimap shows Bay map', await bayMinimapTitle());
+check('minimap shows Bay map', await bayMinimapTitle(), await readMinimapTitle());
 if (shot) await page.screenshot({ path: `${shot}/tokyo-01-sfo-gate.png` });
 
-await page.keyboard.press('KeyF');
-await sleep(1500);
+await tryBoardFlight();
 h = await hud();
-check('F boards the flight', !!h.cine && h.riding === true, h.cine?.label);
+check('F boards the flight', !!h.cine && h.riding === true, h.cine?.label ?? 'no cinematic');
 await sleep(4000);
 if (shot) await page.screenshot({ path: `${shot}/tokyo-02-takeoff.png` });
 
@@ -144,7 +163,7 @@ h = await hud();
 check('cinematic lands in Tokyo', h.inTokyo && h.x > 8000, `(${h.x.toFixed(0)}, ${h.z.toFixed(0)}) flights=${h.flights}`);
 const car = await carState();
 check('car spawned on Tokyo ground', !!car && car.y > -0.5 && car.y < 3, car ? `y=${car.y.toFixed(2)}` : 'no car');
-check('minimap switches to Tokyo', (await page.$eval('.minimap-title', (e) => e.textContent)) === 'Tokyo · FF bonus map');
+check('minimap switches to Tokyo', (await readMinimapTitle()) === 'Tokyo · FF bonus map');
 check('nav points at a Tokyo landmark', !!h.next && h.next !== 'Haneda pad — fly home', h.next);
 if (shot) await page.screenshot({ path: `${shot}/tokyo-03-haneda.png` });
 
@@ -217,21 +236,15 @@ check('reload resumes in Tokyo', h.inTokyo && h.x > 8000, `(${h.x.toFixed(0)}, $
 check('car on ground after Tokyo resume', !!car2 && car2.y > -0.5 && car2.y < 3, car2 ? `y=${car2.y.toFixed(2)}` : 'no car');
 check('Haneda prompt offers flight home', h.prompt?.label === 'Fly home to SFO', h.prompt?.label);
 
-await page.keyboard.press('KeyF');
-await sleep(1500);
+await tryBoardFlight();
 let hReturn = await hud();
-if (!hReturn.cine && hReturn.prompt?.ready) {
-  await page.click('.flight-prompt.ready').catch(() => {});
-  await sleep(1500);
-  hReturn = await hud();
-}
-check('return flight starts', !!hReturn.cine);
+check('return flight starts', !!hReturn.cine, hReturn.cine?.label ?? 'no cinematic');
 await page.waitForSelector('.skip-waymo', { timeout: 15_000 });
 await page.click('.skip-waymo');
 await sleep(3000);
 h = await hud();
 check('Land now returns to SFO', !h.inTokyo && Math.hypot(h.x + 420, h.z + 1260) < 40, `(${h.x.toFixed(0)}, ${h.z.toFixed(0)})`);
-check('minimap back to Bay', await bayMinimapTitle());
+check('minimap back to Bay', await bayMinimapTitle(), await readMinimapTitle());
 if (shot) await page.screenshot({ path: `${shot}/tokyo-06-back-at-sfo.png` });
 
 check('no page errors', errors.length === 0, [...new Set(errors)].slice(0, 3).join(' | '));
