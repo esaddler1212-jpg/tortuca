@@ -13,7 +13,12 @@ import { formatDelegateAgo, readLastDelegate, teamEfficiencySummary, readDelegat
 import type { WeeklyAuditReport } from "../../../shared/weeklyAuditor";
 import { useWeeklyAudit } from "../../hooks/useWeeklyAudit";
 import { gameFinishStatus, gameFinishTeamSummary } from "../../lib/gameFinishContext";
-import { GAME_STUDIO_AGENTS, sliceById } from "../../../shared/gameFinishProgram";
+import {
+  GAME_STUDIO_AGENTS,
+  formatGameFinishPercent,
+  gameFinishProgress,
+  sliceById,
+} from "../../../shared/gameFinishProgram";
 
 interface Props {
   timeZone: string;
@@ -142,10 +147,22 @@ export function TeamPanel({ timeZone, onOpenModule, onAskSpecialist }: Props) {
 function GameStudioCard() {
   const status = gameFinishStatus();
   const reports = status.reports.slice(0, 3);
+  const prog = gameFinishProgress(status);
   return (
     <div className="rounded-md border border-violet-400/25 bg-violet-950/20 px-3 py-2 space-y-2">
       <p className="font-mono text-[10px] uppercase tracking-wider text-violet-300/70">Game studio → Iris</p>
       <p className="text-xs text-violet-50/90">{gameFinishTeamSummary()}</p>
+      <div className="grid gap-1.5 text-[11px] text-violet-100/85" aria-label="Finish program progress">
+        <p>
+          <span className="text-violet-300/80">Overall</span> {prog.program.percent}% ({prog.program.done}/{prog.program.total})
+        </p>
+        <p>
+          <span className="text-violet-300/80">Nightshift</span> {formatGameFinishPercent(prog.nightshift)}
+        </p>
+        <p>
+          <span className="text-violet-300/80">Skyring</span> {formatGameFinishPercent(prog.skyring)}
+        </p>
+      </div>
       <ul className="grid gap-2 sm:grid-cols-2">
         {GAME_STUDIO_AGENTS.map((a) => {
           const activeId = status.activeSlice?.[a.id];

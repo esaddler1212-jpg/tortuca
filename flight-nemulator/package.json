@@ -12,7 +12,9 @@
     "build": "npm run build:glb && tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "test:smoke": "node scripts/smoke-boot.mjs"
+    "test:smoke": "node scripts/smoke-boot.mjs",
+    "test:playtest": "node scripts/playtest-battleworld.mjs",
+    "test:battleworld": "npm run test:smoke && npm run test:playtest"
   },
   "dependencies": {
     "@netlify/blobs": "^10.0.10",

@@ -14,6 +14,8 @@ import {
   type GameStudioAgentId,
   agentById,
   defaultGameFinishStatus,
+  formatGameFinishPercent,
+  gameFinishProgress,
   sliceById,
   nextPendingSlice,
 } from "../shared/gameFinishProgram.ts";
@@ -86,6 +88,10 @@ if (summary.trim()) {
 
 file.updatedAt = new Date().toISOString();
 fs.writeFileSync(statusPath, `${JSON.stringify(file, null, 2)}\n`);
+const prog = gameFinishProgress(file);
 console.log(`✓ Updated ${statusPath}`);
 console.log(`  ${agent} ${sliceId} → ${status}`);
+console.log(`  Program: ${prog.program.percent}% complete (${prog.program.done}/${prog.program.total} slices done)`);
+console.log(`  Nightshift: ${formatGameFinishPercent(prog.nightshift)}`);
+console.log(`  Skyring: ${formatGameFinishPercent(prog.skyring)}`);
 if (summary) console.log(`  Iris report: ${summary.slice(0, 120)}`);

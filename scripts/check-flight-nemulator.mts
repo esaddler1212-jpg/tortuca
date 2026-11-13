@@ -51,7 +51,8 @@ const required = [
   'src/world-persist.ts',
   'src/world-theme.ts',
   'src/build-monuments.ts',
-  'public/manifest-updates.json'
+  'public/manifest-updates.json',
+  'scripts/playtest-battleworld.mjs'
 ];
 
 for (const f of required) {
@@ -135,5 +136,14 @@ if (audit.status !== 0) process.exit(audit.status ?? 1);
 
 const build = spawnSync('npm', ['run', 'build'], { cwd: app, stdio: 'inherit' });
 if (build.status !== 0) process.exit(build.status ?? 1);
+
+if (process.env.SKIP_PLAYTEST !== '1') {
+  const playtest = spawnSync('npm', ['run', 'test:playtest'], {
+    cwd: app,
+    stdio: 'inherit',
+    env: process.env
+  });
+  if (playtest.status !== 0) process.exit(playtest.status ?? 1);
+}
 
 console.log('check-flight-nemulator: ok');

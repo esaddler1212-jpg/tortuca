@@ -6,6 +6,7 @@ import {
   GAME_FINISH_SLICES,
   GAME_STUDIO_AGENTS,
   gameFinishContextForAsk,
+  gameFinishProgress,
   type GameFinishStatusFile,
 } from "../shared/gameFinishProgram.ts";
 import { bayStreetRepPercent, regionRepPercent, streetRepRankFor } from "../drive-world/src/street-rep.ts";
@@ -102,5 +103,17 @@ ok(
   "wave-10 combat chip",
   waveCombatHudChip(combatJuicePhase(PAIR_BOSS_WAVE, true, false), PAIR_BOSS_WAVE)?.includes("PAIR")
 );
+
+const prog = gameFinishProgress(status);
+ok("progress percent fn", prog.program.percent === Math.round((prog.program.done / prog.program.total) * 100));
+console.log(
+  `game-finish progress: program ${prog.program.percent}% · nightshift ${prog.nightshift.percent}% · skyring ${prog.skyring.percent}%`
+);
+
+ok("battleworld playtest script", fs.existsSync(path.join(root, "flight-nemulator/scripts/playtest-battleworld.mjs")));
+
+if (process.env.VANTAGEGAME_FINISH_GATE === "1") {
+  ok("release gate: all slices done", prog.program.percent === 100);
+}
 
 if (failed) process.exitCode = 1;

@@ -271,16 +271,65 @@ function countDone(agent: GameStudioAgentId, status: GameFinishStatusFile): numb
   ).length;
 }
 
+function countSkipped(agent: GameStudioAgentId, status: GameFinishStatusFile): number {
+  return GAME_FINISH_SLICES.filter(
+    (s) => s.agent === agent && status.sliceState[s.id]?.status === "skipped",
+  ).length;
+}
+
 function totalForAgent(agent: GameStudioAgentId): number {
   return GAME_FINISH_SLICES.filter((s) => s.agent === agent).length;
 }
 
+export type GameFinishAgentProgress = {
+  done: number;
+  skipped: number;
+  total: number;
+  /** Whole-percent complete (done ÷ total). Skipped slices do not count as done. */
+  percent: number;
+};
+
+export type GameFinishProgress = {
+  nightshift: GameFinishAgentProgress;
+  skyring: GameFinishAgentProgress;
+  program: GameFinishAgentProgress;
+};
+
+function agentProgress(agent: GameStudioAgentId, status: GameFinishStatusFile): GameFinishAgentProgress {
+  const total = totalForAgent(agent);
+  const done = countDone(agent, status);
+  const skipped = countSkipped(agent, status);
+  const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+  return { done, skipped, total, percent };
+}
+
+function programProgress(status: GameFinishStatusFile): GameFinishAgentProgress {
+  const total = GAME_FINISH_SLICES.length;
+  const done = GAME_FINISH_SLICES.filter((s) => status.sliceState[s.id]?.status === "done").length;
+  const skipped = GAME_FINISH_SLICES.filter((s) => status.sliceState[s.id]?.status === "skipped").length;
+  const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+  return { done, skipped, total, percent };
+}
+
+export function gameFinishProgress(status: GameFinishStatusFile): GameFinishProgress {
+  return {
+    nightshift: agentProgress("nightshift", status),
+    skyring: agentProgress("skyring", status),
+    program: programProgress(status),
+  };
+}
+
+export function formatGameFinishPercent(p: GameFinishAgentProgress): string {
+  return `${p.percent}% (${p.done}/${p.total} done${p.skipped ? `, ${p.skipped} skipped` : ""})`;
+}
+
 /** One line in Iris "Right now" — no student/game PII. */
 export function gameFinishContextForAsk(status: GameFinishStatusFile): string {
-  const cnDone = countDone("nightshift", status);
-  const bwDone = countDone("skyring", status);
-  const cnTotal = totalForAgent("nightshift");
-  const bwTotal = totalForAgent("skyring");
+  const prog = gameFinishProgress(status);
+  const cnDone = prog.nightshift.done;
+  const bwDone = prog.skyring.done;
+  const cnTotal = prog.nightshift.total;
+  const bwTotal = prog.skyring.total;
   const nextN = nextPendingSlice("nightshift", status);
   const nextS = nextPendingSlice("skyring", status);
   const lastReports = status.reports
@@ -293,7 +342,7 @@ export function gameFinishContextForAsk(status: GameFinishStatusFile): string {
     });
 
   const parts = [
-    `VantageGames finish program (game studio reports to Iris via Team): Nightshift City Nights ${cnDone}/${cnTotal} done${nextN ? `, next ${nextN.id} ${nextN.title}` : ""}; Skyring Battleworld ${bwDone}/${bwTotal} done${nextS ? `, next ${nextS.id} ${nextS.title}` : ""}.`,
+    `VantageGames finish program (game studio reports to Iris via Team): overall ${prog.program.percent}% (${prog.program.done}/${prog.program.total}); Nightshift City Nights ${prog.nightshift.percent}% (${cnDone}/${cnTotal})${nextN ? `, next ${nextN.id} ${nextN.title}` : ""}; Skyring Battleworld ${prog.skyring.percent}% (${bwDone}/${bwTotal})${nextS ? `, next ${nextS.id} ${nextS.title}` : ""}.`,
   ];
   if (lastReports.length) parts.push(`Latest game-studio reports: ${lastReports.join("; ")}.`);
   return parts.join(" ");
@@ -301,7 +350,6 @@ export function gameFinishContextForAsk(status: GameFinishStatusFile): string {
 
 /** Team panel blurb */
 export function gameFinishTeamBlurb(status: GameFinishStatusFile): string {
-  const cn = countDone("nightshift", status);
-  const bw = countDone("skyring", status);
-  return `Nightshift ${cn}/10 · Skyring ${bw}/10 — see docs/GAME_FINISH_PROGRAM.md`;
+  const prog = gameFinishProgress(status);
+  return `Program ${prog.program.percent}% · Nightshift ${prog.nightshift.percent}% · Skyring ${prog.skyring.percent}% — docs/GAME_FINISH_PROGRAM.md`;
 }

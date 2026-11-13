@@ -103,6 +103,7 @@ check('pad LT brakes / reverses', g1b.mph < g1.mph || Math.hypot(g1b.playerX - g
 await sleep(1500);
 
 const before = await state();
+await page.click('#application-canvas').catch(() => {});
 await page.keyboard.down('KeyW');
 const wDriveMs = process.env.GITHUB_ACTIONS ? 5500 : 4000;
 await sleep(wDriveMs);

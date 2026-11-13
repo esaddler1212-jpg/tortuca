@@ -15,8 +15,9 @@ import {
   TextureHandler,
   createGraphicsDevice
 } from 'playcanvas';
+import { getHudSnapshot } from './game-bridge';
 import { mountHud } from './hud/mount';
-import { startGame } from './game-loop';
+import { selectHero, startGame } from './game-loop';
 import { refreshLoadingTips, currentLoadingTip } from './loading-tips';
 
 function waitForTap(): Promise<void> {
@@ -76,3 +77,9 @@ app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
 
 await startGame(app);
+
+(window as unknown as { __battleworld?: unknown }).__battleworld = {
+  app,
+  hud: getHudSnapshot,
+  selectHero
+};
