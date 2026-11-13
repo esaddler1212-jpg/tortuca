@@ -34,6 +34,13 @@ const check = (name, ok, detail) => {
   console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${detail ? ` — ${detail}` : ''}`);
 };
 
+const bayMinimapTitle = async () => {
+  await page.waitForSelector('.minimap-wrap .minimap-title', { timeout: 15_000 });
+  return page.evaluate(() =>
+    (document.querySelector('.minimap-wrap .minimap-title')?.textContent ?? '').trim().startsWith('City Nights map')
+  );
+};
+
 const browser = await puppeteer.launch({
   executablePath: chrome,
   headless: 'new',
@@ -121,7 +128,7 @@ await boot();
 let h = await hud();
 check('resume parked at SFO gate', Math.hypot(h.x + 420, h.z + 1260) < 30, `(${h.x.toFixed(0)}, ${h.z.toFixed(0)})`);
 check('flight prompt ready at SFO', h.prompt?.ready === true, h.prompt?.label);
-check('minimap shows Bay map', (await page.$eval('.minimap-title', (e) => e.textContent)) === 'City Nights map');
+check('minimap shows Bay map', await bayMinimapTitle());
 if (shot) await page.screenshot({ path: `${shot}/tokyo-01-sfo-gate.png` });
 
 await page.keyboard.press('KeyF');
@@ -224,7 +231,7 @@ await page.click('.skip-waymo');
 await sleep(3000);
 h = await hud();
 check('Land now returns to SFO', !h.inTokyo && Math.hypot(h.x + 420, h.z + 1260) < 40, `(${h.x.toFixed(0)}, ${h.z.toFixed(0)})`);
-check('minimap back to Bay', (await page.$eval('.minimap-title', (e) => e.textContent)) === 'City Nights map');
+check('minimap back to Bay', await bayMinimapTitle());
 if (shot) await page.screenshot({ path: `${shot}/tokyo-06-back-at-sfo.png` });
 
 check('no page errors', errors.length === 0, [...new Set(errors)].slice(0, 3).join(' | '));

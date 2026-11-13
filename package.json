@@ -22,6 +22,7 @@
     "test:weekly": "tsx scripts/check-weekly-auditor.mts",
     "test:flight-nemulator": "tsx scripts/check-flight-nemulator.mts",
     "test:game-finish": "tsx scripts/check-game-finish.mts",
+    "test:openworldjs": "tsx scripts/check-openworldjs-cherrypick.mts",
     "game-finish:report": "tsx scripts/game-finish-report.mts",
     "gamedev-resources:sync": "tsx scripts/sync-gamedev-resources.mts",
     "test:gamedev-resources": "tsx scripts/check-gamedev-resources.mts",
