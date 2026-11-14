@@ -5,6 +5,7 @@ import type { TodayAction } from "./todayQueue";
 import { weatherLabel } from "./weather";
 import { DAY_MODE_LABEL, type DayMode } from "../../shared/dayMode";
 import { dayKey, localHour, weekdayOfDay } from "../../shared/timezone";
+import type { StoredVantagePaper } from "../../shared/vantagePaper";
 
 const time = (iso: string | Date, tz: string) =>
   new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", minute: "2-digit" }).format(new Date(iso));
@@ -129,6 +130,40 @@ export function buildVantageBrief(opts: {
 
   const spoken = [
     `Here's your Vantage Point briefing, boss.`,
+    ...lines.map((l) => `${l.label}: ${forSpeech(l.text)}.`),
+  ].join(" ");
+  return { lines, spoken };
+}
+
+/**
+ * The real Vantage Point paper (today's edition.json, delivered by the
+ * separate daily newspaper job — see shared/vantagePaper.ts) read into the
+ * same {lines, spoken} shape buildVantageBrief returns, so the panel and
+ * "Brief me" can use either one the same way. Used only while it's fresh
+ * (today's date); App.tsx falls back to buildVantageBrief otherwise.
+ */
+export function buildVantagePaperBrief(stored: StoredVantagePaper): { lines: { label: string; text: string }[]; spoken: string } {
+  const e = stored.edition;
+  const lines: { label: string; text: string }[] = [];
+
+  const attention = e.day?.attention ?? [];
+  lines.push({
+    label: "Needs attention",
+    text: attention.length ? attention.slice(0, 4).map((a) => a.title).join(" · ") : "Nothing needs you this morning.",
+  });
+  if (e.day?.note) lines.push({ label: "Your day", text: e.day.note });
+  if (e.lead?.headline) lines.push({ label: e.lead.kicker || "Lead story", text: [e.lead.headline, e.lead.dek].filter(Boolean).join(" — ") });
+  if (e.watching) lines.push({ label: "Worth watching", text: e.watching });
+  const topFrontier = e.frontier?.[0];
+  if (topFrontier) lines.push({ label: "Frontier Desk", text: `${topFrontier.field}: ${topFrontier.headline}` });
+  if (e.founder?.title) lines.push({ label: "Founder Desk", text: e.founder.title });
+  const openTasks = (e.tasks ?? []).length;
+  if (openTasks) lines.push({ label: "On your list", text: `${openTasks} open task${openTasks === 1 ? "" : "s"}` });
+  if (e.idea?.title) lines.push({ label: "Thought for the day", text: [e.idea.title, e.idea.book].filter(Boolean).join(" — ") });
+  if (e.quote?.text) lines.push({ label: "Quote of the day", text: `${e.quote.text} — ${e.quote.author}` });
+
+  const spoken = [
+    `Here's today's Vantage Point, boss${e.dateline ? `, ${forSpeech(e.dateline)}` : ""}.`,
     ...lines.map((l) => `${l.label}: ${forSpeech(l.text)}.`),
   ].join(" ");
   return { lines, spoken };

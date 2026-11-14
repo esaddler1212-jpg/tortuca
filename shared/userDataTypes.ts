@@ -96,6 +96,10 @@ export interface AlfredUserData {
   liveCommute?: { minutes: number; text?: string; fetchedAt: string };
   /** Brand channel registry + outbound drafts (see shared/channels.ts). */
   channels?: unknown;
+  /** Timed reminders Iris set by voice; pushed by reminder-check when due (see shared/irisReminders.ts). */
+  irisReminders?: import("./irisReminders").IrisReminder[];
+  /** Today's Vantage Point paper, delivered by the separate daily newspaper job (see shared/vantagePaper.ts). */
+  vantagePaper?: import("./vantagePaper").StoredVantagePaper;
   /** Iris specialist delegate log (cross-device dedupe); see shared/irisTeamActivity.ts */
   irisDelegateHistory?: SyncedIrisDelegateLog[];
   /** Meeting prep, calendar proposals, SMS, commitments, etc. (see shared/tierAOps.ts). */

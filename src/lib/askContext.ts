@@ -1,3 +1,4 @@
+import { dayKey } from "../../shared/timezone";
 import type { CalendarEvent } from "../types";
 import type { TodayAction } from "./todayQueue";
 
@@ -46,7 +47,7 @@ export function buildAskContext(opts: {
   const fpEvents = upcoming.filter((e) => e.source === "family-purpose").length;
 
   const lines = [
-    `It is ${when} (${opts.timeZone}). Mode: ${opts.modeLabel}. Location: ${opts.city}.`,
+    `It is ${when} (${opts.timeZone}); today's date is ${dayKey(opts.timeZone, opts.now)}. Mode: ${opts.modeLabel}. Location: ${opts.city}.`,
     opts.weather ? `Weather: ${opts.weather}.` : "",
     opts.leaveBy ? `Leave by: ${opts.leaveBy}.` : "",
     actions.length ? `Do today: ${actions.map((a) => `${a.title}${a.urgent ? " (urgent)" : ""}`).join("; ")}.` : "Do today: nothing open.",

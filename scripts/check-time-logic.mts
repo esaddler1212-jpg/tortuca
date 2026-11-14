@@ -35,6 +35,9 @@ import { buildFamilyPurposeWoodhouseNode } from "../netlify/functions/_family-pu
 import { mergeBackups } from "../netlify/functions/_fp-backup.ts";
 import * as Voices from "../shared/irisVoices.ts";
 import { readFileSync } from "node:fs";
+import * as Rem from "../shared/irisReminders.ts";
+import { isVantagePaperEdition, isFreshVantagePaper } from "../shared/vantagePaper.ts";
+import { buildVantagePaperBrief } from "../src/lib/spokenBrief.ts";
 
 const TZ = "America/Los_Angeles";
 const settings = { ...DEFAULT_SETTINGS }; // wake 04:15 weekdays, 08:00 days off, 7.5h sleep
@@ -474,6 +477,39 @@ check(
 // Times on screen use the IRIS time zone, not the device's (iMac, travel).
 check("clock: event and leave-by times in IRIS time zone", [clockTime("2026-11-04T19:00:00Z", "America/Los_Angeles"), clockTime(new Date("2026-11-04T15:20:00Z"), "America/Los_Angeles"), clockTime("bad", TZ)], ["11:00 AM", "7:20 AM", ""]);
 
+// ── Vantage Point paper: delivered by the separate daily newspaper job, used
+// while fresh, falls back to Iris's own briefing otherwise.
+check("vantage paper: valid edition needs a real date", [isVantagePaperEdition({ date: "2026-11-09" }), isVantagePaperEdition({ date: "not-a-date" }), isVantagePaperEdition({}), isVantagePaperEdition(null), isVantagePaperEdition("2026-11-09")], [true, false, false, false, false]);
+
+const paperToday = { edition: { date: "2026-11-09", dateline: "Monday, November 9, 2026" }, url: "https://claude.ai/artifact/Krc9x2BhnadEb3SXbH4FvR", fetchedAt: "2026-11-09T14:00:00Z" };
+const paperYesterday = { ...paperToday, edition: { ...paperToday.edition, date: "2026-11-08" } };
+check("vantage paper: today's edition is fresh", isFreshVantagePaper(paperToday, TZ, new Date("2026-11-09T20:00:00Z")), true);
+check("vantage paper: yesterday's edition is stale", isFreshVantagePaper(paperYesterday, TZ, new Date("2026-11-09T20:00:00Z")), false);
+check("vantage paper: nothing stored is never fresh", isFreshVantagePaper(null, TZ, new Date("2026-11-09T20:00:00Z")), false);
+
+const fullPaper = {
+  url: "https://claude.ai/artifact/Krc9x2BhnadEb3SXbH4FvR",
+  fetchedAt: "2026-11-09T14:00:00Z",
+  edition: {
+    date: "2026-11-09",
+    dateline: "Monday, November 9, 2026",
+    day: { note: "A light day.", attention: [{ title: "Reply to Jordan" }, { title: "Field trip forms" }] },
+    lead: { kicker: "AI", headline: "Model labs race ahead", dek: "What it means for the next move." },
+    watching: "The jobs report Friday.",
+    frontier: [{ field: "Robotics", headline: "Humanoids get cheaper" }],
+    founder: { title: "North Star: lock the pilot site" },
+    tasks: [{ title: "Follow up with Jordan", status: "active" }, { title: "Draft the deck", status: "waiting" }],
+    idea: { title: "Process over outcome", book: "Atomic Habits" },
+    quote: { text: "Do the work.", author: "Someone Wise" },
+  },
+};
+const brief = buildVantagePaperBrief(fullPaper);
+check("vantage paper → brief: needs-attention leads", brief.lines[0], { label: "Needs attention", text: "Reply to Jordan · Field trip forms" });
+check("vantage paper → brief: carries the lead, frontier, founder, tasks, quote", brief.lines.map((l) => l.label), ["Needs attention", "Your day", "AI", "Worth watching", "Frontier Desk", "Founder Desk", "On your list", "Thought for the day", "Quote of the day"]);
+check("vantage paper → brief: spoken reads naturally, no raw bullets", /Here's today's Vantage Point, boss, Monday, November 9, 2026\. Needs attention: Reply to Jordan, Field trip forms\./.test(brief.spoken), true);
+
+const emptyPaper = { url: "https://claude.ai/artifact/Krc9x2BhnadEb3SXbH4FvR", fetchedAt: "2026-11-09T14:00:00Z", edition: { date: "2026-11-09" } };
+check("vantage paper → brief: quiet morning still reads fine", buildVantagePaperBrief(emptyPaper).lines, [{ label: "Needs attention", text: "Nothing needs you this morning." }]);
 // ── Iris voice labels (browser speechSynthesis sorting)
 {
   check("iris voice tier: premium in name", Voices.voiceTier("Ava (Premium) (en-US)"), "premium");
@@ -483,6 +519,28 @@ check("clock: event and leave-by times in IRIS time zone", [clockTime("2026-11-0
   check("iris voice: Google US English recommended", Voices.isRecommendedIrisVoice("Google US English"), true);
   const mockVoice = { name: "Samantha (Enhanced) (en-US)", lang: "en-US" } as SpeechSynthesisVoice;
   check("iris voice label includes tier", Voices.irisVoiceOptionLabel(mockVoice, "American").includes("Enhanced"), true);
+}
+
+// ── Iris timed reminders + checking off to-dos by voice
+{
+  const now = new Date("2026-11-12T20:00:00Z"); // Thu noon PST
+  const at4 = Rem.reminderInstant("2026-11-12", "16:00", TZ, now);
+  check("reminder: 4 PM today in IRIS time zone", at4, "2026-11-13T00:00:00.000Z");
+  check("reminder: single-digit hour ok", Rem.reminderInstant("2026-11-13", "9:05", TZ, now), "2026-11-13T17:05:00.000Z");
+  check("reminder: past, garbage or far-future times rejected", [Rem.reminderInstant("2026-11-12", "08:00", TZ, now), Rem.reminderInstant("tomorrow", "4pm", TZ, now), Rem.reminderInstant("2027-11-12", "08:00", TZ, now)], [null, null, null]);
+  let list = Rem.addReminder(undefined, "  Call Mike about the shoot ", at4!, now);
+  list = Rem.addReminder(list, "call mike about the shoot", at4!, now);
+  check("reminder: saying it twice saves it once", [list.length, list[0].text], [1, "Call Mike about the shoot"]);
+  const t = (iso: string) => new Date(iso);
+  check("reminder: not due 30 min early", Rem.dueReminders(list, t("2026-11-12T23:30:00Z")).length, 0);
+  check("reminder: fires within 5 min of the time", [Rem.dueReminders(list, t("2026-11-12T23:56:00Z")).length, Rem.dueReminders(list, t("2026-11-13T00:07:00Z")).length], [1, 1]);
+  check("reminder: never fires twice", Rem.dueReminders(list.map((r) => ({ ...r, sentAt: "2026-11-13T00:00:00Z" })), t("2026-11-13T00:07:00Z")).length, 0);
+  check("reminder: too stale to send (notifications were off for hours)", Rem.dueReminders(list, t("2026-11-13T07:00:00Z")).length, 0);
+  check("reminder: sent ones cleared after 2 days", Rem.pruneReminders(list.map((r) => ({ ...r, sentAt: "2026-11-13T00:00:00Z" })), t("2026-11-15T01:00:00Z")).length, 0);
+  check("reminder: reads naturally", [Rem.reminderWhen(at4!, TZ, now), Rem.reminderWhen("2026-11-13T17:05:00Z", TZ, now), Rem.reminderWhen("2026-11-20T17:00:00Z", TZ, now)], ["today 4:00 PM", "tomorrow 9:05 AM", "Fri, Nov 20 9:00 AM"]);
+  check("reminder: Iris's notes list what's set", Rem.remindersContext(list, TZ, now), "Reminders set (his phone gets a notification then): Call Mike about the shoot (today 4:00 PM).");
+  const todos = [{ id: "a", title: "Send sponsor deck v2 to Jordan" }, { id: "b", title: "Call Mike about the shoot" }, { id: "c", title: "Gym · legs" }];
+  check("check off: exact, partial, and no-match", [Rem.matchTodo(todos, "Call Mike about the shoot")?.id, Rem.matchTodo(todos, "the sponsor deck")?.id, Rem.matchTodo(todos, "legs")?.id, Rem.matchTodo(todos, "buy groceries")], ["b", "a", "c", null]);
 }
 
 if (failures) {
