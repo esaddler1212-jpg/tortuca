@@ -26,6 +26,9 @@ export type HudSnapshot = {
   cameraMode: CameraMode;
   waterPhase: number;
   photoMode: boolean;
+  /** Orbit camera around car in photo mode (degrees / meters). */
+  photoOrbit?: { yawDeg: number; pitchDeg: number; radiusM: number };
+  photoExposure?: number;
   nearGarage: boolean;
   settings: GameSettings;
   flightMode?: boolean;
@@ -120,6 +123,7 @@ const listeners = new Set<HudListener>();
 let skipWaymoHandler: (() => void) | null = null;
 let toggleCameraHandler: (() => void) | null = null;
 let togglePhotoHandler: (() => void) | null = null;
+let setPhotoExposureHandler: ((value: number) => void) | null = null;
 let fastTravelHandler: ((d: DistrictId) => void) | null = null;
 let landHereHandler: ((x: number, z: number, label: string) => void) | null = null;
 let navTarget: NavTarget | null = null;
@@ -170,6 +174,14 @@ export function registerToggleCamera(fn: () => void): void {
 
 export function registerTogglePhoto(fn: () => void): void {
   togglePhotoHandler = fn;
+}
+
+export function registerSetPhotoExposure(fn: (value: number) => void): void {
+  setPhotoExposureHandler = fn;
+}
+
+export function requestSetPhotoExposure(value: number): void {
+  setPhotoExposureHandler?.(value);
 }
 
 export function registerFastTravel(fn: (d: DistrictId) => void): void {

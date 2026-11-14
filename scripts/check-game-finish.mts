@@ -19,6 +19,8 @@ import { waveCombatHudChip, combatJuicePhase } from "../flight-nemulator/src/wav
 import { FREEWAY_DRONE_BUDGET } from "../drive-world/src/freeway-traffic-drones.ts";
 import { villainsWithBundledGlb } from "../flight-nemulator/src/villain-gltf-paths.ts";
 import { glbPathForHero } from "../flight-nemulator/src/hero-gltf-paths.ts";
+import { autosaveLabel, isBattleworldOfflineBundle } from "../flight-nemulator/src/battleworld-autosave.ts";
+import { BATTLEWORLD_ARCS } from "../flight-nemulator/src/battleworld-arcs.ts";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const statusPath = path.join(root, "shared/game-finish-status.json");
@@ -111,6 +113,38 @@ console.log(
 );
 
 ok("battleworld playtest script", fs.existsSync(path.join(root, "flight-nemulator/scripts/playtest-battleworld.mjs")));
+
+const photoSrc = fs.readFileSync(path.join(root, "drive-world/src/photo-mode.ts"), "utf8");
+ok("cn-d07 photo orbit", photoSrc.includes("setOrbitTarget") && photoSrc.includes("orbitPosition"));
+ok("cn-d07 photo exposure", photoSrc.includes("setExposure"));
+ok("bw-d06 magnetic-ace arc", BATTLEWORLD_ARCS["magnetic-ace"]?.districtId === "sokovia-memorial");
+ok(
+  "bw-d07 offline autosave copy",
+  autosaveLabel({
+    version: 1,
+    savedAt: "2026-01-01T12:00:00.000Z",
+    heroId: "solar-apex",
+    playerRole: "hero",
+    wave: 1,
+    waveCooldown: 0,
+    destructionUsd: 0,
+    foesStopped: 0,
+    wantedStars: 0,
+    cityIntegrityPct: 100,
+    pairBossSpawned: false,
+    pairBossDefeated: false,
+    pairBossWarned: false,
+    position: { x: 0, y: 0, z: 0 },
+    lastDefeat: null,
+    sessionStats: {
+      destructionUsd: 0,
+      wavesCleared: 0,
+      dronesDestroyed: 0,
+      supersUsed: 0,
+      updatedAt: "2026-01-01T12:00:00.000Z"
+    }
+  })?.includes("Offline save") === isBattleworldOfflineBundle()
+);
 
 if (process.env.VANTAGEGAME_FINISH_GATE === "1") {
   ok("release gate: all slices done", prog.program.percent === 100);

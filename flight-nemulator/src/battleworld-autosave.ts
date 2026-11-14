@@ -46,11 +46,32 @@ export function writeBattleworldAutosave(save: BattleworldAutosave): void {
   localStorage.setItem(KEY, JSON.stringify(save));
 }
 
+/** Static VantageGames bundle — no Netlify lattice API on vantagegames1. */
+export function isBattleworldOfflineBundle(): boolean {
+  const viteFlag =
+    typeof import.meta !== 'undefined' &&
+    (import.meta as { env?: { VITE_BATTLEWORLD_OFFLINE_BUNDLE?: string } }).env
+      ?.VITE_BATTLEWORLD_OFFLINE_BUNDLE === '1';
+  if (viteFlag) return true;
+  if (typeof location !== 'undefined' && /vantagegames/i.test(location.hostname)) return true;
+  return false;
+}
+
 export function autosaveLabel(save: BattleworldAutosave | null): string | null {
   if (!save) return null;
   const t = new Date(save.savedAt);
-  if (Number.isNaN(t.getTime())) return 'Progress saved';
-  return `Auto-saved ${t.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+  const time =
+    Number.isNaN(t.getTime()) ? null : t.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  if (isBattleworldOfflineBundle()) {
+    return time ? `Offline save (this device) · ${time}` : 'Offline save on this device';
+  }
+  if (!time) return 'Progress saved';
+  return `Auto-saved ${time}`;
+}
+
+export function offlineLatticeHint(): string | null {
+  if (!isBattleworldOfflineBundle()) return null;
+  return 'Lattice cloud optional — VantageGames bundle keeps progress in browser storage';
 }
 
 export function buildBattleworldAutosave(

@@ -253,6 +253,15 @@ register(
   })
 );
 register(
+  'magnetic-ace',
+  buildArc('magnetic-ace', {
+    title: 'Magnet rail',
+    thread: 'Sokovia memorial — speed stutter blur vs Sentinel rails',
+    links: ['nimrod-sentinel', 'frost-monarch', 'iron-sentinel'],
+    districtId: 'sokovia-memorial'
+  })
+);
+register(
   'cable-echo',
   buildArc('cable-echo', {
     title: 'Future solder',

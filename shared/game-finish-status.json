@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-12T13:49:09.844Z",
+  "updatedAt": "2026-11-14T17:12:56.918Z",
   "activeSlice": {
-    "nightshift": "cn-d06",
-    "skyring": "bw-d06"
+    "nightshift": "cn-d08",
+    "skyring": "bw-d08"
   },
   "sliceState": {
     "cn-d01": {
@@ -32,13 +32,17 @@
       "note": "Freeway drones I80/880/101; Chromebook cap 3 on main arteries"
     },
     "cn-d06": {
-      "status": "active"
+      "status": "done",
+      "completedAt": "2026-11-14T17:12:56.226Z",
+      "note": "Perf slice signed off: hub streaming cadence + Chromebook hub maze skip verified (smoke/build)"
     },
     "cn-d07": {
-      "status": "pending"
+      "status": "done",
+      "completedAt": "2026-11-14T17:12:56.457Z",
+      "note": "Photo orbit around car (WASD/Q-E), HUD exposure slider, weather exposure restores on P exit"
     },
     "cn-d08": {
-      "status": "pending"
+      "status": "active"
     },
     "cn-d09": {
       "status": "pending"
@@ -72,13 +76,17 @@
       "note": "wall-crawler.glb hero #3; krypton-eclipse nemesis GLB + spawn attach"
     },
     "bw-d06": {
-      "status": "active"
+      "status": "done",
+      "completedAt": "2026-11-14T17:12:56.682Z",
+      "note": "Tier-A Magnetic Ace arc beat at Sokovia memorial (X-flight rail vs Sentinels)"
     },
     "bw-d07": {
-      "status": "pending"
+      "status": "done",
+      "completedAt": "2026-11-14T17:12:56.918Z",
+      "note": "VantageGames offline bundle flag + HUD offline autosave/lattice copy"
     },
     "bw-d08": {
-      "status": "pending"
+      "status": "active"
     },
     "bw-d09": {
       "status": "pending"
@@ -88,6 +96,30 @@
     }
   },
   "reports": [
+    {
+      "agent": "skyring",
+      "sliceId": "bw-d07",
+      "at": "2026-11-14T17:12:56.918Z",
+      "summary": "VantageGames offline bundle flag + HUD offline autosave/lattice copy"
+    },
+    {
+      "agent": "skyring",
+      "sliceId": "bw-d06",
+      "at": "2026-11-14T17:12:56.682Z",
+      "summary": "Tier-A Magnetic Ace arc beat at Sokovia memorial (X-flight rail vs Sentinels)"
+    },
+    {
+      "agent": "nightshift",
+      "sliceId": "cn-d07",
+      "at": "2026-11-14T17:12:56.457Z",
+      "summary": "Photo orbit around car (WASD/Q-E), HUD exposure slider, weather exposure restores on P exit"
+    },
+    {
+      "agent": "nightshift",
+      "sliceId": "cn-d06",
+      "at": "2026-11-14T17:12:56.226Z",
+      "summary": "Hub streaming hitch pass: throttle hub-stream tick; Chromebook maze skip unchanged"
+    },
     {
       "agent": "skyring",
       "sliceId": "bw-d05",
