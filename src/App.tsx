@@ -8,6 +8,7 @@ import { useVoiceOutput } from "./hooks/useVoiceOutput";
 import { buildDailyBrief, buildVantageBrief } from "./lib/spokenBrief";
 import { usePlan } from "./hooks/usePlan";
 import { SparkCard } from "./components/SparkCard";
+import type { PlanTab } from "./components/PlanPanel";
 import { PulsePanel } from "./components/PulsePanel";
 import { usePulse } from "./hooks/usePulse";
 import { ConversationCaptions } from "./components/ConversationPanel";
@@ -418,6 +419,7 @@ export default function App() {
 
   const [activeModule, setActiveModule] = useState<HudModuleId | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [planInitialTab, setPlanInitialTab] = useState<PlanTab | undefined>(undefined);
   /** Iris voice deck in modules: hidden until you tap the header ring (or voice goes live). */
   const [irisVoiceDeckOpen, setIrisVoiceDeckOpen] = useState(false);
 
@@ -428,6 +430,11 @@ export default function App() {
     const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     window.scrollTo({ top: 0, behavior: still ? "auto" : "smooth" });
   }, []);
+
+  const openCreativeWorkshops = useCallback(() => {
+    setPlanInitialTab("workshops");
+    focusModule("plan");
+  }, [focusModule]);
 
   const onResearchTask = useCallback(
     (task: PlanTask, goal?: YearGoal) => {
@@ -742,7 +749,14 @@ export default function App() {
               }
               afterLists={
                 <>
-                  <SparkCard plan={plan} today={today} onToggle={toggleSpark} onShuffle={shuffleSpark} onNote={noteSpark} />
+                  <SparkCard
+                    plan={plan}
+                    today={today}
+                    onToggle={toggleSpark}
+                    onShuffle={shuffleSpark}
+                    onNote={noteSpark}
+                    onOpenWorkshops={openCreativeWorkshops}
+                  />
                   {showWeeklyReview && <WeeklyReview review={weeklyReview} />}
                   <OvernightDeltaBanner delta={overnightDelta} />
                   <InstallAppBanner />
@@ -789,8 +803,8 @@ export default function App() {
       case "plan":
         return (
           <LazyPlanPanel
-            key={isVantageMode(mode) ? "plan-year" : "plan-week"}
-            initialTab={isVantageMode(mode) ? "year" : "week"}
+            key={planInitialTab ? `plan-${planInitialTab}` : isVantageMode(mode) ? "plan-year" : "plan-week"}
+            initialTab={planInitialTab ?? (isVantageMode(mode) ? "year" : "week")}
             plan={plan}
             today={today}
             mode={mode}

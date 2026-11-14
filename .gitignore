@@ -23,6 +23,7 @@ tools/ace-step/upstream/
 tools/unreal-claude/upstream/
 tools/claude-code-game-studios/upstream/
 tools/audio2face-3d/upstream/
+tools/open-generative-ai/upstream/
 
 # Futurist Lantern (cloned GLB/WAV; CC BY-NC)
 public/lantern/
