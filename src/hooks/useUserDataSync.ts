@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateA
 import type { UserSettings, TodoItem, FitnessLog, ShoppingItem } from "../types";
 import { fetchUserData, syncSettings, syncTodos, toSyncedSettings } from "../lib/userData";
 import { saveJson, TODOS_KEY } from "../lib/storage";
+import type { StoredVantagePaper } from "../../shared/vantagePaper";
 import { onRemoteData, startRemoteSync } from "../lib/remoteSync";
 import { hydrateDelegateHistoryFromAccount } from "../../shared/irisTeamActivity";
 
@@ -12,6 +13,8 @@ export function useUserDataSync(
   setTodos: Dispatch<SetStateAction<TodoItem[]>>,
   onFitnessLoad?: (logs: FitnessLog[]) => void,
   onShoppingLoad?: (items: ShoppingItem[]) => void,
+  /** Today's Vantage Point paper, when the server has one (see shared/vantagePaper.ts). */
+  onVantagePaper?: (paper: StoredVantagePaper) => void,
 ) {
   const [synced, setSynced] = useState(false);
   const settingsTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -20,8 +23,8 @@ export function useUserDataSync(
   const started = useRef(false);
   const skipTodosEcho = useRef(false);
   const skipSettingsEcho = useRef(false);
-  const latest = useRef({ settings, todos, persist, onFitnessLoad, onShoppingLoad });
-  latest.current = { settings, todos, persist, onFitnessLoad, onShoppingLoad };
+  const latest = useRef({ settings, todos, persist, onFitnessLoad, onShoppingLoad, onVantagePaper });
+  latest.current = { settings, todos, persist, onFitnessLoad, onShoppingLoad, onVantagePaper };
 
   // Changes made on another device while this one is open (see lib/remoteSync).
   useEffect(() => {
@@ -39,6 +42,7 @@ export function useUserDataSync(
       }
       if (remote.fitnessLogs) cur.onFitnessLoad?.(remote.fitnessLogs);
       if (remote.shoppingList) cur.onShoppingLoad?.(remote.shoppingList);
+      if (remote.vantagePaper) cur.onVantagePaper?.(remote.vantagePaper);
       if (remote.irisDelegateHistory?.length) hydrateDelegateHistoryFromAccount(remote.irisDelegateHistory);
     });
   }, [setTodos]);
@@ -66,6 +70,7 @@ export function useUserDataSync(
       if (remote.shoppingList?.length) {
         onShoppingLoad?.(remote.shoppingList);
       }
+      if (remote.vantagePaper) onVantagePaper?.(remote.vantagePaper);
       if (remote.irisDelegateHistory?.length) {
         hydrateDelegateHistoryFromAccount(remote.irisDelegateHistory);
       }

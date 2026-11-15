@@ -54,7 +54,7 @@ async function askAlfred(
   context: string,
   timeZone: string,
   extra: { signal?: AbortSignal; location?: { lat: number; lon: number } } = {},
-): Promise<{ reply: string; todos: { title: string; due: string }[]; module?: HudModuleId; specialist?: IrisSpecialistId; delegateReport?: string; deduped?: boolean }> {
+): Promise<{ reply: string; todos: { title: string; due: string }[]; completed: string[]; shopping: string[]; module?: HudModuleId; specialist?: IrisSpecialistId; delegateReport?: string; deduped?: boolean }> {
   await ensureSession();
   const res = await fetch("/api/ask", {
     method: "POST",
@@ -72,6 +72,8 @@ async function askAlfred(
   const data = (await res.json().catch(() => ({}))) as {
     reply?: string;
     todos?: { title: string; due: string }[];
+    completed?: string[];
+    shopping?: string[];
     module?: string;
     specialist?: string;
     delegateReport?: string;
@@ -84,6 +86,8 @@ async function askAlfred(
   return {
     reply: data.reply,
     todos: data.todos ?? [],
+    completed: Array.isArray(data.completed) ? data.completed : [],
+    shopping: Array.isArray(data.shopping) ? data.shopping : [],
     module,
     specialist,
     delegateReport: data.delegateReport,
@@ -98,6 +102,10 @@ async function askAlfred(
 export function useConversation(opts: {
   buildContext: () => string;
   onAddTodo: (title: string, dueDate?: string) => void;
+  /** Iris checked off a to-do ("I called Mike"); the title is matched to the list. */
+  onCompleteTodo?: (title: string) => void;
+  /** Iris added an item to the shopping list. */
+  onAddShopping?: (item: string) => void;
   timeZone: string;
   today: string;
   /** Save the finished conversation (e.g. to Memos). */
@@ -261,10 +269,12 @@ export function useConversation(opts: {
       setError(null);
       setLastSpecialist(null);
       try {
-        const { buildContext, timeZone, today, onAddTodo, onOpenModule, location } = optsRef.current;
-        const { reply, todos, module, specialist, delegateReport, deduped } = await askAlfred(next, buildContext(), timeZone, { signal: ctrl.signal, location });
+        const { buildContext, timeZone, today, onAddTodo, onCompleteTodo, onAddShopping, onOpenModule, location } = optsRef.current;
+        const { reply, todos, completed, shopping, module, specialist, delegateReport, deduped } = await askAlfred(next, buildContext(), timeZone, { signal: ctrl.signal, location });
         if (requestRef.current !== id) return; // E moved on
         for (const t of todos) onAddTodo(t.title, t.due === "today" ? today : t.due === "tomorrow" ? addDays(today, 1) : undefined);
+        for (const t of completed) onCompleteTodo?.(t);
+        for (const s of shopping) onAddShopping?.(s);
         const open =
           module ??
           (/\b(open|show|bring( up)?|pull up|go to)\b/i.test(said) ? matchModuleFromSpeech(said) : null);

@@ -5,7 +5,9 @@ import { dayKey, localHour, weekdayOfDay, zonedDateTime } from "../shared/timezo
 import { applyDayMode, dayMode, DAY_MODE_LABEL, isVantageMode, resolveMode } from "../shared/dayMode";
 import { useFocusChoice } from "./hooks/useFocusChoice";
 import { useVoiceOutput } from "./hooks/useVoiceOutput";
-import { buildDailyBrief, buildVantageBrief } from "./lib/spokenBrief";
+import { buildDailyBrief, buildVantageBrief, buildVantagePaperBrief } from "./lib/spokenBrief";
+import { isFreshVantagePaper, type StoredVantagePaper } from "../shared/vantagePaper";
+import { matchTodo } from "../shared/irisReminders";
 import { usePlan } from "./hooks/usePlan";
 import { SparkCard } from "./components/SparkCard";
 import type { PlanTab } from "./components/PlanPanel";
@@ -171,7 +173,9 @@ export default function App() {
     [channelAgent],
   );
 
-  useUserDataSync(settings, persist, todos, setTodos, loadFitness, loadShopping);
+  // Today's Vantage Point paper, when the separate daily newspaper job has delivered one (shared/vantagePaper.ts).
+  const [vantagePaper, setVantagePaper] = useState<StoredVantagePaper | null>(null);
+  useUserDataSync(settings, persist, todos, setTodos, loadFitness, loadShopping, setVantagePaper);
   const push = usePushNotifications(settings.pushNotificationsEnabled);
 
   const familyScheduleEvents = useMemo(
@@ -309,8 +313,11 @@ export default function App() {
 
 
   const voiceOut = useVoiceOutput();
+  // Today's real paper, if it's actually today's; otherwise Iris builds her own briefing, same as always.
+  const freshVantagePaper = vantagePaper && isFreshVantagePaper(vantagePaper, settings.timezone, now) ? vantagePaper : null;
   const vantage = useMemo(
     () =>
+      freshVantagePaper ? buildVantagePaperBrief(freshVantagePaper) :
       buildVantageBrief({
         name: displayName,
         tz: settings.timezone,
@@ -331,7 +338,7 @@ export default function App() {
               .join(". ")
           : undefined,
       }),
-    [displayName, settings.timezone, now, woodhouse, goalLines, weather, allSchedule, plan, today, desk, pulse],
+    [freshVantagePaper, displayName, settings.timezone, now, woodhouse, goalLines, weather, allSchedule, plan, today, desk, pulse],
   );
   // "Brief me": Iris reads today's rundown (or the Vantage briefing in that mode).
   const briefText = () =>
@@ -501,6 +508,11 @@ export default function App() {
     timeZone: settings.timezone,
     today,
     onAddTodo: (title, dueDate) => add(title, dueDate),
+    onCompleteTodo: (title) => {
+      const hit = matchTodo(pending, title);
+      if (hit) toggle(hit.id);
+    },
+    onAddShopping: (item) => addShopping(item),
     location: { lat: settings.latitude, lon: settings.longitude },
     // "Save this conversation?" → yes: the transcript becomes a memo.
     onSaveTranscript: (text) =>
@@ -742,7 +754,14 @@ export default function App() {
                     timeZone={settings.timezone}
                     onOpenChannels={() => focusModule("channels")}
                   />
-                  {isVantageMode(mode) && <VantageBriefingPanel lines={vantage.lines} spoken={vantage.spoken} />}
+                  {isVantageMode(mode) && (
+                    <VantageBriefingPanel
+                      lines={vantage.lines}
+                      spoken={vantage.spoken}
+                      sourceLabel={freshVantagePaper ? "Today's paper" : "Iris's briefing"}
+                      sourceUrl={freshVantagePaper?.url}
+                    />
+                  )}
                   {overcommitment && <OvercommitmentBanner warning={overcommitment} />}
                   {showWindDown && <WindDownBanner bedtime={bedtime} timeZone={settings.timezone} />}
                 </>

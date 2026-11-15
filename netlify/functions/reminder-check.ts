@@ -1,12 +1,13 @@
 import type { Config, Handler } from "@netlify/functions";
 import { buildLeaveReminder, buildUrgentReminder, buildWindDownReminder } from "./_briefing";
-import { listAllUserData, pushAll, pushTargets, saveUserData } from "./_userData";
+import { listAllUserData, loadUserData, pushAll, pushTargets, saveUserData } from "./_userData";
+import { dueReminders, pruneReminders } from "../../shared/irisReminders";
 import { initBlobs } from "./_shared";
 import type { SyncedTodo } from "../../shared/userDataTypes";
 import { computeSuggestedBedtime, nextWakeDay } from "../../shared/bedtime";
 import { computeServerLeaveBy } from "../../shared/leaveByLite";
 import { commuteMinutesFor } from "../../shared/commute";
-import { dayKey, zonedDateTime } from "../../shared/timezone";
+import { clockTime, dayKey, zonedDateTime } from "../../shared/timezone";
 
 export const config: Config = {
   schedule: "*/10 * * * *",
@@ -30,6 +31,28 @@ export const handler: Handler = async (event) => {
 
     const tz = settings.timezone;
     const day = dayKey(tz, now);
+
+    // Reminders E set with Iris ("remind me at 4 to call Mike").
+    const due = dueReminders(data.irisReminders, now);
+    if (due.length) {
+      const ok = await pushAll(data, {
+        title: due.length === 1 ? "IRIS · Reminder" : `IRIS · ${due.length} reminders`,
+        body: due.map((r) => `${clockTime(r.at, tz)} · ${r.text}`).join("\n").slice(0, 240),
+        url: "/",
+      });
+      if (ok) {
+        const ids = new Set(due.map((r) => r.id));
+        // Re-read so a reminder set while we were pushing isn't lost.
+        const latest = (await loadUserData(sessionId)) ?? data;
+        const irisReminders = pruneReminders(
+          (latest.irisReminders ?? []).map((r) => (ids.has(r.id) ? { ...r, sentAt: now.toISOString() } : r)),
+          now,
+        );
+        await saveUserData(sessionId, { ...latest, irisReminders });
+        data.irisReminders = irisReminders;
+        sent++;
+      }
+    }
 
     const leavePlan = computeServerLeaveBy(settings, now, commuteMinutesFor(settings, data.liveCommute, now));
     if (leavePlan) {
