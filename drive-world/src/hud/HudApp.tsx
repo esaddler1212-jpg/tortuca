@@ -9,6 +9,7 @@ import {
   requestToggleCamera,
   requestCycleAutopilotPreset,
   requestSavePhotoCard,
+  requestSetPhotoExposure,
   requestToggleAutopilot,
   requestTogglePhoto,
   requestVistaCam,
@@ -836,12 +837,24 @@ export function HudApp() {
       )}
       {showTouch && <TouchControlsImpl flight={!!snap.flightMode} />}
       {snap.photoMode && (
-        <p className="photo-hint">
-          WASD move · Q/E altitude · P exit ·{' '}
-          <button type="button" className="link-btn" onClick={() => requestSavePhotoCard()}>
-            Save cruise card
-          </button>
-        </p>
+        <div className="photo-hint">
+          <p>
+            Orbit car — WASD · Q/E zoom · P exit ·{' '}
+            <button type="button" className="link-btn" onClick={() => requestSavePhotoCard()}>
+              Save cruise card
+            </button>
+          </p>
+          <label className="slider-row photo-exposure-row">
+            Exposure
+            <input
+              type="range"
+              min={22}
+              max={105}
+              value={Math.round((snap.photoExposure ?? 0.55) * 100)}
+              onChange={(e) => requestSetPhotoExposure(Number(e.target.value) / 100)}
+            />
+          </label>
+        </div>
       )}
     </div>
   );

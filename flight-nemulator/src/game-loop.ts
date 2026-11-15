@@ -141,6 +141,7 @@ import {
 import { nearBattleworldSafeHouse } from './battleworld-safe-houses';
 import {
   autosaveLabel,
+  offlineLatticeHint,
   buildBattleworldAutosave,
   loadBattleworldAutosave,
   writeBattleworldAutosave,
@@ -1049,7 +1050,7 @@ function tickFrame(s: GameSession, dt: number): void {
         ? latticeHudLine(battleworldLatticeStrength())
         : null,
     latticeBeatChip: latticeBeatChip(s.heroSpec.id, s.playerRole),
-    latticeCloudHint: consumeLatticeCloudLabel(),
+    latticeCloudHint: consumeLatticeCloudLabel() ?? offlineLatticeHint(),
     safeHouseHint: (() => {
       const house = nearBattleworldSafeHouse(
         pos,

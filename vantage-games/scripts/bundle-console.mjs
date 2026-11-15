@@ -13,14 +13,18 @@ const repoRoot = path.resolve(boysRoot, '..');
 const hubDir = path.join(repoRoot, 'games-hub');
 const dest = path.join(boysRoot, 'public', 'console');
 
-function run(cmd, args, cwd) {
-  const r = spawnSync(cmd, args, { cwd, stdio: 'inherit' });
+function run(cmd, args, cwd, extraEnv) {
+  const r = spawnSync(cmd, args, {
+    cwd,
+    stdio: 'inherit',
+    env: { ...process.env, ...extraEnv }
+  });
   if (r.status !== 0) process.exit(r.status ?? 1);
 }
 
 console.log('→ Building Tortuca Console (games-hub build:all)…');
 run('npm', ['ci'], hubDir);
-run('npm', ['run', 'build:all'], hubDir);
+run('npm', ['run', 'build:all'], hubDir, { VITE_BATTLEWORLD_OFFLINE_BUNDLE: '1' });
 
 if (fs.existsSync(dest)) fs.rmSync(dest, { recursive: true, force: true });
 fs.cpSync(path.join(hubDir, 'dist'), dest, { recursive: true });

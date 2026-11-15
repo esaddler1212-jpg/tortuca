@@ -32,6 +32,7 @@ import {
   registerToggleAutopilot,
   registerToggleCamera,
   registerTogglePhoto,
+  registerSetPhotoExposure,
   registerClaimSafehouse,
   registerSetHomeSafehouse,
   registerVistaCam,
@@ -577,14 +578,24 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   const togglePhoto = () => {
     photoMode = photo.toggle();
     if (photoMode && vehicle()) {
-      const p = vehicle()!.getPosition();
-      photo.pos.set(p.x, p.y + 8, p.z);
+      photo.setOrbitTarget(vehicle()!.getPosition());
+    } else if (!photoMode) {
+      photo.clearOrbitTarget();
     }
-    publishHud({ photoMode });
+    publishHud({
+      photoMode,
+      photoOrbit: photoMode ? photo.orbit : undefined,
+      photoExposure: photoMode ? photo.exposure : undefined
+    });
     document.body.classList.toggle('photo-mode', photoMode);
   };
 
   registerTogglePhoto(togglePhoto);
+  registerSetPhotoExposure((value) => {
+    if (!photoMode) return;
+    photo.setExposure(value);
+    publishHud({ photoExposure: photo.exposure });
+  });
   registerToggleAutopilot(toggleAutopilot);
   registerCycleAutopilotPreset(cycleAutopilotPresetSetting);
   registerVistaCam(toggleVistaCam);
@@ -1078,8 +1089,9 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     }
 
   if (photoMode) {
-    photo.move(dt * (settings.photoSensitivity ?? 1), photoKeys);
+    photo.move(dt, settings.photoSensitivity ?? 1, photoKeys);
     photo.applyTo(camera);
+    app.scene.exposure = photo.exposure;
     publishHud({
       playerX: ent.getPosition().x,
       playerZ: ent.getPosition().z,
@@ -1093,7 +1105,9 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       waterPhase: waterT,
       photoMode: true,
       nearGarage,
-      settings
+      settings,
+      photoOrbit: photo.orbit,
+      photoExposure: photo.exposure
     });
     return;
   }

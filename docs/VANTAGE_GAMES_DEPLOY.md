@@ -43,7 +43,7 @@ Do **not** use `boys-student`, `boys-with-purpose`, or `drive-world` as the base
 | Auth | Google session for Iris | None |
 | Functions | `netlify/functions/*` | None (static only) |
 
-Lattice cloud sync on Flight Nemulator (`/.netlify/functions/flight-nemulator-lattice`) only applies when the game is deployed on a site that ships those functions (e.g. Alfred production). The VantageGames bundle is offline-first; lattice APIs are optional.
+Lattice cloud sync on Flight Nemulator (`/.netlify/functions/flight-nemulator-lattice`) only applies when the game is deployed on a site that ships those functions (e.g. Alfred production). The VantageGames bundle is offline-first; lattice APIs are optional. The console build sets `VITE_BATTLEWORLD_OFFLINE_BUNDLE=1` so Battleworld HUD labels autosave as **offline (this device)** and shows that lattice sync is optional.
 
 ## Local
 
