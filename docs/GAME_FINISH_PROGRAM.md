@@ -94,6 +94,10 @@ Mark in git via `game-finish:report` — not checkboxes in this file (single sou
 
 ---
 
+## Screenshot polish loop
+
+Between slices or during `cn-d10` / `bw-d10` QA, use [`GAME_POLISH_LOOP.md`](./GAME_POLISH_LOOP.md): capture a signature moment → `npm run game:polish-prompt -- city-nights|battleworld critique` → fix top 5 fake reads → re-capture (2–3 rounds).
+
 ## After day 10
 
 - Re-run peer comparison ([`CITY_NIGHTS_PEER_COMPARISON.md`](./CITY_NIGHTS_PEER_COMPARISON.md)) and pick **season 2** slices.

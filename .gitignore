@@ -30,5 +30,7 @@ public/lantern/
 
 # Craft Anything local project (evidence captures; keep findings/*.md only)
 drive-world/research/city-nights-browser/
+drive-world/research/capture/
+flight-nemulator/research/capture/
 __pycache__/
 *.pyc

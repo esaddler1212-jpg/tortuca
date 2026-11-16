@@ -115,6 +115,7 @@ console.log(
 ok("battleworld playtest script", fs.existsSync(path.join(root, "flight-nemulator/scripts/playtest-battleworld.mjs")));
 
 const photoSrc = fs.readFileSync(path.join(root, "drive-world/src/photo-mode.ts"), "utf8");
+ok("polish loop doc", fs.existsSync(path.join(root, "docs/GAME_POLISH_LOOP.md")));
 ok("cn-d07 photo orbit", photoSrc.includes("setOrbitTarget") && photoSrc.includes("orbitPosition"));
 ok("cn-d07 photo exposure", photoSrc.includes("setExposure"));
 ok("bw-d06 magnetic-ace arc", BATTLEWORLD_ARCS["magnetic-ace"]?.districtId === "sokovia-memorial");

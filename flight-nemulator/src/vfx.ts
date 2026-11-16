@@ -1,7 +1,7 @@
 import { Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
 import { attachUnitBox } from './primitive-mesh';
 
-type TrailPuff = { ent: Entity; life: number };
+type TrailPuff = { ent: Entity; life: number; maxLife: number };
 
 const trails: TrailPuff[] = [];
 let shakeAmp = 0;
@@ -33,13 +33,21 @@ export function spawnBoostTrail(
     mat.update();
   }
   root.addChild(ent);
-  trails.push({ ent, life: 0.35 });
+  trails.push({ ent, life: 0.55, maxLife: 0.55 });
 }
 
 export function tickTrails(dt: number, root: Entity): void {
   for (let i = trails.length - 1; i >= 0; i--) {
     const t = trails[i];
     t.life -= dt;
+    const fade = Math.max(0, t.life / t.maxLife);
+    t.ent.setLocalScale(1.2 * fade + 0.08, 0.4 * fade + 0.04, 2.8 * fade + 0.12);
+    const mat = t.ent.render?.meshInstances?.[0]?.material as StandardMaterial | undefined;
+    if (mat) {
+      mat.opacity = 0.25 + fade * 0.65;
+      mat.blendType = 2;
+      mat.update();
+    }
     if (t.life <= 0) {
       root.removeChild(t.ent);
       t.ent.destroy();
@@ -54,5 +62,5 @@ export function spawnCraterMarker(app: AppBase, root: Entity, aim: Vec3, radius:
   ring.setLocalScale(radius * 2, 0.25, radius * 2);
   ring.addComponent('render', { meshInstances: [attachUnitBox(app, 0.95, 0.35, 0.15)] });
   root.addChild(ring);
-  trails.push({ ent: ring, life: 4.5 });
+  trails.push({ ent: ring, life: 4.5, maxLife: 4.5 });
 }

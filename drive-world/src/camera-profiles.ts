@@ -1,6 +1,7 @@
 import { Vec3, type AppBase, type Entity } from 'playcanvas';
 
 import { hillOffsetM } from './bay-terrain';
+import { chaseCameraBobOffset } from './chase-camera-bob';
 import type { CameraMode } from './game-progress';
 
 function terrainBlocksCamLine(
@@ -185,7 +186,8 @@ export function applyDriveCamera(
   mode: CameraMode,
   dt: number,
   vistaLook?: { x: number; y: number; z: number } | null,
-  app: AppBase | null = null
+  app: AppBase | null = null,
+  mph = 0
 ): void {
   const prof = cameraProfile(mode);
   const pos = ent.getPosition();
@@ -240,10 +242,11 @@ export function applyDriveCamera(
     }
     camBack = Math.max(2.8, camBack);
   }
+  const bob = mode === 'chase' ? chaseCameraBobOffset(mph, dt) : { y: 0, lateral: 0 };
   const target = new Vec3(
-    pos.x + forward.x * camBack + right.x * off.x,
-    pos.y + off.y,
-    pos.z + forward.z * camBack + right.z * off.x
+    pos.x + forward.x * camBack + right.x * (off.x + bob.lateral),
+    pos.y + off.y + bob.y,
+    pos.z + forward.z * camBack + right.z * (off.x + bob.lateral)
   );
   if (prof.lerp >= 0.99) {
     camera.setPosition(target);

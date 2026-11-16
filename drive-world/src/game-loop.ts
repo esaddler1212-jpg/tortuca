@@ -1149,10 +1149,17 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
             z: (vistaLookTarget ?? vistaNear!.vista).lookAtZ
           }
         : null;
+    const vehCam = scriptInstance(ent, 'vehicle') as { speed?: number } | undefined;
+    const flightCam = scriptInstance(ent, 'flightVehicle') as { speed?: number } | undefined;
+    const cameraMph = aerial
+      ? Math.abs(flightCam?.speed ?? 0) * 0.621371
+      : onAutopilot
+        ? mph
+        : Math.abs(vehCam?.speed ?? 0) * 0.621371;
     if (estateGarage && !onAutopilot && !aerial) {
       applyGarageInteriorCamera(camera, ent, shGarage!.house.x, shGarage!.house.z, dt);
     } else {
-      applyDriveCamera(camera, ent, activeCam, dt, vistaLook, app);
+      applyDriveCamera(camera, ent, activeCam, dt, vistaLook, app, cameraMph);
     }
 
     if (!onAutopilot) {

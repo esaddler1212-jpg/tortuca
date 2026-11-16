@@ -24,6 +24,7 @@
     "test:game-finish": "tsx scripts/check-game-finish.mts",
     "test:openworldjs": "tsx scripts/check-openworldjs-cherrypick.mts",
     "game-finish:report": "tsx scripts/game-finish-report.mts",
+    "game:polish-prompt": "tsx scripts/game-polish-prompt.mts",
     "gamedev-resources:sync": "tsx scripts/sync-gamedev-resources.mts",
     "test:gamedev-resources": "tsx scripts/check-gamedev-resources.mts",
     "gods-eye:check": "bash gods-eye/check-connection.sh",
