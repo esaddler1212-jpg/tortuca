@@ -116,6 +116,7 @@ ok("battleworld playtest script", fs.existsSync(path.join(root, "flight-nemulato
 
 const photoSrc = fs.readFileSync(path.join(root, "drive-world/src/photo-mode.ts"), "utf8");
 ok("polish loop doc", fs.existsSync(path.join(root, "docs/GAME_POLISH_LOOP.md")));
+ok("fable prompt catalog", fs.existsSync(path.join(root, "docs/GAME_POLISH_FABLE_PROMPTS.md")));
 ok("cn-d07 photo orbit", photoSrc.includes("setOrbitTarget") && photoSrc.includes("orbitPosition"));
 ok("cn-d07 photo exposure", photoSrc.includes("setExposure"));
 

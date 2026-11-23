@@ -1,6 +1,8 @@
 # Game polish loop (screenshot → critic → one fix)
 
-Adapts the **plan → world → one spell → breakables → add features one at a time → screenshot critic** workflow for Tortuca’s PlayCanvas games—not a single-file Three.js meadow. Use with **Nightshift** (`drive-world/`) and **Skyring** (`flight-nemulator/`).
+Adapts the **Godofprompt FABLE 7-step carousel** (plan → world → first spell → breakables → more spells → screenshot critic → 2–3 rounds) for Tortuca’s PlayCanvas games—not a single-file Three.js meadow. Use with **Nightshift** (`drive-world/`) and **Skyring** (`flight-nemulator/`).
+
+**Full verbatim originals + Tortuca copy:** [`GAME_POLISH_FABLE_PROMPTS.md`](./GAME_POLISH_FABLE_PROMPTS.md)
 
 ## Signature moments (capture these)
 
@@ -13,42 +15,34 @@ Adapts the **plan → world → one spell → breakables → add features one at
 
 Save PNGs under `drive-world/research/capture/` or `flight-nemulator/research/capture/` (**gitignore** — do not commit blobs).
 
-## Seven prompts (Tortuca mapping)
+## Seven prompts (FABLE ↔ Tortuca)
 
-| Step | Wizard-game idea | City Nights | Battleworld |
-|------|------------------|-------------|-------------|
-| 1 **Plan** | One-day scope, 7 spells | One **driving loop** + 3 HUD wins (rep, nav, nitro) | One **combat loop** + chapter 1–3 chain |
-| 2 **World** | Procedural meadow | Bay terrain + district fog/exposure (`regional-weather.ts`) | District rims + sky (`battleworld-districts.ts`) |
-| 3 **First spell** | One ability with full juice | **One** feel pass: nitro FOV + zone grade OR ghost sprint PB toast | **One** feel pass: wave juice + pair shake (`wave-combat-juice.ts`, `vfx.ts`) |
-| 4 **Breakables** | 1500 pieces, cap active bodies | Traffic/sideshow **budgets** (`freeway-traffic-drones`, Chromebook cap) | Destruction $ + wanted meter (already capped per tick) |
-| 5 **More spells** | One spell per message | **One slice per day** (`cn-d0N`) — no multi-feature PRs | **One slice per day** (`bw-d0N`) |
-| 6 **Screenshot critic** | Top 5 fake things → fix | Below | Below |
-| 7 **Repeat** | 2–3 rounds | Re-capture same moment after each round | Same |
+| FABLE step | Wizard-game idea | CLI `fable-N` | City Nights | Battleworld |
+|------------|------------------|---------------|-------------|-------------|
+| **1/7 Plan** | One-day scope, 7 spells | `fable-1` / `plan` | Driving loop + 3 HUD wins + record moment | Chapter chain + pair moment + **H** on map |
+| **2/7 World** | Procedural meadow, one HTML file | `fable-2` / `world` | `regional-weather.ts`, drone budget | District rims + `sky-env.ts` |
+| **3/7 First spell** | Fire spell + critique 3 weak points | `fable-3` / `first-spell` | Nitro FOV **or** ghost PB toast | Wave juice + trail fade |
+| **4/7 Breakables** | ~1500 pieces, sleep + cap movers | `fable-4` / `breakables` | Hub stream + Chromebook cap | Wave/destruction caps, trail `maxLife` |
+| **5/7 More spells** | **One spell per message**, spell bar 1–7 | `fable-5` / `more-spells` | **One slice** (`cn-d0N`) per PR | **One slice** (`bw-d0N`) per PR |
+| **6/7 Fix real** | Top 5 fake + bob/swing/fade | `fable-6` / `critique` | `chase-camera-bob.ts`, fade trails | Shake + trail fade, HUD chips |
+| **7/7 Repeat** | 2–3 screenshot rounds | `fable-7` / `screenshot-round` | Same camera angle each round | Same |
 
-### Prompt 6 — copy/paste (attach screenshot)
+### Prompt 6/7 — copy/paste (attach screenshot)
 
-```text
-Here's a screenshot from my Tortuca game: [attach PNG].
-
-Game: [City Nights | Battleworld]
-Stack: PlayCanvas + TypeScript in [drive-world | flight-nemulator].
-
-Act like a game critic. List the 5 things that look or feel the most fake (colors, light, particles, physics, camera, HUD), worst first.
-
-Fix only those 5 in code. Keep everything else the same. Match existing patterns (no new engine, no asset pipeline).
-
-Then tell me the 3 things you would fix next to make it feel like a shippable console browser game.
-```
+Same as FABLE prompt 6; Tortuca adds HUD + stack lines and maps “walking bob / staff swing / slow fade” to chase bob, boost/nitro punch, and `vfx` trail decay. Full text: [`GAME_POLISH_FABLE_PROMPTS.md`](./GAME_POLISH_FABLE_PROMPTS.md#prompt-67--the-fix-make-it-feel-real).
 
 Run fixes on a `cursor/*-b076` branch; verify with `npm run test:city-nights` or `npm run test:flight-nemulator`.
 
 ## CLI — print step prompts
 
 ```bash
-npm run game:polish-prompt -- city-nights plan
-npm run game:polish-prompt -- battleworld critique
+npm run game:polish-prompt -- city-nights fable-1    # plan
+npm run game:polish-prompt -- battleworld fable-6   # screenshot critic
 npm run game:polish-prompt -- city-nights screenshot-round
+npm run game:polish-prompt -- wizard fable-3        # original Three.js first-spell text
 ```
+
+Aliases still work: `plan`, `world`, `first-spell`, `breakables`, `more-spells`, `critique`, `one-slice`.
 
 ## Code hooks shipped for the loop
 

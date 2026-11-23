@@ -96,7 +96,7 @@ Mark in git via `game-finish:report` — not checkboxes in this file (single sou
 
 ## Screenshot polish loop
 
-Between slices or during `cn-d10` / `bw-d10` QA, use [`GAME_POLISH_LOOP.md`](./GAME_POLISH_LOOP.md): capture a signature moment → `npm run game:polish-prompt -- city-nights|battleworld critique` → fix top 5 fake reads → re-capture (2–3 rounds).
+Between slices or during `cn-d10` / `bw-d10` QA, use [`GAME_POLISH_LOOP.md`](./GAME_POLISH_LOOP.md) and the Godofprompt FABLE catalog [`GAME_POLISH_FABLE_PROMPTS.md`](./GAME_POLISH_FABLE_PROMPTS.md): capture a signature moment → `npm run game:polish-prompt -- city-nights|battleworld fable-6` → fix top 5 fake reads → re-capture (2–3 rounds).
 
 ## After day 10
 
