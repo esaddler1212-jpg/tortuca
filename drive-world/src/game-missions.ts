@@ -1,3 +1,5 @@
+import { tokyoFleetUnlockedCount } from './tokyo-ff-cars';
+import { TOKYO_LANDMARKS, tokyoUnlockStatus } from './tokyo-map';
 import {
   AUTOPILOT_VEHICLE_ID,
   BONUS_AERIAL_IDS,
@@ -14,6 +16,8 @@ import { nextUnvisitedLandmark } from './landmark-navigation';
 import type { SavedProgress } from './game-progress';
 import { nearestGasStationAnywhere } from './bay-navigation';
 import { DRIFT_PADS, DRAG_STRIPS, TIME_ATTACKS } from './cpm-challenges';
+import { LANDMARK_SPRINTS } from './landmark-sprints';
+import { GHOST_SPRINT_CIRCUIT } from './sprint-circuit-roster';
 import { TAXI_CONTRACTS, nextTaxiContract } from './cpm-taxi';
 import { LANDMARK_PARKING, parkingSpotsCleared, parkingSpotCount } from './landmark-parking';
 import {
@@ -187,6 +191,30 @@ export function buildMissionBoard(
     });
   }
 
+  lines.push({
+    id: 'ghost-circuit-roster',
+    label: 'Ghost circuit (3 routes)',
+    done: GHOST_SPRINT_CIRCUIT.every((s) => (synced.landmarkSprintMs[s.id] ?? 0) > 0),
+    hint: GHOST_SPRINT_CIRCUIT.map((s, i) => {
+      const ms = synced.landmarkSprintMs[s.id];
+      return `${i + 1}. ${ms ? `${(ms / 1000).toFixed(1)}s` : 'open'}`;
+    }).join(' · ')
+  });
+
+  for (const sprint of LANDMARK_SPRINTS) {
+    const ms = synced.landmarkSprintMs[sprint.id];
+    lines.push({
+      id: `sprint-${sprint.id}`,
+      label: sprint.ghostTape ? `Ghost: ${sprint.name}` : `Sprint: ${sprint.name}`,
+      done: ms != null && ms > 0,
+      hint: ms
+        ? `PB ${(ms / 1000).toFixed(2)} s`
+        : sprint.ghostTape
+          ? `Roll through start on I-80 (12+ mph)`
+          : `Arm at ${sprint.fromLabel}`
+    });
+  }
+
   for (const attack of TIME_ATTACKS) {
     const ms = synced.cpmTimeAttackMs[attack.id];
     lines.push({
@@ -286,6 +314,30 @@ export function buildMissionBoard(
     label: `Landmarks logged ${synced.visitedLandmarkIds.length}/${LANDMARKS.length}`,
     done: synced.visitedLandmarkIds.length >= LANDMARKS.length
   });
+
+  const tokyo = tokyoUnlockStatus(synced);
+  if (!tokyo.unlocked) {
+    lines.push({
+      id: 'tokyo-unlock',
+      label: `Bonus: Tokyo flight — cars ${tokyo.cars}/${tokyo.carsTotal} · regions ${tokyo.regions}/${tokyo.regionsTotal}`,
+      done: false,
+      hint: 'Unlock everything, then board at the SFO gate'
+    });
+  } else {
+    const logged = synced.tokyoLandmarkIds.length;
+    const fleet = tokyoFleetUnlockedCount(synced);
+    lines.push({
+      id: 'tokyo-landmarks',
+      label: `Tokyo FF fleet ${fleet}/8 · landmarks ${logged}/${TOKYO_LANDMARKS.length}`,
+      done: fleet >= 8 && logged >= TOKYO_LANDMARKS.length,
+      hint:
+        fleet >= 8
+          ? 'Fast family fleet complete — fly home from Haneda when ready'
+          : synced.tokyoFlights === 0
+            ? 'SFO gate is open — stop on the orange pad, press F'
+            : 'Each landmark unlocks the next FF tribute ride (fan tribute)'
+    });
+  }
 
   return lines;
 }

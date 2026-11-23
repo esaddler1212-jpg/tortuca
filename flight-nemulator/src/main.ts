@@ -1,18 +1,24 @@
 import {
   AppBase,
   AppOptions,
+  BinaryHandler,
   CameraComponentSystem,
   Color,
+  ContainerHandler,
   Entity,
   FILLMODE_FILL_WINDOW,
   Keyboard,
   LightComponentSystem,
   RenderComponentSystem,
+  RenderHandler,
   RESOLUTION_AUTO,
+  TextureHandler,
   createGraphicsDevice
 } from 'playcanvas';
+import { getHudSnapshot } from './game-bridge';
 import { mountHud } from './hud/mount';
-import { startGame } from './game-loop';
+import { selectHero, startGame } from './game-loop';
+import { refreshLoadingTips, currentLoadingTip } from './loading-tips';
 
 function waitForTap(): Promise<void> {
   const el = document.getElementById('tap-start');
@@ -30,6 +36,15 @@ function waitForTap(): Promise<void> {
 }
 
 mountHud();
+void refreshLoadingTips();
+const tapSub = document.querySelector('.tap-start-sub');
+if (tapSub) {
+  const refresh = () => {
+    tapSub.textContent = currentLoadingTip().slice(0, 140);
+  };
+  refresh();
+  window.setInterval(refresh, 8000);
+}
 
 const canvas = document.getElementById('application-canvas') as HTMLCanvasElement;
 await waitForTap();
@@ -43,6 +58,7 @@ const options = new AppOptions();
 options.graphicsDevice = device;
 options.keyboard = new Keyboard(window);
 options.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
+options.resourceHandlers = [RenderHandler, TextureHandler, BinaryHandler, ContainerHandler];
 
 const app = new AppBase(canvas);
 app.init(options);
@@ -60,4 +76,10 @@ app.root.addChild(sun);
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
 
-await startGame(app, canvas);
+await startGame(app);
+
+(window as unknown as { __battleworld?: unknown }).__battleworld = {
+  app,
+  hud: getHudSnapshot,
+  selectHero
+};

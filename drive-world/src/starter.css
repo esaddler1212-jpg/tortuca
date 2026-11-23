@@ -73,6 +73,20 @@ body {
   line-height: 1.35;
 }
 
+body.city-nights-shell #hud {
+  display: none !important;
+}
+
+body.city-nights-shell #garage .customize label.slider-row:nth-child(n + 7),
+body.city-nights-shell #garage .customize label.slider-row:has(select) {
+  display: none;
+}
+
+body.city-nights-shell #garage .customize #dyno-pull,
+body.city-nights-shell #garage .customize .dyno-readout {
+  display: none;
+}
+
 .hud {
   position: fixed;
   left: max(1rem, env(safe-area-inset-left));

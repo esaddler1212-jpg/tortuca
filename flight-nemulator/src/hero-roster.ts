@@ -1,5 +1,10 @@
 /** Homage codenames only — not affiliated with rights holders. */
 
+import type { AerialMobility } from './aerial-mobility';
+import { buildExpansionHeroes } from './roster-expansion';
+import { wallCrawlerForms } from './hero-symbiote';
+import { venomEchoForms, VENOM_PLAYABLE_ID } from './hero-venom-bond';
+
 export type PowerKind =
   | 'beam'
   | 'repulsor'
@@ -13,12 +18,35 @@ export type PowerKind =
 
 export type FormToggleId = string;
 
+export type SuitRole = 'swift' | 'siege' | 'bulwark' | 'balanced';
+
 export interface HeroForm {
   id: FormToggleId;
   label: string;
   speedMul: number;
   powerMul: number;
   color: [number, number, number];
+  /** Playable kit — shown in HUD and drives combat tuning when set. */
+  abilities?: string[];
+  kitPrimary?: PowerKind;
+  rangeMul?: number;
+  coneMul?: number;
+  dmgMul?: number;
+  superRadiusMul?: number;
+  primaryCdMul?: number;
+  /** Flight / tank tradeoff tag for HUD grouping */
+  suitRole?: SuitRole;
+  flightAgilityMul?: number;
+  resilienceMul?: number;
+  staminaRegenMul?: number;
+}
+
+export interface SuitVariant {
+  id: string;
+  label: string;
+  color: [number, number, number];
+  speedMul?: number;
+  powerMul?: number;
 }
 
 export interface HeroSpec {
@@ -43,7 +71,15 @@ export interface HeroSpec {
   smashRadius: number;
   forms: HeroForm[];
   defaultFormId: FormToggleId;
-  suitVariants?: { id: string; label: string; color: [number, number, number] }[];
+  suitVariants?: SuitVariant[];
+  /** Canon flight basis — jetpack / glide / web for grounded homages */
+  aerial: AerialMobility;
+}
+
+export function heroFormsForPlay(spec: HeroSpec): HeroForm[] {
+  if (spec.id === 'wall-crawler') return wallCrawlerForms(spec.forms);
+  if (spec.id === VENOM_PLAYABLE_ID) return venomEchoForms(spec.forms);
+  return spec.forms;
 }
 
 export const HERO_ROSTER: HeroSpec[] = [
@@ -59,16 +95,41 @@ export const HERO_ROSTER: HeroSpec[] = [
     smashRadius: 4.2,
     forms: [
       { id: 'cape', label: 'Classic cape', speedMul: 1, powerMul: 1, color: [0.12, 0.22, 0.75] },
-      { id: 'godmode', label: 'Solar flare', speedMul: 1.35, powerMul: 1.5, color: [0.95, 0.82, 0.2] }
+      { id: 'godmode', label: 'Solar flare', speedMul: 1.35, powerMul: 1.5, color: [0.95, 0.82, 0.2] },
+      {
+        id: 'green-ring',
+        label: 'Emerald ring — will loan',
+        suitRole: 'balanced',
+        abilities: ['Emerald construct', 'Ring flight lattice'],
+        kitPrimary: 'ring',
+        rangeMul: 1.1,
+        dmgMul: 1.05,
+        speedMul: 1.02,
+        powerMul: 1.08,
+        color: [0.06, 0.55, 0.25]
+      },
+      {
+        id: 'yellow-ring',
+        label: 'Yellow ring — fear echo',
+        suitRole: 'siege',
+        abilities: ['Fear constructs', 'Parallax flare'],
+        kitPrimary: 'ring',
+        coneMul: 1.25,
+        dmgMul: 1.18,
+        speedMul: 0.96,
+        powerMul: 1.15,
+        color: [0.92, 0.78, 0.12]
+      }
     ],
-    defaultFormId: 'cape'
+    defaultFormId: 'cape',
+    aerial: 'native'
   },
   {
     id: 'emerald-pilot',
     codename: 'Emerald Pilot',
-    tagline: 'Will-powered constructs',
+    tagline: 'Hal Jordan — will-powered constructs',
     districtId: 'coast-city',
-    homeLabel: 'Watchtower Dock',
+    homeLabel: 'Coast Watchtower Dock',
     powers: ['ring'],
     flight: { cruiseKmh: 380, boostKmh: 2100, agility: 1.05, mass: 88 },
     energy: { staminaMax: 110, regenPerSec: 22, superCooldownSec: 18, primaryCooldownSec: 0.28 },
@@ -77,7 +138,59 @@ export const HERO_ROSTER: HeroSpec[] = [
       { id: 'marine', label: 'Marine', speedMul: 1, powerMul: 1, color: [0.05, 0.55, 0.25] },
       { id: 'hard', label: 'Hard-light shell', speedMul: 0.92, powerMul: 1.25, color: [0.15, 0.85, 0.55] }
     ],
-    defaultFormId: 'marine'
+    defaultFormId: 'marine',
+    aerial: 'ring'
+  },
+  {
+    id: 'jade-architect',
+    codename: 'Jade Architect',
+    tagline: 'John Stewart — structural lattice ring',
+    districtId: 'coast-city',
+    homeLabel: 'Sector Fabricator Bay',
+    powers: ['ring'],
+    flight: { cruiseKmh: 370, boostKmh: 2050, agility: 0.98, mass: 92 },
+    energy: { staminaMax: 115, regenPerSec: 21, superCooldownSec: 19, primaryCooldownSec: 0.3 },
+    smashRadius: 3.8,
+    forms: [
+      { id: 'architect', label: 'Architect', speedMul: 1, powerMul: 1.12, color: [0.04, 0.48, 0.22] },
+      { id: 'sniper', label: 'Sniper construct', speedMul: 0.95, powerMul: 1.28, color: [0.08, 0.35, 0.18] }
+    ],
+    defaultFormId: 'architect',
+    aerial: 'ring'
+  },
+  {
+    id: 'garnet-brawler',
+    codename: 'Garnet Brawler',
+    tagline: 'Guy Gardner — knuckle construct rush',
+    districtId: 'coast-city',
+    homeLabel: 'Sector Gym Ring',
+    powers: ['ring'],
+    flight: { cruiseKmh: 365, boostKmh: 1980, agility: 1.08, mass: 96 },
+    energy: { staminaMax: 105, regenPerSec: 24, superCooldownSec: 16, primaryCooldownSec: 0.22 },
+    smashRadius: 3.6,
+    forms: [
+      { id: 'brawler', label: 'Brawler', speedMul: 1.05, powerMul: 1.15, color: [0.12, 0.52, 0.2] },
+      { id: 'red-hot', label: 'Red-hot will', speedMul: 1.12, powerMul: 1.25, color: [0.72, 0.18, 0.12] }
+    ],
+    defaultFormId: 'brawler',
+    aerial: 'ring'
+  },
+  {
+    id: 'spectrum-artist',
+    codename: 'Spectrum Artist',
+    tagline: 'Kyle Rayner — artist ring imagination',
+    districtId: 'coast-city',
+    homeLabel: 'Studio Loft Bay',
+    powers: ['ring'],
+    flight: { cruiseKmh: 375, boostKmh: 2080, agility: 1.1, mass: 86 },
+    energy: { staminaMax: 112, regenPerSec: 23, superCooldownSec: 17, primaryCooldownSec: 0.26 },
+    smashRadius: 3.4,
+    forms: [
+      { id: 'artist', label: 'Artist', speedMul: 1, powerMul: 1.05, color: [0.06, 0.58, 0.28] },
+      { id: 'white', label: 'White-light echo', speedMul: 1.08, powerMul: 1.22, color: [0.92, 0.94, 0.96] }
+    ],
+    defaultFormId: 'artist',
+    aerial: 'ring'
   },
   {
     id: 'tin-aviator',
@@ -89,19 +202,120 @@ export const HERO_ROSTER: HeroSpec[] = [
     flight: { cruiseKmh: 360, boostKmh: 2200, agility: 1.1, mass: 120 },
     energy: { staminaMax: 100, regenPerSec: 25, superCooldownSec: 16, primaryCooldownSec: 0.22 },
     smashRadius: 3.2,
-    suitVariants: [
-      { id: 'mk1', label: 'Mk I scrap', color: [0.45, 0.35, 0.28] },
-      { id: 'mk3', label: 'Mk III red-gold', color: [0.75, 0.15, 0.12] },
-      { id: 'mk7', label: 'Mk VII party', color: [0.82, 0.2, 0.08] },
-      { id: 'mk42', label: 'Mk XLII modular', color: [0.55, 0.55, 0.6] },
-      { id: 'mk50', label: 'Mk L nanite', color: [0.85, 0.75, 0.2] },
-      { id: 'hulkbuster', label: 'Heavy interceptor', color: [0.6, 0.12, 0.12] }
-    ],
     forms: [
-      { id: 'mk3', label: 'Mk III', speedMul: 1, powerMul: 1, color: [0.75, 0.15, 0.12] },
-      { id: 'stealth', label: 'Stealth', speedMul: 1.15, powerMul: 0.85, color: [0.15, 0.18, 0.22] }
+      {
+        id: 'mk3-classic',
+        label: 'Mk III — red & gold',
+        suitRole: 'balanced',
+        abilities: ['Palm repulsors', 'Foot stabilizers'],
+        kitPrimary: 'repulsor',
+        speedMul: 1,
+        powerMul: 1,
+        color: [0.75, 0.15, 0.12]
+      },
+      {
+        id: 'mk5-suitcase',
+        label: 'Mk V — compact',
+        suitRole: 'swift',
+        abilities: ['Deployable case wings', 'Snap repulsors'],
+        kitPrimary: 'beam',
+        primaryCdMul: 0.7,
+        flightAgilityMul: 1.14,
+        speedMul: 1.12,
+        powerMul: 0.94,
+        color: [0.78, 0.16, 0.1]
+      },
+      {
+        id: 'mk17-stealth',
+        label: 'Mk XVII — stealth blue',
+        suitRole: 'swift',
+        abilities: ['EMP dart', 'Silent hover'],
+        kitPrimary: 'thunder',
+        coneMul: 1.45,
+        dmgMul: 0.82,
+        flightAgilityMul: 1.1,
+        speedMul: 1.1,
+        powerMul: 0.9,
+        color: [0.22, 0.32, 0.55]
+      },
+      {
+        id: 'mk50-nanite',
+        label: 'Mk L — nanite swarm',
+        suitRole: 'swift',
+        abilities: ['Nanite blade', 'Micro-missile bloom'],
+        kitPrimary: 'beam',
+        primaryCdMul: 0.65,
+        rangeMul: 1.15,
+        flightAgilityMul: 1.12,
+        speedMul: 1.15,
+        powerMul: 1.02,
+        color: [0.85, 0.75, 0.2]
+      },
+      {
+        id: 'mk85-endgame',
+        label: 'Mk LXXXV — nanoglow',
+        suitRole: 'siege',
+        abilities: ['Unibeam surge', 'Infinity spark rockets'],
+        kitPrimary: 'beam',
+        rangeMul: 1.3,
+        dmgMul: 1.2,
+        superRadiusMul: 1.25,
+        speedMul: 1.05,
+        powerMul: 1.15,
+        color: [0.88, 0.72, 0.25]
+      },
+      {
+        id: 'hulkbuster',
+        label: 'Hulkbuster — siege',
+        suitRole: 'siege',
+        abilities: ['Siege ram', 'Shoulder harpoons'],
+        kitPrimary: 'repulsor',
+        dmgMul: 1.5,
+        superRadiusMul: 1.4,
+        primaryCdMul: 1.25,
+        speedMul: 0.8,
+        powerMul: 1.4,
+        color: [0.6, 0.12, 0.12]
+      },
+      {
+        id: 'rescue-gold',
+        label: 'Rescue — gold support',
+        suitRole: 'bulwark',
+        abilities: ['Stabilizer field', 'Rescue unibeam'],
+        kitPrimary: 'beam',
+        resilienceMul: 1.3,
+        staminaRegenMul: 1.25,
+        dmgMul: 0.95,
+        speedMul: 0.97,
+        powerMul: 1.05,
+        color: [0.92, 0.78, 0.22]
+      },
+      {
+        id: 'bleeding-edge',
+        label: 'Bleeding edge — hotrod',
+        suitRole: 'balanced',
+        abilities: ['Bleeding repulsors', 'Pulse lasers'],
+        kitPrimary: 'repulsor',
+        dmgMul: 1.1,
+        speedMul: 1.08,
+        powerMul: 1.1,
+        color: [0.92, 0.32, 0.12]
+      },
+      {
+        id: 'rescue-stealth',
+        label: 'Night assault — graphite',
+        suitRole: 'bulwark',
+        abilities: ['Sonar jam', 'Low-signature repulsors'],
+        kitPrimary: 'repulsor',
+        resilienceMul: 1.2,
+        flightAgilityMul: 1.05,
+        speedMul: 1.02,
+        powerMul: 0.92,
+        color: [0.15, 0.18, 0.22]
+      }
     ],
-    defaultFormId: 'mk3'
+    defaultFormId: 'mk3-classic',
+    aerial: 'tech'
   },
   {
     id: 'chrome-sage',
@@ -117,20 +331,8 @@ export const HERO_ROSTER: HeroSpec[] = [
       { id: 'solid', label: 'Solid', speedMul: 1, powerMul: 1, color: [0.8, 0.12, 0.12] },
       { id: 'ghost', label: 'Intangible', speedMul: 1.2, powerMul: 0.7, color: [0.65, 0.7, 0.85] }
     ],
-    defaultFormId: 'solid'
-  },
-  {
-    id: 'chrome-overmind',
-    codename: 'Chrome Overmind',
-    tagline: 'Drone swarm salvos',
-    districtId: 'sokovia-memorial',
-    homeLabel: 'Memorial Apex',
-    powers: ['repulsor', 'beam'],
-    flight: { cruiseKmh: 340, boostKmh: 1900, agility: 1.15, mass: 105 },
-    energy: { staminaMax: 90, regenPerSec: 28, superCooldownSec: 14, primaryCooldownSec: 0.18 },
-    smashRadius: 3.0,
-    forms: [{ id: 'prime', label: 'Prime body', speedMul: 1, powerMul: 1, color: [0.35, 0.4, 0.45] }],
-    defaultFormId: 'prime'
+    defaultFormId: 'solid',
+    aerial: 'native'
   },
   {
     id: 'storm-hammer',
@@ -146,7 +348,8 @@ export const HERO_ROSTER: HeroSpec[] = [
       { id: 'worthy', label: 'Worthy', speedMul: 1, powerMul: 1, color: [0.15, 0.35, 0.65] },
       { id: 'berserk', label: 'Berserk', speedMul: 1.1, powerMul: 1.35, color: [0.55, 0.2, 0.15] }
     ],
-    defaultFormId: 'worthy'
+    defaultFormId: 'worthy',
+    aerial: 'native'
   },
   {
     id: 'ki-wanderer',
@@ -162,7 +365,8 @@ export const HERO_ROSTER: HeroSpec[] = [
       { id: 'base', label: 'Base', speedMul: 1, powerMul: 1, color: [0.85, 0.55, 0.15] },
       { id: 'ascended', label: 'Ascended', speedMul: 1.45, powerMul: 1.55, color: [0.95, 0.25, 0.15] }
     ],
-    defaultFormId: 'base'
+    defaultFormId: 'base',
+    aerial: 'ki'
   },
   {
     id: 'ki-prince',
@@ -178,7 +382,59 @@ export const HERO_ROSTER: HeroSpec[] = [
       { id: 'base', label: 'Base', speedMul: 1, powerMul: 1, color: [0.22, 0.45, 0.85] },
       { id: 'ascended', label: 'Ascended', speedMul: 1.4, powerMul: 1.5, color: [0.75, 0.15, 0.55] }
     ],
-    defaultFormId: 'base'
+    defaultFormId: 'base',
+    aerial: 'ki'
+  },
+  {
+    id: 'ki-sage',
+    codename: 'Ki Sage',
+    tagline: 'Regen barrage — stretch counter',
+    districtId: 'ki-plateau',
+    homeLabel: 'Sky Temple Ledge',
+    powers: ['ki', 'beam'],
+    flight: { cruiseKmh: 430, boostKmh: 2600, agility: 1.1, mass: 86 },
+    energy: { staminaMax: 132, regenPerSec: 32, superCooldownSec: 17, primaryCooldownSec: 0.22 },
+    smashRadius: 3.4,
+    forms: [
+      { id: 'tunic', label: 'Temple tunic', speedMul: 1, powerMul: 1, color: [0.22, 0.55, 0.32] },
+      { id: 'orange', label: 'Orange gi', speedMul: 1.08, powerMul: 1.12, color: [0.92, 0.45, 0.12] }
+    ],
+    defaultFormId: 'tunic',
+    aerial: 'ki'
+  },
+  {
+    id: 'time-blade',
+    codename: 'Time Blade',
+    tagline: 'Sword flash — timeline dive',
+    districtId: 'ki-plateau',
+    homeLabel: 'Capsule Ruins',
+    powers: ['ki', 'beam'],
+    flight: { cruiseKmh: 470, boostKmh: 2900, agility: 1.22, mass: 80 },
+    energy: { staminaMax: 128, regenPerSec: 27, superCooldownSec: 16, primaryCooldownSec: 0.2 },
+    smashRadius: 3.3,
+    forms: [
+      { id: 'future', label: 'Future jacket', speedMul: 1, powerMul: 1.05, color: [0.15, 0.18, 0.42] },
+      { id: 'rage', label: 'Super surge', speedMul: 1.35, powerMul: 1.4, color: [0.85, 0.22, 0.18] }
+    ],
+    defaultFormId: 'future',
+    aerial: 'ki'
+  },
+  {
+    id: 'hybrid-warden',
+    codename: 'Hybrid Warden',
+    tagline: 'Hidden potential smash',
+    districtId: 'ki-plateau',
+    homeLabel: 'Scholar Cliff',
+    powers: ['ki'],
+    flight: { cruiseKmh: 460, boostKmh: 2850, agility: 1.15, mass: 84 },
+    energy: { staminaMax: 142, regenPerSec: 26, superCooldownSec: 18, primaryCooldownSec: 0.22 },
+    smashRadius: 3.8,
+    forms: [
+      { id: 'scholar', label: 'Scholar', speedMul: 0.95, powerMul: 1.15, color: [0.45, 0.32, 0.22] },
+      { id: 'unleashed', label: 'Unleashed', speedMul: 1.25, powerMul: 1.45, color: [0.95, 0.75, 0.2] }
+    ],
+    defaultFormId: 'scholar',
+    aerial: 'ki'
   },
   {
     id: 'wall-crawler',
@@ -194,7 +450,47 @@ export const HERO_ROSTER: HeroSpec[] = [
       { id: 'classic', label: 'Classic', speedMul: 1, powerMul: 1, color: [0.75, 0.12, 0.12] },
       { id: 'stealth', label: 'Night', speedMul: 1.05, powerMul: 0.95, color: [0.12, 0.12, 0.18] }
     ],
-    defaultFormId: 'classic'
+    defaultFormId: 'classic',
+    aerial: 'web-swing'
+  },
+  {
+    id: 'venom-echo',
+    codename: 'Venom Echo',
+    tagline: 'Bond with heroes you defeat',
+    districtId: 'gotham-nights',
+    homeLabel: 'Symbiote Spire',
+    powers: ['web', 'beam'],
+    flight: { cruiseKmh: 300, boostKmh: 1500, agility: 1.28, mass: 88 },
+    energy: { staminaMax: 118, regenPerSec: 26, superCooldownSec: 15, primaryCooldownSec: 0.17 },
+    smashRadius: 2.8,
+    forms: [
+      {
+        id: 'venom-base',
+        label: 'Symbiote mass',
+        suitRole: 'siege',
+        abilities: ['Tendril lash', 'Glide shred'],
+        kitPrimary: 'web',
+        dmgMul: 1.12,
+        speedMul: 1.02,
+        powerMul: 1.12,
+        color: [0.08, 0.12, 0.1]
+      },
+      {
+        id: 'carnage-lean',
+        label: 'Carnage lean',
+        suitRole: 'swift',
+        abilities: ['Axe tendrils', 'Blood sprint'],
+        kitPrimary: 'web',
+        primaryCdMul: 0.75,
+        dmgMul: 1.05,
+        flightAgilityMul: 1.12,
+        speedMul: 1.1,
+        powerMul: 1.08,
+        color: [0.72, 0.08, 0.1]
+      }
+    ],
+    defaultFormId: 'venom-base',
+    aerial: 'glide'
   },
   {
     id: 'red-codriver',
@@ -206,8 +502,107 @@ export const HERO_ROSTER: HeroSpec[] = [
     flight: { cruiseKmh: 320, boostKmh: 1750, agility: 0.75, mass: 155 },
     energy: { staminaMax: 115, regenPerSec: 22, superCooldownSec: 19, primaryCooldownSec: 0.25 },
     smashRadius: 3.4,
-    forms: [{ id: 'tank', label: 'Tank frame', speedMul: 1, powerMul: 1.15, color: [0.55, 0.12, 0.12] }],
-    defaultFormId: 'tank'
+    forms: [
+      {
+        id: 'wm-classic',
+        label: 'Classic gunmetal',
+        suitRole: 'balanced',
+        abilities: ['Shoulder salvo', 'Repulsor brace'],
+        kitPrimary: 'repulsor',
+        speedMul: 1,
+        powerMul: 1.1,
+        color: [0.55, 0.12, 0.12]
+      },
+      {
+        id: 'wm-patriot',
+        label: 'Patriot — star livery',
+        suitRole: 'siege',
+        abilities: ['Plasma repeaters', 'Patriot salvo'],
+        kitPrimary: 'beam',
+        dmgMul: 1.18,
+        rangeMul: 1.1,
+        speedMul: 0.96,
+        powerMul: 1.15,
+        color: [0.72, 0.14, 0.18]
+      },
+      {
+        id: 'wm-gunship',
+        label: 'Gunship pods',
+        suitRole: 'siege',
+        abilities: ['Micro-gun pods', 'SAM flak cone'],
+        kitPrimary: 'beam',
+        coneMul: 1.35,
+        dmgMul: 1.12,
+        superRadiusMul: 1.2,
+        speedMul: 0.88,
+        powerMul: 1.28,
+        color: [0.38, 0.12, 0.12]
+      },
+      {
+        id: 'wm-stealth',
+        label: 'Stealth sortie',
+        suitRole: 'swift',
+        abilities: ['Gatling burst', 'Radar veil'],
+        kitPrimary: 'beam',
+        primaryCdMul: 0.58,
+        flightAgilityMul: 1.08,
+        speedMul: 1.06,
+        powerMul: 1.02,
+        color: [0.18, 0.2, 0.24]
+      },
+      {
+        id: 'wm-siege',
+        label: 'Siege hammer chassis',
+        suitRole: 'bulwark',
+        abilities: ['Ex-wife mortar', 'Shock brace plating'],
+        kitPrimary: 'thunder',
+        dmgMul: 1.42,
+        superRadiusMul: 1.45,
+        resilienceMul: 1.25,
+        speedMul: 0.84,
+        powerMul: 1.32,
+        color: [0.28, 0.28, 0.32]
+      },
+      {
+        id: 'wm-desert',
+        label: 'Desert tan depot',
+        suitRole: 'bulwark',
+        abilities: ['Sand shield', 'Heavy rotary'],
+        kitPrimary: 'repulsor',
+        resilienceMul: 1.22,
+        staminaRegenMul: 1.15,
+        dmgMul: 1.08,
+        speedMul: 0.95,
+        powerMul: 1.12,
+        color: [0.58, 0.48, 0.35]
+      },
+      {
+        id: 'wm-plasma',
+        label: 'Plasma repeater kit',
+        suitRole: 'siege',
+        abilities: ['Plasma lances', 'Overheat dump'],
+        kitPrimary: 'beam',
+        dmgMul: 1.25,
+        rangeMul: 1.12,
+        speedMul: 0.93,
+        powerMul: 1.18,
+        color: [0.35, 0.15, 0.55]
+      },
+      {
+        id: 'wm-astro',
+        label: 'Orbital bracer',
+        suitRole: 'swift',
+        abilities: ['Kinetic drop', 'Orbit assist jets'],
+        kitPrimary: 'repulsor',
+        rangeMul: 1.2,
+        flightAgilityMul: 1.1,
+        speedMul: 1.08,
+        powerMul: 1.1,
+        color: [0.52, 0.42, 0.35]
+      }
+    ],
+    defaultFormId: 'wm-classic',
+    aerial: 'tech'
   },
   {
     id: 'martian-strider',
@@ -223,8 +618,585 @@ export const HERO_ROSTER: HeroSpec[] = [
       { id: 'green', label: 'True form', speedMul: 1, powerMul: 1, color: [0.12, 0.55, 0.35] },
       { id: 'human', label: 'Detective guise', speedMul: 0.95, powerMul: 0.9, color: [0.25, 0.3, 0.35] }
     ],
-    defaultFormId: 'green'
-  }
+    defaultFormId: 'green',
+    aerial: 'native'
+  },
+  {
+    id: 'shade-knight',
+    codename: 'Shade Knight',
+    tagline: 'Gliding cape intercepts',
+    districtId: 'gotham-nights',
+    homeLabel: 'Clock Tower Loft',
+    powers: ['web', 'beam'],
+    flight: { cruiseKmh: 260, boostKmh: 1200, agility: 1.3, mass: 85 },
+    energy: { staminaMax: 100, regenPerSec: 26, superCooldownSec: 16, primaryCooldownSec: 0.18 },
+    smashRadius: 2.2,
+    forms: [
+      {
+        id: 'night-patrol',
+        label: 'Night patrol — charcoal',
+        suitRole: 'balanced',
+        abilities: ['Cape glide', 'Silent takedown'],
+        kitPrimary: 'web',
+        speedMul: 1,
+        powerMul: 1,
+        color: [0.1, 0.12, 0.16]
+      },
+      {
+        id: 'year-one',
+        label: 'Year One — earth cape',
+        suitRole: 'bulwark',
+        abilities: ['Smoke capsule', 'Armored cowl'],
+        kitPrimary: 'web',
+        resilienceMul: 1.2,
+        staminaRegenMul: 1.15,
+        dmgMul: 0.92,
+        speedMul: 0.98,
+        powerMul: 1.02,
+        color: [0.32, 0.22, 0.15]
+      },
+      {
+        id: 'arkham',
+        label: 'Arkham — matte black',
+        suitRole: 'siege',
+        abilities: ['Explosive gel', 'Concussion batarang'],
+        kitPrimary: 'beam',
+        dmgMul: 1.18,
+        superRadiusMul: 1.15,
+        speedMul: 0.98,
+        powerMul: 1.12,
+        color: [0.08, 0.1, 0.14]
+      },
+      {
+        id: 'detective',
+        label: 'Detective — earth tones',
+        suitRole: 'balanced',
+        abilities: ['Grapnel zip', 'Evidence scanner'],
+        kitPrimary: 'web',
+        rangeMul: 1.35,
+        speedMul: 1.02,
+        powerMul: 1,
+        color: [0.42, 0.35, 0.28]
+      },
+      {
+        id: 'batarang-barrage',
+        label: 'Animated — blue-gray',
+        suitRole: 'swift',
+        abilities: ['Batarang volley', 'Ricochet cones'],
+        kitPrimary: 'web',
+        primaryCdMul: 0.68,
+        flightAgilityMul: 1.12,
+        speedMul: 1.06,
+        powerMul: 1,
+        color: [0.12, 0.18, 0.35]
+      },
+      {
+        id: 'tactical-jet',
+        label: 'Tactical jetpack rig',
+        suitRole: 'swift',
+        abilities: ['Jet burst', 'Drop kick'],
+        kitPrimary: 'repulsor',
+        flightAgilityMul: 1.1,
+        speedMul: 1.12,
+        powerMul: 1.08,
+        color: [0.2, 0.22, 0.28]
+      },
+      {
+        id: 'beyond-burn',
+        label: 'Beyond — neon thrust',
+        suitRole: 'swift',
+        abilities: ['Rocket boots', 'Sonic batarang'],
+        kitPrimary: 'beam',
+        rangeMul: 1.12,
+        flightAgilityMul: 1.14,
+        speedMul: 1.14,
+        powerMul: 1.08,
+        color: [0.85, 0.12, 0.12]
+      },
+      {
+        id: 'hellbat-burn',
+        label: 'Inferno armor',
+        suitRole: 'siege',
+        abilities: ['Thermal vent', 'Shock knuckle'],
+        kitPrimary: 'beam',
+        dmgMul: 1.32,
+        superRadiusMul: 1.28,
+        speedMul: 1.02,
+        powerMul: 1.25,
+        color: [0.62, 0.1, 0.08]
+      },
+      {
+        id: 'steel-ward',
+        label: 'Steel mantle',
+        suitRole: 'bulwark',
+        abilities: ['Ceramic plates', 'Shock foam'],
+        kitPrimary: 'web',
+        resilienceMul: 1.28,
+        staminaRegenMul: 1.2,
+        dmgMul: 0.9,
+        speedMul: 0.94,
+        powerMul: 1.05,
+        color: [0.35, 0.38, 0.42]
+      },
+      {
+        id: 'grapple-lift',
+        label: 'Glider ascent rig',
+        suitRole: 'balanced',
+        abilities: ['Ascender rig', 'Line lifts'],
+        kitPrimary: 'web',
+        rangeMul: 1.22,
+        speedMul: 1.05,
+        powerMul: 1.02,
+        color: [0.15, 0.16, 0.2]
+      }
+    ],
+    defaultFormId: 'night-patrol',
+    aerial: 'glide'
+  },
+  {
+    id: 'amazon-vanguard',
+    codename: 'Amazon Vanguard',
+    tagline: 'Lasso shock slam',
+    districtId: 'watchtower-annex',
+    homeLabel: 'Diplomatic Wing',
+    powers: ['telekinesis'],
+    flight: { cruiseKmh: 340, boostKmh: 1650, agility: 1.05, mass: 92 },
+    energy: { staminaMax: 130, regenPerSec: 20, superCooldownSec: 20, primaryCooldownSec: 0.3 },
+    smashRadius: 3.5,
+    forms: [
+      { id: 'regalia', label: 'Regalia', speedMul: 1, powerMul: 1.1, color: [0.75, 0.12, 0.15] },
+      { id: 'stealth', label: 'Stealth', speedMul: 1.12, powerMul: 0.95, color: [0.15, 0.15, 0.2] }
+    ],
+    defaultFormId: 'regalia',
+    aerial: 'native'
+  },
+  {
+    id: 'velocity-streak',
+    codename: 'Velocity Streak',
+    tagline: 'Speed-force afterimage rush',
+    districtId: 'coast-city',
+    homeLabel: 'Forensics Annex',
+    powers: ['beam', 'synth'],
+    flight: { cruiseKmh: 520, boostKmh: 3400, agility: 1.45, mass: 68 },
+    energy: { staminaMax: 108, regenPerSec: 35, superCooldownSec: 13, primaryCooldownSec: 0.12 },
+    smashRadius: 2.8,
+    forms: [
+      { id: 'scarlet', label: 'Scarlet suit', speedMul: 1, powerMul: 1, color: [0.82, 0.12, 0.1] },
+      { id: 'lightning', label: 'Lightning trail', speedMul: 1.28, powerMul: 1.18, color: [0.95, 0.72, 0.15] }
+    ],
+    defaultFormId: 'scarlet',
+    aerial: 'native'
+  },
+  {
+    id: 'comet-surfer',
+    codename: 'Comet Surfer',
+    tagline: 'Board skim — cosmic ray',
+    districtId: 'watchtower-annex',
+    homeLabel: 'Orrery Deck',
+    powers: ['beam'],
+    flight: { cruiseKmh: 460, boostKmh: 2800, agility: 1.05, mass: 88 },
+    energy: { staminaMax: 135, regenPerSec: 19, superCooldownSec: 20, primaryCooldownSec: 0.3 },
+    smashRadius: 3.9,
+    forms: [
+      { id: 'silver', label: 'Silver shell', speedMul: 1, powerMul: 1.05, color: [0.72, 0.74, 0.78] },
+      { id: 'cosmic', label: 'Cosmic flare', speedMul: 1.25, powerMul: 1.35, color: [0.95, 0.45, 0.2] }
+    ],
+    defaultFormId: 'silver',
+    aerial: 'native'
+  },
+  {
+    id: 'nova-centurion',
+    codename: 'Nova Centurion',
+    tagline: 'Corps velocity burst',
+    districtId: 'watchtower-annex',
+    homeLabel: 'Corps Berth',
+    powers: ['beam', 'repulsor'],
+    flight: { cruiseKmh: 450, boostKmh: 2600, agility: 1.08, mass: 82 },
+    energy: { staminaMax: 120, regenPerSec: 24, superCooldownSec: 17, primaryCooldownSec: 0.24 },
+    smashRadius: 3.5,
+    forms: [{ id: 'helmet', label: 'Full helm', speedMul: 1, powerMul: 1, color: [0.18, 0.22, 0.75] }],
+    defaultFormId: 'helmet',
+    aerial: 'native'
+  },
+  {
+    id: 'solar-envoy',
+    codename: 'Solar Envoy',
+    tagline: 'Cousin sun-line blast',
+    districtId: 'metropolis',
+    homeLabel: 'Envoy Spire',
+    powers: ['beam'],
+    flight: { cruiseKmh: 400, boostKmh: 2200, agility: 1.05, mass: 80 },
+    energy: { staminaMax: 118, regenPerSec: 20, superCooldownSec: 19, primaryCooldownSec: 0.3 },
+    smashRadius: 3.6,
+    forms: [
+      { id: 'cape', label: 'Cape line', speedMul: 1, powerMul: 1, color: [0.2, 0.28, 0.72] },
+      { id: 'flare', label: 'Red flare', speedMul: 1.22, powerMul: 1.28, color: [0.85, 0.2, 0.15] }
+    ],
+    defaultFormId: 'cape',
+    aerial: 'native'
+  },
+  {
+    id: 'gamma-titan',
+    codename: 'Gamma Titan',
+    tagline: 'Leap-smash gamma shockwave',
+    districtId: 'watchtower-annex',
+    homeLabel: 'Research Wing',
+    powers: ['synth', 'beam'],
+    flight: { cruiseKmh: 300, boostKmh: 1650, agility: 0.65, mass: 175 },
+    energy: { staminaMax: 155, regenPerSec: 28, superCooldownSec: 20, primaryCooldownSec: 0.35 },
+    smashRadius: 4.8,
+    forms: [
+      { id: 'jade', label: 'Jade giant', speedMul: 1, powerMul: 1.15, color: [0.22, 0.62, 0.28] },
+      { id: 'worldbreaker', label: 'Worldbreaker', speedMul: 0.88, powerMul: 1.55, color: [0.35, 0.48, 0.22] }
+    ],
+    defaultFormId: 'jade',
+    aerial: 'native'
+  },
+  {
+    id: 'flame-jet',
+    codename: 'Flame Jet',
+    tagline: 'Nova flame streak',
+    districtId: 'stark-nexus',
+    homeLabel: 'Baxter Loft',
+    powers: ['beam'],
+    flight: { cruiseKmh: 380, boostKmh: 2100, agility: 1.15, mass: 74 },
+    energy: { staminaMax: 112, regenPerSec: 26, superCooldownSec: 15, primaryCooldownSec: 0.2 },
+    smashRadius: 3.0,
+    forms: [
+      { id: 'blaze', label: 'Blaze', speedMul: 1, powerMul: 1, color: [0.92, 0.35, 0.08] },
+      { id: 'plasma', label: 'Plasma shell', speedMul: 1.18, powerMul: 1.25, color: [0.98, 0.55, 0.15] }
+    ],
+    defaultFormId: 'blaze',
+    aerial: 'native'
+  },
+  {
+    id: 'wing-captain',
+    codename: 'Wing Captain',
+    tagline: 'Exo-wing interceptor',
+    districtId: 'stark-nexus',
+    homeLabel: 'Hangar Nest',
+    powers: ['repulsor'],
+    flight: { cruiseKmh: 340, boostKmh: 1950, agility: 1.2, mass: 98 },
+    energy: { staminaMax: 105, regenPerSec: 24, superCooldownSec: 16, primaryCooldownSec: 0.22 },
+    smashRadius: 2.8,
+    forms: [
+      { id: 'wings', label: 'Carbon wings', speedMul: 1, powerMul: 1, color: [0.62, 0.42, 0.28] },
+      { id: 'redwing', label: 'Redwing assist', speedMul: 1.12, powerMul: 1.05, color: [0.72, 0.15, 0.12] }
+    ],
+    defaultFormId: 'wings',
+    aerial: 'tech'
+  },
+  {
+    id: 'thunder-zealot',
+    codename: 'Thunder Zealot',
+    tagline: 'Living lightning bolt',
+    districtId: 'coast-city',
+    homeLabel: 'Rock of Eternity Steps',
+    powers: ['thunder'],
+    flight: { cruiseKmh: 370, boostKmh: 2000, agility: 0.9, mass: 110 },
+    energy: { staminaMax: 138, regenPerSec: 18, superCooldownSec: 21, primaryCooldownSec: 0.38 },
+    smashRadius: 4.0,
+    forms: [
+      { id: 'champion', label: 'Champion', speedMul: 1, powerMul: 1.1, color: [0.85, 0.18, 0.12] },
+      { id: 'mythic', label: 'Mythic', speedMul: 1.08, powerMul: 1.3, color: [0.95, 0.82, 0.25] }
+    ],
+    defaultFormId: 'champion',
+    aerial: 'native'
+  },
+  {
+    id: 'storm-caller',
+    codename: 'Storm Caller',
+    tagline: 'Tempest jetstream rider',
+    districtId: 'watchtower-annex',
+    homeLabel: 'Weather Dome',
+    powers: ['thunder', 'beam'],
+    flight: { cruiseKmh: 400, boostKmh: 2300, agility: 1.08, mass: 82 },
+    energy: { staminaMax: 125, regenPerSec: 24, superCooldownSec: 17, primaryCooldownSec: 0.26 },
+    smashRadius: 3.5,
+    forms: [
+      { id: 'ororo', label: 'White queen', speedMul: 1, powerMul: 1, color: [0.95, 0.95, 0.98] },
+      { id: 'goddess', label: 'Goddess mode', speedMul: 1.15, powerMul: 1.35, color: [0.12, 0.15, 0.22] }
+    ],
+    defaultFormId: 'ororo',
+    aerial: 'native'
+  },
+  {
+    id: 'sorcerer-apex',
+    codename: 'Sorcerer Apex',
+    tagline: 'Crimson mantle levitation',
+    districtId: 'gotham-nights',
+    homeLabel: 'Sanctum Loft',
+    powers: ['telekinesis', 'beam'],
+    flight: { cruiseKmh: 370, boostKmh: 2100, agility: 1.05, mass: 86 },
+    energy: { staminaMax: 140, regenPerSec: 22, superCooldownSec: 18, primaryCooldownSec: 0.28 },
+    smashRadius: 3.3,
+    forms: [
+      { id: 'cloak', label: 'Cloak of levitation', speedMul: 1, powerMul: 1.05, color: [0.15, 0.12, 0.18] },
+      { id: 'time', label: 'Time-split', speedMul: 1.12, powerMul: 1.25, color: [0.75, 0.12, 0.12] }
+    ],
+    defaultFormId: 'cloak',
+    aerial: 'native'
+  },
+  {
+    id: 'sky-tyrant',
+    codename: 'Sky Tyrant',
+    tagline: 'Nth-wing shock ram',
+    districtId: 'asgard-embassy',
+    homeLabel: 'Reincarnation Spire',
+    powers: ['beam'],
+    flight: { cruiseKmh: 390, boostKmh: 2050, agility: 1.0, mass: 95 },
+    energy: { staminaMax: 118, regenPerSec: 20, superCooldownSec: 19, primaryCooldownSec: 0.3 },
+    smashRadius: 3.4,
+    forms: [
+      { id: 'bronze', label: 'Bronze harness', speedMul: 1, powerMul: 1, color: [0.55, 0.38, 0.18] },
+      { id: 'hawk', label: 'Predator dive', speedMul: 1.18, powerMul: 1.15, color: [0.72, 0.52, 0.22] }
+    ],
+    defaultFormId: 'bronze',
+    aerial: 'native'
+  },
+  {
+    id: 'phoenix-ember',
+    codename: 'Phoenix Ember',
+    tagline: 'Telekinetic cosmic flare',
+    districtId: 'watchtower-annex',
+    homeLabel: 'X-Jet Pad',
+    powers: ['telekinesis', 'beam'],
+    flight: { cruiseKmh: 420, boostKmh: 2500, agility: 1.02, mass: 84 },
+    energy: { staminaMax: 132, regenPerSec: 23, superCooldownSec: 16, primaryCooldownSec: 0.24 },
+    smashRadius: 3.6,
+    forms: [
+      { id: 'jean', label: 'Resonance', speedMul: 1, powerMul: 1, color: [0.18, 0.22, 0.65] },
+      { id: 'phoenix', label: 'Phoenix', speedMul: 1.22, powerMul: 1.45, color: [0.92, 0.42, 0.12] }
+    ],
+    defaultFormId: 'jean',
+    aerial: 'native'
+  },
+  {
+    id: 'wing-archon',
+    codename: 'Wing Archon',
+    tagline: 'Metal pinion dive',
+    districtId: 'stark-nexus',
+    homeLabel: 'Mansion Aviary',
+    powers: ['beam', 'optic'],
+    flight: { cruiseKmh: 410, boostKmh: 2200, agility: 1.18, mass: 78 },
+    energy: { staminaMax: 115, regenPerSec: 26, superCooldownSec: 15, primaryCooldownSec: 0.2 },
+    smashRadius: 3.0,
+    forms: [
+      { id: 'feather', label: 'Feathered', speedMul: 1.05, powerMul: 0.95, color: [0.92, 0.88, 0.75] },
+      { id: 'metal', label: 'Metal wings', speedMul: 1.1, powerMul: 1.2, color: [0.55, 0.58, 0.62] }
+    ],
+    defaultFormId: 'feather',
+    aerial: 'native'
+  },
+  {
+    id: 'golden-sentry',
+    codename: 'Golden Sentry',
+    tagline: 'Void-touched golden zenith',
+    districtId: 'watchtower-annex',
+    homeLabel: 'Helicarrier Crown',
+    powers: ['beam', 'telekinesis'],
+    flight: { cruiseKmh: 440, boostKmh: 2550, agility: 1.05, mass: 90 },
+    energy: { staminaMax: 148, regenPerSec: 26, superCooldownSec: 15, primaryCooldownSec: 0.28 },
+    smashRadius: 4.2,
+    forms: [
+      { id: 'hero', label: 'Golden hero', speedMul: 1, powerMul: 1.2, color: [0.92, 0.82, 0.35] },
+      { id: 'void', label: 'Void whisper', speedMul: 1.15, powerMul: 1.45, color: [0.12, 0.1, 0.14] }
+    ],
+    defaultFormId: 'hero',
+    aerial: 'native'
+  },
+  {
+    id: 'magnet-sovereign',
+    codename: 'Magnet Sovereign',
+    tagline: 'Magnetic field supremacy',
+    districtId: 'sokovia-memorial',
+    homeLabel: 'Sentinel Memorial',
+    powers: ['telekinesis', 'beam'],
+    flight: { cruiseKmh: 360, boostKmh: 2000, agility: 0.95, mass: 100 },
+    energy: { staminaMax: 130, regenPerSec: 22, superCooldownSec: 18, primaryCooldownSec: 0.3 },
+    smashRadius: 3.7,
+    forms: [
+      { id: 'helmet', label: 'Crimson helmet', speedMul: 1, powerMul: 1.1, color: [0.72, 0.12, 0.15] },
+      { id: 'master', label: 'Master of magnetism', speedMul: 0.95, powerMul: 1.3, color: [0.55, 0.15, 0.65] }
+    ],
+    defaultFormId: 'helmet',
+    aerial: 'magnet'
+  },
+  {
+    id: 'frost-monarch',
+    codename: 'Frost Monarch',
+    tagline: 'Diamond queen — telekinetic hover',
+    districtId: 'watchtower-annex',
+    homeLabel: 'Ice Spire Annex',
+    powers: ['telekinesis', 'beam'],
+    flight: { cruiseKmh: 360, boostKmh: 2050, agility: 1.02, mass: 88 },
+    energy: { staminaMax: 132, regenPerSec: 23, superCooldownSec: 17, primaryCooldownSec: 0.27 },
+    smashRadius: 3.4,
+    forms: [
+      { id: 'diamond', label: 'Diamond form', speedMul: 0.96, powerMul: 1.28, color: [0.82, 0.92, 0.98] },
+      { id: 'queen', label: 'White queen', speedMul: 1.08, powerMul: 1.12, color: [0.95, 0.95, 0.98] }
+    ],
+    defaultFormId: 'diamond',
+    aerial: 'native'
+  },
+  {
+    id: 'cable-echo',
+    codename: 'Cable Echo',
+    tagline: 'TK bubble hover — future soldier',
+    districtId: 'sokovia-memorial',
+    homeLabel: 'Chrono Bunker',
+    powers: ['beam', 'telekinesis'],
+    flight: { cruiseKmh: 340, boostKmh: 1980, agility: 0.92, mass: 108 },
+    energy: { staminaMax: 138, regenPerSec: 21, superCooldownSec: 19, primaryCooldownSec: 0.3 },
+    smashRadius: 3.6,
+    forms: [
+      { id: 'field', label: 'TK field', speedMul: 1, powerMul: 1.15, color: [0.22, 0.35, 0.55] },
+      { id: 'soldier', label: 'Future rig', speedMul: 0.94, powerMul: 1.25, color: [0.35, 0.28, 0.22] }
+    ],
+    defaultFormId: 'field',
+    aerial: 'native'
+  },
+  {
+    id: 'banshee-wail',
+    codename: 'Banshee Wail',
+    tagline: 'Sonic scream glide — classic X-flight',
+    districtId: 'gotham-nights',
+    homeLabel: 'Pipe Loft',
+    powers: ['thunder', 'beam'],
+    flight: { cruiseKmh: 380, boostKmh: 2200, agility: 1.1, mass: 84 },
+    energy: { staminaMax: 128, regenPerSec: 24, superCooldownSec: 16, primaryCooldownSec: 0.25 },
+    smashRadius: 3.2,
+    forms: [
+      { id: 'scream', label: 'Sonic glide', speedMul: 1.1, powerMul: 1.05, color: [0.18, 0.55, 0.42] },
+      { id: 'echo', label: 'Resonance burst', speedMul: 1.02, powerMul: 1.22, color: [0.12, 0.38, 0.32] }
+    ],
+    defaultFormId: 'scream',
+    aerial: 'native'
+  },
+  {
+    id: 'latverian-sovereign',
+    codename: 'Latverian Sovereign',
+    tagline: 'Only dual-role legend — hero or villain',
+    districtId: 'watchtower-annex',
+    homeLabel: 'Castle Latveria Aerie',
+    powers: ['repulsor', 'thunder'],
+    flight: { cruiseKmh: 340, boostKmh: 1900, agility: 0.88, mass: 115 },
+    energy: { staminaMax: 125, regenPerSec: 22, superCooldownSec: 18, primaryCooldownSec: 0.28 },
+    smashRadius: 3.6,
+    forms: [
+      {
+        id: 'doom-hero',
+        label: 'Sovereign — protector',
+        suitRole: 'balanced',
+        abilities: ['Latverian panel', 'Repulsor scepter'],
+        kitPrimary: 'repulsor',
+        speedMul: 1,
+        powerMul: 1.08,
+        color: [0.45, 0.48, 0.52]
+      },
+      {
+        id: 'doom-villain',
+        label: 'Monarch — iron fist',
+        suitRole: 'siege',
+        abilities: ['Arcane bolt', 'Orbital strike'],
+        kitPrimary: 'thunder',
+        dmgMul: 1.22,
+        superRadiusMul: 1.2,
+        speedMul: 0.94,
+        powerMul: 1.22,
+        color: [0.38, 0.12, 0.15]
+      },
+      {
+        id: 'doom-god-emperor',
+        label: 'God Emperor — Battleworld',
+        suitRole: 'siege',
+        abilities: ['Reality lattice', 'Throne world-breaker'],
+        kitPrimary: 'thunder',
+        dmgMul: 1.38,
+        superRadiusMul: 1.45,
+        speedMul: 0.92,
+        powerMul: 1.42,
+        color: [0.78, 0.62, 0.18]
+      }
+    ],
+    defaultFormId: 'doom-hero',
+    aerial: 'tech'
+  },
+  {
+    id: 'cell-mimic',
+    codename: 'Cell Mimic',
+    tagline: 'Absorb foes — villain runway only',
+    districtId: 'ki-plateau',
+    homeLabel: 'Genetics Crater',
+    powers: ['ki', 'beam'],
+    flight: { cruiseKmh: 450, boostKmh: 2600, agility: 1.05, mass: 92 },
+    energy: { staminaMax: 140, regenPerSec: 24, superCooldownSec: 17, primaryCooldownSec: 0.24 },
+    smashRadius: 3.9,
+    forms: [
+      {
+        id: 'imperfect',
+        label: 'Imperfect form',
+        suitRole: 'balanced',
+        abilities: ['Tail stinger', 'Absorption cells'],
+        kitPrimary: 'ki',
+        speedMul: 1,
+        powerMul: 1.05,
+        color: [0.35, 0.72, 0.28]
+      },
+      {
+        id: 'perfect',
+        label: 'Perfect absorption',
+        suitRole: 'siege',
+        abilities: ['Solar kamehamecho', 'Genetic copy'],
+        kitPrimary: 'beam',
+        dmgMul: 1.2,
+        speedMul: 0.98,
+        powerMul: 1.25,
+        color: [0.92, 0.55, 0.22]
+      }
+    ],
+    defaultFormId: 'imperfect',
+    aerial: 'ki'
+  },
+  {
+    id: 'spirit-buu',
+    codename: 'Spirit Buu',
+    tagline: 'Pink catastrophe — absorb anyone',
+    districtId: 'ki-plateau',
+    homeLabel: 'Candy Spire',
+    powers: ['ki'],
+    flight: { cruiseKmh: 380, boostKmh: 2100, agility: 0.92, mass: 105 },
+    energy: { staminaMax: 150, regenPerSec: 26, superCooldownSec: 16, primaryCooldownSec: 0.2 },
+    smashRadius: 4.1,
+    forms: [
+      {
+        id: 'fat',
+        label: 'Playful pink',
+        suitRole: 'bulwark',
+        abilities: ['Candy beam', 'Stretch slap'],
+        kitPrimary: 'ki',
+        resilienceMul: 1.15,
+        speedMul: 0.95,
+        powerMul: 1.08,
+        color: [0.95, 0.45, 0.82]
+      },
+      {
+        id: 'evil',
+        label: 'Pure malice',
+        suitRole: 'siege',
+        abilities: ['Absorption mist', 'Planet ball'],
+        kitPrimary: 'ki',
+        dmgMul: 1.25,
+        coneMul: 1.3,
+        speedMul: 1.02,
+        powerMul: 1.22,
+        color: [0.85, 0.18, 0.55]
+      }
+    ],
+    defaultFormId: 'fat',
+    aerial: 'ki'
+  },
+  ...buildExpansionHeroes()
 ];
 
 export function getHero(id: string): HeroSpec | undefined {

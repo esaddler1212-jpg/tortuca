@@ -11,10 +11,11 @@ interface Props {
   onToggle: (day: string) => void;
   onShuffle: (day: string) => void;
   onNote: (day: string, note: string) => void;
+  onOpenWorkshops?: () => void;
 }
 
 /** Today's creative spark: a mindset to carry and one small thing to make. */
-export function SparkCard({ plan, today, onToggle, onShuffle, onNote }: Props) {
+export function SparkCard({ plan, today, onToggle, onShuffle, onNote, onOpenWorkshops }: Props) {
   const spark = todaySpark(plan, today);
   const done = sparkDone(plan, today);
   const streak = sparkStreak(plan, today);
@@ -66,6 +67,15 @@ export function SparkCard({ plan, today, onToggle, onShuffle, onNote }: Props) {
           <StickyNote className="h-3.5 w-3.5" aria-hidden /> Note
         </button>
         <PromptButton label="Riff" build={() => promptForSpark(spark, THEME_LABEL[spark.theme])} />
+        {onOpenWorkshops ? (
+          <button
+            type="button"
+            className="inline-flex min-h-[40px] items-center gap-1 rounded-md border border-alfred-border/60 px-3 py-1.5 text-xs font-mono uppercase tracking-wider text-alfred-mist hover:text-alfred-gold"
+            onClick={onOpenWorkshops}
+          >
+            Workshops
+          </button>
+        ) : null}
       </div>
 
       {noteOpen && (

@@ -12,6 +12,13 @@ import {
 import { formatDelegateAgo, readLastDelegate, teamEfficiencySummary, readDelegateHistory, type IrisDelegateLog } from "../../../shared/irisTeamActivity";
 import type { WeeklyAuditReport } from "../../../shared/weeklyAuditor";
 import { useWeeklyAudit } from "../../hooks/useWeeklyAudit";
+import { gameFinishStatus, gameFinishTeamSummary } from "../../lib/gameFinishContext";
+import {
+  GAME_STUDIO_AGENTS,
+  formatGameFinishPercent,
+  gameFinishProgress,
+  sliceById,
+} from "../../../shared/gameFinishProgram";
 
 interface Props {
   timeZone: string;
@@ -89,6 +96,8 @@ export function TeamPanel({ timeZone, onOpenModule, onAskSpecialist }: Props) {
 
       <WeeklyAuditorCard report={weeklyAudit} loading={weeklyLoading} timeZone={timeZone} />
 
+      <GameStudioCard />
+
       {last ? (
         <div className="rounded-md border border-cyan-400/25 bg-black/35 px-3 py-2">
           <p className="font-mono text-[10px] uppercase tracking-wider text-cyan-400/60">Last delegate</p>
@@ -132,6 +141,52 @@ export function TeamPanel({ timeZone, onOpenModule, onAskSpecialist }: Props) {
         </ul>
       </div>
     </section>
+  );
+}
+
+function GameStudioCard() {
+  const status = gameFinishStatus();
+  const reports = status.reports.slice(0, 3);
+  const prog = gameFinishProgress(status);
+  return (
+    <div className="rounded-md border border-violet-400/25 bg-violet-950/20 px-3 py-2 space-y-2">
+      <p className="font-mono text-[10px] uppercase tracking-wider text-violet-300/70">Game studio → Iris</p>
+      <p className="text-xs text-violet-50/90">{gameFinishTeamSummary()}</p>
+      <div className="grid gap-1.5 text-[11px] text-violet-100/85" aria-label="Finish program progress">
+        <p>
+          <span className="text-violet-300/80">Overall</span> {prog.program.percent}% ({prog.program.done}/{prog.program.total})
+        </p>
+        <p>
+          <span className="text-violet-300/80">Nightshift</span> {formatGameFinishPercent(prog.nightshift)}
+        </p>
+        <p>
+          <span className="text-violet-300/80">Skyring</span> {formatGameFinishPercent(prog.skyring)}
+        </p>
+      </div>
+      <ul className="grid gap-2 sm:grid-cols-2">
+        {GAME_STUDIO_AGENTS.map((a) => {
+          const activeId = status.activeSlice?.[a.id];
+          const slice = activeId ? sliceById(activeId) : undefined;
+          return (
+            <li key={a.id} className="rounded border border-violet-400/15 bg-black/25 px-2 py-1.5 text-xs">
+              <p className="font-mono text-violet-200">{a.name}</p>
+              <p className="text-alfred-mist line-clamp-2">{slice ? `Day ${slice.day}: ${slice.title}` : "—"}</p>
+            </li>
+          );
+        })}
+      </ul>
+      {reports.length ? (
+        <ul className="text-[11px] text-alfred-mist space-y-1 border-t border-violet-400/10 pt-2">
+          {reports.map((r) => (
+            <li key={`${r.at}-${r.sliceId}`} className="line-clamp-2">
+              <span className="text-violet-200/90">{r.agent}</span> · {r.summary}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-[11px] text-alfred-mist">Cloud agents log slices with npm run game-finish:report</p>
+      )}
+    </div>
   );
 }
 

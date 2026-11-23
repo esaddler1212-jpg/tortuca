@@ -1,6 +1,6 @@
 /** Procedural night cruise radio — no licensed audio files. */
 
-import { loadSettings, saveSettings, type GameSettings } from './game-settings';
+import { loadSettings, saveSettings } from './game-settings';
 import type { DistrictId } from './world-config';
 
 export type MusicStationId = 'off' | 'ambient' | 'synth' | 'lofi' | 'pulse';

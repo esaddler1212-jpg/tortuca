@@ -1,6 +1,10 @@
 export type QualityTier = 'low' | 'medium' | 'high';
 
+import { qualityOverride } from './game-settings';
+
 export function detectQualityTier(): QualityTier {
+  const forced = qualityOverride();
+  if (forced) return forced;
   const cores = navigator.hardwareConcurrency ?? 4;
   const mem = (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 4;
   const coarse = window.matchMedia('(pointer: coarse)').matches;

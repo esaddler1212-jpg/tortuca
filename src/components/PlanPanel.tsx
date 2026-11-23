@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactElement } from "react";
+import { useEffect, useMemo, useState, type ReactElement } from "react";
 import { Bot, Check, Flag, Pencil, Plus, Target, Trash2, Undo2, Wallet, X } from "lucide-react";
 import type { CalendarEvent } from "../types";
 import type { Area, PlanTask, YearGoal } from "../../shared/planData";
@@ -22,8 +22,10 @@ import {
 import { AI_TAG_LABEL, promptForEvent, promptForTask } from "../lib/promptGenerator";
 import { upcomingEvents } from "../lib/spokenBrief";
 import { PromptButton } from "./PromptButton";
+import { WorkshopsPanel } from "./WorkshopsPanel";
 
-type Tab = "week" | "month" | "year";
+export type PlanTab = "week" | "month" | "year" | "workshops";
+type Tab = PlanTab;
 
 const AREAS: Area[] = ["Tortuga", "North Star", "Easy Supply", "2EASY", "ECS", "Personal"];
 
@@ -150,6 +152,9 @@ function monthName(month: string): string {
 export function PlanPanel(props: Props) {
   const { plan, today, mode, timeZone, now } = props;
   const [tab, setTab] = useState<Tab>(props.initialTab ?? "week");
+  useEffect(() => {
+    if (props.initialTab) setTab(props.initialTab);
+  }, [props.initialTab]);
   const goals = allGoals(plan);
   const goalById = useMemo(() => new Map(goals.map((g) => [g.id, g])), [goals]);
   const year = Number(today.slice(0, 4));
@@ -171,14 +176,14 @@ export function PlanPanel(props: Props) {
         </span>
       </div>
 
-      <div className="mb-4 grid grid-cols-3 gap-1 rounded-full border border-alfred-border/60 p-1" role="tablist">
-        {(["week", "month", "year"] as Tab[]).map((t) => (
+      <div className="mb-4 grid grid-cols-4 gap-1 rounded-full border border-alfred-border/60 p-1" role="tablist">
+        {(["week", "month", "year", "workshops"] as Tab[]).map((t) => (
           <button
             key={t}
             type="button"
             role="tab"
             aria-selected={tab === t}
-            className={`rounded-full py-1.5 text-xs font-mono uppercase tracking-wider ${tab === t ? "bg-alfred-gold/20 text-alfred-gold" : "text-alfred-mist"}`}
+            className={`min-h-[36px] rounded-full py-1.5 text-[10px] sm:text-xs font-mono uppercase tracking-wider ${tab === t ? "bg-alfred-gold/20 text-alfred-gold" : "text-alfred-mist"}`}
             onClick={() => setTab(t)}
           >
             {t}
@@ -206,6 +211,7 @@ export function PlanPanel(props: Props) {
           mode={mode}
         />
       )}
+      {tab === "workshops" && <WorkshopsPanel />}
     </section>
   );
 }

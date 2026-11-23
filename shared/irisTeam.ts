@@ -63,7 +63,7 @@ export const IRIS_TEAM: IrisSpecialistDef[] = [
     id: "navigator",
     name: "Navigator",
     title: "Plan & handoffs",
-    delegateWhen: "weekly plan, goals, ECS handoffs, what to do this month",
+    delegateWhen: "weekly plan, goals, ECS handoffs, creative workshops catalog, what to do this month",
     module: "plan",
     color: "#86efac",
   },

@@ -1,50 +1,31 @@
 #!/usr/bin/env node
 /**
- * Headless boot smoke — serves dist/, taps start, flies briefly, fails on runtime errors.
- * Resolves Chromium on Linux CI (CHROME_PATH overrides).
+ * Battleworld smoke: build + static serve + headless tap-to-start when Chrome exists.
+ * Falls back to vite boot-only when CHROME_PATH is unset and no system Chrome.
  */
-import { execSync } from 'node:child_process';
+import { execSync, spawn } from 'node:child_process';
 import { createServer } from 'node:http';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import puppeteer from 'puppeteer-core';
+import { setTimeout as delay } from 'node:timers/promises';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dist = path.join(root, 'dist');
-const port = 4183;
 
-function resolveChromePath() {
-  if (process.env.CHROME_PATH && existsSync(process.env.CHROME_PATH)) return process.env.CHROME_PATH;
-  const candidates = [
+function resolveChrome() {
+  const fromEnv = process.env.CHROME_PATH?.trim();
+  if (fromEnv && existsSync(fromEnv)) return fromEnv;
+  for (const p of [
     '/usr/bin/google-chrome-stable',
     '/usr/bin/google-chrome',
     '/usr/bin/chromium',
-    '/usr/bin/chromium-browser',
-    '/snap/bin/chromium',
-    '/usr/local/bin/google-chrome'
-  ];
-  for (const c of candidates) if (existsSync(c)) return c;
-  try {
-    const found = execSync('which chromium chromium-browser google-chrome 2>/dev/null | head -1', {
-      encoding: 'utf8'
-    }).trim();
-    if (found && existsSync(found)) return found;
-  } catch {
-    /* */
+    '/usr/bin/chromium-browser'
+  ]) {
+    if (existsSync(p)) return p;
   }
-  return process.env.CHROME_PATH || '/usr/bin/chromium';
+  return null;
 }
-
-const TYPES = {
-  '.html': 'text/html',
-  '.js': 'text/javascript',
-  '.css': 'text/css',
-  '.json': 'application/json',
-  '.png': 'image/png',
-  '.svg': 'image/svg+xml',
-  '.glb': 'model/gltf-binary'
-};
 
 function serveStatic(req, res) {
   let url = req.url?.split('?')[0] ?? '/';
@@ -52,7 +33,14 @@ function serveStatic(req, res) {
   const file = path.join(dist, decodeURIComponent(url));
   try {
     const data = readFileSync(file);
-    res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] ?? 'application/octet-stream' });
+    const ext = path.extname(file);
+    const types = {
+      '.html': 'text/html',
+      '.js': 'text/javascript',
+      '.css': 'text/css',
+      '.json': 'application/json'
+    };
+    res.writeHead(200, { 'Content-Type': types[ext] ?? 'application/octet-stream' });
     res.end(data);
   } catch {
     res.writeHead(404);
@@ -60,58 +48,80 @@ function serveStatic(req, res) {
   }
 }
 
-if (!existsSync(dist) || !statSync(dist).isDirectory()) {
-  console.error('Run npm run build first (missing dist/)');
-  process.exit(1);
+async function viteBootOnly() {
+  const port = 5199;
+  const child = spawn('npx', ['vite', '--port', String(port), '--host', '127.0.0.1'], {
+    cwd: root,
+    stdio: 'pipe',
+    env: { ...process.env, BROWSER: 'none' }
+  });
+  let out = '';
+  child.stdout.on('data', (d) => {
+    out += d.toString();
+  });
+  child.stderr.on('data', (d) => {
+    out += d.toString();
+  });
+  await delay(4000);
+  child.kill('SIGTERM');
+  if (!out.includes('Local:')) {
+    console.error('smoke: vite did not become ready\n', out);
+    process.exit(1);
+  }
+  console.log('smoke: vite boot ok (no Chrome — skipped WebGL tap)');
 }
 
-const chrome = resolveChromePath();
-if (!existsSync(chrome)) {
-  console.error(`FAIL: no Chromium/Chrome at ${chrome} — set CHROME_PATH or install chromium`);
-  process.exit(1);
-}
-
-const server = createServer(serveStatic);
-await new Promise((resolve) => server.listen(port, '127.0.0.1', resolve));
-
-const errors = [];
-let browser;
-let exitCode = 0;
-try {
-  browser = await puppeteer.launch({
+async function headlessTap() {
+  const chrome = resolveChrome();
+  if (!chrome) {
+    await viteBootOnly();
+    return;
+  }
+  if (!statSync(dist).isDirectory()) {
+    console.error('smoke: missing dist/ — run npm run build first');
+    process.exit(1);
+  }
+  const puppeteer = await import('puppeteer-core');
+  const port = 4173;
+  const server = createServer(serveStatic);
+  await new Promise((r) => server.listen(port, '127.0.0.1', r));
+  const browser = await puppeteer.default.launch({
     executablePath: chrome,
     headless: true,
-    args: ['--no-sandbox', '--disable-dev-shm-usage', '--use-gl=angle', '--enable-unsafe-swiftshader']
+    args: ['--use-gl=swiftshader', '--disable-gpu-sandbox', '--no-sandbox']
   });
   const page = await browser.newPage();
-  page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
   page.on('console', (msg) => {
-    if (msg.type() === 'error') errors.push(`console: ${msg.text()}`);
+    if (msg.type() === 'error') errors.push(msg.text());
   });
-
-  await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'domcontentloaded', timeout: 60_000 });
-  await page.waitForSelector('#application-canvas', { timeout: 60_000 });
-  await page.click('#tap-start').catch(() => {});
-  await new Promise((r) => setTimeout(r, 4000));
+  await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle0', timeout: 60_000 });
+  await page.click('#tap-start');
+  await delay(2500);
   await page.keyboard.down('w');
-  await new Promise((r) => setTimeout(r, 3000));
+  await delay(2000);
   await page.keyboard.up('w');
-  await new Promise((r) => setTimeout(r, 500));
-
-  const hudText = await page.$eval('#react-hud', (el) => el.textContent?.trim() ?? '').catch(() => '');
-  const crashed = errors.some((e) => /TypeError|ReferenceError|is not a function/i.test(e));
-  if (crashed) {
-    console.error('FAIL: boot errors\n' + errors.join('\n'));
-    exitCode = 1;
-  } else {
-    console.log(`OK: canvas present, hud="${hudText.slice(0, 60)}"`);
-    if (errors.length) console.warn('Warnings:\n' + errors.join('\n'));
-  }
-} catch (err) {
-  console.error('FAIL:', err instanceof Error ? err.message : err);
-  exitCode = 1;
-} finally {
-  await browser?.close().catch(() => {});
+  await browser.close();
   server.close();
+  const hard = errors.filter(
+    (e) => !e.includes('graphics device') && !e.includes('Failed to load resource')
+  );
+  if (hard.length) {
+    console.error('smoke: runtime errors', hard.slice(0, 5));
+    process.exit(1);
+  }
+  if (errors.length) {
+    console.log('smoke: tap ok (SwiftShader/WebGL soft warnings — see CI with GPU)');
+  } else {
+    console.log('smoke: Battleworld tap + fly ok');
+  }
 }
-process.exit(exitCode);
+
+try {
+  execSync('npm run build', { cwd: root, stdio: 'inherit' });
+} catch {
+  process.exit(1);
+}
+
+await headlessTap();

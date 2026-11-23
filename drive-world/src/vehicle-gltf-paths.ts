@@ -42,6 +42,14 @@ export const VEHICLE_GLB: Record<string, string> = {
   'craft-bay-wedge': `${KENNEY}/sedan-sports.glb`,
   'craft-night-lift': `${KENNEY}/suv.glb`,
   'craft-street-spike': `${KENNEY}/race.glb`,
+  'tokyo-drift-monarch': `${KENNEY}/race.glb`,
+  'tokyo-teal-phantom': `${KENNEY}/sedan-sports.glb`,
+  'tokyo-kabuki-z': `${KENNEY}/hatchback-sports.glb`,
+  'tokyo-gold-linx': `${KENNEY}/sedan-sports.glb`,
+  'tokyo-neon-evo': `${KENNEY}/race-future.glb`,
+  'tokyo-c1-boost': `${KENNEY}/race.glb`,
+  'tokyo-family-van': `${KENNEY}/van.glb`,
+  'tokyo-shuto-runner': `${KENNEY}/race.glb`,
   default: `${KENNEY}/sedan.glb`
 };
 

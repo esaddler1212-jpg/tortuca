@@ -1,4 +1,4 @@
-import { DISTRICT_LABELS, LANDMARKS } from './landmark-registry';
+import { DISTRICT_LABELS } from './landmark-registry';
 import { missionBannerText } from './game-missions';
 import { GARAGE_STARTER_IDS, VEHICLE_CATALOG } from './vehicle-catalog';
 import { COLLECTIBLES } from './world-extras';

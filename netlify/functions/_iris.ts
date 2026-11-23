@@ -9,6 +9,9 @@ import {
   IRIS_MAX_TODO_TITLE_CHARS,
   safeFact,
 } from "../../shared/agentGuardrails";
+import type { TierAToolBatch } from "./_tierAApply";
+import { emptyTierABatch } from "./_tierAApply";
+import type { CalendarProposalKind } from "../../shared/tierAOps";
 
 /** Iris's brain: persona, tools, and one conversational turn (with web search). */
 
@@ -32,7 +35,7 @@ You are speaking out loud through a phone or computer speaker, in a back-and-for
 - The notes also show E's inbox (senders and subjects only, not the email text), recent memos, money this month, gym week and shopping list. Answer from them ("anything from Jordan?", "what's on my list?", "how much did I spend on food?"). School and family emails and memos are withheld on purpose: if asked, say there are some and E can check them in the Inbox or the Family Purpose app. You can't read or send email.
 - Answer module domains (today, inbox, vitals, plan, apps, hub, meals, team roster, ECS) directly from Right now — do not call consult_specialist for those. consult_specialist is only for Scout (sourced business research) or Scribe (draft an email in Drafts).
 - When E asks where a flight is, when it lands, or how high it is ("where's UA 123?"), call track_flight with the flight number and answer from its result in a sentence or two. For ISS or satellite sightings, use the "Right now" notes.
-- You can't send email, change the calendar or spend money; say so and offer to add it as a to-do instead.
+- You can't send email or spend money. For calendar creates, moves, or declines, call propose_calendar_change — E confirms in Today before anything hits Google Calendar. For promises to people, call add_commitment. Before important meetings, call prepare_meeting with a short objective and talking points. For an approved phone script, call propose_voice_call — E confirms before dialing.
 Latency-sensitive; begin your visible answer immediately.`;
 
 export const ADD_TODO = {
@@ -87,6 +90,80 @@ export const CONSULT_SPECIALIST = {
       },
     },
     required: ["specialist", "task"],
+    additionalProperties: false,
+  },
+};
+
+export const ADD_COMMITMENT = {
+  name: "add_commitment",
+  description: "Record a promise E made to someone (commitment ledger on Today). Use when E says he told someone he'd do something by a date.",
+  strict: true,
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      promise: { type: "string", description: "What E promised to do." },
+      owed_to: { type: "string", description: "Person or org E owes it to." },
+      due: { type: "string", description: "Optional due date YYYY-MM-DD." },
+    },
+    required: ["promise", "owed_to"],
+    additionalProperties: false,
+  },
+};
+
+export const PREPARE_MEETING = {
+  name: "prepare_meeting",
+  description: "Save a meeting prep pack (objective, talking points, risks) for an upcoming event E names.",
+  strict: true,
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      title: { type: "string", description: "Meeting title." },
+      objective: { type: "string", description: "One sentence goal for the meeting." },
+      talking_points: { type: "array", items: { type: "string" }, description: "Up to 5 bullets." },
+      risks: { type: "array", items: { type: "string" }, description: "Optional risks or open loops." },
+      event_id: { type: "string", description: "Google calendar event id if known." },
+      starts_at: { type: "string", description: "ISO start time if known." },
+    },
+    required: ["title", "objective", "talking_points"],
+    additionalProperties: false,
+  },
+};
+
+export const PROPOSE_CALENDAR_CHANGE = {
+  name: "propose_calendar_change",
+  description:
+    "Propose a calendar create, move, or decline for E to confirm in Today (never applies immediately). Use create for new events; move when rescheduling; decline to cancel.",
+  strict: true,
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      kind: { type: "string", enum: ["create", "move", "decline"], description: "Type of change." },
+      title: { type: "string", description: "Event title." },
+      event_id: { type: "string", description: "Existing event id for move/decline." },
+      start: { type: "string", description: "For create: start ISO datetime." },
+      end: { type: "string", description: "For create: end ISO datetime." },
+      new_start: { type: "string", description: "For move: new start ISO." },
+      new_end: { type: "string", description: "For move: new end ISO." },
+      location: { type: "string", description: "Optional location." },
+      description: { type: "string", description: "Optional description." },
+    },
+    required: ["kind", "title"],
+    additionalProperties: false,
+  },
+};
+
+export const PROPOSE_VOICE_CALL = {
+  name: "propose_voice_call",
+  description: "Queue an outbound phone call script for E to approve before Twilio dials.",
+  strict: true,
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      to_number: { type: "string", description: "E.164 or US number to call." },
+      label: { type: "string", description: "Short label, e.g. school office." },
+      script: { type: "string", description: "What Iris should say when they answer (short)." },
+    },
+    required: ["to_number", "label", "script"],
     additionalProperties: false,
   },
 };
@@ -197,10 +274,12 @@ export async function runIris(
   delegateReport: string | null;
   delegateDeduped: boolean;
   usage: IrisTurnUsage;
+  tierA: TierAToolBatch;
 }> {
   const messages: Anthropic.Beta.BetaMessageParam[] = turns.map((t) => ({ role: t.role, content: t.content }));
   const texts: string[] = [];
   const todos: IrisTodo[] = [];
+  const tierA = emptyTierABatch();
   const remember: string[] = [];
   const forget: string[] = [];
   let searched = false;
@@ -224,6 +303,10 @@ export async function runIris(
       ],
       tools: [
         ADD_TODO,
+        ADD_COMMITMENT,
+        PREPARE_MEETING,
+        PROPOSE_CALENDAR_CHANGE,
+        PROPOSE_VOICE_CALL,
         OPEN_MODULE,
         ...(tools.trackFlight ? [TRACK_FLIGHT] : []),
         ...(tools.consultSpecialist ? [CONSULT_SPECIALIST] : []),
@@ -244,7 +327,7 @@ export async function runIris(
     usage.fetches += u?.server_tool_use?.web_fetch_requests ?? 0;
     for (const b of response.content) if (b.type === "tool_use") usage.tools.push(b.name);
     if (response.stop_reason === "refusal") {
-      return { reply: "", todos: [], remember: [], forget: [], searched, refused: true, module: null, specialist: null, delegateReport: null, delegateDeduped: false, usage };
+      return { reply: "", todos: [], remember: [], forget: [], searched, refused: true, module: null, specialist: null, delegateReport: null, delegateDeduped: false, usage, tierA: emptyTierABatch() };
     }
     for (const b of response.content) {
       if (b.type === "text") texts.push(b.text);
@@ -263,6 +346,61 @@ export async function runIris(
       } else if (b.type === "tool_use" && b.name === "open_module") {
         const id = String((b.input as { module?: unknown }).module ?? "").trim();
         if (HUD_MODULE_IDS.includes(id as (typeof HUD_MODULE_IDS)[number])) module = id;
+      } else if (b.type === "tool_use" && b.name === "add_commitment") {
+        const i = b.input as { promise?: unknown; owed_to?: unknown; due?: unknown };
+        tierA.commitments.push({
+          promise: String(i.promise ?? ""),
+          owed_to: String(i.owed_to ?? ""),
+          due: typeof i.due === "string" ? i.due : undefined,
+        });
+      } else if (b.type === "tool_use" && b.name === "prepare_meeting") {
+        const i = b.input as {
+          title?: unknown;
+          objective?: unknown;
+          talking_points?: unknown;
+          risks?: unknown;
+          event_id?: unknown;
+          starts_at?: unknown;
+        };
+        tierA.meetingPreps.push({
+          title: String(i.title ?? ""),
+          objective: String(i.objective ?? ""),
+          talking_points: Array.isArray(i.talking_points) ? i.talking_points.map(String) : [],
+          risks: Array.isArray(i.risks) ? i.risks.map(String) : [],
+          event_id: typeof i.event_id === "string" ? i.event_id : undefined,
+          starts_at: typeof i.starts_at === "string" ? i.starts_at : undefined,
+        });
+      } else if (b.type === "tool_use" && b.name === "propose_calendar_change") {
+        const i = b.input as {
+          kind?: unknown;
+          title?: unknown;
+          event_id?: unknown;
+          start?: unknown;
+          end?: unknown;
+          new_start?: unknown;
+          new_end?: unknown;
+          location?: unknown;
+          description?: unknown;
+        };
+        const kind = i.kind === "create" || i.kind === "move" || i.kind === "decline" ? (i.kind as CalendarProposalKind) : "create";
+        tierA.calendarProposals.push({
+          kind,
+          title: String(i.title ?? ""),
+          event_id: typeof i.event_id === "string" ? i.event_id : undefined,
+          start: typeof i.start === "string" ? i.start : undefined,
+          end: typeof i.end === "string" ? i.end : undefined,
+          new_start: typeof i.new_start === "string" ? i.new_start : undefined,
+          new_end: typeof i.new_end === "string" ? i.new_end : undefined,
+          location: typeof i.location === "string" ? i.location : undefined,
+          description: typeof i.description === "string" ? i.description : undefined,
+        });
+      } else if (b.type === "tool_use" && b.name === "propose_voice_call") {
+        const i = b.input as { to_number?: unknown; label?: unknown; script?: unknown };
+        tierA.voiceCalls.push({
+          to_number: String(i.to_number ?? ""),
+          label: String(i.label ?? ""),
+          script: String(i.script ?? ""),
+        });
       }
     }
     const toolUses = response.content.filter((b) => b.type === "tool_use");
@@ -318,5 +456,5 @@ export async function runIris(
     // Long search: hand the partial turn back so Claude picks up where it left off.
     messages.push({ role: "assistant", content: response.content as Anthropic.Beta.BetaContentBlockParam[] });
   }
-  return { reply: forVoice(texts.join(" ")), todos, remember, forget, searched, refused: false, module, specialist, delegateReport, delegateDeduped, usage };
+  return { reply: forVoice(texts.join(" ")), todos, remember, forget, searched, refused: false, module, specialist, delegateReport, delegateDeduped, usage, tierA };
 }

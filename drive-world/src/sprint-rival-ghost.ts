@@ -3,7 +3,6 @@
  * Shows a delta vs an authored par or the player's PB when no personal ghost tape exists.
  */
 import type { SavedProgress } from './game-progress';
-import { LANDMARK_SPRINTS, type LandmarkSprintDef } from './landmark-sprints';
 
 export type SprintRivalTier = 'easy' | 'medium' | 'hard';
 
@@ -16,19 +15,11 @@ const TIER_PACE: Record<SprintRivalTier, number> = {
 
 /** Approximate par laps for HUD rival (ms). Tune from playtest. */
 const SPRINT_PAR_MS: Record<string, number> = {
+  'freeway-i80-east': 72_000,
   'vallejo-estate-mare': 44_000,
   'mare-carquinez': 40_000,
   'sf-bridge-vista': 58_000
 };
-
-export function sprintLineProgress(sprint: LandmarkSprintDef, px: number, pz: number): number {
-  const dx = sprint.finish.x - sprint.start.x;
-  const dz = sprint.finish.z - sprint.start.z;
-  const len2 = dx * dx + dz * dz;
-  if (len2 < 1) return 0;
-  const t = ((px - sprint.start.x) * dx + (pz - sprint.start.z) * dz) / len2;
-  return Math.max(0, Math.min(1, t));
-}
 
 export function sprintRivalGhostHud(
   progress: SavedProgress,

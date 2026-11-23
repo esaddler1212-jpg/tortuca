@@ -8,7 +8,7 @@ export function pulseVehicleUnderglow(vehicle: Entity, boosting: boolean): void 
   glow.light.intensity = (boosting ? 4.2 : 2.4) + pulse;
 }
 
-/** Forza-style FOV stretch on nitro. */
+/** @deprecated Use nitro-zone-feel.applyNitroZoneFeel — kept for tests / external refs. */
 export function applyCameraFovBoost(camera: Entity, boosting: boolean, dt: number): void {
   const cam = camera.camera;
   if (!cam) return;

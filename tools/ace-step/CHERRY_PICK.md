@@ -4,15 +4,19 @@
 
 ## Workflow
 
-1. Bootstrap: `npm run ace-step:bootstrap` and run `uv run acestep` (or API on port 8001).
-2. Prompt pattern (instrumental, loop-friendly):
+1. Bootstrap: `npm run ace-step:bootstrap` and run `uv run acestep-api` in the clone (port 8001).
+2. One command for three playlist slots (+ keeps `bay-night-cruise.ogg`):
+   ```bash
+   npm run ace-step:city-nights
+   ```
+   Uses `tools/ace-step/city-nights-tracks.json` prompts. Without API, pass `--fallback-only` for ffmpeg ambient beds (replace later with ACE-Step output on your GPU).
+3. Manual prompt pattern (instrumental, loop-friendly):
    - *“Instrumental lo-fi electronic, 88–96 BPM, night city drive, no vocals, 2–3 minute loop, warm synth pads, subtle sub-bass”*
    - Add *“SF Bay, fog, neon reflections”* for tone; avoid artist names (ACE-Step disclaimer).
-3. Export **WAV** from Gradio, transcode for the web:
+4. Or export **WAV** from Gradio, transcode for the web:
    ```bash
    ffmpeg -i track.wav -c:a libvorbis -q:a 6 drive-world/public/music/my-night-loop.ogg
    ```
-4. Append to [`drive-world/public/music/playlist.json`](../../drive-world/public/music/playlist.json).
 5. In-game: **Settings → Music → Use my playlist** (or leave procedural radio on).
 
 ## Model pick (upstream table)

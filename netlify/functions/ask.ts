@@ -22,6 +22,8 @@ import type { IrisSpecialistId } from "../../shared/irisTeam";
 import { isIrisSpecialistId } from "../../shared/irisTeam";
 import { parseDelegateHistory, mergeDelegateHistories, toSyncedDelegateLog } from "../../shared/irisTeamActivity";
 import { loadUserData, resolveDataKey, saveUserData } from "./_userData";
+import { applyTierATools, tierABatchEmpty } from "./_tierAApply";
+import { tierAContextForIris } from "../../shared/tierAOps";
 
 /**
  * POST /api/ask: Iris's conversation brain (Claude). Signed-in only, capped
@@ -77,10 +79,12 @@ export const handler: Handler = async (event) => {
     const memory = (accountData?.irisMemory ?? []).map((m) => m.fact);
     const here = coords({ lat: String(body.lat ?? ""), lon: String(body.lon ?? "") });
     const delegateHistory = mergeDelegateHistories(accountData?.irisDelegateHistory, parseDelegateHistory(body.delegateHistory));
-    const { reply: text, todos, remember, forget, refused, module, specialist, delegateReport, delegateDeduped, usage } = await runIris(
+    const tierAHint = tierAContextForIris(accountData?.tierA);
+    const contextBlock = tierAHint ? `${body.context ?? ""}\n${tierAHint}` : body.context ?? "";
+    const { reply: text, todos, remember, forget, refused, module, specialist, delegateReport, delegateDeduped, usage, tierA } = await runIris(
       client,
       turns,
-      clampIrisContext(body.context ?? ""),
+      clampIrisContext(contextBlock),
       memory,
       {
         trackFlight: async (flight) => (await lookupFlight(flight, tz, here.lat, here.lon)).spoken,
@@ -124,6 +128,11 @@ export const handler: Handler = async (event) => {
       });
       const irisDelegateHistory = mergeDelegateHistories(latest.irisDelegateHistory, [entry]);
       await saveUserData(key, { ...latest, irisDelegateHistory });
+    }
+    if (!tierABatchEmpty(tierA)) {
+      const latest = (await loadUserData(key)) ?? { updatedAt: new Date().toISOString() };
+      const mergedTierA = applyTierATools(latest.tierA, tierA);
+      await saveUserData(key, { ...latest, tierA: mergedTierA });
     }
     const reply =
       text ||

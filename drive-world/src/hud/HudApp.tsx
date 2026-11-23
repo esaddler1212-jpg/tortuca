@@ -9,14 +9,20 @@ import {
   requestToggleCamera,
   requestCycleAutopilotPreset,
   requestSavePhotoCard,
+  requestSetPhotoExposure,
   requestToggleAutopilot,
   requestTogglePhoto,
   requestVistaCam,
   requestWaymoReplay,
   setTouchDrive,
   subscribeHud,
+  requestVehicleSwap,
+  requestBoardFlight,
+  requestStartTaxi,
   type HudSnapshot
 } from '../game-bridge';
+import { VEHICLE_CATALOG } from '../vehicle-catalog';
+import { BayMap } from './BayMap';
 import { DISTRICT_LABELS, LANDMARKS, districtLandmarkTotal, districtLandmarksVisited } from '../landmark-registry';
 import type { DistrictId } from '../world-config';
 import { Minimap } from './Minimap';
@@ -25,9 +31,12 @@ import { isLandTargetAllowed, searchLandTargets } from '../city-land-search';
 import { loadSettings, saveSettings, type GameSettings } from '../game-settings';
 import { FAST_TRAVEL } from '../world-extras';
 import { buildMissionBoard } from '../game-missions';
-import { bayRegionsGated } from '../mission-chapters';
+import { bayRegionsGated, syncVallejoMissionSteps, VALLEJO_CHAPTER_STEPS } from '../mission-chapters';
+import { GAMEPAD_GLYPHS } from '../gamepad-hub';
+import { setSimulationPaused } from '../console-graphics';
 import { nextTaxiContract } from '../cpm-taxi';
-import { requestStartTaxi } from '../game-bridge';
+import { TOKYO_FF_GARAGE_LABEL, tokyoFleetUnlockedCount } from '../tokyo-ff-cars';
+import { TOKYO_LANDMARKS, tokyoUnlockStatus } from '../tokyo-map';
 import { heatLabel } from '../game-heat';
 import {
   exportProgressJson,
@@ -36,7 +45,7 @@ import {
   pullCloudProgress,
   pushCloudProgress
 } from '../game-cloud-save';
-import { loadProgress, saveProgress } from '../game-progress';
+import { loadProgress, normalizeProgress, saveProgress } from '../game-progress';
 import { isTouchPrimary } from '../mobile-platform';
 import { cameraModeLabel } from '../camera-profiles';
 import { JournalPanel } from './JournalPanel';
@@ -53,11 +62,62 @@ function PinnedObjective({ snap }: { snap: HudSnapshot }) {
   );
 }
 
+function VehicleFleetPanel({ snap }: { snap: HudSnapshot }) {
+  const ids = snap.progress?.unlockedVehicleIds ?? [];
+  if (!snap.progress || snap.phase !== 'home') return <p className="sync-msg">Finish the intro to manage your fleet.</p>;
+  return (
+    <div className="vehicle-fleet-panel">
+      <p className="fleet-hint">
+        {snap.nearGarage ? 'Garage open — paint & tuning on the left panel.' : 'Stop at a garage door (slow) for full tuning.'}
+      </p>
+      <div className="fleet-grid" aria-label="Your cars">
+        {ids.map((id) => {
+          const spec = VEHICLE_CATALOG[id];
+          if (!spec) return null;
+          const active = id === snap.progress?.activeVehicleId;
+          return (
+            <button
+              key={id}
+              type="button"
+              className={`fleet-card ${active ? 'active' : ''}`}
+              disabled={active}
+              onClick={() => requestVehicleSwap(id)}
+            >
+              <span className="fleet-card-name">{spec.name}</span>
+              <span className="fleet-card-tag">{spec.city}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function HudDrawerTabs({ snap }: { snap: HudSnapshot }) {
   const [tab, setTab] = useState<'map' | 'missions' | 'garage' | 'settings'>('missions');
+
+  useEffect(() => {
+    const onTab = (ev: Event) => {
+      const id = (ev as CustomEvent<'map' | 'missions' | 'garage' | 'settings'>).detail;
+      setTab((cur) => (id !== 'missions' && cur === id ? 'missions' : id));
+    };
+    window.addEventListener('drive-world:hud-tab', onTab);
+    return () => window.removeEventListener('drive-world:hud-tab', onTab);
+  }, []);
+
+  useEffect(() => {
+    setSimulationPaused(tab !== 'missions' && snap.phase === 'home' && !snap.ridingWaymo && !snap.photoMode);
+    return () => setSimulationPaused(false);
+  }, [tab, snap.phase, snap.ridingWaymo, snap.photoMode]);
+
   if (snap.photoMode || snap.ridingWaymo) return null;
   return (
     <div className="hud-drawer-stack">
+      {tab !== 'missions' && snap.phase === 'home' ? (
+        <button type="button" className="paused-banner" onClick={() => setTab('missions')}>
+          Paused — {snap.gamepadConnected ? `${GAMEPAD_GLYPHS.resume} to resume` : 'tap Missions or here to resume'}
+        </button>
+      ) : null}
       <div className="hud-tabs" role="tablist" aria-label="HUD panels">
         {(['map', 'missions', 'garage', 'settings'] as const).map((id) => (
           <button
@@ -68,17 +128,18 @@ function HudDrawerTabs({ snap }: { snap: HudSnapshot }) {
             className={`hud-tab ${tab === id ? 'active' : ''}`}
             onClick={() => setTab(id)}
           >
-            {id === 'map' ? 'Map' : id === 'missions' ? 'Missions' : id === 'garage' ? 'Garage' : 'Settings'}
+            {id === 'map' ? 'Map' : id === 'missions' ? 'Drive' : id === 'garage' ? 'Cars' : 'More'}
           </button>
         ))}
       </div>
       <div className="hud-tab-panel" role="tabpanel">
         {tab === 'map' && (
-          <>
+          <div className="map-tab-panel">
+            <BayMap snap={snap} size={280} showDistrictLabels />
+            <p className="map-legend">Orange = freeways · dots = landmarks · square = taco truck</p>
             <LandSearchPanel snap={snap} />
             <FastTravel snap={snap} />
-            <LandmarkPanel snap={snap} />
-          </>
+          </div>
         )}
         {tab === 'missions' && (
           <>
@@ -92,12 +153,18 @@ function HudDrawerTabs({ snap }: { snap: HudSnapshot }) {
         {tab === 'garage' && (
           <>
             {snap.garageInteriorCam ? <div className="sprint-armed">Garage interior cam</div> : null}
+            <VehicleFleetPanel snap={snap} />
+            <RecordsPanel snap={snap} streetRep={snap.streetRepPercent} streetRank={snap.streetRepRankLabel} />
             <SafehousePanel snap={snap} />
           </>
         )}
         {tab === 'settings' && (
           <>
-            <SettingsPanel />
+            <SettingsQuickPanel />
+            <details className="settings-panel">
+              <summary>Advanced &amp; cloud</summary>
+              <SettingsPanel />
+            </details>
             <MusicPanel />
             <JournalPanel snap={snap} />
           </>
@@ -206,6 +273,60 @@ function LandmarkPanel({ snap }: { snap: HudSnapshot }) {
   );
 }
 
+function RecordsPanel({
+  snap,
+  streetRep,
+  streetRank
+}: {
+  snap: HudSnapshot;
+  streetRep?: number;
+  streetRank?: string;
+}) {
+  const p = snap.progress;
+  if (!p) return null;
+  const synced = syncVallejoMissionSteps(p);
+  const mastery = VALLEJO_CHAPTER_STEPS.filter((s) => synced.missionStepsCompleted.includes(s.id)).length;
+  const parkStars = Object.values(p.parkingStars).reduce((a, b) => a + b, 0);
+  const traps = Object.keys(p.speedTrapBests).length;
+  const tokyo = tokyoUnlockStatus(p);
+  return (
+    <details className="records-panel" open={!isTouchPrimary()}>
+      <summary>Records · trophies</summary>
+      <ul className="records-list">
+        <li>Landmarks {p.visitedLandmarkIds.length}</li>
+        <li>Garage unlocks {p.unlockedVehicleIds.length}</li>
+        <li>Regions {p.unlockedRegionIds.length} / 6</li>
+        <li>
+          Street rep {streetRep ?? 0}% · {streetRank ?? 'Rookie'}
+        </li>
+        <li>Parking ★ {parkStars}</li>
+        <li>Speed traps logged {traps}</li>
+        <li>Heat peak {p.heatPeakEver?.toFixed(1) ?? '0'} / 5</li>
+        <li>Meet badges {p.meetBadges?.length ?? 0}</li>
+        <li>Vallejo mastery {mastery} / {VALLEJO_CHAPTER_STEPS.length}</li>
+        <li>Scenic routes {p.scenicCompleted.length}</li>
+        <li>
+          {tokyo.unlocked
+            ? `${TOKYO_FF_GARAGE_LABEL} · fleet ${tokyoFleetUnlockedCount(p)}/8 · landmarks ${p.tokyoLandmarkIds.length}/${TOKYO_LANDMARKS.length} · flights ${p.tokyoFlights}`
+            : `Tokyo flight: Bay cars ${tokyo.cars}/${tokyo.carsTotal} · regions ${tokyo.regions}/${tokyo.regionsTotal}`}
+        </li>
+      </ul>
+    </details>
+  );
+}
+
+function GamepadGlyphs({ connected }: { connected: boolean }) {
+  if (!connected) return null;
+  return (
+    <div className="gamepad-glyphs" aria-label="Controller hints">
+      <span>{GAMEPAD_GLYPHS.drive}</span>
+      <span>Cam {GAMEPAD_GLYPHS.camera}</span>
+      <span>{GAMEPAD_GLYPHS.photo}</span>
+      <span>{GAMEPAD_GLYPHS.map}</span>
+    </div>
+  );
+}
+
 function StatsPanel({ snap }: { snap: HudSnapshot }) {
   const id = snap.progress?.activeVehicleId;
   if (!id || !snap.progress) return null;
@@ -214,6 +335,23 @@ function StatsPanel({ snap }: { snap: HudSnapshot }) {
   return (
     <div className="stats-panel">
       Miles: {st.miles.toFixed(2)} · Top: {Math.round(st.topMph)} mph
+    </div>
+  );
+}
+
+function StreetRepMeter({ snap }: { snap: HudSnapshot }) {
+  if (snap.ridingWaymo || snap.photoMode || snap.phase !== 'home' || snap.flightMode) return null;
+  const rep = snap.streetRepPercent ?? 0;
+  const rank = snap.streetRepRankLabel ?? 'Rookie';
+  const region = snap.regionRepLabel;
+  return (
+    <div className="street-rep-meter" title="Street rep — region landmarks, tacos, unlocks">
+      <span className="street-rep-rank">{rank}</span>
+      <span className="street-rep-pct">{rep}% Bay</span>
+      {region ? <span className="street-rep-region">{region}</span> : null}
+      <div className="street-rep-bar">
+        <div className="street-rep-fill" style={{ width: `${rep}%` }} />
+      </div>
     </div>
   );
 }
@@ -267,8 +405,9 @@ function RacingHud({ snap }: { snap: HudSnapshot }) {
         </div>
       ) : null}
       {showNitro ? (
-        <div className="race-strip nitro">
-          N₂O {snap.nitroBoosting ? 'BOOST' : 'Tank'} {Math.round(nitro)}%
+        <div className={`race-strip nitro${snap.nitroZoneActive ? ' nitro-zone' : ''}`}>
+          {snap.nitroZoneActive ? 'NITRO ZONE' : `N₂O ${snap.nitroBoosting ? 'BOOST' : 'Tank'}`}{' '}
+          {Math.round(nitro)}%
           <div className="race-bar">
             <div
               className="race-bar-fill nitro"
@@ -292,7 +431,7 @@ function MissionBoard({ snap }: { snap: HudSnapshot }) {
   const taxiOffer = snap.progress ? nextTaxiContract(snap.progress, 'vallejo') : null;
   return (
     <details className="mission-panel" {...(isTouchPrimary() ? {} : { open: true })}>
-      <summary>Missions · CPM · Horizon · MC</summary>
+      <summary>Objectives</summary>
       {taxiOffer && !snap.progress?.activeTaxiId ? (
         <button
           type="button"
@@ -319,6 +458,56 @@ function MissionBoard({ snap }: { snap: HudSnapshot }) {
   );
 }
 
+function SettingsQuickPanel() {
+  const [s, setS] = useState<GameSettings>(loadSettings());
+  const apply = (next: GameSettings) => {
+    setS(next);
+    saveSettings(next);
+    window.dispatchEvent(new CustomEvent('drive-world:settings', { detail: next }));
+  };
+  return (
+    <div className="settings-quick">
+      <p className="settings-quick-title">Quick settings</p>
+      <label className="slider-row">
+        Quality
+        <select
+          value={s.bayQualityPreset ?? 'balanced'}
+          onChange={(e) =>
+            apply(applyBayQualityPreset(s, e.target.value as GameSettings['bayQualityPreset']))
+          }
+        >
+          <option value="chromebook">Chromebook</option>
+          <option value="balanced">Balanced</option>
+          <option value="console">Console / TV</option>
+          <option value="lush">Lush</option>
+        </select>
+      </label>
+      <label className="slider-row">
+        Volume
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={Math.round(s.masterVolume * 100)}
+          onChange={(e) => apply({ ...s, masterVolume: Number(e.target.value) / 100 })}
+        />
+      </label>
+      <label className="checkbox-row">
+        <input
+          type="checkbox"
+          checked={s.fuelSimEnabled}
+          onChange={(e) => apply({ ...s, fuelSimEnabled: e.target.checked })}
+        />
+        Fuel sim
+      </label>
+      <label className="checkbox-row">
+        <input type="checkbox" checked={!!s.tvHudMode} onChange={(e) => apply({ ...s, tvHudMode: e.target.checked })} />
+        Couch / TV text size
+      </label>
+    </div>
+  );
+}
+
 function SettingsPanel() {
   const [s, setS] = useState<GameSettings>(loadSettings());
   const [syncMsg, setSyncMsg] = useState('');
@@ -329,8 +518,7 @@ function SettingsPanel() {
   };
   const syncKey = getOrCreateSyncKey();
   return (
-    <details className="settings-panel">
-      <summary>Settings</summary>
+    <div className="settings-panel">
       <p className="sync-key-line">
         Cloud sync key: <code>{syncKey}</code>
       </p>
@@ -339,7 +527,7 @@ function SettingsPanel() {
           type="button"
           className="sync-btn"
           onClick={async () => {
-            const remote = await pullCloudProgress();
+            const remote = normalizeProgress(await pullCloudProgress());
             if (remote) {
               saveProgress(remote);
               setSyncMsg('Pulled cloud save — reload to apply');
@@ -384,13 +572,23 @@ function SettingsPanel() {
         />
       </label>
       <label className="slider-row">
-        Volume
+        Master volume
         <input
           type="range"
           min={0}
           max={100}
           value={Math.round(s.masterVolume * 100)}
           onChange={(e) => apply({ ...s, masterVolume: Number(e.target.value) / 100 })}
+        />
+      </label>
+      <label className="slider-row">
+        SFX / engine
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={Math.round((s.sfxVolume ?? 0.9) * 100)}
+          onChange={(e) => apply({ ...s, sfxVolume: Number(e.target.value) / 100 })}
         />
       </label>
       <label className="slider-row">
@@ -403,8 +601,40 @@ function SettingsPanel() {
         >
           <option value="chromebook">Chromebook (light)</option>
           <option value="balanced">Balanced</option>
+          <option value="console">Console / TV</option>
           <option value="lush">Lush nights</option>
         </select>
+      </label>
+      <label className="slider-row">
+        Frame cap
+        <select
+          value={String(s.frameCapFps ?? 0)}
+          onChange={(e) =>
+            apply({ ...s, frameCapFps: Number(e.target.value) as GameSettings['frameCapFps'] })
+          }
+        >
+          <option value="0">Uncapped</option>
+          <option value="30">30 fps (Performance)</option>
+          <option value="60">60 fps</option>
+        </select>
+      </label>
+      <label className="slider-row">
+        Resolution scale
+        <input
+          type="range"
+          min={50}
+          max={100}
+          value={Math.round((s.resolutionScale ?? 1) * 100)}
+          onChange={(e) => apply({ ...s, resolutionScale: Number(e.target.value) / 100 })}
+        />
+      </label>
+      <label className="checkbox-row">
+        <input
+          type="checkbox"
+          checked={!!s.tvHudMode}
+          onChange={(e) => apply({ ...s, tvHudMode: e.target.checked })}
+        />
+        TV / couch HUD (larger text)
       </label>
       <label className="slider-row">
         Fog
@@ -475,7 +705,7 @@ function SettingsPanel() {
         />
         Hub streaming (reload to fully toggle)
       </label>
-    </details>
+    </div>
   );
 }
 
@@ -508,14 +738,43 @@ export function HudApp() {
 
   const showTouch =
     typeof window !== 'undefined' && isTouchPrimary() && !snap.photoMode && snap.phase === 'home' && !snap.ridingWaymo;
+  const pad = !!snap.gamepadConnected;
+  const camLabel = pad ? `Cam ${GAMEPAD_GLYPHS.camera}` : `Camera: ${cameraModeLabel(snap.cameraMode)} (C)`;
+  const photoLabel = pad ? `Photo ${GAMEPAD_GLYPHS.photo}` : `Photo ${snap.photoMode ? 'ON' : ''} (P)`;
 
   return (
-    <div className={`react-hud ${snap.photoMode ? 'photo-active' : ''}`}>
+    <div
+      className={`react-hud ${snap.photoMode ? 'photo-active' : ''} ${snap.settings.tvHudMode ? 'react-hud--tv' : ''}`}
+    >
+      {snap.flightCinematic ? (
+        <>
+          <div className="flight-fade" style={{ opacity: snap.flightCinematic.fade }} aria-hidden />
+          <div className="flight-banner" aria-live="polite">
+            ✈ {snap.flightCinematic.label}
+          </div>
+        </>
+      ) : null}
       {snap.ridingWaymo && (
         <button type="button" className="skip-waymo" onClick={() => requestSkipWaymo()}>
-          Skip prologue ride
+          {snap.flightCinematic
+            ? `Land now${pad ? ` (${GAMEPAD_GLYPHS.skip})` : ''}`
+            : pad
+              ? `Skip ride (${GAMEPAD_GLYPHS.skip})`
+              : 'Skip prologue ride'}
         </button>
       )}
+      {snap.flightPrompt && !snap.ridingWaymo && !snap.photoMode && (
+        <button
+          type="button"
+          className={`flight-prompt ${snap.flightPrompt.ready ? 'ready' : 'locked'}`}
+          onClick={() => requestBoardFlight()}
+        >
+          ✈ {snap.flightPrompt.label}
+          {snap.flightPrompt.ready ? ` (${pad ? GAMEPAD_GLYPHS.flight : 'F'})` : ''}
+          {snap.flightPrompt.detail ? <span className="flight-prompt-detail">{snap.flightPrompt.detail}</span> : null}
+        </button>
+      )}
+      <GamepadGlyphs connected={pad} />
       {(snap.streetName || snap.storefrontStripLabel) && !snap.photoMode && !snap.ridingWaymo && (
         <div className="street-blade" aria-live="polite">
           {snap.storefrontStripLabel ?? snap.streetName}
@@ -523,10 +782,10 @@ export function HudApp() {
       )}
       <div className="hud-toolbar">
         <button type="button" className="cam-toggle" onClick={() => requestToggleCamera()}>
-          Camera: {cameraModeLabel(snap.cameraMode)} (C)
+          {camLabel}
         </button>
         <button type="button" className="cam-toggle" onClick={() => requestTogglePhoto()}>
-          Photo {snap.photoMode ? 'ON' : ''} (P)
+          {photoLabel}
         </button>
         <span className="hud-mph">{Math.round(snap.mph)} mph</span>
         {snap.progress?.activeVehicleId === 'bonus-night-coil' && snap.phase === 'home' && !snap.ridingWaymo && (
@@ -556,6 +815,7 @@ export function HudApp() {
         <p className="flight-hint">Space/⤒ climb · Ctrl/⤓ sink · WASD · Shift boost</p>
       )}
       <RacingHud snap={snap} />
+      <StreetRepMeter snap={snap} />
       <HeatMeter snap={snap} />
       {snap.settings.fuelSimEnabled && snap.phase === 'home' && !snap.photoMode && (
         <div className="fuel-meter" aria-label="Fuel">
@@ -577,12 +837,24 @@ export function HudApp() {
       )}
       {showTouch && <TouchControlsImpl flight={!!snap.flightMode} />}
       {snap.photoMode && (
-        <p className="photo-hint">
-          WASD move · Q/E altitude · P exit ·{' '}
-          <button type="button" className="link-btn" onClick={() => requestSavePhotoCard()}>
-            Save cruise card
-          </button>
-        </p>
+        <div className="photo-hint">
+          <p>
+            Orbit car — WASD · Q/E zoom · P exit ·{' '}
+            <button type="button" className="link-btn" onClick={() => requestSavePhotoCard()}>
+              Save cruise card
+            </button>
+          </p>
+          <label className="slider-row photo-exposure-row">
+            Exposure
+            <input
+              type="range"
+              min={22}
+              max={105}
+              value={Math.round((snap.photoExposure ?? 0.55) * 100)}
+              onChange={(e) => requestSetPhotoExposure(Number(e.target.value) / 100)}
+            />
+          </label>
+        </div>
       )}
     </div>
   );

@@ -57,6 +57,8 @@ export interface SyncedShoppingItem {
   createdAt: string;
 }
 
+import type { TierAState } from "./tierAOps";
+
 /** Plan progress (see shared/plan.ts PlanState); synced across devices. */
 export interface SyncedPlanState {
   done: Record<string, string>;
@@ -96,6 +98,8 @@ export interface AlfredUserData {
   channels?: unknown;
   /** Iris specialist delegate log (cross-device dedupe); see shared/irisTeamActivity.ts */
   irisDelegateHistory?: SyncedIrisDelegateLog[];
+  /** Meeting prep, calendar proposals, SMS, commitments, etc. (see shared/tierAOps.ts). */
+  tierA?: TierAState;
   updatedAt: string;
 }
 

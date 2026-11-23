@@ -5,7 +5,7 @@ PlayStation-style **home screen** for the two browser games in this repo:
 | Tile | Path | Source |
 |------|------|--------|
 | **City Nights** | `/city-nights/` | [`drive-world/`](../drive-world/) |
-| **Flight Nemulator** | `/flight-nemulator/` | [`flight-nemulator/`](../flight-nemulator/) |
+| **Battleworld** (Flight Nemulator) | `/flight-nemulator/` | [`flight-nemulator/`](../flight-nemulator/) — patchwork homage planet |
 
 ## Dev (launcher only)
 

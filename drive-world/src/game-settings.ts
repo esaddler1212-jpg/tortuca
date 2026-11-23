@@ -26,6 +26,14 @@ export type GameSettings = {
   shareSessionStats: boolean;
   /** Landmark sprint rival pacing (Summer racing easy/medium/hard). */
   sprintRivalTier: 'easy' | 'medium' | 'hard';
+  /** SFX stings + engine gain (music has musicVolume) */
+  sfxVolume: number;
+  /** 0 = uncapped; 30 / 60 caps GPU draw rate (sim still ticks each frame) */
+  frameCapFps: 0 | 30 | 60;
+  /** Multiplier on device pixel ratio (performance / TV) */
+  resolutionScale: number;
+  /** Larger HUD type for TV / couch */
+  tvHudMode: boolean;
 };
 
 const KEY = 'drive-world-settings-v1';
@@ -46,7 +54,11 @@ const defaults: GameSettings = {
   autopilotPreset: 'tour',
   coastalWeatherEnabled: true,
   shareSessionStats: true,
-  sprintRivalTier: 'medium'
+  sprintRivalTier: 'medium',
+  sfxVolume: 0.9,
+  frameCapFps: 0,
+  resolutionScale: 1,
+  tvHudMode: false
 };
 
 export function loadSettings(): GameSettings {

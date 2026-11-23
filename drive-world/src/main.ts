@@ -29,10 +29,15 @@ import {
 
 import { buildDrivingWorld } from './build-world';
 import { startGameSession } from './game-loop';
+import { installOpenworldDevCommands } from './openworldjs/dev-commands';
+import { getHudSnapshot } from './game-bridge';
 import { installMobileShell } from './install-mobile-shell';
 import { isIOS, recommendedPixelRatio } from './mobile-platform';
+import { applyFrameCap, applyResolutionScale, installRenderCap } from './console-graphics';
+import { loadSettings, type GameSettings } from './game-settings';
+import { setMasterVolume, setSfxVolume } from './game-audio';
 import { tryMergeCloudOnBoot } from './game-cloud-save';
-import { preloadBootVehicleModels } from './vehicle-gltf';
+import { preloadAllVehicleModels, preloadBootVehicleModels, preloadGarageStarterModels } from './vehicle-gltf';
 import { mountReactHud } from './hud/mount';
 import { NIGHT_AMBIENT, NIGHT_SKY } from './night-palette';
 import { WORLD_HALF_M } from './world-config';
@@ -48,6 +53,7 @@ await new Promise<void>((resolve) => {
 
 installMobileShell();
 mountReactHud();
+installOpenworldDevCommands();
 
 const canvas = document.getElementById('application-canvas') as HTMLCanvasElement;
 const speedEl = document.getElementById('speed') as HTMLParagraphElement;
@@ -56,7 +62,11 @@ const device = await createGraphicsDevice(canvas, {
   antialias: false,
   powerPreference: isIOS() ? 'low-power' : 'high-performance'
 });
-device.maxPixelRatio = recommendedPixelRatio();
+const basePixelRatio = recommendedPixelRatio();
+const bootSettings = loadSettings();
+applyResolutionScale(device, bootSettings, basePixelRatio);
+setMasterVolume(bootSettings.masterVolume);
+setSfxVolume(bootSettings.sfxVolume ?? 0.9);
 
 const options = new AppOptions();
 options.graphicsDevice = device;
@@ -95,6 +105,16 @@ await new Promise<void>((resolve) => {
 });
 
 app.start();
+installRenderCap(app);
+applyFrameCap(app, bootSettings);
+window.addEventListener('drive-world:settings', (ev) => {
+  const s = { ...loadSettings(), ...(ev as CustomEvent<Partial<GameSettings>>).detail };
+  applyResolutionScale(device, s, basePixelRatio);
+  applyFrameCap(app, s);
+  setMasterVolume(s.masterVolume);
+  setSfxVolume(s.sfxVolume ?? 0.9);
+  app.resizeCanvas();
+});
 
 app.scene.ambientLight = NIGHT_AMBIENT.clone();
 app.scene.exposure = 0.55;
@@ -108,9 +128,13 @@ try {
 }
 try {
   await preloadBootVehicleModels(app);
+  await preloadGarageStarterModels(app);
 } catch (err) {
   console.warn('[city-nights] Boot vehicle models failed to preload; block fallback only.', err);
 }
+void preloadAllVehicleModels(app).catch(() => {
+  console.warn('[city-nights] Background vehicle preload incomplete.');
+});
 
 buildDrivingWorld(app);
 
@@ -135,3 +159,20 @@ camera.addComponent('camera', {
 app.root.addChild(camera);
 
 startGameSession(app, speedEl);
+
+if (new URLSearchParams(location.search).has('cnDebug')) {
+  let renders = 0;
+  let ticks = 0;
+  const baseRender = app.render.bind(app);
+  app.render = () => {
+    renders++;
+    baseRender();
+  };
+  app.on('update', () => ticks++);
+  (window as unknown as { __cityNights?: unknown }).__cityNights = {
+    app,
+    renders: () => renders,
+    ticks: () => ticks,
+    hud: getHudSnapshot
+  };
+}

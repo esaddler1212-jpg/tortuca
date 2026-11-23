@@ -49,7 +49,7 @@ export class HeroFlightController {
   update(dt: number, input: FlightInput): void {
     const cruise = (this.hero.flight.cruiseKmh / 3.6) * this.form.speedMul;
     const boost = (this.hero.flight.boostKmh / 3.6) * this.form.speedMul;
-    const agility = this.hero.flight.agility;
+    const agility = this.hero.flight.agility * (this.form.flightAgilityMul ?? 1);
 
     this.yaw -= input.yaw * agility * 1.8 * dt;
     this.pitch -= input.pitch * agility * 1.4 * dt;
@@ -72,10 +72,15 @@ export class HeroFlightController {
     this.entity.setPosition(next.x, Math.max(2, next.y), next.z);
     this.entity.setEulerAngles(this.pitch, this.yaw, this.roll);
 
+    const resilience = this.form.resilienceMul ?? 1;
+    const regenMul = this.form.staminaRegenMul ?? 1;
     if (input.boost) {
-      this.stamina = Math.max(0, this.stamina - 28 * dt);
+      this.stamina = Math.max(0, this.stamina - (28 * dt) / resilience);
     } else {
-      this.stamina = Math.min(this.hero.energy.staminaMax, this.stamina + this.hero.energy.regenPerSec * dt);
+      this.stamina = Math.min(
+        this.hero.energy.staminaMax,
+        this.stamina + this.hero.energy.regenPerSec * regenMul * dt
+      );
     }
 
     this.primaryCd = Math.max(0, this.primaryCd - dt);
@@ -87,7 +92,8 @@ export class HeroFlightController {
   }
 
   triggerPrimary(): void {
-    this.primaryCd = this.hero.energy.primaryCooldownSec;
+    const cdMul = this.form.primaryCdMul ?? 1;
+    this.primaryCd = this.hero.energy.primaryCooldownSec * cdMul;
     this.stamina = Math.max(0, this.stamina - 6);
   }
 

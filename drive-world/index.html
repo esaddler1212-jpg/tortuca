@@ -19,7 +19,7 @@
   <body>
     <div id="tap-start" class="tap-start" role="button" tabindex="0">
       <span class="tap-start-title">City Nights</span>
-      <span class="tap-start-sub">Tap to start · landscape recommended on phone</span>
+      <span class="tap-start-sub">Tap to start · A on controller · landscape on phone</span>
     </div>
     <canvas id="application-canvas"></canvas>
     <div id="react-hud"></div>
@@ -84,9 +84,15 @@
 
     <script>
       (function () {
-        if (!/\/city-nights(\/|$)/.test(location.pathname)) return;
+        var p = location.pathname;
+        var hub = /\/console\/city-nights(\/|$)/.test(p)
+          ? '/console/'
+          : /\/city-nights(\/|$)/.test(p)
+            ? '../'
+            : '';
+        if (!hub) return;
         var a = document.createElement('a');
-        a.href = '../';
+        a.href = hub;
         a.textContent = '◯ Console';
         a.setAttribute('aria-label', 'Back to Tortuca Console');
         a.style.cssText =

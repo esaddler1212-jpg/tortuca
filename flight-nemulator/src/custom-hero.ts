@@ -38,6 +38,7 @@ export function customHeroToSpec(draft: CustomHeroDraft): HeroSpec {
     energy: { staminaMax: 110, regenPerSec: 22, superCooldownSec: 20, primaryCooldownSec: 0.28 },
     smashRadius: 3.2,
     forms: [{ id: 'custom', label: 'Custom', speedMul: 1, powerMul: 1, color: draft.primaryColor }],
-    defaultFormId: 'custom'
+    defaultFormId: 'custom',
+    aerial: 'tech'
   };
 }

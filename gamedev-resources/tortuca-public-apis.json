@@ -1,0 +1,103 @@
+{
+  "catalogVersion": 1,
+  "upstream": "https://github.com/public-apis/public-apis",
+  "selectionRules": "Prefer Auth=No, HTTPS=Yes, CORS=Yes for browser clients; secrets via Netlify only.",
+  "alreadyInTortuca": [
+    {
+      "id": "open-meteo",
+      "url": "https://open-meteo.com/",
+      "use": "IRIS Pulse, regional weather, drive-world sky mood",
+      "where": ["netlify/functions/_pulse.ts", "src/lib/weather.ts"]
+    },
+    {
+      "id": "open-meteo-geocoding",
+      "url": "https://open-meteo.com/en/docs/geocoding-api",
+      "use": "City search",
+      "where": ["src/lib/weather.ts"]
+    }
+  ],
+  "entries": [
+    {
+      "id": "3dtexel",
+      "url": "https://3dtexel.com/developers/",
+      "auth": "none",
+      "cors": true,
+      "use": ["cc0-model-search", "character-research-assets"],
+      "target": "flight-nemulator"
+    },
+    {
+      "id": "open5e",
+      "url": "https://open5e.com/",
+      "auth": "none",
+      "cors": true,
+      "use": ["mission-text", "rpg-easter-eggs"],
+      "target": "flight-nemulator"
+    },
+    {
+      "id": "jokeapi",
+      "url": "https://sv443.net/jokeapi/v2/",
+      "auth": "none",
+      "cors": true,
+      "use": ["loading-banter"],
+      "target": "both"
+    },
+    {
+      "id": "freetogame",
+      "url": "https://www.freetogame.com/api-doc",
+      "auth": "none",
+      "cors": true,
+      "use": ["manifest-suggestions"],
+      "target": "flight-nemulator"
+    },
+    {
+      "id": "gamerpower",
+      "url": "https://www.gamerpower.com/api-read",
+      "auth": "none",
+      "cors": true,
+      "use": ["giveaway-widget"],
+      "target": "both"
+    },
+    {
+      "id": "deckofcards",
+      "url": "https://deckofcardsapi.com/",
+      "auth": "none",
+      "cors": "unknown",
+      "use": ["minigame-prototype"],
+      "target": "both"
+    },
+    {
+      "id": "nasa-power",
+      "url": "https://power.larc.nasa.gov/docs/",
+      "auth": "none",
+      "cors": true,
+      "use": ["solar-flare-sky-tint"],
+      "target": "flight-nemulator"
+    },
+    {
+      "id": "aviationweather",
+      "url": "https://www.aviationweather.gov/dataserver",
+      "auth": "none",
+      "cors": false,
+      "use": ["gods-eye-flight-context"],
+      "target": "server-proxy-only"
+    },
+    {
+      "id": "pirate-weather",
+      "url": "https://pirateweather.readthedocs.io/",
+      "auth": "none",
+      "cors": true,
+      "use": ["backup-weather"],
+      "target": "drive-world"
+    }
+  ],
+  "avoidInClient": [
+    {
+      "id": "marvel-api",
+      "reason": "Trademarked character names; we use homage codenames only"
+    },
+    {
+      "id": "comicvine",
+      "reason": "Same; lore inspiration only off-device"
+    }
+  ]
+}

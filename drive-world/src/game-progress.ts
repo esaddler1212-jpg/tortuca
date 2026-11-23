@@ -21,6 +21,16 @@ import {
 import { seedGhostTapes } from './cpm-ghost';
 import { tryUnlockCraftVehicles } from './craft-vehicle-unlocks';
 import { migrateRenamedVehicles } from './save-vehicle-migrations';
+import { bumpStreetRepPeak, type StreetRepRank } from './street-rep';
+
+/** Set when saveProgress bumps street rep rank (game-loop shows toast once). */
+let pendingStreetRepRankToast: StreetRepRank | null = null;
+
+export function consumeStreetRepRankToast(): StreetRepRank | null {
+  const t = pendingStreetRepRankToast;
+  pendingStreetRepRankToast = null;
+  return t;
+}
 
 export type GamePhase = 'waymo_ride' | 'pick_car' | 'home';
 
@@ -122,6 +132,11 @@ export type SavedProgress = {
   dynoRunCount: number;
   meetBadges: string[];
   activeTaxiId: string | null;
+  /** Tokyo bonus map (post-game) */
+  tokyoLandmarkIds: string[];
+  tokyoFlights: number;
+  /** Highest bay-wide street rep % (rank meter). */
+  streetRepPeak?: number;
 };
 
 const STORAGE_KEY = 'drive-world-progress-v5';
@@ -163,7 +178,10 @@ function defaultProgress(): SavedProgress {
     taxiCompletedIds: [],
     dynoRunCount: 0,
     meetBadges: [],
-    activeTaxiId: null
+    activeTaxiId: null,
+    tokyoLandmarkIds: [],
+    tokyoFlights: 0,
+    streetRepPeak: 0
   };
 }
 
@@ -199,6 +217,9 @@ function withV9Defaults(p: Partial<Omit<SavedProgress, 'version'>> & { version: 
     dynoRunCount: p.dynoRunCount ?? 0,
     meetBadges: p.meetBadges ?? [],
     activeTaxiId: p.activeTaxiId ?? null,
+    tokyoLandmarkIds: Array.isArray(p.tokyoLandmarkIds) ? p.tokyoLandmarkIds : [],
+    tokyoFlights: typeof p.tokyoFlights === 'number' ? p.tokyoFlights : 0,
+    streetRepPeak: typeof p.streetRepPeak === 'number' ? Math.max(0, Math.min(100, p.streetRepPeak)) : 0,
     cameraMode: normalizeCameraMode(p.cameraMode)
   };
   return migrateRenamedVehicles(base);
@@ -220,9 +241,8 @@ function migrateRaw(parsed: Record<string, unknown>): SavedProgress | null {
       version: 2;
       customizations?: Record<string, VehicleCustomization>;
     };
-    const { version: _v, ...rest } = p;
     return withV9Defaults({
-      ...rest,
+      ...p,
       version: 2,
       customizations: p.customizations ?? {},
       lastPose: null,
@@ -230,6 +250,13 @@ function migrateRaw(parsed: Record<string, unknown>): SavedProgress | null {
     });
   }
   return null;
+}
+
+/** Normalize a save object from cloud / import before it touches localStorage. */
+export function normalizeProgress(raw: unknown): SavedProgress | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const migrated = migrateRaw(raw as Record<string, unknown>);
+  return migrated ? seedGhostTapes(migrated) : null;
 }
 
 export function loadProgress(): SavedProgress {
@@ -253,8 +280,11 @@ export function startTaxiContract(progress: SavedProgress, contractId: string): 
   return { ...progress, activeTaxiId: contractId };
 }
 
-export function saveProgress(progress: SavedProgress): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+export function saveProgress(progress: SavedProgress): SavedProgress {
+  const { progress: peaked, rankUp } = bumpStreetRepPeak(progress);
+  if (rankUp) pendingStreetRepRankToast = rankUp;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(peaked));
+  return peaked;
 }
 
 export function resetProgress(): SavedProgress {
@@ -303,14 +333,26 @@ export function unlockVehicle(progress: SavedProgress, vehicleId: string): Saved
   return next;
 }
 
+export function visitTokyoLandmark(progress: SavedProgress, landmarkId: string): SavedProgress {
+  if (progress.tokyoLandmarkIds.includes(landmarkId)) return progress;
+  const next: SavedProgress = { ...progress, tokyoLandmarkIds: [...progress.tokyoLandmarkIds, landmarkId] };
+  saveProgress(next);
+  return next;
+}
+
+export function recordTokyoFlight(progress: SavedProgress): SavedProgress {
+  const next: SavedProgress = { ...progress, tokyoFlights: progress.tokyoFlights + 1, fuelLevel: 1 };
+  saveProgress(next);
+  return next;
+}
+
 export function visitLandmark(progress: SavedProgress, landmarkId: string): SavedProgress {
   if (progress.visitedLandmarkIds.includes(landmarkId)) return progress;
   const next: SavedProgress = {
     ...progress,
     visitedLandmarkIds: [...progress.visitedLandmarkIds, landmarkId]
   };
-  saveProgress(next);
-  return next;
+  return saveProgress(next);
 }
 
 export function findTacoTruck(progress: SavedProgress, district: DistrictId): SavedProgress {
@@ -319,8 +361,7 @@ export function findTacoTruck(progress: SavedProgress, district: DistrictId): Sa
     ...progress,
     tacoTrucksFound: [...progress.tacoTrucksFound, district]
   };
-  saveProgress(next);
-  return next;
+  return saveProgress(next);
 }
 
 export function visitCruiseVista(progress: SavedProgress, vistaId: string): SavedProgress {
@@ -448,7 +489,7 @@ export function tickScenicRoute(progress: SavedProgress, routeId: string, checkp
   const cur = progress.scenicProgress[routeId] ?? 0;
   if (checkpointIdx !== cur) return progress;
   const nextIdx = cur + 1;
-  let next: SavedProgress = {
+  const next: SavedProgress = {
     ...progress,
     scenicProgress: { ...progress.scenicProgress, [routeId]: nextIdx }
   };

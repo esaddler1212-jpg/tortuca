@@ -34,7 +34,8 @@ Compressed **Bay Area night sandbox** in `drive-world/` (PlayCanvas 2.23 + Ammo 
 | Need | Why | Scope |
 |------|-----|-------|
 | ~~**Browser smoke test in CI**~~ | **Done:** `drive-world/scripts/smoke-boot.mjs` + `npm run test:smoke` in `.github/workflows/city-nights.yml` | **Done:** smoke skips Waymo and holds W for 5 s |
-| ~~**Chase camera collision**~~ | **Done (partial):** physics raycast in `camera-profiles.ts`; tight garages can still clip. Was: camera clips inside buildings/garage walls at spawn and in dense hubs (visible in smoke screenshots) | Raycast from car to camera target in `camera-profiles.ts`, pull camera in on hit |
+| ~~**Chase camera collision**~~ | **Done:** raycast in `camera-profiles.ts` skips the player car and Tokyo ground; chase uses Bullet +Z travel (opposite PlayCanvas `forward`). Tight garages can still clip | Raycast from car to camera target, pull camera in on hit |
+| ~~**Tokyo bonus map**~~ | **Done:** Bay completion → SFO FF gate → Haneda; **8 landmarks = 8 FF tribute cars** (`npm run test:tokyo`, `test:wiring`) | MCLA Remix–style second map + Fast family fleet |
 | ~~**HUD density**~~ | **Done:** tabbed Map / Missions / Garage / Settings drawer. Was: right column stacks ~10 panels (missions, stats, settings, fast travel, landmarks, search, music, journal…). Crowded at 1280×720, worse on phones | Collapse into one tabbed "Map / Missions / Garage / Settings" drawer; keep minimap + speed always on |
 | ~~**First-session clarity**~~ | **Done:** one pinned Chapter 1 objective (Vallejo taco + landmark opens the Bay). Was: player lands at Vallejo with 37 landmarks, 6 taco trucks, 14 parking bays, 10 vistas, 5 homage tokens, scenic routes — no "do this first" | Single pinned objective that advances (first taco truck → first unlock), rest behind the mission tab |
 | ~~**Nav hint polish**~~ | **Done:** legs < 80 m skipped. Was: shows `Bear right · 0.0 mi` when the next leg point is close | Skip legs < ~80 m; show street name of next leg when available |
@@ -76,4 +77,32 @@ Compressed **Bay Area night sandbox** in `drive-world/` (PlayCanvas 2.23 + Ammo 
 
 ---
 
+## Pass 3 (Nov 2026) — console feel + Tokyo polish
+
+| Item | Status |
+|------|--------|
+| Console-feel (pause, gamepad RT/LT, frame cap) | Shipped #106 + `test:playtest` |
+| Chase camera Bullet +Z + self-raycast skip | Fixed; playtest dot check |
+| Tokyo FF fleet (8 landmarks → 8 cars) | `tokyo-ff-cars.ts` + `test:wiring` |
+| CI City Nights | `test:wiring`, `test:playtest`, `test:tokyo` in workflow |
+
 _Pass 2: boot crash fixes, typecheck gate, layout fix, headless smoke. Prior pass covered Telegraph / Caldecott / Orinda / Concord / Walnut Creek / Martinez geography._
+
+## Pass 4 (Nov 2026) — UX, ground, Game Finish merge (PR #114)
+
+| Area | Status | Notes |
+|------|--------|--------|
+| **Map UI** | Shipped | `BayMap.tsx` — freeways, districts, hubs; corner minimap + large Map tab |
+| **HUD tabs** | Shipped | **Drive / Map / Cars / More**; legacy `#hud` hidden when React shell mounts |
+| **Fleet / GLB** | Shipped | Starter + background Kenney preload; **Cars** tab `requestVehicleSwap` when slow |
+| **3D ground** | Partial | Heightmapped `build-bay-ground.ts` (visual); flat physics slab + streets for handling |
+| **Tokyo** | Shipped | 8 landmarks → 8 FF cars; heightfield visuals; `test:wiring` + `test:tokyo` |
+| **Game Finish D1–D5** (on `main`) | Shipped | Street rep, Nitro Zone, I-80 ghost, chapters, ghost circuit, Day 5 drones/GLBs (#118–#125) |
+| **Cars tab density** | Watch | Fleet picker + Records + Safehouse after merge — busier than “fleet only” |
+| **CI** | Fragile | Headless Chrome playtests need mph/Δ thresholds (not fixed physics) |
+| **World art** | Open | City blocks still procedural boxes; EarthNG-style meshes not in scope |
+| **Docs drift** | Open | `DRIVE_WORLD_STATUS.md` still lists “Garage” tab name; code says **Cars** |
+
+**Automated gates (local, Nov 2026):** `npm run test:city-nights` pass on `cursor/tokyo-bonus-fc6d`.
+
+**Still P2 from pass 2:** Oracle/Chase 12 m overlap, `game-loop` monolith, no Vitest in `drive-world/`, empty `public/music/`.

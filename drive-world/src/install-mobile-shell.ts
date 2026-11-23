@@ -1,5 +1,6 @@
 import { unlockAudio } from './game-audio';
 import { unlockMusic } from './game-music';
+import { pollGamepadConfirmEdge } from './gamepad-hub';
 import { isIOS, isTouchPrimary } from './mobile-platform';
 
 function dismissTapStart(): void {
@@ -32,11 +33,32 @@ export function installMobileShell(): void {
   canvas?.addEventListener('touchmove', blockGameTouch, { passive: false });
 
   const tap = document.getElementById('tap-start');
+  const sub = tap?.querySelector('.tap-start-sub');
+  if (sub && !isTouchPrimary()) {
+    sub.textContent = 'Tap, click, or press A / Start on a controller';
+  }
+  let gamepadBootRaf = 0;
   const engage = () => {
     onFirstGesture();
     window.removeEventListener('pointerdown', engage);
     tap?.removeEventListener('click', engage);
+    cancelAnimationFrame(gamepadBootRaf);
   };
+  // Gamepad buttons are not a user activation in most browsers, so keep retrying audio on real gestures.
+  const retryAudio = () => {
+    unlockAudio();
+    void unlockMusic();
+  };
+  window.addEventListener('keydown', retryAudio, { passive: true });
+  window.addEventListener('pointerdown', retryAudio, { passive: true });
+  const pollGamepadBoot = () => {
+    if (pollGamepadConfirmEdge()) {
+      engage();
+      return;
+    }
+    gamepadBootRaf = requestAnimationFrame(pollGamepadBoot);
+  };
+  gamepadBootRaf = requestAnimationFrame(pollGamepadBoot);
   window.addEventListener('pointerdown', engage, { once: true, passive: true });
   tap?.addEventListener('click', engage, { once: true });
 

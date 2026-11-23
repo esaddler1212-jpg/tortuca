@@ -2,7 +2,7 @@ import { Color, Entity, StandardMaterial, type AppBase } from 'playcanvas';
 
 import type { BayQualityPreset } from './bay-quality';
 import { CITY_HUBS } from './city-map-registry';
-import { hillOffsetM } from './bay-terrain';
+import { snapToBayGround } from './openworldjs/ground-snap';
 
 type HubCar = { root: Entity; path: { x: number; z: number }[]; seg: number; t: number; speed: number };
 
@@ -77,7 +77,7 @@ export function updateHubStreetTraffic(dt: number, enabled: boolean): void {
     const b = car.path[car.seg + 1];
     const x = a.x + (b.x - a.x) * car.t;
     const z = a.z + (b.z - a.z) * car.t;
-    car.root.setPosition(x, hillOffsetM(x, z) + 1.35, z);
+    car.root.setPosition(x, snapToBayGround(x, z, 1.35), z);
     const dx = b.x - a.x;
     const dz = b.z - a.z;
     car.root.setEulerAngles(0, (Math.atan2(dx, dz) * 180) / Math.PI, 0);

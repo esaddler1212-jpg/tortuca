@@ -45,6 +45,10 @@ Default home is the **Vallejo estate** with a **Fast & Furious–style garage**.
 - **Hub parking rows** at every `CITY_HUBS` center; **green dots** on the minimap are free gas pumps.
 - **Bay quality preset** in Settings (Chromebook / Balanced / Lush) adjusts fog, traffic, sideshow, and fuel sim.
 
+### Tokyo bonus (post-game)
+
+After **every Bay car** (no `tokyo-*` ids) and **all six regions**, board the **orange SFO gate** (**F** / **D-pad ↑**) to Haneda. **Eight landmarks** unlock the **Fast & Furious–style tribute fleet** (one ride each; fan tribute, not affiliated). Fly home from Haneda when the **8/8 fleet** is complete. Tests: `npm run test:wiring`, `npm run test:tokyo`, or full `npm run test:city-nights`.
+
 ### Bay streaming & grade nav (EarthNG Tier 2)
 
 - **Hub streaming** — distant hubs show a low-poly **skyline shell** until you drive within range; full blocks stream in (Waymo bootstrap hubs always built). Toggle in Settings.

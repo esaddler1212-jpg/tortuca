@@ -23,7 +23,14 @@ let snapshot: GameHudSnapshot = {
   staminaMax: 100,
   superReady: true,
   quality: 'medium',
-  flightMode: true
+  flightMode: true,
+  heroX: 0,
+  heroZ: 0,
+  dronesLeft: 0,
+  lifetimeDestructionUsd: 0,
+  dronesDestroyed: 0,
+  loadingTip: '',
+  manifestHints: [] as string[]
 };
 
 let touch: TouchFlight = {

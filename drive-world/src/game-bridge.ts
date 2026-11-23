@@ -22,10 +22,13 @@ export type HudSnapshot = {
   phase: GamePhase;
   ridingWaymo: boolean;
   progress: SavedProgress | null;
-  nextLandmark: LandmarkDef | null;
+  nextLandmark: Pick<LandmarkDef, 'id' | 'name' | 'x' | 'z'> | null;
   cameraMode: CameraMode;
   waterPhase: number;
   photoMode: boolean;
+  /** Orbit camera around car in photo mode (degrees / meters). */
+  photoOrbit?: { yawDeg: number; pitchDeg: number; radiusM: number };
+  photoExposure?: number;
   nearGarage: boolean;
   settings: GameSettings;
   flightMode?: boolean;
@@ -53,6 +56,8 @@ export type HudSnapshot = {
   /** 0–100 nitro tank (Midnight Club–style boost) */
   nitroPercent?: number;
   nitroBoosting?: boolean;
+  /** Lush preset + boost — MC Nitro Zone grade */
+  nitroZoneActive?: boolean;
   driftScore?: number;
   driftGoal?: number;
   driftPadName?: string | null;
@@ -64,7 +69,24 @@ export type HudSnapshot = {
   pinnedChapterLabel?: string | null;
   pinnedChapterHint?: string | null;
   landmarkSprintLabel?: string | null;
+  /** Ghost circuit minimap segments (3 routes). */
+  ghostCircuitRoutes?: { id: string; name: string; x1: number; z1: number; x2: number; z2: number; pbMs: number }[];
+  ghostCircuitRoster?: string | null;
   garageInteriorCam?: boolean;
+  gamepadConnected?: boolean;
+  simPaused?: boolean;
+  /** Tokyo bonus map active (minimap / nav switch to Tokyo bounds). */
+  inTokyo?: boolean;
+  /** Board-flight prompt at SFO gate / Haneda pad. */
+  flightPrompt?: { label: string; ready: boolean; detail?: string } | null;
+  /** Cinematic flight in progress (0–1 fade to black between legs). */
+  flightCinematic?: { label: string; fade: number } | null;
+  /** Bay-wide street rep 0–100 */
+  streetRepPercent?: number;
+  streetRepRankLabel?: string;
+  /** Current district rep when driving */
+  regionRepPercent?: number;
+  regionRepLabel?: string;
 };
 
 export type TouchDrive = {
@@ -101,6 +123,7 @@ const listeners = new Set<HudListener>();
 let skipWaymoHandler: (() => void) | null = null;
 let toggleCameraHandler: (() => void) | null = null;
 let togglePhotoHandler: (() => void) | null = null;
+let setPhotoExposureHandler: ((value: number) => void) | null = null;
 let fastTravelHandler: ((d: DistrictId) => void) | null = null;
 let landHereHandler: ((x: number, z: number, label: string) => void) | null = null;
 let navTarget: NavTarget | null = null;
@@ -113,6 +136,8 @@ let setHomeSafehouseHandler: ((id: string) => void) | null = null;
 let claimSafehouseHandler: ((name: string) => void) | null = null;
 let startTaxiHandler: ((contractId: string) => void) | null = null;
 let dynoPullHandler: (() => void) | null = null;
+let boardFlightHandler: (() => void) | null = null;
+let vehicleSwapHandler: ((vehicleId: string) => void) | null = null;
 
 let touchDrive: TouchDrive = {
   up: false,
@@ -149,6 +174,14 @@ export function registerToggleCamera(fn: () => void): void {
 
 export function registerTogglePhoto(fn: () => void): void {
   togglePhotoHandler = fn;
+}
+
+export function registerSetPhotoExposure(fn: (value: number) => void): void {
+  setPhotoExposureHandler = fn;
+}
+
+export function requestSetPhotoExposure(value: number): void {
+  setPhotoExposureHandler?.(value);
 }
 
 export function registerFastTravel(fn: (d: DistrictId) => void): void {
@@ -292,4 +325,20 @@ export function computeTouchControls(): { steering: number; throttle: number; ve
   if (t.climb) vertical += 1;
   if (t.descend) vertical -= 1;
   return { steering, throttle, vertical, nitro: t.nitro };
+}
+
+export function registerBoardFlight(fn: () => void): void {
+  boardFlightHandler = fn;
+}
+
+export function requestBoardFlight(): void {
+  boardFlightHandler?.();
+}
+
+export function registerVehicleSwap(fn: (vehicleId: string) => void): void {
+  vehicleSwapHandler = fn;
+}
+
+export function requestVehicleSwap(vehicleId: string): void {
+  vehicleSwapHandler?.(vehicleId);
 }

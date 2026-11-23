@@ -5,6 +5,8 @@ import type { StocksSnapshot } from "../types/stocks";
 import { woodhouseBriefingLines } from "../lib/woodhouseBriefing";
 import { stocksBriefingLines } from "../lib/stocksBriefing";
 import { weatherLabel } from "../lib/weather";
+import type { TierAState } from "../../shared/tierAOps";
+import { orderBriefingLines, type BriefingLine, type BriefingSectionId } from "../../shared/tierAOps";
 
 interface Props {
   weather: WeatherSnapshot | null;
@@ -14,6 +16,8 @@ interface Props {
   userName?: string;
   woodhouse?: WoodhouseOrchestrationSnapshot | null;
   stocks?: StocksSnapshot | null;
+  tierA?: TierAState | null;
+  onBriefingPref?: (id: BriefingSectionId, delta: number) => void;
 }
 
 export function MorningBriefing({
@@ -24,6 +28,8 @@ export function MorningBriefing({
   userName,
   woodhouse,
   stocks,
+  tierA,
+  onBriefingPref,
 }: Props) {
   const greeting = (() => {
     const h = new Date().getHours();
@@ -32,25 +38,38 @@ export function MorningBriefing({
     return "Good evening";
   })();
 
-  const lines: string[] = [];
+  const raw: BriefingLine[] = [];
   if (weather) {
-    lines.push(
-      `It is ${Math.round(weather.temperature)}° with ${weatherLabel(weather.weatherCode).toLowerCase()}. Sunset today is at ${format(new Date(weather.sunset), "h:mm a")}.`,
-    );
+    raw.push({
+      section: "weather",
+      text: `It is ${Math.round(weather.temperature)}° with ${weatherLabel(weather.weatherCode).toLowerCase()}. Sunset today is at ${format(new Date(weather.sunset), "h:mm a")}.`,
+    });
   }
-  if (unreadEmails > 0) {
-    lines.push(`You have ${unreadEmails} unread message${unreadEmails === 1 ? "" : "s"}.`);
-  } else {
-    lines.push("Your inbox is clear.");
-  }
+  raw.push({
+    section: "inbox",
+    text:
+      unreadEmails > 0
+        ? `You have ${unreadEmails} unread message${unreadEmails === 1 ? "" : "s"}.`
+        : "Your inbox is clear.",
+  });
   if (pendingTodos > 0) {
-    lines.push(`${pendingTodos} task${pendingTodos === 1 ? "" : "s"} remain on your list.`);
+    raw.push({
+      section: "todos",
+      text: `${pendingTodos} task${pendingTodos === 1 ? "" : "s"} remain on your list.`,
+    });
   }
   if (nextEventTitle) {
-    lines.push(`Next on your schedule: ${nextEventTitle}.`);
+    raw.push({ section: "schedule", text: `Next on your schedule: ${nextEventTitle}.` });
   }
-  lines.push(...woodhouseBriefingLines(woodhouse));
-  lines.push(...stocksBriefingLines(stocks ?? null));
+  for (const w of woodhouseBriefingLines(woodhouse)) raw.push({ section: "woodhouse", text: w });
+  for (const s of stocksBriefingLines(stocks ?? null)) raw.push({ section: "stocks", text: s });
+  const openCmt = (tierA?.commitments ?? []).filter((c) => !c.done).length;
+  if (openCmt) raw.push({ section: "commitments", text: `${openCmt} open commitment${openCmt === 1 ? "" : "s"} on your ledger.` });
+  const w = tierA?.wearable;
+  if (w?.sleepHours != null) {
+    raw.push({ section: "wearable", text: `Recovery: about ${w.sleepHours} hours sleep logged.` });
+  }
+  const lines = orderBriefingLines(raw, tierA?.briefingPrefs).map((l) => l.text);
 
   return (
     <section className="panel p-6 border-alfred-gold/20">
@@ -61,6 +80,16 @@ export function MorningBriefing({
       <p className="text-alfred-mist leading-relaxed max-w-2xl">
         {lines.join(" ")}
       </p>
+      {onBriefingPref && (
+        <p className="mt-3 flex flex-wrap gap-2 text-[11px] text-alfred-mist">
+          More:
+          {(["inbox", "stocks", "weather"] as BriefingSectionId[]).map((id) => (
+            <button key={id} type="button" className="underline" onClick={() => onBriefingPref(id, 0.2)}>
+              {id}
+            </button>
+          ))}
+        </p>
+      )}
       <p className="mt-4 text-sm italic text-alfred-mist/80 font-display">
         — Iris, at your service.
       </p>

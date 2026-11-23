@@ -26,7 +26,7 @@ export function buildBayWater(app: AppBase): void {
 
   const fringe = new Entity('bay-fringe');
   fringe.setLocalScale(WORLD_HALF_M * 2, 0.06, WORLD_HALF_M * 2);
-  fringe.setPosition(0, -0.25, 0);
+  fringe.setPosition(0, -1.35, 0);
   const fringeMat = new StandardMaterial();
   fringeMat.diffuse = new Color(0.04, 0.05, 0.06);
   fringeMat.update();

@@ -87,7 +87,13 @@ const errors = [];
 const browser = await puppeteer.launch({
   executablePath: chrome,
   headless: true,
-  args: ['--no-sandbox', '--disable-dev-shm-usage', '--use-gl=angle', '--enable-unsafe-swiftshader']
+  args: [
+    '--no-sandbox',
+    '--disable-dev-shm-usage',
+    '--use-angle=swiftshader',
+    '--enable-unsafe-swiftshader',
+    '--ignore-gpu-blocklist'
+  ]
 });
 const page = await browser.newPage();
 page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));

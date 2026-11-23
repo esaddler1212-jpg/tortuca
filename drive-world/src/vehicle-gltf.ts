@@ -1,6 +1,7 @@
 import { Color, StandardMaterial, type AppBase, type Asset, type Entity } from 'playcanvas';
 
 import { appliedTuning } from './vehicle-customization';
+import { GARAGE_STARTER_IDS } from './vehicle-catalog';
 import { glbPathForVehicle as pathForId, VEHICLE_GLB } from './vehicle-gltf-paths';
 
 export { VEHICLE_GLB, glbPathForVehicle } from './vehicle-gltf-paths';
@@ -28,6 +29,17 @@ function loadUrl(app: AppBase, url: string): Promise<void> {
 /** Small first paint — starter sedan + hover mesh shared by Waymo path. */
 export function preloadBootVehicleModels(app: AppBase): Promise<void> {
   return Promise.all(BOOT_PATHS.map((url) => loadUrl(app, url))).then(() => undefined);
+}
+
+/** Car picker + first drives use Kenney GLBs (avoid block-body fallback). */
+export function preloadGarageStarterModels(app: AppBase): Promise<void> {
+  return ensureVehicleModelsLoaded(app, [...GARAGE_STARTER_IDS]);
+}
+
+/** Background load of every catalog mesh so swaps stay on GLB bodies. */
+export function preloadAllVehicleModels(app: AppBase): Promise<void> {
+  const ids = Object.keys(VEHICLE_GLB).filter((k) => k !== 'default');
+  return ensureVehicleModelsLoaded(app, ids);
 }
 
 export async function ensureVehicleModelLoaded(app: AppBase, vehicleId: string): Promise<void> {
@@ -58,6 +70,14 @@ const VISUAL_BY_ID: Record<string, GltfVisualOptions> = {
   'bonus-gotham-knight': { scale: 2.08, yawOffsetDeg: 90, yOffset: -0.3 },
   'bonus-scarlet-five': { scale: 2.05, yawOffsetDeg: 90, yOffset: -0.26 },
   'bonus-night-coil': { scale: 2.1, yawOffsetDeg: 90, yOffset: -0.28 },
+  'tokyo-drift-monarch': { scale: 2.06, yawOffsetDeg: 90, yOffset: -0.24 },
+  'tokyo-teal-phantom': { scale: 2.04, yawOffsetDeg: 90, yOffset: -0.28 },
+  'tokyo-kabuki-z': { scale: 2.02, yawOffsetDeg: 90, yOffset: -0.26 },
+  'tokyo-gold-linx': { scale: 2.05, yawOffsetDeg: 90, yOffset: -0.3 },
+  'tokyo-neon-evo': { scale: 2.0, yawOffsetDeg: 90, yOffset: -0.22 },
+  'tokyo-c1-boost': { scale: 2.04, yawOffsetDeg: 90, yOffset: -0.22 },
+  'tokyo-family-van': { scale: 2.22, yawOffsetDeg: 90, yOffset: -0.46 },
+  'tokyo-shuto-runner': { scale: 2.08, yawOffsetDeg: 90, yOffset: -0.24 },
   'bonus-bay-van': { scale: 2.18, yawOffsetDeg: 90, yOffset: -0.44 },
   'bonus-night-delivery': { scale: 2.14, yawOffsetDeg: 90, yOffset: -0.4 },
   'bonus-marina-hatch': { scale: 2.02, yawOffsetDeg: 90, yOffset: -0.3 },

@@ -8,7 +8,7 @@ You can **play for hours** without boot failures, without missing core loops (dr
 
 ## Devices
 
-iPhone Safari, iPad, Chromebook, desktop Chrome — same full game; presets only change **load** (fog, car counts), not which systems exist.
+iPhone Safari, iPad, Chromebook, desktop Chrome — same full game; presets only change **load** (fog, car counts), not which systems exist. Couch / Xbox Edge + controller: see [`CITY_NIGHTS_CONSOLE_FEEL.md`](./CITY_NIGHTS_CONSOLE_FEEL.md).
 
 ## Feedback
 
@@ -30,7 +30,23 @@ Anonymous `cn-tel-*` id; periodic beacons with **session length**, quality prese
 
 ## Music (more tracks)
 
-Procedural radio ships in-game; add loops you own under `public/music/`. Optional local generator: [**ACE-Step 1.5**](../tools/ace-step/) (`npm run ace-step:bootstrap`) — export OGG, update `playlist.json`. See [upstream toolchain index](./UPSTREAM_GAME_TOOLCHAIN.md).
+Procedural radio ships in-game; **playlist** has four OGG beds (toggle **Settings → Music → Use my playlist**). Regenerate or swap for ACE-Step on your GPU:
+
+```bash
+npm run ace-step:bootstrap
+# in tools/ace-step/upstream: uv sync && uv run acestep-api
+npm run ace-step:city-nights
+```
+
+No GPU handy: `npm run ace-step:city-nights -- --fallback-only` (ffmpeg ambient placeholders).
+
+## Tokyo bonus map
+
+Unlock the flight when you own **every Bay catalog car** (IDs starting with `tokyo-` don’t count) and **all six regions**. Board at **SFO** (pink gate), land at **Haneda**, then log **8 landmarks** in the **Fast & Furious–style Tokyo garage** — **one fan-tribute car per landmark** (Drift Monarch at Shibuya, Family Runner Van at Daikoku, **Shuto Night Runner** capstone at Odaiba). Headless: `cd drive-world && npm run test:tokyo`.
+
+## Peer comparison
+
+See [`CITY_NIGHTS_PEER_COMPARISON.md`](./CITY_NIGHTS_PEER_COMPARISON.md) (CPM2, Forza Horizon, Midnight Club LA vs what ships in the browser).
 
 ## Next engineering priorities
 
