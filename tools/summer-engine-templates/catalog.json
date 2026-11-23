@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "engine": "Summer Engine / Godot 4",
+  "licenseDefault": "MIT",
+  "note": "Reference-only for Tortuca PlayCanvas games — port ideas in TypeScript, never ship Godot scenes in the Netlify bundle.",
+  "templates": [
+    {
+      "id": "procedural-road-world",
+      "repo": "https://github.com/SummerEngine/template-3d-procedural-road-world.git",
+      "branch": "codex/importable-template",
+      "license": "MIT",
+      "tortucaGame": "city-nights",
+      "cherryPick": ["seeded road graph", "district chunks", "weather cycle", "enterable car handling presets"]
+    },
+    {
+      "id": "racing-game",
+      "repo": "https://github.com/SummerEngine/template-3d-racing-game.git",
+      "branch": "main",
+      "license": "MIT",
+      "tortucaGame": "city-nights",
+      "cherryPick": ["ghost/time-trial flow", "drift + nitro fill", "track authoring markers", "AI rival difficulty tiers"]
+    },
+    {
+      "id": "open-world-explore-tps",
+      "repo": "https://github.com/SummerEngine/template-3d-open-world-explore-tps.git",
+      "branch": "main",
+      "license": "Other (see repo)",
+      "tortucaGame": "city-nights",
+      "cherryPick": ["orbit camera + spring collision", "quest + interactable pattern", "coyote jump (Waymo on-foot if added)"]
+    },
+    {
+      "id": "sakura-rally",
+      "repo": "https://github.com/SummerEngine/sakura-rally.git",
+      "branch": "main",
+      "license": "MIT",
+      "tortucaGame": "city-nights",
+      "cherryPick": ["AI ghost driver", "seasonal world blend", "Tokyo / hanami rally tone for flight + cruise refs", "cel-band read for HUD"]
+    }
+  ]
+}

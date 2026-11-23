@@ -15,6 +15,11 @@ const required = [
   'tools/audio2face-3d/README.md',
   'tools/audio2face-3d/CHERRY_PICK.md',
   'tools/audio2face-3d/bootstrap.sh',
+  'tools/summer-engine-templates/README.md',
+  'tools/summer-engine-templates/CHERRY_PICK.md',
+  'tools/summer-engine-templates/bootstrap.sh',
+  'tools/summer-engine-templates/catalog.json',
+  'docs/SUMMER_ENGINE_TEMPLATES.md',
   'drive-world/CLAUDE.md'
 ];
 
