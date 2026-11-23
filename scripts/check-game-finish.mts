@@ -113,6 +113,19 @@ console.log(
 );
 
 ok("battleworld playtest script", fs.existsSync(path.join(root, "flight-nemulator/scripts/playtest-battleworld.mjs")));
+ok(
+  "cn-d10 playtest script",
+  fs.existsSync(path.join(root, "drive-world/scripts/playtest-browser.mjs"))
+);
+ok("cn-d10 console feel doc", fs.existsSync(path.join(root, "docs/CITY_NIGHTS_CONSOLE_FEEL.md")));
+ok("bw-d10 console feel doc", fs.existsSync(path.join(root, "docs/BATTLEWORLD_CONSOLE_FEEL.md")));
+const finishProgramMd = fs.readFileSync(path.join(root, "docs/GAME_FINISH_PROGRAM.md"), "utf8");
+ok("cn-d10 funnel signed", finishProgramMd.includes("funnel-signed: vantagegames-s1"));
+ok(
+  "cn-d10 funnel table (no placeholder)",
+  !finishProgramMd.includes("*e.g.") && finishProgramMd.includes("heat-5 box escape")
+);
+ok("bw-d10 funnel hook in program", finishProgramMd.includes("wave-10 pair duel"));
 
 const photoSrc = fs.readFileSync(path.join(root, "drive-world/src/photo-mode.ts"), "utf8");
 ok("polish loop doc", fs.existsSync(path.join(root, "docs/GAME_POLISH_LOOP.md")));

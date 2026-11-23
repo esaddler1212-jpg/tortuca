@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-23T01:42:15.950Z",
+  "updatedAt": "2026-11-23T01:52:26.892Z",
   "activeSlice": {
     "nightshift": "cn-d10",
-    "skyring": "bw-d09"
+    "skyring": "bw-d10"
   },
   "sliceState": {
     "cn-d01": {
@@ -52,7 +52,9 @@
       "note": "ACE finish bed in playlist; Settings Music ACE swap + persisted aceStepBedFile"
     },
     "cn-d10": {
-      "status": "active"
+      "status": "done",
+      "completedAt": "2026-11-23T01:52:26.679Z",
+      "note": "15-min funnel + couch doc signed; playtest gamepad RT/LT/Menu/B green"
     },
     "bw-d01": {
       "status": "done",
@@ -100,10 +102,24 @@
       "note": "Minimap home H pin; arc objective chip; playtest asserts new player cues"
     },
     "bw-d10": {
-      "status": "active"
+      "status": "done",
+      "completedAt": "2026-11-23T01:52:26.892Z",
+      "note": "Battleworld funnel doc + playtest smoke (chapter, H pin, arc chip)"
     }
   },
   "reports": [
+    {
+      "agent": "skyring",
+      "sliceId": "bw-d10",
+      "at": "2026-11-23T01:52:26.892Z",
+      "summary": "Battleworld funnel doc + playtest smoke (chapter, H pin, arc chip)"
+    },
+    {
+      "agent": "nightshift",
+      "sliceId": "cn-d10",
+      "at": "2026-11-23T01:52:26.679Z",
+      "summary": "15-min funnel + couch doc signed; playtest gamepad RT/LT/Menu/B green"
+    },
     {
       "agent": "skyring",
       "sliceId": "bw-d09",
