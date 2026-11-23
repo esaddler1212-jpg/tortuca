@@ -28,7 +28,7 @@ import {
 } from 'playcanvas';
 
 import { buildDrivingWorld } from './build-world';
-import { placeVallejoKenneyProps } from './build-kenney-vallejo';
+import { placeDistrictKenneyProps } from './build-kenney-districts';
 import { startGameSession } from './game-loop';
 import { installOpenworldDevCommands } from './openworldjs/dev-commands';
 import { getHudSnapshot } from './game-bridge';
@@ -138,7 +138,7 @@ void preloadAllVehicleModels(app).catch(() => {
 });
 
 buildDrivingWorld(app);
-void placeVallejoKenneyProps(app);
+void placeDistrictKenneyProps(app);
 
 const moon = new Entity('moon');
 moon.addComponent('light', {

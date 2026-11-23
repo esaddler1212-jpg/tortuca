@@ -28,6 +28,7 @@ HUD hex accents must match existing CSS nitro / chapter stripes — do not inven
 ## Density
 
 - **Vallejo estate (slice 1):** garage silhouette, driveway collision, 2 pump islands, 3–6 palms/trim props; optional Kenney GLBs when `public/models/kenney-city/` is installed.
+- **SF Embarcadero / Ferry (slice 2):** clock tower + wings, plaza + pier decks (collision), market awnings, string lights; Kenney ring at `SF_FERRY_POINT` (−780, −520).
 - Other regions: one kit per finish slice (`cn-art-d0N`), same rules.
 
 ## Credits
