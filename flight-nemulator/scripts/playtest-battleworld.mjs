@@ -76,6 +76,8 @@ const moved = Math.hypot((h1.heroX ?? 0) - (h0.heroX ?? 0), (h1.heroZ ?? 0) - (h
 check('flight moves hero', h1.speedKmh > 80 || moved > 15, `Δ ${moved.toFixed(0)} m · ${h1.speedKmh?.toFixed?.(0) ?? h1.speedKmh} km/h`);
 
 check('minimap mount', (await page.$('.minimap')) !== null);
+check('minimap home H', (await page.$('.minimap-home-h')) !== null);
+check('arc objective chip', !!(h0?.arcObjectiveChip && h0.arcObjectiveChip.length > 12), h0?.arcObjectiveChip);
 check('no page errors', errors.length === 0, [...new Set(errors)].slice(0, 3).join(' | '));
 
 await browser.close();

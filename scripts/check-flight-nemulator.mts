@@ -86,6 +86,12 @@ const parity = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-hero-vill
 });
 if (parity.status !== 0) process.exit(parity.status ?? 1);
 
+const minimap = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-battleworld-minimap.mts')], {
+  cwd: root,
+  stdio: 'inherit'
+});
+if (minimap.status !== 0) process.exit(minimap.status ?? 1);
+
 const dialogue = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-battleworld-dialogue.mts')], {
   cwd: root,
   stdio: 'inherit'

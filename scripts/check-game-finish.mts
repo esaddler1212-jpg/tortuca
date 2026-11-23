@@ -113,9 +113,23 @@ console.log(
 );
 
 ok("battleworld playtest script", fs.existsSync(path.join(root, "flight-nemulator/scripts/playtest-battleworld.mjs")));
+ok(
+  "cn-d10 playtest script",
+  fs.existsSync(path.join(root, "drive-world/scripts/playtest-browser.mjs"))
+);
+ok("cn-d10 console feel doc", fs.existsSync(path.join(root, "docs/CITY_NIGHTS_CONSOLE_FEEL.md")));
+ok("bw-d10 console feel doc", fs.existsSync(path.join(root, "docs/BATTLEWORLD_CONSOLE_FEEL.md")));
+const finishProgramMd = fs.readFileSync(path.join(root, "docs/GAME_FINISH_PROGRAM.md"), "utf8");
+ok("cn-d10 funnel signed", finishProgramMd.includes("funnel-signed: vantagegames-s1"));
+ok(
+  "cn-d10 funnel table (no placeholder)",
+  !finishProgramMd.includes("*e.g.") && finishProgramMd.includes("heat-5 box escape")
+);
+ok("bw-d10 funnel hook in program", finishProgramMd.includes("wave-10 pair duel"));
 
 const photoSrc = fs.readFileSync(path.join(root, "drive-world/src/photo-mode.ts"), "utf8");
 ok("polish loop doc", fs.existsSync(path.join(root, "docs/GAME_POLISH_LOOP.md")));
+ok("vice86 prompt catalog", fs.existsSync(path.join(root, "docs/GAME_POLISH_VICE86_PROMPTS.md")));
 ok("cn-d07 photo orbit", photoSrc.includes("setOrbitTarget") && photoSrc.includes("orbitPosition"));
 ok("cn-d07 photo exposure", photoSrc.includes("setExposure"));
 
@@ -129,6 +143,18 @@ ok(
   "bw-d08 chapter cue wiring",
   fs.existsSync(path.join(root, "flight-nemulator/src/battleworld-chapter-cues.ts"))
 );
+
+const playlistJson = JSON.parse(
+  fs.readFileSync(path.join(root, "drive-world/public/music/playlist.json"), "utf8")
+) as { tracks: { file: string }[] };
+ok("cn-d09 ace playlist bed", playlistJson.tracks.some((t) => t.file.includes("ace-step")));
+const musicPlaylistSrc = fs.readFileSync(path.join(root, "drive-world/src/music-playlist.ts"), "utf8");
+ok("cn-d09 playAceStepBed", musicPlaylistSrc.includes("playAceStepBed"));
+const minimapPinsSrc = fs.readFileSync(
+  path.join(root, "flight-nemulator/src/battleworld-minimap-pins.ts"),
+  "utf8"
+);
+ok("bw-d09 home minimap pin", minimapPinsSrc.includes("homeMinimapPin"));
 ok("bw-d06 magnetic-ace arc", BATTLEWORLD_ARCS["magnetic-ace"]?.districtId === "sokovia-memorial");
 ok(
   "bw-d07 offline autosave copy",
