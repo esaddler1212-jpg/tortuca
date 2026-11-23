@@ -2,8 +2,6 @@
 
 Second **7-prompt carousel** from Godofprompt: **neon 1986 Miami open-world driving** in one HTML file (Three.js). Tortuca’s analogue is **City Nights** (`drive-world/`) — Bay night drive, MC/FH feel, procedural audio, coastal weather.
 
-**Wizard FABLE carousel:** [`GAME_POLISH_FABLE_PROMPTS.md`](./GAME_POLISH_FABLE_PROMPTS.md)
-
 **CLI**
 
 ```bash
@@ -131,4 +129,4 @@ Trailer analogue (don’t block the fix list): document a 30s capture path—aut
 
 ## Prompt 7/7 — REPEAT
 
-Same as FABLE: **2 or 3 rounds** where the wow shows up. Capture nitro-at-dusk or wet-freeway moment; run `vice86-6`; verify `npm run test:city-nights`.
+**2 or 3 rounds** where the wow shows up. Capture nitro-at-dusk or wet-freeway moment; run `vice86-6`; verify `npm run test:city-nights`.
