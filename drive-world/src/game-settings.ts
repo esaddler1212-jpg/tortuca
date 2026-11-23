@@ -24,6 +24,8 @@ export type GameSettings = {
   coastalWeatherEnabled: boolean;
   /** Anonymous session length rollups (no PII) */
   shareSessionStats: boolean;
+  /** Landmark sprint rival pacing (Summer racing easy/medium/hard). */
+  sprintRivalTier: 'easy' | 'medium' | 'hard';
 };
 
 const KEY = 'drive-world-settings-v1';
@@ -43,7 +45,8 @@ const defaults: GameSettings = {
   musicUsePlaylist: false,
   autopilotPreset: 'tour',
   coastalWeatherEnabled: true,
-  shareSessionStats: true
+  shareSessionStats: true,
+  sprintRivalTier: 'medium'
 };
 
 export function loadSettings(): GameSettings {

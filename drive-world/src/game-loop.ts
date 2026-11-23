@@ -81,7 +81,9 @@ import {
   CAMERA_CYCLE,
   cameraModeLabel
 } from './camera-profiles';
-import { activeSprintLabel, freshSprintRuntime, tickLandmarkSprint } from './landmark-sprints';
+import { activeSprintLabel, freshSprintRuntime, LANDMARK_SPRINTS, tickLandmarkSprint } from './landmark-sprints';
+import { sprintLineProgress, sprintRivalGhostHud } from './sprint-rival-ghost';
+import { driftNitroGain } from './drift-nitro-charge';
 import { chapterObjectivePin } from './mission-nav';
 import { tryUnlockCraftVehicles } from './craft-vehicle-unlocks';
 import { tryAwardDistrictMeetBadge, tryUnlockDistrictMeetVehicles } from './district-meets';
@@ -933,7 +935,11 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         const mul = nitroBoosting ? 1.52 + nitroCharge * 0.38 : 1;
         vs?.fire?.('vehicle:nitro', mul);
         if (nitroBoosting) nitroCharge = Math.max(0, nitroCharge - dt * 0.44);
-        else nitroCharge = Math.min(1, nitroCharge + dt * (mph > 28 ? 0.2 : 0.11));
+        else {
+          const driftGain = driftNitroGain(drive.steering, mph, cpmRuntime.driftPadId != null);
+          const cruiseGain = mph > 28 ? 0.2 : 0.11;
+          nitroCharge = Math.min(1, nitroCharge + dt * (driftGain > 0 ? driftGain : cruiseGain));
+        }
         pulseVehicleUnderglow(ent, nitroBoosting);
         applyCameraFovBoost(camera, nitroBoosting, dt);
       } else if (drive.nitro && nitroCharge > 0.04) {
@@ -1227,7 +1233,19 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     const heatHunted = (progress.heatLevel ?? 0) >= 4.1;
 
     let ghostRivalLabel: string | null = null;
-    if (cpmRuntime.dragStripId && cpmRuntime.dragLaunchT != null) {
+    if (sprintRuntime.sprintId && sprintRuntime.startedMs != null) {
+      const sprint = LANDMARK_SPRINTS.find((s) => s.id === sprintRuntime.sprintId);
+      if (sprint) {
+        const elapsed = frameMs - sprintRuntime.startedMs;
+        ghostRivalLabel = sprintRivalGhostHud(
+          progress,
+          sprint.id,
+          sprintLineProgress(sprint, pos.x, pos.z),
+          elapsed,
+          settings.sprintRivalTier ?? 'medium'
+        );
+      }
+    } else if (cpmRuntime.dragStripId && cpmRuntime.dragLaunchT != null) {
       const strip = DRAG_STRIPS.find((s) => s.id === cpmRuntime.dragStripId);
       if (strip) {
         const elapsed = frameMs - cpmRuntime.dragLaunchT;

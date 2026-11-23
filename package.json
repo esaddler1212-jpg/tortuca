@@ -31,6 +31,7 @@
     "game-studios:bootstrap": "bash tools/claude-code-game-studios/bootstrap.sh",
     "audio2face:bootstrap": "bash tools/audio2face-3d/bootstrap.sh",
     "summer-engine:bootstrap": "bash tools/summer-engine-templates/bootstrap.sh",
+    "test:sprint-rival": "cd drive-world && npx tsx ../scripts/check-sprint-rival.mts",
     "test:upstream-tools": "tsx scripts/check-upstream-game-tools.mts",
     "test:os": "npm run build && npm run test:time && npm run test:speech && npm run test:herald && npm run test:upstream-tools && npm run test:iris && npm run test:research && npm run test:audit && npm run test:devices && npm run test:guardrails && npm run test:thin && npm run test:weekly"
   },

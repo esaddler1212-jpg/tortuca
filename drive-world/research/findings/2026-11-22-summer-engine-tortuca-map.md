@@ -8,12 +8,19 @@
 
 Summer Engine ships **complete browser-runnable Godot 4 slices** (driving, rally, procedural world, TPS quest). Tortuca already has Bullet cars, ghost sprints, nitro, and Bay terrain in TypeScript. The win is **proven UX loops** and **data layouts**, not scene import.
 
+## Shipped cherry-picks (this branch)
+
+| Template | Port | Files |
+|----------|------|-------|
+| Racing | Landmark sprint rival HUD (easy/med/hard par/PB) | `sprint-rival-ghost.ts`, `game-settings.sprintRivalTier` |
+| Racing | Drift/slide refills nitro | `drift-nitro-charge.ts`, `game-loop.ts` |
+
 ## Priority cherry-picks (next slices)
 
 | Order | Template | Idea | Tortuca file | Risk |
 |-------|----------|------|--------------|------|
-| 1 | Racing | Ghost lap + AI difficulty table | `cpm-ghost.ts`, `heat-chaser.ts` | Low |
-| 2 | Racing | Drift charges boost meter | `game-loop.ts` nitro charge | Medium (feel tuning) |
+| 1 | Racing | Ghost lap tapes on more drag strips | `cpm-ghost.ts`, `heat-chaser.ts` | Low |
+| 2 | Sakura | Spline ghost replay on sprint line | extend `sprint-rival-ghost.ts` | Medium |
 | 3 | Sakura | Ghost replay spline | new helper beside `cpm-ghost` | Medium |
 | 4 | Procedural | Road graph + chunk budget | hub streaming / Bay map doc | Medium |
 | 5 | TPS | Orbit cam collision | `camera-profiles.ts` | Low |
