@@ -19,6 +19,8 @@ export type GameSettings = {
   musicStation: MusicStationId;
   musicEnabled: boolean;
   musicUsePlaylist: boolean;
+  /** Preferred ACE-Step bed file under public/music/ when playlist mode is on. */
+  musicAceStepBedFile?: string;
   autopilotPreset: AutopilotPreset;
   /** SF/Marin mist + wet-road mood */
   coastalWeatherEnabled: boolean;

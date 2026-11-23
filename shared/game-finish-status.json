@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-23T01:38:19.253Z",
+  "updatedAt": "2026-11-23T01:42:15.950Z",
   "activeSlice": {
-    "nightshift": "cn-d09",
+    "nightshift": "cn-d10",
     "skyring": "bw-d09"
   },
   "sliceState": {
@@ -47,10 +47,12 @@
       "note": "Heat-5 cop box at 4.5; spawn/escape toasts; chaser pulls tighter at max heat"
     },
     "cn-d09": {
-      "status": "active"
+      "status": "done",
+      "completedAt": "2026-11-23T01:42:15.585Z",
+      "note": "ACE finish bed in playlist; Settings Music ACE swap + persisted aceStepBedFile"
     },
     "cn-d10": {
-      "status": "pending"
+      "status": "active"
     },
     "bw-d01": {
       "status": "done",
@@ -89,17 +91,31 @@
     },
     "bw-d08": {
       "status": "done",
-      "completedAt": "2026-11-23T01:38:19.252Z",
+      "completedAt": "2026-11-23T01:42:15.769Z",
       "note": "Chapter-clear cutscenes on territory/stone/home-mark beats; dialogue smoke extended"
     },
     "bw-d09": {
-      "status": "active"
+      "status": "done",
+      "completedAt": "2026-11-23T01:42:15.950Z",
+      "note": "Minimap home H pin; arc objective chip; playtest asserts new player cues"
     },
     "bw-d10": {
-      "status": "pending"
+      "status": "active"
     }
   },
   "reports": [
+    {
+      "agent": "skyring",
+      "sliceId": "bw-d09",
+      "at": "2026-11-23T01:42:15.950Z",
+      "summary": "Minimap home H pin; arc objective chip; playtest asserts new player cues"
+    },
+    {
+      "agent": "nightshift",
+      "sliceId": "cn-d09",
+      "at": "2026-11-23T01:42:15.585Z",
+      "summary": "ACE finish bed in playlist; Settings Music ACE swap + persisted aceStepBedFile"
+    },
     {
       "agent": "skyring",
       "sliceId": "bw-d08",

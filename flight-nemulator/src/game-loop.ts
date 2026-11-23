@@ -118,6 +118,7 @@ import {
 } from './doom-story-arc';
 import {
   battleworldLatticeStrength,
+  hasDistrictSignatureBeat,
   latticeBeatChip,
   maybeRecordTerritoryClear,
   recordArcBeat,
@@ -159,6 +160,7 @@ import {
   pairFoeNameForHero
 } from './battleworld-dialogue';
 import { queueChapterClearDialogue } from './battleworld-chapter-cues';
+import { arcMinimapPin, arcObjectiveChip, homeMinimapPin } from './battleworld-minimap-pins';
 import {
   canQueueGenericDefeatLine,
   cutsceneHudFields,
@@ -1088,6 +1090,27 @@ function tickFrame(s: GameSession, dt: number): void {
       s.playerRole,
       isVillainOnlyHero(s.heroSpec.id)
     ),
+    arcObjectiveChip: arcObjectiveChip(
+      characterArcHudLine(s.heroSpec.id, {
+        role: s.playerRole,
+        wave: s.wave,
+        takeoverCount: territoryTakeoverCount(s.territory),
+        pairBossBlocked:
+          s.playerRole === 'hero' &&
+          (!canHeroFacePairBoss(s.territory) || infinityBossBlocksFinale(s.factionNpcs)),
+        playerStones: playerInfinityStoneCount(),
+        stonesSealed: s.infinity.sites.filter((st) => st.claimedBy === 'sealed').length,
+        districtId: districtIdAtPosition(pos.x, pos.z),
+        lattice: battleworldLatticeStrength()
+      }),
+      battleworldOpeningChapterChip(s.heroSpec.id, s.playerRole, isVillainOnlyHero(s.heroSpec.id)),
+      latticeBeatChip(s.heroSpec.id, s.playerRole),
+      s.playerRole === 'hero' && !hasDistrictSignatureBeat(s.heroSpec.id)
+    ),
+    homeMinimapX: homeMinimapPin(s.heroSpec.districtId).x,
+    homeMinimapZ: homeMinimapPin(s.heroSpec.districtId).z,
+    arcMinimapX: arcMinimapPin(s.heroSpec.id, s.playerRole)?.x ?? null,
+    arcMinimapZ: arcMinimapPin(s.heroSpec.id, s.playerRole)?.z ?? null,
     alignmentNote: canPickAlignment(s.heroSpec.id)
       ? 'Doom: toggle Hero or Villain below'
       : s.heroSpec.id === VENOM_PLAYABLE_ID

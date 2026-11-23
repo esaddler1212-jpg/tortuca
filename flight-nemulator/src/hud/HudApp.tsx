@@ -102,6 +102,11 @@ export type GameHudSnapshot = {
   chapterChip?: string | null;
   chapterChainChip?: string | null;
   chapterChainObjective?: string | null;
+  arcObjectiveChip?: string | null;
+  homeMinimapX?: number;
+  homeMinimapZ?: number;
+  arcMinimapX?: number | null;
+  arcMinimapZ?: number | null;
   cutsceneActive?: boolean;
   cutsceneSpeaker?: string | null;
   cutsceneText?: string | null;
@@ -190,7 +195,25 @@ export function HudApp() {
         </div>
       </div>
 
-      <Minimap heroX={snap.heroX ?? 0} heroZ={snap.heroZ ?? 0} />
+      {snap.arcObjectiveChip ? (
+        <p className="hud-tag hud-arc-objective" title="Arc · Story · Lattice">
+          {snap.arcObjectiveChip}
+        </p>
+      ) : null}
+      <Minimap
+        heroX={snap.heroX ?? 0}
+        heroZ={snap.heroZ ?? 0}
+        homePin={
+          snap.homeMinimapX != null && snap.homeMinimapZ != null
+            ? { x: snap.homeMinimapX, z: snap.homeMinimapZ, label: 'H' }
+            : null
+        }
+        arcPin={
+          snap.arcMinimapX != null && snap.arcMinimapZ != null
+            ? { x: snap.arcMinimapX, z: snap.arcMinimapZ }
+            : null
+        }
+      />
 
       {snap.cutsceneActive && snap.cutsceneText && (
         <CutsceneOverlay snap={snap} onContinue={() => acknowledgeDialogue()} />

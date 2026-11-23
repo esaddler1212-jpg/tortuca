@@ -20,6 +20,14 @@
       "prompt": "Instrumental ambient downtempo, 88 BPM, no vocals, coastal fog, muted piano pads, gentle rain texture, golden gate night mood, 90 second loop",
       "bpm": 88,
       "duration": 95
+    },
+    {
+      "file": "ace-step-nightshift-d09.ogg",
+      "title": "ACE nightshift finish bed",
+      "prompt": "Instrumental electronic night drive, 94 BPM, no vocals, ACE-Step style, analog synth bass, gated hats, SF bay neon, loopable 95 seconds",
+      "bpm": 94,
+      "duration": 95,
+      "aceStepBed": true
     }
   ]
 }

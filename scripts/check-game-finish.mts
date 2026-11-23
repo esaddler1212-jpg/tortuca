@@ -129,6 +129,18 @@ ok(
   "bw-d08 chapter cue wiring",
   fs.existsSync(path.join(root, "flight-nemulator/src/battleworld-chapter-cues.ts"))
 );
+
+const playlistJson = JSON.parse(
+  fs.readFileSync(path.join(root, "drive-world/public/music/playlist.json"), "utf8")
+) as { tracks: { file: string }[] };
+ok("cn-d09 ace playlist bed", playlistJson.tracks.some((t) => t.file.includes("ace-step")));
+const musicPlaylistSrc = fs.readFileSync(path.join(root, "drive-world/src/music-playlist.ts"), "utf8");
+ok("cn-d09 playAceStepBed", musicPlaylistSrc.includes("playAceStepBed"));
+const minimapPinsSrc = fs.readFileSync(
+  path.join(root, "flight-nemulator/src/battleworld-minimap-pins.ts"),
+  "utf8"
+);
+ok("bw-d09 home minimap pin", minimapPinsSrc.includes("homeMinimapPin"));
 ok("bw-d06 magnetic-ace arc", BATTLEWORLD_ARCS["magnetic-ace"]?.districtId === "sokovia-memorial");
 ok(
   "bw-d07 offline autosave copy",

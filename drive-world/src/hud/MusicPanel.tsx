@@ -1,16 +1,28 @@
 import { useEffect, useState } from 'react';
 
 import { MUSIC_STATIONS, cycleMusicStation, getMusicState, setMusicVolume, startMusic, toggleMusicPlay } from '../game-music';
-import { loadPlaylistCatalog, nextPlaylistTrack, playlistAvailable, prevPlaylistTrack } from '../music-playlist';
+import {
+  currentPlaylistTrack,
+  loadPlaylistCatalog,
+  nextPlaylistTrack,
+  playAceStepBed,
+  playlistAvailable,
+  playlistHudLabel,
+  prevPlaylistTrack
+} from '../music-playlist';
 import { loadSettings, saveSettings } from '../game-settings';
 
 export function MusicPanel() {
   const [s, setS] = useState(loadSettings());
   const [state, setState] = useState(getMusicState());
   const [hasPlaylist, setHasPlaylist] = useState(false);
+  const [playlistTitle, setPlaylistTitle] = useState<string | null>(null);
 
   useEffect(() => {
-    void loadPlaylistCatalog().then(() => setHasPlaylist(playlistAvailable()));
+    void loadPlaylistCatalog().then(() => {
+      setHasPlaylist(playlistAvailable());
+      setPlaylistTitle(playlistHudLabel() ?? currentPlaylistTrack()?.title ?? null);
+    });
   }, []);
 
   const apply = (next: typeof s) => {
@@ -36,6 +48,29 @@ export function MusicPanel() {
         />
         Use my playlist {hasPlaylist ? '' : '(add tracks to public/music/)'}
       </label>
+      {s.musicUsePlaylist && hasPlaylist && playlistTitle ? (
+        <p className="music-now-playing" aria-live="polite">
+          Now: {playlistTitle}
+        </p>
+      ) : null}
+      {hasPlaylist ? (
+        <button
+          type="button"
+          className="sync-btn"
+          onClick={() => {
+            void playAceStepBed().then((ok) => {
+              if (!ok) return;
+              const next = loadSettings();
+              setS(next);
+              apply(next);
+              void startMusic(next.musicStation === 'off' ? 'ambient' : next.musicStation);
+              setPlaylistTitle(playlistHudLabel());
+            });
+          }}
+        >
+          ACE finish bed
+        </button>
+      ) : null}
       <div className="music-actions">
         <button type="button" className="sync-btn" onClick={() => setState({ ...getMusicState(), playing: toggleMusicPlay() })}>
           {state.playing ? 'Pause' : 'Play'}
@@ -44,14 +79,20 @@ export function MusicPanel() {
           type="button"
           className="sync-btn"
           onClick={() => {
-            if (s.musicUsePlaylist && hasPlaylist) void nextPlaylistTrack();
+            if (s.musicUsePlaylist && hasPlaylist) {
+              void nextPlaylistTrack().then(() => setPlaylistTitle(playlistHudLabel()));
+            }
             else setState({ ...getMusicState(), station: cycleMusicStation(1), label: '' });
           }}
         >
           Next
         </button>
         {s.musicUsePlaylist && hasPlaylist ? (
-          <button type="button" className="sync-btn" onClick={() => void prevPlaylistTrack()}>
+          <button
+            type="button"
+            className="sync-btn"
+            onClick={() => void prevPlaylistTrack().then(() => setPlaylistTitle(playlistHudLabel()))}
+          >
             Prev
           </button>
         ) : null}
