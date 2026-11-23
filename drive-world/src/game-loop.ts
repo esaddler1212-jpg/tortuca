@@ -72,7 +72,8 @@ import {
   startTaxiContract,
   type SavedProgress
 } from './game-progress';
-import { bindDriveKeys, pollDriveInput } from './game-input';
+import { bindDriveKeys, bindRecoverVehicle, pollDriveInput } from './game-input';
+import { countWheelsOnGround, recoverVehiclePose } from './vehicle-recover';
 import { isGamepadConnected, pollGamepadMenuActions } from './gamepad-hub';
 import {
   hapticDragGo,
@@ -254,6 +255,8 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   let wasNitroBoosting = false;
   let wasHeatHunted = false;
   let wasCopBoxChase = false;
+  let wheelsOffGroundT = 0;
+  let showedRecoverHint = false;
   const photoKeys = { fwd: false, back: false, left: false, right: false, up: false, down: false };
   const CALDECOTT = { x: 392, z: 265 };
   let autopilotActive = false;
@@ -316,6 +319,15 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   };
 
   bindDriveKeys();
+  bindRecoverVehicle(() => {
+    const ent = vehicle();
+    if (!ent || isAerialVehicle(progress.activeVehicleId ?? '')) return;
+    if (progress.phase !== 'home' || ridingWaymo) return;
+    recoverVehiclePose(ent);
+    const p = ent.getPosition();
+    progress = saveLastPose(progress, { x: p.x, y: p.y, z: p.z, yaw: ent.getEulerAngles().y });
+    ui.showToast('Vehicle reset', 'Wheels back on the deck — R to repeat', 3200);
+  });
   window.addEventListener('drive-world:unlock-audio', () => unlockAudio(), { once: false });
   window.addEventListener('keydown', (e) => {
     if (autopilotActive && (e.key === 'c' || e.key === 'C' || e.key === 'w' || e.key === 'a' || e.key === 's' || e.key === 'd')) {
@@ -373,6 +385,9 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     if (isAerialVehicle(vehicleId)) {
       const floor = hillOffsetM(p.x, p.z) + 0.8;
       p.set(p.x, Math.max(p.y, floor + 38), p.z);
+    } else {
+      const floor = hillOffsetM(p.x, p.z) + 0.55;
+      if (p.y < floor - 0.2) p.y = floor;
     }
     try {
       await ensureVehicleModelLoaded(app, vehicleId);
@@ -1210,6 +1225,21 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         nitroCharge = Math.min(1, nitroCharge + dt * 0.14);
       }
       wasNitroBoosting = nitroBoosting;
+      if (!aerial && progress.phase === 'home' && !ridingWaymo && !photoMode) {
+        const wheels = countWheelsOnGround(ent);
+        if (wheels === 0 && mph < 5) wheelsOffGroundT += dt;
+        else wheelsOffGroundT = 0;
+        if (wheelsOffGroundT > 1.5) {
+          recoverVehiclePose(ent);
+          wheelsOffGroundT = 0;
+          const p = ent.getPosition();
+          progress = saveLastPose(progress, { x: p.x, y: p.y, z: p.z, yaw: ent.getEulerAngles().y });
+          if (!showedRecoverHint) {
+            showedRecoverHint = true;
+            ui.showToast('Auto recover', 'Off-pavement reset — press R if it happens again', 4500);
+          }
+        }
+      }
     }
 
     progress = heatDecay(progress, mph, dt);

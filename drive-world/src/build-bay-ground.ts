@@ -165,11 +165,11 @@ export function buildBayGround(app: AppBase, preset: BayQualityPreset = 'balance
     }
   }
 
-  // Physics slab (flat) — streets/freeways still carry most driving; terrain mesh is visual fill.
+  // Physics slab — top near streetDeckY (~0.14) so wheels keep contact off asphalt decks.
   const ground = new Entity('ground');
-  ground.setLocalScale(half * 2, 0.4, half * 2);
-  ground.setPosition(0, -0.35, 0);
-  ground.addComponent('collision', { type: 'box', halfExtents: new Vec3(half, 0.2, half) });
+  ground.setLocalScale(half * 2, 1, half * 2);
+  ground.setPosition(0, 0.02, 0);
+  ground.addComponent('collision', { type: 'box', halfExtents: new Vec3(half, 0.12, half) });
   ground.addComponent('rigidbody', { type: 'static' });
   root.addChild(ground);
 }

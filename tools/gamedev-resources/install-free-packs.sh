@@ -4,8 +4,10 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 FLIGHT="$ROOT/flight-nemulator/public"
+DRIVE="$ROOT/drive-world/public"
 AUDIO_DIR="$FLIGHT/audio/kenney"
 CITY_DIR="$FLIGHT/models/kenney-city"
+DRIVE_CITY_DIR="$DRIVE/models/kenney-city"
 
 INSTALL_AUDIO=false
 INSTALL_CITY=false
@@ -55,22 +57,23 @@ if $INSTALL_AUDIO; then
 fi
 
 if $INSTALL_CITY; then
-  mkdir -p "$CITY_DIR"
+  mkdir -p "$CITY_DIR" "$DRIVE_CITY_DIR"
   echo "Cloning Kenney City Kit (Commercial) sample…"
   if git clone --depth 1 --filter=blob:none --sparse https://github.com/KenneyNL/City-Kit-Commercial.git "$tmpdir/city" 2>/dev/null; then
     git -C "$tmpdir/city" sparse-checkout set Models/GLB 2>/dev/null || true
     if [ -d "$tmpdir/city/Models/GLB" ]; then
       find "$tmpdir/city/Models/GLB" -name '*.glb' | head -24 | while read -r f; do
         cp -n "$f" "$CITY_DIR/"
+        cp -n "$f" "$DRIVE_CITY_DIR/"
       done
       python3 - <<PY
 import glob, json, os
-city = "$CITY_DIR"
-files = sorted(os.path.basename(p) for p in glob.glob(os.path.join(city, "*.glb")))
-with open(os.path.join(city, "index.json"), "w", encoding="utf-8") as f:
-    json.dump({"files": files}, f)
+for city in ("$CITY_DIR", "$DRIVE_CITY_DIR"):
+    files = sorted(os.path.basename(p) for p in glob.glob(os.path.join(city, "*.glb")))
+    with open(os.path.join(city, "index.json"), "w", encoding="utf-8") as f:
+        json.dump({"files": files}, f)
 PY
-      echo "Installed GLBs + index.json → $CITY_DIR"
+      echo "Installed GLBs + index.json → $CITY_DIR and $DRIVE_CITY_DIR"
     else
       echo "WARN: GLB folder not found — download from https://kenney.nl/assets/city-kit-commercial"
     fi
