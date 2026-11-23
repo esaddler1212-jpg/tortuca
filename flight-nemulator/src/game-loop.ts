@@ -120,7 +120,8 @@ import {
   battleworldLatticeStrength,
   latticeBeatChip,
   maybeRecordTerritoryClear,
-  recordArcBeat
+  recordArcBeat,
+  recordArcBeatIfNew
 } from './arc-progress';
 import {
   battleworldChapterChip,
@@ -157,6 +158,7 @@ import {
   dialogueVillainApexEncounter,
   pairFoeNameForHero
 } from './battleworld-dialogue';
+import { queueChapterClearDialogue } from './battleworld-chapter-cues';
 import {
   canQueueGenericDefeatLine,
   cutsceneHudFields,
@@ -546,7 +548,9 @@ function tickFrame(s: GameSession, dt: number): void {
   applyBattleworldUniverseFog(s.app, districtUniverse);
   applyBattleworldUniverseSky(s.app, districtUniverse);
   if (input.interact && tryInteractInfinityStone(s.infinity, pos, s.playerRole, s.heroSpec.id)) {
-    recordArcBeat(s.heroSpec.id, 'stone-linked');
+    if (recordArcBeatIfNew(s.heroSpec.id, 'stone-linked')) {
+      queueChapterClearDialogue('stone-linked', s.heroSpec.codename, s.playerRole);
+    }
     if (playerInfinityStoneCount() >= 6) recordArcBeat(s.heroSpec.id, 'hunt-ascended');
     playWaveAlert();
     if (
@@ -587,17 +591,23 @@ function tickFrame(s: GameSession, dt: number): void {
   if (input.interact && s.playerRole === 'hero' && districtHere) {
     if (heroReclaimRazeDistrict(s.territory, districtHere)) {
       playWaveAlert();
-      maybeRecordTerritoryClear(
-        s.heroSpec.id,
-        s.playerRole,
-        territoryTakeoverCount(s.territory)
-      );
+      if (
+        maybeRecordTerritoryClear(
+          s.heroSpec.id,
+          s.playerRole,
+          territoryTakeoverCount(s.territory)
+        )
+      ) {
+        queueChapterClearDialogue('territory-clear', s.heroSpec.codename, s.playerRole);
+      }
     }
   }
   if (input.interact) {
     const arcTap = tryArcDistrictInteract(s.heroSpec.id, districtHere);
     if (arcTap) {
-      recordArcBeat(s.heroSpec.id, arcTap.beat);
+      if (recordArcBeatIfNew(s.heroSpec.id, arcTap.beat)) {
+        queueChapterClearDialogue(arcTap.beat, s.heroSpec.codename, s.playerRole);
+      }
       playWaveAlert();
     }
   }
@@ -826,7 +836,9 @@ function tickFrame(s: GameSession, dt: number): void {
     s.city
   );
   if (s.playerRole === 'hero' && takeoversBefore > 0 && territoryTakeoverCount(s.territory) === 0) {
-    maybeRecordTerritoryClear(s.heroSpec.id, s.playerRole, 0);
+    if (maybeRecordTerritoryClear(s.heroSpec.id, s.playerRole, 0)) {
+      queueChapterClearDialogue('territory-clear', s.heroSpec.codename, s.playerRole);
+    }
   }
 
   const npcTick = tickFactionNpcs(

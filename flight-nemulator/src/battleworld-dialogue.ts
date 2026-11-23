@@ -84,6 +84,23 @@ export function dialogueSafeHouse(heroCodename: string, houseLabel: string): Dia
   ];
 }
 
+/** bw-d08 — short beat when an opening chapter step clears. */
+export function dialogueChapterClear(
+  chapterLabel: string,
+  chapterHint: string,
+  heroCodename: string,
+  role: PlayerRole
+): DialogueLine[] {
+  const heroLine =
+    role === 'villain'
+      ? `${chapterLabel} locked — raze or hold before the stone hunt closes in.`
+      : `${chapterLabel} clear — ${chapterHint}`;
+  return [
+    line('ch-clear-narr', 'Battleworld', `${chapterLabel} chapter sealed on the lattice.`, 'narrator'),
+    line('ch-clear-hero', heroCodename, heroLine, 'hero')
+  ];
+}
+
 export function pairFoeNameForHero(heroId: string): string {
   return pairVillainCodename(heroId);
 }

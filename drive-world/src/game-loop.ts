@@ -172,7 +172,12 @@ import { pushCloudProgress } from './game-cloud-save';
 import { flushSessionTelemetry, installSessionTelemetryFlush, markSessionBoot } from './session-telemetry';
 import { updateHubStreetTraffic } from './hub-street-traffic';
 import { updateFreewayTrafficDrones } from './freeway-traffic-drones';
-import { heatDecay, heatFromSpeedTrap } from './game-heat';
+import {
+  HEAT_COP_BOX_ESCAPE,
+  HEAT_COP_BOX_SPAWN,
+  heatDecay,
+  heatFromSpeedTrap
+} from './game-heat';
 import { createPlayerVehicle, destroyPlayerVehicle, type PlayerVehicle } from './vehicle-factory';
 import { ensureVehicleModelLoaded, ensureVehicleModelsLoaded } from './vehicle-gltf';
 import type { GameSettings } from './game-settings';
@@ -246,6 +251,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   let nitroBoosting = false;
   let wasNitroBoosting = false;
   let wasHeatHunted = false;
+  let wasCopBoxChase = false;
   const photoKeys = { fwd: false, back: false, left: false, right: false, up: false, down: false };
   const CALDECOTT = { x: 392, z: 265 };
   let autopilotActive = false;
@@ -1497,9 +1503,17 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     const frameMs = performance.now();
     const taElapsed =
       cpmRuntime.timeLapStartMs != null && taId ? frameMs - cpmRuntime.timeLapStartMs : null;
-    const heatHunted = (progress.heatLevel ?? 0) >= 4.1;
+    const heat = progress.heatLevel ?? 0;
+    const heatHunted = heat >= HEAT_COP_BOX_SPAWN;
     if (heatHunted && !wasHeatHunted) hapticHeatChase();
     wasHeatHunted = heatHunted;
+    const copBoxChase = heat >= HEAT_COP_BOX_SPAWN;
+    if (copBoxChase && !wasCopBoxChase) {
+      ui.showToast('Heat 5', 'Cop box on your bumper — lay off traps to escape', 5200);
+    } else if (wasCopBoxChase && heat < HEAT_COP_BOX_ESCAPE) {
+      ui.showToast('Escaped', 'Box unit peeled off — heat cooling', 4200);
+    }
+    wasCopBoxChase = copBoxChase;
 
     let ghostRivalLabel: string | null = null;
     if (cpmRuntime.dragStripId && cpmRuntime.dragLaunchT != null) {

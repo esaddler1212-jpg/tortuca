@@ -118,6 +118,17 @@ const photoSrc = fs.readFileSync(path.join(root, "drive-world/src/photo-mode.ts"
 ok("polish loop doc", fs.existsSync(path.join(root, "docs/GAME_POLISH_LOOP.md")));
 ok("cn-d07 photo orbit", photoSrc.includes("setOrbitTarget") && photoSrc.includes("orbitPosition"));
 ok("cn-d07 photo exposure", photoSrc.includes("setExposure"));
+
+const heatSrc = fs.readFileSync(path.join(root, "drive-world/src/game-heat.ts"), "utf8");
+ok("cn-d08 heat-5 spawn constant", heatSrc.includes("HEAT_COP_BOX_SPAWN"));
+const chaserSrc = fs.readFileSync(path.join(root, "drive-world/src/heat-chaser.ts"), "utf8");
+ok("cn-d08 chaser uses spawn threshold", chaserSrc.includes("HEAT_COP_BOX_SPAWN"));
+const bwDialogueSrc = fs.readFileSync(path.join(root, "flight-nemulator/src/battleworld-dialogue.ts"), "utf8");
+ok("bw-d08 chapter clear dialogue", bwDialogueSrc.includes("dialogueChapterClear"));
+ok(
+  "bw-d08 chapter cue wiring",
+  fs.existsSync(path.join(root, "flight-nemulator/src/battleworld-chapter-cues.ts"))
+);
 ok("bw-d06 magnetic-ace arc", BATTLEWORLD_ARCS["magnetic-ace"]?.districtId === "sokovia-memorial");
 ok(
   "bw-d07 offline autosave copy",

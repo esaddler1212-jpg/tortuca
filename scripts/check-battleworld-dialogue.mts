@@ -1,9 +1,11 @@
 import {
+  dialogueChapterClear,
   dialogueFoeDefeat,
   dialogueIntro,
   dialoguePairVictory,
   dialogueSafeHouse
 } from '../flight-nemulator/src/battleworld-dialogue.ts';
+import { queueChapterClearDialogue } from '../flight-nemulator/src/battleworld-chapter-cues.ts';
 import {
   buildBattleworldAutosave,
   loadBattleworldAutosave,
@@ -18,6 +20,21 @@ if (intro.length < 2) {
   console.error('intro dialogue too short');
   process.exit(1);
 }
+
+const ch2 = dialogueChapterClear('Hold the lattice', 'Hero: clear takeovers', 'Solar Apex', 'hero');
+if (!ch2.some((l) => l.id.startsWith('ch-clear'))) {
+  console.error('chapter clear dialogue missing');
+  process.exit(1);
+}
+
+clearDialogueQueue();
+queueChapterClearDialogue('territory-clear', 'Solar Apex', 'hero');
+const chHud = cutsceneHudFields();
+if (!chHud.cutsceneActive || !chHud.cutsceneText?.toLowerCase().includes('lattice')) {
+  console.error('chapter clear did not queue cutscene');
+  process.exit(1);
+}
+clearDialogueQueue();
 
 const defeat = dialogueFoeDefeat('Solar Apex', 'hero', 'titan-snap-echo', 'Titan Snap Echo');
 if (!defeat.some((l) => l.speaker.includes('Titan'))) {

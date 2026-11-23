@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-14T17:12:56.918Z",
+  "updatedAt": "2026-11-23T01:38:19.253Z",
   "activeSlice": {
-    "nightshift": "cn-d08",
-    "skyring": "bw-d08"
+    "nightshift": "cn-d09",
+    "skyring": "bw-d09"
   },
   "sliceState": {
     "cn-d01": {
@@ -42,10 +42,12 @@
       "note": "Photo orbit around car (WASD/Q-E), HUD exposure slider, weather exposure restores on P exit"
     },
     "cn-d08": {
-      "status": "active"
+      "status": "done",
+      "completedAt": "2026-11-23T01:38:19.061Z",
+      "note": "Heat-5 cop box at 4.5; spawn/escape toasts; chaser pulls tighter at max heat"
     },
     "cn-d09": {
-      "status": "pending"
+      "status": "active"
     },
     "cn-d10": {
       "status": "pending"
@@ -86,16 +88,30 @@
       "note": "VantageGames offline bundle flag + HUD offline autosave/lattice copy"
     },
     "bw-d08": {
-      "status": "active"
+      "status": "done",
+      "completedAt": "2026-11-23T01:38:19.252Z",
+      "note": "Chapter-clear cutscenes on territory/stone/home-mark beats; dialogue smoke extended"
     },
     "bw-d09": {
-      "status": "pending"
+      "status": "active"
     },
     "bw-d10": {
       "status": "pending"
     }
   },
   "reports": [
+    {
+      "agent": "skyring",
+      "sliceId": "bw-d08",
+      "at": "2026-11-23T01:38:19.253Z",
+      "summary": "Chapter-clear cutscenes on territory/stone/home-mark beats; dialogue smoke extended"
+    },
+    {
+      "agent": "nightshift",
+      "sliceId": "cn-d08",
+      "at": "2026-11-23T01:38:19.061Z",
+      "summary": "Heat-5 cop box at 4.5; spawn/escape toasts; chaser pulls tighter at max heat"
+    },
     {
       "agent": "skyring",
       "sliceId": "bw-d07",
