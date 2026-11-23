@@ -99,6 +99,8 @@ import {
   cameraModeLabel
 } from './camera-profiles';
 import { activeSprintLabel, freshSprintRuntime, LANDMARK_SPRINTS, tickLandmarkSprint } from './landmark-sprints';
+import { sprintRivalGhostHud } from './sprint-rival-ghost';
+import { driftNitroGain } from './drift-nitro-charge';
 import { sprintLineProgress } from './sprint-line';
 import { ghostCircuitMapLines, ghostCircuitRosterLabel } from './sprint-circuit-roster';
 import { chapterObjectivePin } from './mission-nav';
@@ -1184,7 +1186,11 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         const mul = nitroBoosting ? 1.52 + nitroCharge * 0.38 : 1;
         vs?.fire?.('vehicle:nitro', mul);
         if (nitroBoosting) nitroCharge = Math.max(0, nitroCharge - dt * 0.44);
-        else nitroCharge = Math.min(1, nitroCharge + dt * (mph > 28 ? 0.2 : 0.11));
+        else {
+          const driftGain = driftNitroGain(drive.steering, mph, cpmRuntime.driftPadId != null);
+          const cruiseGain = mph > 28 ? 0.2 : 0.11;
+          nitroCharge = Math.min(1, nitroCharge + dt * (driftGain > 0 ? driftGain : cruiseGain));
+        }
         if (nitroBoosting && !wasNitroBoosting) hapticNitro();
         wasNitroBoosting = nitroBoosting;
         applyNitroZoneFeel(
@@ -1516,7 +1522,19 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     wasCopBoxChase = copBoxChase;
 
     let ghostRivalLabel: string | null = null;
-    if (cpmRuntime.dragStripId && cpmRuntime.dragLaunchT != null) {
+    if (sprintRuntime.sprintId && sprintRuntime.startedMs != null) {
+      const sprint = LANDMARK_SPRINTS.find((s) => s.id === sprintRuntime.sprintId);
+      if (sprint) {
+        const elapsed = frameMs - sprintRuntime.startedMs;
+        ghostRivalLabel = sprintRivalGhostHud(
+          progress,
+          sprint.id,
+          sprintLineProgress(pos.x, pos.z, sprint.start, sprint.finish),
+          elapsed,
+          settings.sprintRivalTier ?? 'medium'
+        );
+      }
+    } else if (cpmRuntime.dragStripId && cpmRuntime.dragLaunchT != null) {
       const strip = DRAG_STRIPS.find((s) => s.id === cpmRuntime.dragStripId);
       if (strip) {
         const elapsed = frameMs - cpmRuntime.dragLaunchT;
