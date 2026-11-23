@@ -8,6 +8,14 @@ This repo vendors copies from the community mirror [shorepine/kenney](https://gi
 
 Attribution is optional for CC0 but appreciated: [Kenney](https://kenney.nl).
 
+## Kenney City Kit (optional, CC0)
+
+`kenney-city/*.glb` when present are from [Kenney City Kit Commercial](https://kenney.nl/assets/city-kit-commercial). Install locally:
+
+`bash tools/gamedev-resources/install-free-packs.sh --city-glb`
+
+Not committed by default — see `drive-world/.gitignore`.
+
 ## Light Helicopter (CC0 1.0)
 
 `cc0/helicopter.glb` is from [tevy.dev — Light Helicopter](https://tevy.dev/models/light-helicopter) (CC0, LOD2).

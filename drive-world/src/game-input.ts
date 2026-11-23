@@ -3,6 +3,12 @@ import { computeTouchControls, isTouchDriveActive } from './game-bridge';
 export type DriveInput = { steering: number; throttle: number; nitro: boolean; vertical: number };
 
 let shiftDown = false;
+let recoverHandler: (() => void) | null = null;
+
+export function bindRecoverVehicle(handler: () => void): void {
+  recoverHandler = handler;
+}
+
 const keys = {
   left: false,
   right: false,
@@ -24,6 +30,10 @@ export function bindDriveKeys(): void {
       keys.climb = true;
     }
     if (e.key === 'Control') keys.descend = true;
+    if ((e.key === 'r' || e.key === 'R') && recoverHandler) {
+      e.preventDefault();
+      recoverHandler();
+    }
   });
   window.addEventListener('keyup', (e) => {
     if (e.key === 'Shift') shiftDown = false;
