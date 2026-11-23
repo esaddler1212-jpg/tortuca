@@ -20,7 +20,7 @@ Repo root [`AGENTS.md`](../AGENTS.md) applies when touching `netlify/functions` 
 
 - Playbook: [`docs/CITY_NIGHTS_PLAYBOOK.md`](../docs/CITY_NIGHTS_PLAYBOOK.md)
 - Status / audit: [`docs/DRIVE_WORLD_STATUS.md`](../docs/DRIVE_WORLD_STATUS.md), [`docs/CITY_NIGHTS_AUDIT.md`](../docs/CITY_NIGHTS_AUDIT.md)
-- External tools (music, studio skills, UE, A2F): [`docs/UPSTREAM_GAME_TOOLCHAIN.md`](../docs/UPSTREAM_GAME_TOOLCHAIN.md)
+- External tools (music, studio skills, UE, A2F, Summer Engine refs): [`docs/UPSTREAM_GAME_TOOLCHAIN.md`](../docs/UPSTREAM_GAME_TOOLCHAIN.md), [`docs/SUMMER_ENGINE_TEMPLATES.md`](../docs/SUMMER_ENGINE_TEMPLATES.md)
 
 ## Optional Claude Code Game Studios
 
