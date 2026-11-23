@@ -1,5 +1,7 @@
 # Godofprompt FABLE carousel → Tortuca
 
+**Also see:** neon driving carousel (Vice ’86 / Miami) → [`GAME_POLISH_VICE86_PROMPTS.md`](./GAME_POLISH_VICE86_PROMPTS.md)
+
 Reference: the **7-prompt wizard-game carousel** (plan → meadow → first spell → breakables → more spells → screenshot critic → repeat). Tortuca already maps this to PlayCanvas **City Nights** and **Battleworld** in [`GAME_POLISH_LOOP.md`](./GAME_POLISH_LOOP.md).
 
 **Rules from the carousel (keep for both stacks):**

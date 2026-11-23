@@ -1,8 +1,13 @@
 # Game polish loop (screenshot → critic → one fix)
 
-Adapts the **Godofprompt FABLE 7-step carousel** (plan → world → first spell → breakables → more spells → screenshot critic → 2–3 rounds) for Tortuca’s PlayCanvas games—not a single-file Three.js meadow. Use with **Nightshift** (`drive-world/`) and **Skyring** (`flight-nemulator/`).
+Adapts two **Godofprompt 7-step carousels** for Tortuca’s PlayCanvas games:
 
-**Full verbatim originals + Tortuca copy:** [`GAME_POLISH_FABLE_PROMPTS.md`](./GAME_POLISH_FABLE_PROMPTS.md)
+| Carousel | Theme | Best for |
+|----------|--------|----------|
+| **FABLE** | Wizard meadow / spells | Battleworld juice + generic critic loop |
+| **Vice ’86** | Neon Miami driving | **City Nights** (weather, garage, sound, trailer) |
+
+**Catalogs:** [`GAME_POLISH_FABLE_PROMPTS.md`](./GAME_POLISH_FABLE_PROMPTS.md) · [`GAME_POLISH_VICE86_PROMPTS.md`](./GAME_POLISH_VICE86_PROMPTS.md)
 
 ## Signature moments (capture these)
 
@@ -36,13 +41,18 @@ Run fixes on a `cursor/*-b076` branch; verify with `npm run test:city-nights` or
 ## CLI — print step prompts
 
 ```bash
-npm run game:polish-prompt -- city-nights fable-1    # plan
-npm run game:polish-prompt -- battleworld fable-6   # screenshot critic
-npm run game:polish-prompt -- city-nights screenshot-round
-npm run game:polish-prompt -- wizard fable-3        # original Three.js first-spell text
+# FABLE wizard track
+npm run game:polish-prompt -- city-nights fable-6
+npm run game:polish-prompt -- wizard fable-3
+
+# Vice '86 driving track (City Nights)
+npm run game:polish-prompt -- vice86 vice86-3        # original garage prompt
+npm run game:polish-prompt -- city-nights vice86-5    # Tortuca sound pass
+npm run game:polish-prompt -- city-nights vice86-6    # art director + trailer note
 ```
 
-Aliases still work: `plan`, `world`, `first-spell`, `breakables`, `more-spells`, `critique`, `one-slice`.
+FABLE aliases: `fable-1..7`, `plan`, `world`, `first-spell`, …  
+Vice ’86 aliases: `vice86-1..7` → plan · city · garage · weather · sound · critique · screenshot-round
 
 ## Code hooks shipped for the loop
 

@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 /**
- * Print Godofprompt FABLE-style polish prompts (original wizard + Tortuca PlayCanvas).
+ * Print Godofprompt polish prompts (FABLE wizard + Vice '86 driving + Tortuca PlayCanvas).
  *
  * npm run game:polish-prompt -- city-nights fable-6
- * npm run game:polish-prompt -- wizard fable-1
+ * npm run game:polish-prompt -- city-nights vice86-5
+ * npm run game:polish-prompt -- vice86 vice86-1
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -11,6 +12,18 @@ import path from "node:path";
 
 const [, , game = "", step = "critique"] = process.argv;
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
+const stepKey = step.toLowerCase();
+const viceTrack = stepKey.startsWith("vice86-");
+
+const VICE86_ALIASES: Record<string, string> = {
+  "vice86-1": "plan",
+  "vice86-2": "city",
+  "vice86-3": "garage",
+  "vice86-4": "weather",
+  "vice86-5": "sound",
+  "vice86-6": "critique",
+  "vice86-7": "screenshot-round",
+};
 
 const FABLE_ALIASES: Record<string, string> = {
   "fable-1": "plan",
@@ -23,13 +36,14 @@ const FABLE_ALIASES: Record<string, string> = {
   "fix-real": "critique",
 };
 
-const resolvedStep = FABLE_ALIASES[step.toLowerCase()] ?? step.toLowerCase();
+const resolvedStep =
+  VICE86_ALIASES[stepKey] ?? FABLE_ALIASES[stepKey] ?? stepKey;
 
-const games = new Set(["city-nights", "battleworld", "wizard"]);
+const games = new Set(["city-nights", "battleworld", "wizard", "vice86"]);
 const g = game.toLowerCase();
 if (!games.has(g)) {
   console.error(
-    "Usage: game-polish-prompt city-nights|battleworld|wizard [plan|world|first-spell|breakables|more-spells|critique|screenshot-round|fable-1..7|one-slice]"
+    "Usage: game-polish-prompt city-nights|battleworld|wizard|vice86 [fable-1..7|vice86-1..7|plan|city|garage|weather|sound|...]"
   );
   process.exit(1);
 }
@@ -50,74 +64,123 @@ Workflow:
 4. Re-capture the same angle. Repeat 2–3 times.`,
 };
 
+const VICE86_ORIGINAL: Record<string, string> = {
+  plan: `You're a lead designer at a big game studio. Plan a 3D open-world driving game set in a neon 1986 Miami that runs in one HTML file. Give me: 4 areas of the city (beach strip, downtown, a bridge, the docks), 3 classic 80s sports cars, the colors as hex codes, the time of day and weather, the controls, the sounds, and the 5 details that will make players say "this looks like GTA."`,
+  city: `Build the city in one HTML file with Three.js loaded from a CDN link. No 3D model files and no image files: every mesh, texture and light is made in code. Roads with lane lines, sidewalks, palm trees, pastel art deco hotels, a beach, a long bridge over water, and pink and blue neon signs. Sunset sky, light fog. I can drive a car with WASD and the camera follows from behind.`,
+  garage: `Add a garage as the start screen: a dark room with pink neon lights, a glowing "Vice '86" sign and a car turning slowly on a round platform with a shiny floor. Let me switch between 3 cars made from shapes in code: a red wedge supercar, a black classic coupe and a white convertible. Then add driving feel: speed builds up, the car leans in turns, drifts a little and shoots flames on boost (Shift).`,
+  weather: `Add a day-to-night cycle: sunset, then night with street lamps, neon glowing on the walls and car headlights. Add rain that starts and stops: falling drops, wet roads that reflect the lights, and drops on the screen when the camera faces forward. Add traffic: 20 simple cars driving in their lanes and stopping when I block them. Keep it smooth on a normal laptop and keep everything else the same.`,
+  sound: `Add sound made with code, no sound files: an engine that gets higher as I speed up and drops when I brake, tires that squeal in drifts, rain and thunder, and an 80s synth radio that plays a simple looping beat. Add a "Start engine" button that starts all sound (browsers block sound before a click) and an R key to switch the radio on and off. Keep the rest the same.`,
+  critique: `Here's a screenshot of my game: [upload]. Look at it like an art director at a big game studio. List the 5 things that look the most fake (light, colors, scale, empty spots, car shapes), worst first. Fix only those 5 and keep the rest the same. Then add a 30-second camera tour that flies over the city, drops behind the car and drives through the rain, so I can screen-record a trailer.`,
+  "screenshot-round": `Screenshot the best moment and send it back. 2 or 3 rounds is where the wow comes from. After each round, re-run the art-director prompt on the same camera path you will use for the trailer.`,
+};
+
 if (g === "wizard") {
   const text = WIZARD_ORIGINAL[resolvedStep] ?? WIZARD_ORIGINAL.critique;
-  console.log(`# Godofprompt FABLE (original wizard) · step: ${resolvedStep}\n\n${text}\n`);
-  console.log(`Tortuca mapping: ${root}/docs/GAME_POLISH_FABLE_PROMPTS.md`);
+  console.log(`# Godofprompt FABLE (wizard) · step: ${resolvedStep}\n\n${text}\n`);
+  console.log(`Tortuca: ${root}/docs/GAME_POLISH_FABLE_PROMPTS.md`);
+  process.exit(0);
+}
+
+if (g === "vice86") {
+  const text = VICE86_ORIGINAL[resolvedStep] ?? VICE86_ORIGINAL.critique;
+  console.log(`# Godofprompt Vice '86 (driving) · step: ${resolvedStep}\n\n${text}\n`);
+  console.log(`Tortuca City Nights: ${root}/docs/GAME_POLISH_VICE86_PROMPTS.md`);
   process.exit(0);
 }
 
 const pkg = g === "city-nights" ? "drive-world" : "flight-nemulator";
 const name = g === "city-nights" ? "City Nights" : "Battleworld (Flight Nemulator)";
 
-const prompts: Record<string, string> = {
-  plan:
-    g === "city-nights"
-      ? `You're a game designer. Plan a small browser driving game in PlayCanvas (Tortuca City Nights, ${pkg}/).\nOne map (Bay Area), no new menus.\nDeliver: the 15-minute funnel (spawn → freeway → one collectible), 3 HUD wins (street rep, minimap leg, nitro read), heat-trap loop, and the one screenshot moment players will share. Keep scope to one finish slice (cn-d0N). See docs/GAME_FINISH_PROGRAM.md.`
-      : `You're a game designer. Plan a small browser hero-flight game in PlayCanvas (${pkg}/).\nOne Earth districts layer, chapter chain 1–3 visible on HUD.\nDeliver: orbit read, wave-10 pair moment, home H on minimap, arc/lattice chips, and the one screenshot moment. Keep scope to one finish slice (bw-d0N). See docs/GAME_FINISH_PROGRAM.md.`,
-  world:
-    g === "city-nights"
-      ? `Polish the Bay world read in ${pkg}: coastal fog/exposure (src/regional-weather.ts), district labels, freeway drones within FREEWAY_DRONE_BUDGET / Chromebook cap. No new raster map in the 3D sim. Keep save format. (FABLE 2/7: procedural world, all in code.)`
-      : `Polish district universe rims and sky in ${pkg}/src/battleworld-districts.ts + sky-env.ts. Nine districts must read distinct from orbit. No new GLB pipeline in this message. (FABLE 2/7.)`,
-  "first-spell":
-    g === "city-nights"
-      ? `One juice pass only (FABLE 3/7): nitro zone FOV + canvas grade OR ghost sprint PB toast—not both. Files: nitro-zone-feel.ts, game-loop.ts. Screen shake + procedural audio only (game-audio.ts). Particles/grades must ease in and fade out. Keep the world the same. List 3 weak points after.`
-      : `One juice pass only (FABLE 3/7): primary boost trail + screen shake on heavy hits. Files: vfx.ts, wave-combat-juice.ts. Trails must fade out slowly (opacity/scale). Keep roster and chapters unchanged. List 3 weak points after.`,
-  breakables:
-    g === "city-nights"
-      ? `FABLE 4/7 — perf as "breakables": FREEWAY_DRONE_BUDGET, hub streaming cadence, Chromebook preset. Any new debris: cap active movers, sleep when at rest. Heat chaser is pursuit physics—keep smooth. test:playtest green.`
-      : `FABLE 4/7: destruction and wave spawns stay capped per tick. Debris via vfx trails with maxLife + fade; no uncapped rigidbody piles. test:flight-nemulator green.`,
-  "more-spells":
-    g === "city-nights"
-      ? `FABLE 5/7 — one feature per message (not 6 spells at once). Implement exactly one cn-d0N row from docs/GAME_FINISH_PROGRAM.md. Examples: playlist ACE bed, photo orbit, heat chase. One commit, verify row, game-finish:report. HUD chips must not overlap awkwardly.`
-      : `FABLE 5/7 — one feature per message. Implement exactly one bw-d0N row. Examples: chapter dialogue, minimap H, offline save copy. One commit, verify, game-finish:report.`,
-  critique: `Here's a screenshot from ${name} (PlayCanvas, ${pkg}/): [attach PNG].
+const viceCityNights: Record<string, string> = {
+  plan: `Lead designer pass for Tortuca City Nights (PlayCanvas, ${pkg}/). Plan the Bay as a festival open world: 4 named regions + freeway spine, 3 vehicle fantasies from vehicle-catalog, HUD hex accents (existing CSS), weather via regional-weather.ts, controls + gamepad, procedural engine + playlist bed (no new licensed MP3s). List 5 details that sell "real driving game" for cn-d10. One slice scope — GAME_FINISH_PROGRAM.md.`,
+  city: `Vice 2/7 — city read: street-name-registry, regional fog/exposure, hub streaming, storefront strips, landmarks. FREEWAY_DRONE_BUDGET. Chase/bumper cameras only. No Vice tileset in 3D; Bay research note stays HUD-only.`,
+  garage: `Vice 3/7 — one garage/drive pass: estate garage cam, vehicle swap, nitro-zone-feel.ts, drift scoring, boost VFX. Three cars from unlock roster. Chromebook-safe lean/drift. No full garage UI rebuild in this message.`,
+  weather: `Vice 4/7 — coastalWeatherEnabled, coastalRainAdjust, wet nitro grade, ambient + freeway drones (Chromebook cap 3). Night via exposure/fog. Rain on windshield only on Lush if added. test:playtest green.`,
+  sound: `Vice 5/7 — game-audio.ts engine pitch, heat siren, drift beeps; Music panel + ACE playlist (cn-d09). Use existing tap-to-unlock; optional R → musicUsePlaylist. No radio rips.`,
+  critique: `Here's a screenshot from City Nights (PlayCanvas, ${pkg}/): [attach PNG].
 
-Act like a game critic (FABLE 6/7). List the 5 things that look or feel most fake (colors, light, particles, physics, camera, HUD), worst first.
+Art director (Vice 6/7): top 5 fakest reads (light, colors, scale, empty lots, car silhouette, HUD). Fix only those 5.
 
-Fix only those 5 in TypeScript. Keep everything else the same.
+Trailer note: document a 30s record path (autopilot tour or vista → rainy freeway → nitro) for screen capture—no new cinematic engine unless cn-d10.
 
-Apply when relevant:
-${
-  g === "city-nights"
-    ? "- Chase camera bob at cruise speed (chase-camera-bob.ts)\n- Nitro FOV punch and heat HUD readability\n- Particles/trails that fade out slowly"
-    : "- Combat shake decay\n- Boost trails fade slowly (vfx.ts)\n- District rim/sky + arc objective chip clutter"
-}
+Then 3 next fixes for console browser feel.`,
+  "screenshot-round": `Vice 7/7 — 2–3 rounds on nitro-at-dusk or wet freeway.
 
-Then name the 3 things you'd fix next for console-quality browser feel.`,
-  "one-slice": `Implement exactly one row from docs/GAME_FINISH_PROGRAM.md for ${name}. One feature, one commit message, verify row passes, then game-finish:report.`,
-  "screenshot-round": `FABLE 7/7 — 2 or 3 rounds is where the wow comes from.
-
-Round workflow for ${name}:
-1. Capture signature moment (docs/GAME_POLISH_LOOP.md table).
-2. Run: npm run game:polish-prompt -- ${g} critique
-3. Apply fixes + ${g === "city-nights" ? "cd drive-world && npm run test:playtest" : "npm run test:flight-nemulator"}
-4. Re-screenshot the same camera angle. Repeat.`,
+1. Signature moment (GAME_POLISH_LOOP.md)
+2. npm run game:polish-prompt -- city-nights vice86-6
+3. cd drive-world && npm run test:playtest
+4. Same camera angle; repeat.`,
 };
 
-const text = prompts[resolvedStep];
+const fableBattleworld: Record<string, string> = {
+  plan: `Plan hero-flight PlayCanvas (${pkg}/): chapter 1–3 HUD, wave-10 pair, home H on minimap. One bw-d0N slice.`,
+  world: `District rims + sky-env.ts; nine districts distinct from orbit.`,
+  "first-spell": `One juice pass: vfx.ts trails + wave-combat-juice.ts. List 3 weak points after.`,
+  breakables: `Wave/destruction caps; trail maxLife.`,
+  "more-spells": `One bw-d0N slice per PR.`,
+  critique: `Screenshot critic (FABLE 6/7) for ${name}…`,
+  "one-slice": `One GAME_FINISH_PROGRAM row for ${name}; game-finish:report.`,
+  "screenshot-round": `2–3 rounds; test:flight-nemulator.`,
+};
+
+const fableCityNights: Record<string, string> = {
+  plan: viceCityNights.plan,
+  world: viceCityNights.city,
+  "first-spell": viceCityNights.garage,
+  breakables: viceCityNights.weather,
+  "more-spells": `FABLE 5/7 — one cn-d0N slice per PR (playlist, photo, heat, etc.).`,
+  critique: fableBattleworld.critique.replace("Battleworld", "City Nights") + `\n\nChase bob, nitro FOV, fade trails.`,
+  "one-slice": `One cn-d0N row; game-finish:report.`,
+  "screenshot-round": viceCityNights["screenshot-round"],
+};
+
+function pickPrompt(): string | undefined {
+  if (g === "city-nights" && viceTrack) {
+    return viceCityNights[resolvedStep];
+  }
+  if (g === "city-nights") {
+    return fableCityNights[resolvedStep];
+  }
+  if (g === "battleworld") {
+    const battle: Record<string, string> = {
+      plan: fableBattleworld.plan!,
+      world: fableBattleworld.world!,
+      "first-spell": fableBattleworld["first-spell"]!,
+      breakables: fableBattleworld.breakables!,
+      "more-spells": fableBattleworld["more-spells"]!,
+      critique: `Here's a screenshot from ${name} (PlayCanvas, ${pkg}/): [attach PNG].
+
+Critic (FABLE 6/7): 5 fakest reads (colors, light, particles, camera, HUD). Fix only those 5.
+
+Shake decay, trail fade (vfx.ts), arc chip clutter.`,
+      "one-slice": fableBattleworld["one-slice"]!,
+      "screenshot-round": fableBattleworld["screenshot-round"]!,
+    };
+    return battle[resolvedStep];
+  }
+  return undefined;
+}
+
+const text = pickPrompt();
 if (!text) {
-  console.error(`Unknown step "${step}". Try fable-1..fable-7 or plan|world|first-spell|breakables|more-spells|critique|screenshot-round|one-slice.`);
-  console.error(`Full catalog: docs/GAME_POLISH_FABLE_PROMPTS.md`);
+  console.error(`Unknown step "${step}" for ${g}. Try vice86-1..7, fable-1..7, or see docs.`);
   process.exit(1);
 }
 
-const original = WIZARD_ORIGINAL[resolvedStep];
-console.log(`# ${name} · polish step: ${resolvedStep} (FABLE carousel)\n\n${text}\n`);
-if (original) {
-  console.log(`---\nOriginal wizard prompt (Three.js reference):\n\n${original}\n`);
-}
-console.log(`Docs: ${root}/docs/GAME_POLISH_LOOP.md · ${root}/docs/GAME_POLISH_FABLE_PROMPTS.md`);
+const carousel = viceTrack ? "Vice '86" : "FABLE";
+console.log(`# ${name} · ${carousel} · step: ${resolvedStep}\n\n${text}\n`);
 
-// Smoke: doc exists when CI runs test:game-finish
+const original = viceTrack
+  ? VICE86_ORIGINAL[resolvedStep]
+  : WIZARD_ORIGINAL[resolvedStep];
+if (original) {
+  const label = viceTrack ? "Original Vice '86 prompt" : "Original FABLE wizard prompt";
+  console.log(`---\n${label}:\n\n${original}\n`);
+}
+
+console.log(
+  `Docs: ${root}/docs/GAME_POLISH_LOOP.md · ${root}/docs/GAME_POLISH_FABLE_PROMPTS.md · ${root}/docs/GAME_POLISH_VICE86_PROMPTS.md`
+);
+
+void readFileSync(path.join(root, "docs/GAME_POLISH_VICE86_PROMPTS.md"), "utf8");
 void readFileSync(path.join(root, "docs/GAME_POLISH_FABLE_PROMPTS.md"), "utf8");
