@@ -30,7 +30,7 @@ export const DEFAULT_HUD_PREFS: HudPrefs = {
   irisOrbStyle: DEFAULT_IRIS_ORB_STYLE,
 };
 
-const PREFS_VER = 4;
+const PREFS_VER = 5;
 
 export function loadHudPrefs(): HudPrefs {
   try {
@@ -41,15 +41,16 @@ export function loadHudPrefs(): HudPrefs {
       lanternUnlock?: boolean;
     };
     if (parsed._v !== PREFS_VER) {
+      const prevStyle = isIrisOrbStyleId(parsed.irisOrbStyle ?? "") ? parsed.irisOrbStyle : DEFAULT_HUD_PREFS.irisOrbStyle;
+      const irisOrbStyle =
+        parsed._v === 4 && prevStyle === "ops-console" ? DEFAULT_HUD_PREFS.irisOrbStyle : prevStyle;
       const next: HudPrefs = {
         combo135: parsed.combo135 ?? true,
         karaOrb: parsed.karaOrb ?? true,
         particleViz: parsed.particleViz ?? DEFAULT_HUD_PREFS.particleViz,
         reactorSkin: parsed.reactorSkin ?? DEFAULT_HUD_PREFS.reactorSkin,
         voicePersona: parsed.voicePersona ?? DEFAULT_HUD_PREFS.voicePersona,
-        irisOrbStyle: isIrisOrbStyleId(parsed.irisOrbStyle ?? "")
-          ? parsed.irisOrbStyle
-          : DEFAULT_HUD_PREFS.irisOrbStyle,
+        irisOrbStyle,
       };
       localStorage.setItem(KEY, JSON.stringify({ ...next, _v: PREFS_VER }));
       return next;

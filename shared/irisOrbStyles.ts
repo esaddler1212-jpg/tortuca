@@ -55,7 +55,7 @@ export const IRIS_ORB_STYLES = [
 
 export type IrisOrbStyleId = (typeof IRIS_ORB_STYLES)[number]["id"];
 
-export const DEFAULT_IRIS_ORB_STYLE: IrisOrbStyleId = "ops-console";
+export const DEFAULT_IRIS_ORB_STYLE: IrisOrbStyleId = "cinema-eye";
 
 export function isIrisOrbStyleId(raw: string): raw is IrisOrbStyleId {
   return IRIS_ORB_STYLES.some((s) => s.id === raw);
