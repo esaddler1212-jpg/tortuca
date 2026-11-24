@@ -495,6 +495,42 @@ export const VEHICLE_CATALOG: Record<string, VehicleSpec> = {
     { diffuse: [0.08, 0.1, 0.14], emissive: [0.25, 0.55, 0.95], emissiveIntensity: 0.45 },
     {}
   ),
+  'bonus-night-medic': spec(
+    'bonus-night-medic',
+    'Night Medic',
+    'Bonus — Bay cruise medic rig',
+    'Bay Area',
+    { mass: 1450, maxEngineForce: 5200, maxSteering: 0.3, chassis: { x: 1.1, y: 0.55, z: 2.35 } },
+    { diffuse: [0.9, 0.92, 0.94], emissive: [0.15, 0.85, 0.55], emissiveIntensity: 0.48 },
+    {}
+  ),
+  'bonus-fire-watch': spec(
+    'bonus-fire-watch',
+    'Fire Watch',
+    'Bonus — ladder night response',
+    'Bay Area',
+    { mass: 1680, maxEngineForce: 4800, maxSteering: 0.28, chassis: { x: 1.15, y: 0.62, z: 2.5 } },
+    { diffuse: [0.85, 0.12, 0.1], emissive: [0.95, 0.35, 0.12], emissiveIntensity: 0.52 },
+    {}
+  ),
+  'bonus-route-collect': spec(
+    'bonus-route-collect',
+    'Route Collector',
+    'Bonus — municipal night hauler',
+    'Bay Area',
+    { mass: 1720, maxEngineForce: 4600, maxSteering: 0.27, chassis: { x: 1.18, y: 0.65, z: 2.55 } },
+    { diffuse: [0.12, 0.14, 0.16], emissive: [0.35, 0.75, 0.45], emissiveIntensity: 0.35 },
+    {}
+  ),
+  'bonus-peninsula-luxe': spec(
+    'bonus-peninsula-luxe',
+    'Peninsula Luxe',
+    'Bonus — luxury coast SUV',
+    'Peninsula',
+    { mass: 1340, maxEngineForce: 6000, maxSteering: 0.34, chassis: { x: 1.05, y: 0.48, z: 2.1 } },
+    { diffuse: [0.1, 0.1, 0.12], emissive: [0.75, 0.65, 0.95], emissiveIntensity: 0.4 },
+    {}
+  ),
   'tokyo-drift-monarch': spec(
     'tokyo-drift-monarch',
     'Drift Monarch',

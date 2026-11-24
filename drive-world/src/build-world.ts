@@ -42,19 +42,20 @@ export function buildDrivingWorld(app: AppBase): void {
   app.scene.fog.type = FOG_LINEAR;
   app.scene.fog.color = NIGHT_FOG.clone();
 
-  const preset = loadSettings().bayQualityPreset;
+  const bootSettings = loadSettings();
+  const preset = bootSettings.bayQualityPreset;
   buildBayGround(app, preset);
   buildBayWater(app);
   buildAllFreeways(app);
   buildFreewayRamps(app);
   buildCityStreets(app);
-  buildHubParkingLots(app);
-  buildStorefrontSigns(app);
+  buildHubParkingLots(app, bootSettings.vice86NeonRead);
+  buildStorefrontSigns(app, bootSettings.vice86NeonRead);
   buildLombardStreet(app);
   buildCollectibles(app);
   buildCruiseVistas(app);
   spawnAmbientTraffic(app, preset);
-  spawnFreewayTrafficDrones(app, preset);
+  spawnFreewayTrafficDrones(app, preset, bootSettings.vice86NeonRead);
   spawnHubStreetTraffic(app, preset);
   buildSideshowMeets(app);
   buildAllDistricts(app);

@@ -148,8 +148,8 @@ check('car frozen while paused', drift < 0.25, `${drift.toFixed(2)} m`);
 check('paused banner visible', !!(await page.$('.paused-banner')));
 if (shot) await page.screenshot({ path: `${shot}/playtest-paused.png` });
 
-await page.evaluate(() => window.dispatchEvent(new CustomEvent('drive-world:hud-tab', { detail: 'map' })));
-await sleep(1500);
+await page.evaluate(() => window.dispatchEvent(new CustomEvent('drive-world:hud-tab', { detail: 'missions' })));
+await sleep(process.env.GITHUB_ACTIONS ? 2500 : 1500);
 const r = await state();
 check('second Menu press resumes', r.timeScale === 1 && !r.simPaused, `timeScale=${r.timeScale}`);
 

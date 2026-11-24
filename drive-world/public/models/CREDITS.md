@@ -2,9 +2,11 @@
 
 ## Kenney Car Kit (CC0 1.0)
 
-Vehicles under `kenney/*.glb` are from [Kenney Car Kit](https://kenney.nl/assets/car-kit) (CC0).
+Vehicles under `kenney/*.glb` are from [Kenney Car Kit](https://kenney.nl/assets/car-kit) (CC0) — **full kit** (45 GLBs including debris/wheels) vendored in git. Refresh:
 
-This repo vendors copies from the community mirror [shorepine/kenney](https://github.com/shorepine/kenney/tree/main/3d/car) for reliable static hosting in Vite.
+`bash tools/gamedev-resources/install-free-packs.sh --car-kit-full`
+
+Originally mirrored from [shorepine/kenney](https://github.com/shorepine/kenney/tree/main/3d/car).
 
 Attribution is optional for CC0 but appreciated: [Kenney](https://kenney.nl).
 

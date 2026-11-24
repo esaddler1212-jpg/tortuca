@@ -24,6 +24,10 @@ INSTALL_ROADS=false
 INSTALL_SUBURBAN=false
 INSTALL_PBR=false
 INSTALL_BUILDING_PBR=false
+INSTALL_CAR_KIT=false
+INSTALL_HERO_MINIS=false
+CAR_KENNEY_DIR="$DRIVE/models/kenney"
+HERO_DIR="$FLIGHT/models/heroes"
 CITY_GLB_LIMIT="${CITY_GLB_LIMIT:-48}"
 
 for arg in "$@"; do
@@ -37,16 +41,18 @@ for arg in "$@"; do
     --suburban-glb) INSTALL_SUBURBAN=true ;;
     --pbr-decks) INSTALL_PBR=true ;;
     --building-pbr) INSTALL_BUILDING_PBR=true ;;
+    --car-kit-full) INSTALL_CAR_KIT=true ;;
+    --hero-minis) INSTALL_HERO_MINIS=true ;;
     --all) INSTALL_AUDIO=true; INSTALL_CITY=true; INSTALL_MODULAR=true; INSTALL_PBR=true ;;
     -h|--help)
-      echo "Usage: $0 [--audio] [--city-glb|--city-glb-full] [--modular-glb] [--nature-glb] [--roads-glb] [--suburban-glb] [--pbr-decks] [--building-pbr] [--all]"
+      echo "Usage: $0 [--audio] [--city-glb|--city-glb-full] [--modular-glb] [--nature-glb] [--roads-glb] [--suburban-glb] [--pbr-decks] [--building-pbr] [--car-kit-full] [--hero-minis] [--all]"
       exit 0
       ;;
   esac
 done
 
-if ! $INSTALL_AUDIO && ! $INSTALL_CITY && ! $INSTALL_MODULAR && ! $INSTALL_NATURE && ! $INSTALL_ROADS && ! $INSTALL_SUBURBAN && ! $INSTALL_PBR && ! $INSTALL_BUILDING_PBR; then
-  echo "Pick at least one: --audio --city-glb --modular-glb --nature-glb --roads-glb --suburban-glb --pbr-decks --building-pbr"
+if ! $INSTALL_AUDIO && ! $INSTALL_CITY && ! $INSTALL_MODULAR && ! $INSTALL_NATURE && ! $INSTALL_ROADS && ! $INSTALL_SUBURBAN && ! $INSTALL_PBR && ! $INSTALL_BUILDING_PBR && ! $INSTALL_CAR_KIT && ! $INSTALL_HERO_MINIS; then
+  echo "Pick at least one: --audio --city-glb --modular-glb --nature-glb --roads-glb --suburban-glb --pbr-decks --building-pbr --car-kit-full --hero-minis"
   exit 1
 fi
 
@@ -217,6 +223,37 @@ if $INSTALL_PBR; then
     fi
   else
     echo "WARN: AmbientCG download failed — manual: https://ambientcg.com/view?id=Ground085"
+  fi
+fi
+
+if $INSTALL_CAR_KIT; then
+  mkdir -p "$CAR_KENNEY_DIR"
+  echo "Fetching Kenney Car Kit (CC0) GLBs…"
+  if curl -fsSL -A "Mozilla/5.0 (compatible; TortucaAssetInstaller/1.0)" \
+    "https://opengameart.org/sites/default/files/kenney_car-kit.zip" -o "$tmpdir/car-kit.zip"; then
+    unzip -qo "$tmpdir/car-kit.zip" "Models/GLB format/*.glb" -d "$tmpdir/car-kit"
+    find "$tmpdir/car-kit/Models/GLB format" -name '*.glb' -exec cp -n {} "$CAR_KENNEY_DIR/" \;
+    echo "Installed car GLBs → $CAR_KENNEY_DIR ($(find "$CAR_KENNEY_DIR" -name '*.glb' | wc -l) files)"
+  else
+    echo "WARN: Car kit download failed — https://kenney.nl/assets/car-kit"
+  fi
+fi
+
+if $INSTALL_HERO_MINIS; then
+  mkdir -p "$HERO_DIR"
+  echo "Installing Kenney Mini Character hero GLBs (CC0)…"
+  if curl -fsSL -A "Mozilla/5.0 (compatible; TortucaAssetInstaller/1.0)" \
+    "https://opengameart.org/sites/default/files/kenney_mini-characters.zip" -o "$tmpdir/mini.zip"; then
+    unzip -qo "$tmpdir/mini.zip" \
+      "Models/GLB format/character-male-b.glb" \
+      "Models/GLB format/character-male-c.glb" \
+      "Models/GLB format/character-female-c.glb" -d "$tmpdir/mini"
+    cp -f "$tmpdir/mini/Models/GLB format/character-male-b.glb" "$HERO_DIR/emerald-pilot.glb"
+    cp -f "$tmpdir/mini/Models/GLB format/character-male-c.glb" "$HERO_DIR/storm-hammer.glb"
+    cp -f "$tmpdir/mini/Models/GLB format/character-female-c.glb" "$HERO_DIR/chrome-sage.glb"
+    echo "Installed heroes: emerald-pilot, storm-hammer, chrome-sage"
+  else
+    echo "WARN: Mini characters download failed — OpenGameArt kenney_mini-characters.zip"
   fi
 fi
 

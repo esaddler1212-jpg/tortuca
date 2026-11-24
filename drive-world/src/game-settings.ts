@@ -38,6 +38,8 @@ export type GameSettings = {
   tvHudMode: boolean;
   /** Tier 5 — show WGS84 under minimap (anchor fit; not GPS truth) */
   experimentalGeoHud: boolean;
+  /** Tier 6 — Vice ’86 neon density (freeway drones + storefront emissive) */
+  vice86NeonRead: boolean;
 };
 
 const KEY = 'drive-world-settings-v1';
@@ -63,7 +65,8 @@ const defaults: GameSettings = {
   frameCapFps: 0,
   resolutionScale: 1,
   tvHudMode: false,
-  experimentalGeoHud: false
+  experimentalGeoHud: false,
+  vice86NeonRead: true
 };
 
 export function loadSettings(): GameSettings {

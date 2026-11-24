@@ -27,6 +27,7 @@ if (!kenney.includes('placeDistrictKenneyModular')) errors.push('build-city-kenn
 if (!loop.includes('placeDistrictKenneyModular')) errors.push('game-loop: modular kenney not wired');
 if (!hudApp.includes('HudIcon')) errors.push('HudApp: HudIcon missing');
 if (!existsSync(join(root, 'flight-nemulator/public/hud/icons/objective.svg'))) errors.push('hud icons missing');
+if (!existsSync(join(root, 'flight-nemulator/public/models/heroes/storm-hammer.glb'))) errors.push('storm-hammer kenney glb missing');
 
 if (errors.length) {
   console.error('check-battleworld-art failed:\n' + errors.map((e) => `  - ${e}`).join('\n'));

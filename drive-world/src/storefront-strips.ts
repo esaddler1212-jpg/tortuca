@@ -19,7 +19,7 @@ export const STOREFRONT_STRIPS: StorefrontStrip[] = [
     x: 538,
     z: 28,
     radius: 75,
-    shops: ['Campus Gear', 'Night Records', 'Telegraph Coffee', 'East Bay Books']
+    shops: ['Campus Gear', 'Night Records', 'Telegraph Coffee', 'East Bay Books', 'Neon Arcade']
   },
   {
     id: 'emeryville-retail',
@@ -37,7 +37,25 @@ export const STOREFRONT_STRIPS: StorefrontStrip[] = [
     x: -780,
     z: -520,
     radius: 70,
-    shops: ['Ferry Farm Table', 'Harbor Roast', 'Embarcadero Cycles', 'Pier Provisions']
+    shops: ['Ferry Farm Table', 'Harbor Roast', 'Embarcadero Cycles', 'Pier Provisions', 'Pink Horizon Diner']
+  },
+  {
+    id: 'soma-neon-row',
+    label: 'SoMa neon row',
+    district: 'sf',
+    x: -840,
+    z: -380,
+    radius: 60,
+    shops: ['Vice Linen', 'Blue Hour Lounge', 'Arcade Vault', 'Photo Lab']
+  },
+  {
+    id: 'jack-london-strip',
+    label: 'Jack London Square',
+    district: 'eastBay',
+    x: 700,
+    z: -80,
+    radius: 58,
+    shops: ['Waterfront Grill', 'Oakland Neon Co', 'Bike Dock', 'Live Jazz']
   },
   {
     id: 'concord-plaza-shops',
