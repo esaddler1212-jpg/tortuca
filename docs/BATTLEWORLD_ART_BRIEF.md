@@ -2,7 +2,11 @@
 
 Greybox flight combat with **hero GLB when present** (`public/models/heroes/<id>.glb`); procedural blocks remain the fallback.
 
-## Slice 2 (this pass)
+## Slice 3 (this pass)
+
+- **District rim lighting:** `buildDistrictRimLights` — universe-colored point lights + emissive beacons + ground ring at each district center (orbit/couch read).
+
+## Slice 2
 
 - **Hero panel:** pair/story/lattice chips stay visible; long arc copy lives under `<details class="hero-picker-more">`.
 - **Scoped hints:** `.hero-picker .hud-hint` no longer uses viewport-absolute bottom placement.

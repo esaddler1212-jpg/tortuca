@@ -3,6 +3,7 @@ import type { AppBase } from 'playcanvas';
 import { type KenneySlot, placeKenneySlots } from './build-kenney-props';
 import { EAST_BAY_LAKE } from './build-eastbay-lake-kit';
 import { PENINSULA_SFO_GATE } from './build-peninsula-sfo-kit';
+import { SOUTH_BAY_SAP } from './build-southbay-sap-kit';
 import { MARIN_GG_VISTA } from './build-marin-bridge-kit';
 import { SF_FERRY_POINT } from './build-sf-ferry-kit';
 import { VALLEJO_SAFEHOUSE } from './landmark-registry';
@@ -19,6 +20,13 @@ const MARIN_GG_SLOTS: KenneySlot[] = [
   { dx: 72, dz: 38, scale: 2.8, yaw: 22, fileIdx: 10 },
   { dx: -55, dz: -70, scale: 2.5, yaw: 100, fileIdx: 11 },
   { dx: 48, dz: -65, scale: 2.4, yaw: -88, fileIdx: 12 }
+];
+
+const SOUTH_BAY_SLOTS: KenneySlot[] = [
+  { dx: -50, dz: 42, scale: 2.8, yaw: 20, fileIdx: 21 },
+  { dx: 54, dz: 38, scale: 3.0, yaw: -16, fileIdx: 22 },
+  { dx: -42, dz: -50, scale: 2.6, yaw: 88, fileIdx: 23 },
+  { dx: 48, dz: -46, scale: 2.7, yaw: -92, fileIdx: 0 }
 ];
 
 const PENINSULA_SFO_SLOTS: KenneySlot[] = [
@@ -55,6 +63,10 @@ export async function placeMarinBridgeKenneyProps(app: AppBase): Promise<number>
   return placeKenneySlots(app, MARIN_GG_VISTA.x, MARIN_GG_VISTA.z, 'marin-bridge-kenney-props', MARIN_GG_SLOTS);
 }
 
+export async function placeSouthbaySapKenneyProps(app: AppBase): Promise<number> {
+  return placeKenneySlots(app, SOUTH_BAY_SAP.x, SOUTH_BAY_SAP.z, 'southbay-sap-kenney-props', SOUTH_BAY_SLOTS);
+}
+
 export async function placePeninsulaSfoKenneyProps(app: AppBase): Promise<number> {
   return placeKenneySlots(
     app,
@@ -75,5 +87,6 @@ export async function placeDistrictKenneyProps(app: AppBase): Promise<number> {
   const c = await placeMarinBridgeKenneyProps(app);
   const d = await placeEastbayLakeKenneyProps(app);
   const e = await placePeninsulaSfoKenneyProps(app);
-  return a + b + c + d + e;
+  const f = await placeSouthbaySapKenneyProps(app);
+  return a + b + c + d + e + f;
 }

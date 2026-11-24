@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "notes": "City Nights district art anchors — procedural kits + Kenney slot rings. Kenney requires local install (see docs/FREE_3D_BUILDING_ASSETS.md).",
+  "cityNights": [
+    {
+      "id": "vallejo",
+      "region": "vallejo",
+      "kitModule": "build-vallejo-estate-kit",
+      "anchorConst": "VALLEJO_SAFEHOUSE",
+      "anchorNote": "coords in landmark-registry.ts",
+      "anchor": { "x": 500, "z": 900 },
+      "landmarkId": "vallejo-estate"
+    },
+    {
+      "id": "sf-ferry",
+      "region": "sf",
+      "kitModule": "build-sf-ferry-kit",
+      "anchorConst": "SF_FERRY_POINT",
+      "anchor": { "x": -780, "z": -520 },
+      "landmarkId": "ferry-building"
+    },
+    {
+      "id": "marin-gg",
+      "region": "marin",
+      "kitModule": "build-marin-bridge-kit",
+      "anchorConst": "MARIN_GG_VISTA",
+      "anchor": { "x": -1165, "z": -455 },
+      "landmarkId": "golden-gate"
+    },
+    {
+      "id": "eastbay-lake",
+      "region": "eastBay",
+      "kitModule": "build-eastbay-lake-kit",
+      "anchorConst": "EAST_BAY_LAKE",
+      "anchor": { "x": 620, "z": -120 },
+      "landmarkId": "lake-merritt"
+    },
+    {
+      "id": "peninsula-sfo",
+      "region": "peninsula",
+      "kitModule": "build-peninsula-sfo-kit",
+      "anchorConst": "PENINSULA_SFO_GATE",
+      "anchor": { "x": -420, "z": -1260 },
+      "landmarkId": "sfo-skypad"
+    },
+    {
+      "id": "southbay-sap",
+      "region": "southBay",
+      "kitModule": "build-southbay-sap-kit",
+      "anchorConst": "SOUTH_BAY_SAP",
+      "anchor": { "x": 400, "z": -1220 },
+      "landmarkId": "sap-center"
+    }
+  ],
+  "battleworld": {
+    "districtRimLights": "build-district-rim-lights",
+    "kenneySkyline": "placeDistrictKenneySkyline"
+  }
+}
