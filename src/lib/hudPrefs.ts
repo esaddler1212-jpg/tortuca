@@ -1,4 +1,5 @@
 import type { VoicePersonaPref } from "./voicePersona";
+import { DEFAULT_IRIS_ORB_STYLE, type IrisOrbStyleId, isIrisOrbStyleId } from "../../shared/irisOrbStyles";
 
 /** Local HUD layout prefs (not synced — device-specific). */
 
@@ -14,6 +15,8 @@ export interface HudPrefs {
   karaOrb: boolean;
   /** JARVIS calm vs FRIDAY voice energy (see docs/IRIS_PERSONA_UI.md). */
   voicePersona: VoicePersonaPref;
+  /** Home + dock talking orb layout (see docs/IRIS_ORB_OPTIONS.md). */
+  irisOrbStyle: IrisOrbStyleId;
 }
 
 const KEY = "iris-hud-prefs";
@@ -24,9 +27,10 @@ export const DEFAULT_HUD_PREFS: HudPrefs = {
   reactorSkin: false,
   karaOrb: true,
   voicePersona: "auto",
+  irisOrbStyle: DEFAULT_IRIS_ORB_STYLE,
 };
 
-const PREFS_VER = 3;
+const PREFS_VER = 4;
 
 export function loadHudPrefs(): HudPrefs {
   try {
@@ -43,6 +47,9 @@ export function loadHudPrefs(): HudPrefs {
         particleViz: parsed.particleViz ?? DEFAULT_HUD_PREFS.particleViz,
         reactorSkin: parsed.reactorSkin ?? DEFAULT_HUD_PREFS.reactorSkin,
         voicePersona: parsed.voicePersona ?? DEFAULT_HUD_PREFS.voicePersona,
+        irisOrbStyle: isIrisOrbStyleId(parsed.irisOrbStyle ?? "")
+          ? parsed.irisOrbStyle
+          : DEFAULT_HUD_PREFS.irisOrbStyle,
       };
       localStorage.setItem(KEY, JSON.stringify({ ...next, _v: PREFS_VER }));
       return next;

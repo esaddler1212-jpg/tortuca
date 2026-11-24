@@ -1,4 +1,6 @@
 import type { Conversation } from "../../hooks/useConversation";
+import type { IrisOrbStyleId } from "../../../shared/irisOrbStyles";
+import type { HudModuleId } from "../../../shared/hudModules";
 import { JarvisCinemaBar } from "./JarvisCinemaBar";
 
 /**
@@ -10,6 +12,8 @@ export function IrisDock({
   inlineOnDesktopToday,
   convo,
   googleConnected,
+  irisOrbStyle,
+  orbQuick,
   onDismiss,
 }: {
   show: boolean;
@@ -17,6 +21,14 @@ export function IrisDock({
   inlineOnDesktopToday?: boolean;
   convo: Conversation;
   googleConnected: boolean;
+  irisOrbStyle?: IrisOrbStyleId;
+  orbQuick?: {
+    unread: number;
+    pendingTodos: number;
+    pulseUrgent: boolean;
+    onOpenModule: (id: HudModuleId) => void;
+    interim?: string;
+  };
   onDismiss?: () => void;
 }) {
   if (!show) return null;
@@ -32,6 +44,8 @@ export function IrisDock({
           googleConnected={googleConnected}
           onActivate={convo.tap}
           onDismiss={onDismiss}
+          irisOrbStyle={irisOrbStyle}
+          orbQuick={orbQuick}
         />
       </div>
     </div>

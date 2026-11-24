@@ -30,6 +30,7 @@ export const DEFAULT_FEEDS: FeedSource[] = [
   { id: "mindshift", name: "KQED MindShift", url: "https://www.kqed.org/mindshift/feed", topic: "Education" },
   { id: "edsurge", name: "EdSurge", url: "https://www.edsurge.com/articles_rss", topic: "Education" },
   { id: "verge-ai", name: "The Verge · AI", url: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml", topic: "AI" },
+  { id: "nasa-news", name: "NASA Breaking News", url: "https://www.nasa.gov/rss/dyn/breaking_news.rss", topic: "AI" },
 ];
 
 export interface FeedItem {
