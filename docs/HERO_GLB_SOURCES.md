@@ -10,6 +10,11 @@ Runtime path: `flight-nemulator/public/models/heroes/<hero-id>.glb` (`hero-gltf-
 | `emerald-pilot` | `emerald-pilot.glb` | [Kenney Mini Characters](https://kenney.nl/assets/mini-characters) — `character-male-b` (CC0) |
 | `storm-hammer` | `storm-hammer.glb` | Kenney Mini Characters — `character-male-c` (CC0) |
 | `chrome-sage` | `chrome-sage.glb` | Kenney Mini Characters — `character-female-c` (CC0) |
+| `jade-architect` | `jade-architect.glb` | Kenney Mini — `character-male-a` |
+| `garnet-brawler` | `garnet-brawler.glb` | Kenney Mini — `character-male-d` |
+| `spectrum-artist` | `spectrum-artist.glb` | Kenney Mini — `character-female-a` |
+| `ki-sage` | `ki-sage.glb` | Kenney Mini — `character-female-d` |
+| `time-blade` | `time-blade.glb` | Kenney Mini — `character-male-e` |
 
 Refresh dev copies:
 

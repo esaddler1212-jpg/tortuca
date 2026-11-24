@@ -1,6 +1,6 @@
 import { Color, Entity, Vec3, type AppBase } from 'playcanvas';
 
-import { kitDeckMaterial, kitMaterial } from './art-kit-materials';
+import { kitDeckMaterial, kitFacadeMaterial, kitMaterial } from './art-kit-materials';
 import { hillOffsetM } from './bay-terrain';
 import { SFO_AIRPORT_LOT } from './landmark-registry';
 import { BAY_BRIDGE_ORANGE, BAY_WINDOW_LIGHTS, hash2 } from './night-palette';
@@ -54,7 +54,7 @@ export function buildPeninsulaSfoKit(app: AppBase): void {
   tower.setLocalScale(8, 22, 8);
   tower.addComponent('render', {
     type: 'box',
-    material: kitMaterial(new Color(0.12, 0.22, 0.38), 0.55)
+    material: kitFacadeMaterial(new Color(0.12, 0.22, 0.38), 0.55)
   });
   root.addChild(tower);
 

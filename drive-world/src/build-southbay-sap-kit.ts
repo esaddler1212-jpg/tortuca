@@ -1,6 +1,6 @@
 import { Color, Entity, Vec3, type AppBase } from 'playcanvas';
 
-import { kitDeckMaterial, kitMaterial } from './art-kit-materials';
+import { kitDeckMaterial, kitFacadeMaterial, kitMaterial } from './art-kit-materials';
 import { hillOffsetM } from './bay-terrain';
 import { BAY_WINDOW_LIGHTS, hash2 } from './night-palette';
 import { streetDeckY } from './street-utils';
@@ -40,7 +40,7 @@ export function buildSouthbaySapKit(app: AppBase): void {
   ring.setLocalScale(44, 16, 36);
   ring.addComponent('render', {
     type: 'box',
-    material: kitMaterial(new Color(0.55, 0.42, 0.2), 0.38, new Color(0.08, 0.08, 0.09))
+    material: kitFacadeMaterial(new Color(0.55, 0.42, 0.2), 0.38, new Color(0.08, 0.08, 0.09))
   });
   root.addChild(ring);
 
@@ -61,7 +61,7 @@ export function buildSouthbaySapKit(app: AppBase): void {
     tower.setLocalScale(4, 28, 4);
     tower.addComponent('render', {
       type: 'box',
-      material: kitMaterial(BAY_WINDOW_LIGHTS[i % BAY_WINDOW_LIGHTS.length]!, 0.55)
+      material: kitFacadeMaterial(BAY_WINDOW_LIGHTS[i % BAY_WINDOW_LIGHTS.length]!, 0.55)
     });
     root.addChild(tower);
   }

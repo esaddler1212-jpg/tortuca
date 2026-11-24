@@ -1,7 +1,7 @@
 {
-  "centerpiece": "",
-  "scale": 1,
+  "centerpiece": "bay-modular-center.glb",
+  "scale": 0.45,
   "offset": [420, 0, -320],
-  "yRotation": 0,
-  "files": []
+  "yRotation": 18,
+  "files": ["bay-modular-east.glb", "bay-modular-west.glb"]
 }

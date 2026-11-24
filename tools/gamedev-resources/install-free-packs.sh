@@ -245,13 +245,24 @@ if $INSTALL_HERO_MINIS; then
   if curl -fsSL -A "Mozilla/5.0 (compatible; TortucaAssetInstaller/1.0)" \
     "https://opengameart.org/sites/default/files/kenney_mini-characters.zip" -o "$tmpdir/mini.zip"; then
     unzip -qo "$tmpdir/mini.zip" \
+      "Models/GLB format/character-male-a.glb" \
       "Models/GLB format/character-male-b.glb" \
       "Models/GLB format/character-male-c.glb" \
-      "Models/GLB format/character-female-c.glb" -d "$tmpdir/mini"
-    cp -f "$tmpdir/mini/Models/GLB format/character-male-b.glb" "$HERO_DIR/emerald-pilot.glb"
-    cp -f "$tmpdir/mini/Models/GLB format/character-male-c.glb" "$HERO_DIR/storm-hammer.glb"
-    cp -f "$tmpdir/mini/Models/GLB format/character-female-c.glb" "$HERO_DIR/chrome-sage.glb"
-    echo "Installed heroes: emerald-pilot, storm-hammer, chrome-sage"
+      "Models/GLB format/character-male-d.glb" \
+      "Models/GLB format/character-male-e.glb" \
+      "Models/GLB format/character-female-a.glb" \
+      "Models/GLB format/character-female-c.glb" \
+      "Models/GLB format/character-female-d.glb" -d "$tmpdir/mini"
+    gdir="$tmpdir/mini/Models/GLB format"
+    cp -f "$gdir/character-male-b.glb" "$HERO_DIR/emerald-pilot.glb"
+    cp -f "$gdir/character-male-c.glb" "$HERO_DIR/storm-hammer.glb"
+    cp -f "$gdir/character-female-c.glb" "$HERO_DIR/chrome-sage.glb"
+    cp -f "$gdir/character-male-a.glb" "$HERO_DIR/jade-architect.glb"
+    cp -f "$gdir/character-male-d.glb" "$HERO_DIR/garnet-brawler.glb"
+    cp -f "$gdir/character-female-a.glb" "$HERO_DIR/spectrum-artist.glb"
+    cp -f "$gdir/character-female-d.glb" "$HERO_DIR/ki-sage.glb"
+    cp -f "$gdir/character-male-e.glb" "$HERO_DIR/time-blade.glb"
+    echo "Installed heroes: emerald-pilot, storm-hammer, chrome-sage, jade-architect, garnet-brawler, spectrum-artist, ki-sage, time-blade"
   else
     echo "WARN: Mini characters download failed — OpenGameArt kenney_mini-characters.zip"
   fi
