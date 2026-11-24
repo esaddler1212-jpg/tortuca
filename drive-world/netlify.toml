@@ -1,7 +1,7 @@
 # City Nights — standalone Netlify site (base directory: drive-world)
 
 [build]
-  command = "npm ci && npm run build"
+  command = "npm ci && bash ../tools/gamedev-resources/netlify-visual-assets.sh && npm run build"
   publish = "dist"
 
 [functions]
