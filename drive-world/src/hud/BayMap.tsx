@@ -6,7 +6,7 @@ import { CITY_HUBS } from '../city-map-registry';
 import { NAMED_STREETS } from '../street-registry';
 import { homeServicePoint, resolveHomeSafehouse } from '../safehouse-registry';
 import { GAS_STATIONS } from '../gas-stations';
-import { DISTRICTS, FREEWAY_ROUTES, WORLD_HALF_M } from '../world-config';
+import { BAY_WATER_BOUNDS, DISTRICTS, FREEWAY_ROUTES, WORLD_HALF_M } from '../world-config';
 import { TOKYO_MINIMAP_TITLE } from '../tokyo-ff-cars';
 import { GHOST_SPRINT_CIRCUIT } from '../sprint-circuit-roster';
 import { HANEDA_PAD, SFO_FLIGHT_GATE, TOKYO_CENTER, TOKYO_HALF_M, TOKYO_LANDMARKS, tokyoUnlockStatus } from '../tokyo-map';
@@ -92,9 +92,23 @@ function BayMapBody({ snap, size, showDistrictLabels }: { snap: HudSnapshot; siz
   const next = snap.nextLandmark;
   const pulse = snap.atVista ? 4 + Math.sin((snap.vistaPulse ?? 0) * 4) * 2 : 0;
 
+  const water = BAY_WATER_BOUNDS;
+  const wx0 = mapX(water.minX, size);
+  const wy0 = mapY(water.maxZ, size);
+  const wx1 = mapX(water.maxX, size);
+  const wy1 = mapY(water.minZ, size);
+
   return (
     <>
       <rect x={0} y={0} width={size} height={size} className="minimap-bg" />
+      <rect
+        x={Math.min(wx0, wx1)}
+        y={Math.min(wy0, wy1)}
+        width={Math.abs(wx1 - wx0)}
+        height={Math.abs(wy1 - wy0)}
+        rx={size * 0.08}
+        className="minimap-bay-underlay"
+      />
       {FREEWAY_ROUTES.map((route, ri) =>
         route.slice(0, -1).map((a, i) => {
           const b = route[i + 1]!;

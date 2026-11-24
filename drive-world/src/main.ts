@@ -28,8 +28,11 @@ import {
 } from 'playcanvas';
 
 import { preloadDeckPbr } from './deck-pbr';
+import { applyCityNightsSky } from './sky-env-cn';
 import { buildDrivingWorld } from './build-world';
 import { placeDistrictKenneyProps } from './build-kenney-districts';
+import { placeFreewayKenneyProps } from './build-kenney-freeway';
+import { placeNatureKenneyProps } from './build-kenney-nature';
 import { startGameSession } from './game-loop';
 import { installOpenworldDevCommands } from './openworldjs/dev-commands';
 import { getHudSnapshot } from './game-bridge';
@@ -139,8 +142,11 @@ void preloadAllVehicleModels(app).catch(() => {
 });
 
 await preloadDeckPbr(app);
+await applyCityNightsSky(app, bootSettings);
 buildDrivingWorld(app);
 void placeDistrictKenneyProps(app);
+void placeFreewayKenneyProps(app);
+void placeNatureKenneyProps(app);
 
 const moon = new Entity('moon');
 moon.addComponent('light', {
