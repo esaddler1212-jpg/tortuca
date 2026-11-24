@@ -9,6 +9,7 @@ const vallejo = readFileSync(join(root, 'drive-world/src/build-vallejo-estate-ki
 const ferry = readFileSync(join(root, 'drive-world/src/build-sf-ferry-kit.ts'), 'utf8');
 const marin = readFileSync(join(root, 'drive-world/src/build-marin-bridge-kit.ts'), 'utf8');
 const eastbay = readFileSync(join(root, 'drive-world/src/build-eastbay-lake-kit.ts'), 'utf8');
+const peninsula = readFileSync(join(root, 'drive-world/src/build-peninsula-sfo-kit.ts'), 'utf8');
 const districts = readFileSync(join(root, 'drive-world/src/build-kenney-districts.ts'), 'utf8');
 const recover = readFileSync(join(root, 'drive-world/src/vehicle-recover.ts'), 'utf8');
 
@@ -24,10 +25,12 @@ if (!marin.includes('marin-gg-vista-deck')) errors.push('build-marin-bridge-kit:
 if (!districts.includes('placeMarinBridgeKenneyProps')) errors.push('build-kenney-districts: Marin Kenney slots missing');
 if (!eastbay.includes('eastbay-lake-promenade')) errors.push('build-eastbay-lake-kit: promenade missing');
 if (!districts.includes('placeEastbayLakeKenneyProps')) errors.push('build-kenney-districts: East Bay Kenney slots missing');
+if (!peninsula.includes('peninsula-sfo-lot-deck')) errors.push('build-peninsula-sfo-kit: lot deck missing');
+if (!districts.includes('placePeninsulaSfoKenneyProps')) errors.push('build-kenney-districts: Peninsula Kenney slots missing');
 if (!recover.includes('countWheelsOnGround')) errors.push('vehicle-recover: wheel contact helper missing');
 
 if (errors.length) {
   console.error('check-vallejo-art failed:\n' + errors.map((e) => `  - ${e}`).join('\n'));
   process.exit(1);
 }
-console.log('check-vallejo-art ok (Vallejo + SF ferry + Marin GG + East Bay lake art slices)');
+console.log('check-vallejo-art ok (Vallejo + SF ferry + Marin GG + East Bay + Peninsula SFO art slices)');

@@ -1,5 +1,5 @@
 import { Entity, type AppBase } from 'playcanvas';
-import { WORLD_HALF_M } from './districts';
+import { DISTRICTS, WORLD_HALF_M } from './districts';
 
 type KenneyIndex = { files: string[] };
 
@@ -53,6 +53,40 @@ export async function placeKenneyLandmarks(app: AppBase, root: Entity, maxCount:
       ent.setLocalScale(scale, scale, scale);
       ent.setLocalEulerAngles(0, hash2(x, z) * 360, 0);
       root.addChild(ent);
+      placed++;
+    }
+  }
+  return placed;
+}
+
+type DistrictSlot = { dx: number; dz: number; scale: number; yaw: number; fileIdx: number };
+
+const SKYLINE_RING: DistrictSlot[] = [
+  { dx: 180, dz: 120, scale: 3.2, yaw: -20, fileIdx: 0 },
+  { dx: -160, dz: 140, scale: 2.9, yaw: 35, fileIdx: 1 },
+  { dx: 140, dz: -150, scale: 3.0, yaw: 110, fileIdx: 2 },
+  { dx: -170, dz: -130, scale: 2.8, yaw: -95, fileIdx: 3 }
+];
+
+/** Four Kenney silhouettes per district center when CC0 pack is installed (slice 2 skyline read). */
+export async function placeDistrictKenneySkyline(app: AppBase, root: Entity): Promise<number> {
+  const index = await loadKenneyIndex();
+  if (!index?.files?.length) return 0;
+  const files = index.files;
+  let placed = 0;
+
+  for (const d of DISTRICTS) {
+    const group = new Entity(`kenney-skyline-${d.id}`);
+    root.addChild(group);
+    for (const slot of SKYLINE_RING) {
+      const file = files[slot.fileIdx % files.length]!;
+      const url = `./models/kenney-city/${file}`;
+      const ent = await loadGlb(app, url);
+      if (!ent) continue;
+      ent.setLocalPosition(d.center.x + slot.dx, 0, d.center.z + slot.dz);
+      ent.setLocalScale(slot.scale, slot.scale * d.skylineMul, slot.scale);
+      ent.setLocalEulerAngles(0, slot.yaw, 0);
+      group.addChild(ent);
       placed++;
     }
   }

@@ -31,6 +31,7 @@ HUD hex accents must match existing CSS nitro / chapter stripes — do not inven
 - **SF Embarcadero / Ferry (slice 2):** clock tower + wings, plaza + pier decks (collision), market awnings, string lights; Kenney ring at `SF_FERRY_POINT` (−780, −520).
 - **Marin Golden Gate vista (slice 3):** south approach pull-off deck (collision), orange cable hints + beacons, vista sign; Kenney at `MARIN_GG_VISTA` (−1165, −455).
 - **East Bay Lake Merritt (slice 4):** lakeside promenade deck (collision), water ring glow, benches + string lights; Kenney at `EAST_BAY_LAKE` (620, −120).
+- **Peninsula SFO gate (slice 5):** airport lot deck (collision), tower + taxi strip, Tokyo gate sign; Kenney at `PENINSULA_SFO_GATE` (−420, −1260).
 - Other regions: one kit per finish slice (`cn-art-d0N`), same rules.
 
 ## Credits

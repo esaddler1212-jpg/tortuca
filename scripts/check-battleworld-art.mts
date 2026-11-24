@@ -6,6 +6,8 @@ const root = join(import.meta.dirname, '..');
 const css = readFileSync(join(root, 'flight-nemulator/src/hud/hud.css'), 'utf8');
 const vfx = readFileSync(join(root, 'flight-nemulator/src/vfx.ts'), 'utf8');
 const pins = readFileSync(join(root, 'flight-nemulator/src/battleworld-minimap-pins.ts'), 'utf8');
+const kenney = readFileSync(join(root, 'flight-nemulator/src/build-city-kenney.ts'), 'utf8');
+const hudApp = readFileSync(join(root, 'flight-nemulator/src/hud/HudApp.tsx'), 'utf8');
 const heroGlb = join(root, 'flight-nemulator/public/models/heroes/solar-apex.glb');
 
 const errors: string[] = [];
@@ -14,6 +16,9 @@ if (!css.includes('-webkit-line-clamp')) errors.push('hud.css: arc chip line cla
 if (!vfx.includes("kind: 'ring'")) errors.push('vfx.ts: crater ring kind missing');
 if (!pins.includes('52')) errors.push('arcObjectiveChip: short arc hint length not applied');
 if (!existsSync(heroGlb)) errors.push('solar-apex.glb missing under public/models/heroes/');
+if (!css.includes('.hero-picker-more')) errors.push('hud.css: hero-picker-more missing');
+if (!hudApp.includes('hero-picker-more')) errors.push('HudApp: collapsed arc details missing');
+if (!kenney.includes('placeDistrictKenneySkyline')) errors.push('build-city-kenney: district skyline missing');
 
 if (errors.length) {
   console.error('check-battleworld-art failed:\n' + errors.map((e) => `  - ${e}`).join('\n'));

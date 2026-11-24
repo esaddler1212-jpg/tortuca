@@ -23,6 +23,7 @@ import { buildTacoTrucks } from './build-taco-trucks';
 import { buildMissionSites } from './build-mission-sites';
 import { buildVallejoEstateKit } from './build-vallejo-estate-kit';
 import { buildEastbayLakeKit } from './build-eastbay-lake-kit';
+import { buildPeninsulaSfoKit } from './build-peninsula-sfo-kit';
 import { buildMarinBridgeKit } from './build-marin-bridge-kit';
 import { buildSfFerryKit } from './build-sf-ferry-kit';
 import {
@@ -67,6 +68,7 @@ export function buildDrivingWorld(app: AppBase): void {
   buildSfFerryKit(app);
   buildMarinBridgeKit(app);
   buildEastbayLakeKit(app);
+  buildPeninsulaSfoKit(app);
   const lamps = freewayLampBudget(loadSettings().bayQualityPreset);
   buildFreewayLamps(app, lamps.spacing, lamps.limit);
   void buildOpenworldCherryPickMaze(app, preset).catch((err) => {

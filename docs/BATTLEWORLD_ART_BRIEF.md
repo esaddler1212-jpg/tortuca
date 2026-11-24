@@ -2,7 +2,13 @@
 
 Greybox flight combat with **hero GLB when present** (`public/models/heroes/<id>.glb`); procedural blocks remain the fallback.
 
-## Slice 1 (this pass)
+## Slice 2 (this pass)
+
+- **Hero panel:** pair/story/lattice chips stay visible; long arc copy lives under `<details class="hero-picker-more">`.
+- **Scoped hints:** `.hero-picker .hud-hint` no longer uses viewport-absolute bottom placement.
+- **District Kenney ring:** `placeDistrictKenneySkyline` — four CC0 buildings per district center when `kenney-city/` is installed.
+
+## Slice 1
 
 - **Arc objective chip:** centered below top telemetry, two-line clamp (`hud-arc-objective`), shorter arc hint text in `arcObjectiveChip`.
 - **Super crater ring:** keeps spawn scale — puff trail animation does not squash the ring (`vfx.ts` `kind: 'ring'`).
