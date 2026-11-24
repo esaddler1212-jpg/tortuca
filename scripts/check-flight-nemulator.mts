@@ -140,6 +140,12 @@ const audit = spawnSync('npx', ['tsx', path.join(root, 'scripts/audit-aerial-ros
 });
 if (audit.status !== 0) process.exit(audit.status ?? 1);
 
+const art = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-battleworld-art.mts')], {
+  cwd: root,
+  stdio: 'inherit'
+});
+if (art.status !== 0) process.exit(art.status ?? 1);
+
 const build = spawnSync('npm', ['run', 'build'], { cwd: app, stdio: 'inherit' });
 if (build.status !== 0) process.exit(build.status ?? 1);
 

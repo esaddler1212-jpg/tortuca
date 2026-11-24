@@ -30,6 +30,7 @@ HUD hex accents must match existing CSS nitro / chapter stripes — do not inven
 - **Vallejo estate (slice 1):** garage silhouette, driveway collision, 2 pump islands, 3–6 palms/trim props; optional Kenney GLBs when `public/models/kenney-city/` is installed.
 - **SF Embarcadero / Ferry (slice 2):** clock tower + wings, plaza + pier decks (collision), market awnings, string lights; Kenney ring at `SF_FERRY_POINT` (−780, −520).
 - **Marin Golden Gate vista (slice 3):** south approach pull-off deck (collision), orange cable hints + beacons, vista sign; Kenney at `MARIN_GG_VISTA` (−1165, −455).
+- **East Bay Lake Merritt (slice 4):** lakeside promenade deck (collision), water ring glow, benches + string lights; Kenney at `EAST_BAY_LAKE` (620, −120).
 - Other regions: one kit per finish slice (`cn-art-d0N`), same rules.
 
 ## Credits

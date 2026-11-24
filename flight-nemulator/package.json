@@ -14,7 +14,8 @@
     "typecheck": "tsc --noEmit",
     "test:smoke": "node scripts/smoke-boot.mjs",
     "test:playtest": "node scripts/playtest-battleworld.mjs",
-    "test:battleworld": "npm run test:smoke && npm run test:playtest"
+    "test:battleworld-art": "tsx ../scripts/check-battleworld-art.mts",
+    "test:battleworld": "npm run test:battleworld-art && npm run test:smoke && npm run test:playtest"
   },
   "dependencies": {
     "@netlify/blobs": "^10.0.10",

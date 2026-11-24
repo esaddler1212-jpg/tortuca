@@ -15,11 +15,17 @@ Battleworld stays **PlayCanvas in the browser** on VantageGames or local `npm ru
 
 | Input | Action |
 |-------|--------|
-| WASD / arrows | Thrust / steer flight |
-| Mouse | Look (when captured) |
+| A / D | Yaw (turn) |
+| W / S | Pitch down / up (+ throttle when held) |
+| Space / Ctrl | Climb / descend |
+| Shift | Boost |
+| F | Primary fire |
+| Q / E | Throw / super |
+| H | Interact (chapters, home turf) |
+| Tab (R) | Target lock |
 | Tap `#tap-start` | Audio + boot (required user gesture) |
 
-Gamepad: browsers vary; funnel QA is keyboard-first. Series couch can use Bluetooth + Edge (same as City Nights).
+Gamepad: left stick yaw/pitch; RT throttle, shoulder buttons climb/descent/fire/super. No mouse look in this build. Funnel QA is keyboard-first.
 
 ## Offline / VantageGames
 

@@ -25,6 +25,7 @@
     "test:heat-chase": "tsx scripts/check-heat-chase.mts",
     "test:playlist-ace": "tsx scripts/check-playlist-ace.mts",
     "test:vallejo-art": "tsx scripts/check-vallejo-art.mts",
+    "test:battleworld-art": "tsx scripts/check-battleworld-art.mts",
     "test:openworldjs": "tsx scripts/check-openworldjs-cherrypick.mts",
     "game-finish:report": "tsx scripts/game-finish-report.mts",
     "game:polish-prompt": "tsx scripts/game-polish-prompt.mts",

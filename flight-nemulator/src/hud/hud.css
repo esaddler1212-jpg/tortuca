@@ -223,6 +223,28 @@
   pointer-events: auto;
 }
 
+.hud-arc-objective {
+  position: absolute;
+  top: 58px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(720px, calc(100vw - 24px));
+  max-width: calc(100% - 24px);
+  padding: 6px 14px;
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  opacity: 0.93;
+  text-align: center;
+  pointer-events: none;
+  z-index: 6;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  box-sizing: border-box;
+}
+
 .hud-arc-picker {
   font-size: 0.78rem;
   line-height: 1.25;

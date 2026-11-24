@@ -28,7 +28,7 @@ export function arcObjectiveChip(
 ): string | null {
   const parts: string[] = [];
   if (characterArcHint) {
-    const short = characterArcHint.length > 72 ? `${characterArcHint.slice(0, 69)}…` : characterArcHint;
+    const short = characterArcHint.length > 52 ? `${characterArcHint.slice(0, 49)}…` : characterArcHint;
     parts.push(short);
   }
   if (chapterChainChip) parts.push(`Story ${chapterChainChip.replace(/^Story\s*/, '')}`);
