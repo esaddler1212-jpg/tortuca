@@ -35,7 +35,9 @@ bash tools/gamedev-resources/install-free-packs.sh --all         # city + modula
 | Flag | Output path (gitignored) | City Nights | Battleworld |
 |------|--------------------------|-------------|-------------|
 | `--city-glb` | `*/public/models/kenney-city/` + `index.json` | Kenney ring at **6** Bay anchors (`placeDistrictKenneyProps`) | Scattered landmarks + **4× per district** skyline |
-| `--modular-glb` | `*/public/models/kenney-modular/` + `index.json` | **Download only** — loader not wired yet (Tier 3) | Same |
+| `--modular-glb` | `*/public/models/kenney-modular/` + `index.json` | **Wired** — `placeDistrictModularProps` at each Bay anchor | **Wired** — `placeDistrictKenneyModular` per district |
+| `--city-glb-full` | Same as city (all GLBs from kit clone) | More building variety | Same |
+| `--pbr-decks` | `drive-world/public/textures/ambientcg/deck-asphalt.jpg` | **Wired** — `kitDeckMaterial` on art-kit plazas | — |
 | `--audio` | `flight-nemulator/public/audio/kenney/` | — | UI-style SFX |
 | `--all` | All of the above | | |
 
@@ -71,12 +73,12 @@ Track in art slices / PRs — not required for local dev.
 
 | # | Work | Effort | Payoff |
 |---|------|--------|--------|
-| 1 | **Wire `kenney-modular/`** (same loader as `kenney-city`) | Small | Denser facades at district anchors |
-| 2 | **Raise `--city-glb` cap** (e.g. 40–60 files) or `--city-glb-full` | Tiny script | Less repeated buildings on a Bay tour |
-| 3 | **AmbientCG** asphalt / wet concrete on kit decks | Small | Plazas read as pavement (`art-kit-materials.ts`) |
-| 4 | **District rim lights** | Shipped in `build-district-rim-lights.ts` | Battleworld orbit / universe color read |
-| 5 | **Six Bay anchor kits** | Shipped — see `shared/art-district-manifest.json` | Collision + emissive landmarks |
-| 6 | **Vice ’86 density pass** | Medium | [`GAME_POLISH_VICE86_PROMPTS.md`](./GAME_POLISH_VICE86_PROMPTS.md) — trim grey clusters between anchors |
+| 1 | **Wire `kenney-modular/`** | **Shipped** | `placeDistrictModularProps` / `placeDistrictKenneyModular` |
+| 2 | **`--city-glb-full`** + default cap **48** | **Shipped** | `install-free-packs.sh` |
+| 3 | **`--pbr-decks`** + `kitDeckMaterial` | **Shipped** | `deck-pbr.ts`, art-kit plaza decks |
+| 4 | **District rim lights** | **Shipped** | `build-district-rim-lights.ts` |
+| 5 | **Six Bay anchor kits** | **Shipped** | `shared/art-district-manifest.json` |
+| 6 | **Vice ’86 density pass** | **Todo** | [`GAME_POLISH_VICE86_PROMPTS.md`](./GAME_POLISH_VICE86_PROMPTS.md) |
 
 ---
 

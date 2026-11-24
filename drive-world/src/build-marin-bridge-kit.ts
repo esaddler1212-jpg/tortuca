@@ -1,6 +1,6 @@
 import { Color, Entity, Vec3, type AppBase } from 'playcanvas';
 
-import { kitMaterial } from './art-kit-materials';
+import { kitDeckMaterial, kitMaterial } from './art-kit-materials';
 import { hillOffsetM } from './bay-terrain';
 import { BAY_BRIDGE_ORANGE, hash2 } from './night-palette';
 import { streetDeckY } from './street-utils';
@@ -27,7 +27,7 @@ export function buildMarinBridgeKit(app: AppBase): void {
   vista.setEulerAngles(0, 18, 0);
   vista.addComponent('render', {
     type: 'box',
-    material: kitMaterial(new Color(0.05, 0.06, 0.07), 0.08)
+    material: kitDeckMaterial(new Color(0.05, 0.06, 0.07), 0.08)
   });
   vista.addComponent('collision', {
     type: 'box',

@@ -54,6 +54,11 @@
   ],
   "battleworld": {
     "districtRimLights": "build-district-rim-lights",
-    "kenneySkyline": "placeDistrictKenneySkyline"
+    "kenneySkyline": "placeDistrictKenneySkyline",
+    "kenneyModular": "placeDistrictKenneyModular"
+  },
+  "cityNightsOptional": {
+    "kenneyModular": "placeDistrictModularProps",
+    "deckPbr": "preloadDeckPbr + kitDeckMaterial"
   }
 }

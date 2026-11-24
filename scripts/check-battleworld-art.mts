@@ -23,6 +23,8 @@ if (!hudApp.includes('hero-picker-more')) errors.push('HudApp: collapsed arc det
 if (!kenney.includes('placeDistrictKenneySkyline')) errors.push('build-city-kenney: district skyline missing');
 if (!rim.includes('district-rim-beacon')) errors.push('build-district-rim-lights: beacons missing');
 if (!loop.includes('buildDistrictRimLights')) errors.push('game-loop: district rim lights not wired');
+if (!kenney.includes('placeDistrictKenneyModular')) errors.push('build-city-kenney: modular district missing');
+if (!loop.includes('placeDistrictKenneyModular')) errors.push('game-loop: modular kenney not wired');
 
 if (errors.length) {
   console.error('check-battleworld-art failed:\n' + errors.map((e) => `  - ${e}`).join('\n'));

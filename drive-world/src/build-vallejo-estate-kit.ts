@@ -1,6 +1,6 @@
 import { Color, Entity, Vec3, type AppBase } from 'playcanvas';
 
-import { kitMaterial } from './art-kit-materials';
+import { kitDeckMaterial, kitMaterial } from './art-kit-materials';
 import { hillOffsetM } from './bay-terrain';
 import { VALLEJO_SAFEHOUSE } from './landmark-registry';
 import { BAY_BRIDGE_ORANGE, BAY_WINDOW_LIGHTS, hash2 } from './night-palette';
@@ -22,7 +22,7 @@ export function buildVallejoEstateKit(app: AppBase): void {
   const driveway = new Entity('vallejo-estate-driveway');
   driveway.setPosition(sx, drivewayY, sz + 22);
   driveway.setLocalScale(34, 0.22, 52);
-  const asphalt = kitMaterial(new Color(0.05, 0.06, 0.07), 0.08);
+  const asphalt = kitDeckMaterial(new Color(0.05, 0.06, 0.07), 0.08);
   driveway.addComponent('render', { type: 'box', material: asphalt });
   driveway.addComponent('collision', {
     type: 'box',
