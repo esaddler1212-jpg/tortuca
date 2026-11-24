@@ -7,6 +7,7 @@ const root = join(import.meta.dirname, '..');
 const ground = readFileSync(join(root, 'drive-world/src/build-bay-ground.ts'), 'utf8');
 const vallejo = readFileSync(join(root, 'drive-world/src/build-vallejo-estate-kit.ts'), 'utf8');
 const ferry = readFileSync(join(root, 'drive-world/src/build-sf-ferry-kit.ts'), 'utf8');
+const marin = readFileSync(join(root, 'drive-world/src/build-marin-bridge-kit.ts'), 'utf8');
 const districts = readFileSync(join(root, 'drive-world/src/build-kenney-districts.ts'), 'utf8');
 const recover = readFileSync(join(root, 'drive-world/src/vehicle-recover.ts'), 'utf8');
 
@@ -18,10 +19,12 @@ if (!vallejo.includes('vallejo-estate-driveway')) errors.push('build-vallejo-est
 if (!ferry.includes('sf-ferry-plaza')) errors.push('build-sf-ferry-kit: plaza missing');
 if (!ferry.includes('sf-ferry-clock-tower')) errors.push('build-sf-ferry-kit: clock tower missing');
 if (!districts.includes('placeSfFerryKenneyProps')) errors.push('build-kenney-districts: SF Kenney slots missing');
+if (!marin.includes('marin-gg-vista-deck')) errors.push('build-marin-bridge-kit: vista deck missing');
+if (!districts.includes('placeMarinBridgeKenneyProps')) errors.push('build-kenney-districts: Marin Kenney slots missing');
 if (!recover.includes('countWheelsOnGround')) errors.push('vehicle-recover: wheel contact helper missing');
 
 if (errors.length) {
   console.error('check-vallejo-art failed:\n' + errors.map((e) => `  - ${e}`).join('\n'));
   process.exit(1);
 }
-console.log('check-vallejo-art ok (Vallejo + SF ferry art slices)');
+console.log('check-vallejo-art ok (Vallejo + SF ferry + Marin GG art slices)');
