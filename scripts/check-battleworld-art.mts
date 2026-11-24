@@ -7,6 +7,8 @@ const css = readFileSync(join(root, 'flight-nemulator/src/hud/hud.css'), 'utf8')
 const vfx = readFileSync(join(root, 'flight-nemulator/src/vfx.ts'), 'utf8');
 const pins = readFileSync(join(root, 'flight-nemulator/src/battleworld-minimap-pins.ts'), 'utf8');
 const kenney = readFileSync(join(root, 'flight-nemulator/src/build-city-kenney.ts'), 'utf8');
+const rim = readFileSync(join(root, 'flight-nemulator/src/build-district-rim-lights.ts'), 'utf8');
+const loop = readFileSync(join(root, 'flight-nemulator/src/game-loop.ts'), 'utf8');
 const hudApp = readFileSync(join(root, 'flight-nemulator/src/hud/HudApp.tsx'), 'utf8');
 const heroGlb = join(root, 'flight-nemulator/public/models/heroes/solar-apex.glb');
 
@@ -19,6 +21,8 @@ if (!existsSync(heroGlb)) errors.push('solar-apex.glb missing under public/model
 if (!css.includes('.hero-picker-more')) errors.push('hud.css: hero-picker-more missing');
 if (!hudApp.includes('hero-picker-more')) errors.push('HudApp: collapsed arc details missing');
 if (!kenney.includes('placeDistrictKenneySkyline')) errors.push('build-city-kenney: district skyline missing');
+if (!rim.includes('district-rim-beacon')) errors.push('build-district-rim-lights: beacons missing');
+if (!loop.includes('buildDistrictRimLights')) errors.push('game-loop: district rim lights not wired');
 
 if (errors.length) {
   console.error('check-battleworld-art failed:\n' + errors.map((e) => `  - ${e}`).join('\n'));

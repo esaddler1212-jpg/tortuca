@@ -16,6 +16,14 @@ Attribution is optional for CC0 but appreciated: [Kenney](https://kenney.nl).
 
 Not committed by default — see `drive-world/.gitignore`.
 
+## Kenney Modular Buildings (optional, CC0)
+
+`kenney-modular/*.glb` when present are from [Kenney Modular Buildings](https://kenney.nl/assets/modular-buildings) (CC0). Install:
+
+`bash tools/gamedev-resources/install-free-packs.sh --modular-glb`
+
+Runtime loader is optional — see [`docs/VISUAL_UPGRADE_TIERS.md`](../../docs/VISUAL_UPGRADE_TIERS.md) Tier 3.
+
 ## Light Helicopter (CC0 1.0)
 
 `cc0/helicopter.glb` is from [tevy.dev — Light Helicopter](https://tevy.dev/models/light-helicopter) (CC0, LOD2).

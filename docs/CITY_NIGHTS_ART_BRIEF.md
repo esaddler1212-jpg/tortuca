@@ -32,7 +32,12 @@ HUD hex accents must match existing CSS nitro / chapter stripes — do not inven
 - **Marin Golden Gate vista (slice 3):** south approach pull-off deck (collision), orange cable hints + beacons, vista sign; Kenney at `MARIN_GG_VISTA` (−1165, −455).
 - **East Bay Lake Merritt (slice 4):** lakeside promenade deck (collision), water ring glow, benches + string lights; Kenney at `EAST_BAY_LAKE` (620, −120).
 - **Peninsula SFO gate (slice 5):** airport lot deck (collision), tower + taxi strip, Tokyo gate sign; Kenney at `PENINSULA_SFO_GATE` (−420, −1260).
-- Other regions: one kit per finish slice (`cn-art-d0N`), same rules.
+- **South Bay SAP (slice 6):** arena plaza deck (collision), ring façade, marquee, light towers; Kenney at `SOUTH_BAY_SAP` (400, −1220).
+- All six Bay region anchors are listed in `shared/art-district-manifest.json`. Optional GLB packs: [`FREE_3D_BUILDING_ASSETS.md`](./FREE_3D_BUILDING_ASSETS.md).
+
+## Local visual stack
+
+Follow [`VISUAL_UPGRADE_TIERS.md`](./VISUAL_UPGRADE_TIERS.md) — Tier 0 settings, Tier 1 `install-free-packs.sh --city-glb`, Tier 3+ engine hooks.
 
 ## Credits
 

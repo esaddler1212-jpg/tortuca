@@ -4,6 +4,15 @@
   "targets": ["drive-world", "flight-nemulator"],
   "entries": [
     {
+      "id": "kenney-modular-buildings",
+      "kavexTier": "triangular_flag_on_post",
+      "title": "Kenney Modular Buildings",
+      "url": "https://kenney.nl/assets/modular-buildings",
+      "licenseNote": "CC0; GLB in zip — install via --modular-glb",
+      "use": ["3d-modular-skyline", "district-fill"],
+      "install": "tools/gamedev-resources/install-free-packs.sh --modular-glb"
+    },
+    {
       "id": "kenney-assets",
       "kavexTier": "triangular_flag_on_post",
       "title": "Kenney Assets",

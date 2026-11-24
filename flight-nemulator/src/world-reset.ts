@@ -2,6 +2,7 @@ import { Entity, type AppBase } from 'playcanvas';
 import { buildMetropolis, getDestructibles, spawnSimpleCars } from './build-city';
 import { placeDistrictKenneySkyline, placeKenneyLandmarks } from './build-city-kenney';
 import { placeWorldGachaTowns } from './build-city-worldgacha';
+import { buildDistrictRimLights } from './build-district-rim-lights';
 import { buildPlanetShell, initEarthDistrictRing } from './earth-planet';
 import { resetChronoAfterWorldShatter } from './earth-orbit';
 import { smashDestructible } from './destruction';
@@ -68,6 +69,7 @@ function assembleFreshEarth(app: AppBase, root: Entity, tier: QualityTier): void
   initEarthDistrictRing();
   buildMetropolis(app, root, { tier });
   buildPlanetShell(app, root);
+  buildDistrictRimLights(app, root);
   void placeKenneyLandmarks(app, root, tier === 'low' ? 6 : tier === 'high' ? 22 : 12);
   void placeDistrictKenneySkyline(app, root);
   void placeWorldGachaTowns(app, root, tier === 'low' ? 0 : tier === 'high' ? 3 : 1);

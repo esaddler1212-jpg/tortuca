@@ -14,8 +14,9 @@ Default buildings, heroes, and drones are procedural primitives in `flight-nemul
 |------|--------|---------|
 | Interface Sounds | [Kenney](https://kenney.nl/assets/interface-sounds) | CC0 |
 | City Kit GLBs | [Kenney City Kit Commercial](https://kenney.nl/assets/city-kit-commercial) | CC0 |
+| Modular Buildings | [Kenney Modular Buildings](https://kenney.nl/assets/modular-buildings) | CC0 |
 
-Install: `bash tools/gamedev-resources/install-free-packs.sh --all` from repo root.
+Install: `bash tools/gamedev-resources/install-free-packs.sh --all` from repo root. Tier guide: [`docs/VISUAL_UPGRADE_TIERS.md`](../../../docs/VISUAL_UPGRADE_TIERS.md).
 
 ## Optional Oyasumi World Gacha (manual export)
 

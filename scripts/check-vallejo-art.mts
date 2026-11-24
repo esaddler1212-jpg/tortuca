@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /** Art slice gates: district kits + aligned physics ground (no runtime). */
+import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -10,6 +11,7 @@ const ferry = readFileSync(join(root, 'drive-world/src/build-sf-ferry-kit.ts'), 
 const marin = readFileSync(join(root, 'drive-world/src/build-marin-bridge-kit.ts'), 'utf8');
 const eastbay = readFileSync(join(root, 'drive-world/src/build-eastbay-lake-kit.ts'), 'utf8');
 const peninsula = readFileSync(join(root, 'drive-world/src/build-peninsula-sfo-kit.ts'), 'utf8');
+const southbay = readFileSync(join(root, 'drive-world/src/build-southbay-sap-kit.ts'), 'utf8');
 const districts = readFileSync(join(root, 'drive-world/src/build-kenney-districts.ts'), 'utf8');
 const recover = readFileSync(join(root, 'drive-world/src/vehicle-recover.ts'), 'utf8');
 
@@ -27,10 +29,18 @@ if (!eastbay.includes('eastbay-lake-promenade')) errors.push('build-eastbay-lake
 if (!districts.includes('placeEastbayLakeKenneyProps')) errors.push('build-kenney-districts: East Bay Kenney slots missing');
 if (!peninsula.includes('peninsula-sfo-lot-deck')) errors.push('build-peninsula-sfo-kit: lot deck missing');
 if (!districts.includes('placePeninsulaSfoKenneyProps')) errors.push('build-kenney-districts: Peninsula Kenney slots missing');
+if (!southbay.includes('southbay-sap-plaza')) errors.push('build-southbay-sap-kit: plaza missing');
+if (!districts.includes('placeSouthbaySapKenneyProps')) errors.push('build-kenney-districts: South Bay Kenney slots missing');
 if (!recover.includes('countWheelsOnGround')) errors.push('vehicle-recover: wheel contact helper missing');
 
 if (errors.length) {
   console.error('check-vallejo-art failed:\n' + errors.map((e) => `  - ${e}`).join('\n'));
   process.exit(1);
 }
-console.log('check-vallejo-art ok (Vallejo + SF ferry + Marin GG + East Bay + Peninsula SFO art slices)');
+const manifest = spawnSync('npx', ['tsx', join(root, 'scripts/check-art-district-manifest.mts')], {
+  cwd: root,
+  stdio: 'inherit'
+});
+if (manifest.status !== 0) process.exit(manifest.status ?? 1);
+
+console.log('check-vallejo-art ok (6 Bay region art slices)');
