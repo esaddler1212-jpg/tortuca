@@ -27,6 +27,7 @@
     "test:vallejo-art": "tsx scripts/check-vallejo-art.mts",
     "test:battleworld-art": "tsx scripts/check-battleworld-art.mts",
     "test:visual-tiers": "tsx scripts/check-visual-tiers.mts",
+    "test:kenney-service-unlocks": "tsx scripts/check-kenney-service-unlocks.mts",
     "test:geo-anchor": "tsx scripts/check-geo-anchor.mts",
     "build:bay-freeways": "tsx scripts/build-bay-freeways.mts",
     "test:openworldjs": "tsx scripts/check-openworldjs-cherrypick.mts",

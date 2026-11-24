@@ -43,6 +43,9 @@ if (!install.includes('--roads-glb')) errors.push('install script: roads-glb mis
 if (!install.includes('--building-pbr')) errors.push('install script: building-pbr missing');
 if (!existsSync(join(root, 'drive-world/src/geo-anchor.ts'))) errors.push('geo-anchor missing');
 if (!existsSync(join(root, 'drive-world/src/vice86-density.ts'))) errors.push('vice86-density missing');
+if (!existsSync(join(root, 'drive-world/src/vehicle-kenney-service-unlocks.ts'))) {
+  errors.push('vehicle-kenney-service-unlocks missing');
+}
 if (!existsSync(join(root, 'docs/COUCH_PASS_VISUAL.md'))) errors.push('COUCH_PASS_VISUAL missing');
 const kenneyCars = join(root, 'drive-world/public/models/kenney/ambulance.glb');
 if (!existsSync(kenneyCars)) errors.push('full kenney car kit missing');

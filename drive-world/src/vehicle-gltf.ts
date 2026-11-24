@@ -97,6 +97,10 @@ const VISUAL_BY_ID: Record<string, GltfVisualOptions> = {
   'bonus-vista-liner': { scale: 2.08, yawOffsetDeg: 90, yOffset: -0.42 },
   'bonus-heat-shade': { scale: 2.06, yawOffsetDeg: 90, yOffset: -0.28 },
   'bonus-trap-outlaw': { scale: 2.1, yawOffsetDeg: 90, yOffset: -0.36 },
+  'bonus-night-medic': { scale: 2.12, yawOffsetDeg: 90, yOffset: -0.48 },
+  'bonus-fire-watch': { scale: 2.14, yawOffsetDeg: 90, yOffset: -0.55 },
+  'bonus-route-collect': { scale: 2.18, yawOffsetDeg: 90, yOffset: -0.58 },
+  'bonus-peninsula-luxe': { scale: 2.1, yawOffsetDeg: 90, yOffset: -0.44 },
   'craft-bay-wedge': { scale: 2.04, yawOffsetDeg: 90, yOffset: -0.26 },
   'craft-night-lift': { scale: 2.1, yawOffsetDeg: 90, yOffset: -0.42 },
   'craft-street-spike': { scale: 1.98, yawOffsetDeg: 90, yOffset: -0.22 }

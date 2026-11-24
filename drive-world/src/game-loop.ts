@@ -108,6 +108,7 @@ import { chapterObjectivePin } from './mission-nav';
 import { tryUnlockCraftVehicles } from './craft-vehicle-unlocks';
 import { tryAwardDistrictMeetBadge, tryUnlockDistrictMeetVehicles } from './district-meets';
 import { bumpHeatPeak, tryUnlockActivityVehicles } from './vehicle-activity-unlocks';
+import { tryUnlockKenneyServiceVehicles } from './vehicle-kenney-service-unlocks';
 import { appendJournal } from './cruise-journal';
 import { nearestCruiseVista, type CruiseVistaDef } from './cruise-vistas';
 import { loadSettings, saveSettings } from './game-settings';
@@ -424,7 +425,8 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     const sources = [
       tryUnlockActivityVehicles(progress),
       tryUnlockDistrictMeetVehicles(progress),
-      tryUnlockCraftVehicles(progress)
+      tryUnlockCraftVehicles(progress),
+      tryUnlockKenneyServiceVehicles(progress)
     ];
     let changed = false;
     for (const out of sources) {
@@ -1363,6 +1365,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
             saveProgress(progress);
             progress = appendJournal(progress, { kind: 'fuel', id: gasNear.id, label: gasNear.name });
             ui.showToast('Tank full', `${gasNear.name} — free fill`);
+            applyBonusVehicleUnlocks();
             if (nearGarage) refreshGarageUi();
           }
           fuelRefillT = 0;
