@@ -18,6 +18,10 @@ Greybox flight combat with **hero GLB when present** (`public/models/heroes/<id>
 - **Super crater ring:** keeps spawn scale — puff trail animation does not squash the ring (`vfx.ts` `kind: 'ring'`).
 - **Default hero:** `solar-apex.glb` (CC0 Blockbench export — see `BLOCKBENCH_WORKFLOW.md`).
 
+## Local visual stack
+
+[`VISUAL_UPGRADE_TIERS.md`](./VISUAL_UPGRADE_TIERS.md) — quality tier + `--city-glb`, World Gacha (Tier 2), rim/skyline (Tier 3).
+
 ## Look
 
 - District read: low-poly blocks + optional Kenney / World Gacha skyline (see `GAMEDEV_RESOURCES.md`).

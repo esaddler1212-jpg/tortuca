@@ -12,7 +12,9 @@ We comb multiple **free resource indexes**:
 
 ## Free building research
 
-See [`FREE_3D_BUILDING_ASSETS.md`](./FREE_3D_BUILDING_ASSETS.md) for CC0 packs (Kenney modular, Poly Haven, etc.) and the district manifest.
+See [`VISUAL_UPGRADE_TIERS.md`](./VISUAL_UPGRADE_TIERS.md) for **Tier 0–5** visual ROI (settings → install → manual → code).
+
+See [`FREE_3D_BUILDING_ASSETS.md`](./FREE_3D_BUILDING_ASSETS.md) for CC0 pack sources and the district manifest.
 
 ## Quick commands
 

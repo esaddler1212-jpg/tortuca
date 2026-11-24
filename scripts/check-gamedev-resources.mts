@@ -9,7 +9,10 @@ const files = [
   'gamedev-resources/upstream-pin.json',
   'tools/gamedev-resources/install-free-packs.sh',
   'docs/BLOCKBENCH_WORKFLOW.md',
-  'docs/WORLDGACHA_WORKFLOW.md'
+  'docs/WORLDGACHA_WORKFLOW.md',
+  'docs/FREE_3D_BUILDING_ASSETS.md',
+  'docs/VISUAL_UPGRADE_TIERS.md',
+  'shared/art-district-manifest.json'
 ];
 
 for (const rel of files) {

@@ -35,6 +35,10 @@ HUD hex accents must match existing CSS nitro / chapter stripes — do not inven
 - **South Bay SAP (slice 6):** arena plaza deck (collision), ring façade, marquee, light towers; Kenney at `SOUTH_BAY_SAP` (400, −1220).
 - All six Bay region anchors are listed in `shared/art-district-manifest.json`. Optional GLB packs: [`FREE_3D_BUILDING_ASSETS.md`](./FREE_3D_BUILDING_ASSETS.md).
 
+## Local visual stack
+
+Follow [`VISUAL_UPGRADE_TIERS.md`](./VISUAL_UPGRADE_TIERS.md) — Tier 0 settings, Tier 1 `install-free-packs.sh --city-glb`, Tier 3+ engine hooks.
+
 ## Credits
 
 Any GLB under `drive-world/public/models/` needs a line in `drive-world/public/models/CREDITS.md` (CC0 / license link).

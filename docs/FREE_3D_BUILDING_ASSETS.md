@@ -1,6 +1,10 @@
 # Free 3D building assets (research)
 
-Curated options that fit Tortuca’s **browser GLB + optional local install** pattern (no giant binaries in git). Single source for agents: pair with [`GAMEDEV_RESOURCES.md`](./GAMEDEV_RESOURCES.md) and [`shared/art-district-manifest.json`](../shared/art-district-manifest.json).
+Curated options that fit Tortuca’s **browser GLB + optional local install** pattern (no giant binaries in git).
+
+**Start here for priority:** [`VISUAL_UPGRADE_TIERS.md`](./VISUAL_UPGRADE_TIERS.md) (Tier 0–5 checklist for both games).
+
+Also pair with [`GAMEDEV_RESOURCES.md`](./GAMEDEV_RESOURCES.md) and [`shared/art-district-manifest.json`](../shared/art-district-manifest.json).
 
 ## Already wired in repo
 
