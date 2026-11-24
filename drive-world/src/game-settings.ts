@@ -36,6 +36,8 @@ export type GameSettings = {
   resolutionScale: number;
   /** Larger HUD type for TV / couch */
   tvHudMode: boolean;
+  /** Tier 5 — show WGS84 under minimap (anchor fit; not GPS truth) */
+  experimentalGeoHud: boolean;
 };
 
 const KEY = 'drive-world-settings-v1';
@@ -60,7 +62,8 @@ const defaults: GameSettings = {
   sfxVolume: 0.9,
   frameCapFps: 0,
   resolutionScale: 1,
-  tvHudMode: false
+  tvHudMode: false,
+  experimentalGeoHud: false
 };
 
 export function loadSettings(): GameSettings {

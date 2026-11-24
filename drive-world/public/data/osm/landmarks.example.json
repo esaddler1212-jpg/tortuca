@@ -1,0 +1,7 @@
+{
+  "source": "Example only — copy to landmarks.json after OSM / scout research (ODbL attribution in MAP_ATTRIBUTION.md)",
+  "markers": [
+    { "id": "ferry-building", "lon": -122.3933, "lat": 37.7955, "label": "Ferry Building" },
+    { "id": "oakland-city-hall", "lon": -122.2719, "lat": 37.8054, "label": "Oakland" }
+  ]
+}

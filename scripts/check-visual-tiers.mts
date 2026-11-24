@@ -25,6 +25,8 @@ if (!districts.includes('placeDistrictModularProps')) errors.push('kenney distri
 const main = readFileSync(join(root, 'drive-world/src/main.ts'), 'utf8');
 if (!main.includes('preloadDeckPbr')) errors.push('main: deck PBR preload missing');
 if (!main.includes('placeFreewayKenneyProps')) errors.push('main: freeway kenney missing');
+if (!main.includes('placeFreewayRoadProps')) errors.push('main: freeway roads missing');
+if (!main.includes('placeOsmLandmarkMarkers')) errors.push('main: osm landmarks missing');
 if (!main.includes('applyCityNightsSky')) errors.push('main: city nights sky missing');
 
 const bayMap = readFileSync(join(root, 'drive-world/src/hud/BayMap.tsx'), 'utf8');
@@ -37,9 +39,12 @@ const install = readFileSync(join(root, 'tools/gamedev-resources/install-free-pa
 if (!install.includes('--pbr-decks')) errors.push('install script: pbr-decks missing');
 if (!install.includes('--city-glb-full')) errors.push('install script: city-glb-full missing');
 if (!install.includes('--nature-glb')) errors.push('install script: nature-glb missing');
+if (!install.includes('--roads-glb')) errors.push('install script: roads-glb missing');
+if (!install.includes('--building-pbr')) errors.push('install script: building-pbr missing');
+if (!existsSync(join(root, 'drive-world/src/geo-anchor.ts'))) errors.push('geo-anchor missing');
 
 if (errors.length) {
   console.error('check-visual-tiers failed:\n' + errors.map((e) => `  - ${e}`).join('\n'));
   process.exit(1);
 }
-console.log('check-visual-tiers ok (Tier 1–4 hooks)');
+console.log('check-visual-tiers ok (Tier 1–5 hooks)');

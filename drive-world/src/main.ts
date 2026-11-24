@@ -29,10 +29,14 @@ import {
 
 import { preloadDeckPbr } from './deck-pbr';
 import { applyCityNightsSky } from './sky-env-cn';
+import { preloadBuildingPbr } from './building-pbr';
 import { buildDrivingWorld } from './build-world';
 import { placeDistrictKenneyProps } from './build-kenney-districts';
 import { placeFreewayKenneyProps } from './build-kenney-freeway';
 import { placeNatureKenneyProps } from './build-kenney-nature';
+import { placeFreewayRoadProps } from './build-kenney-roads';
+import { placeSuburbanKenneyProps } from './build-kenney-suburban';
+import { placeOsmLandmarkMarkers } from './build-osm-landmarks';
 import { startGameSession } from './game-loop';
 import { installOpenworldDevCommands } from './openworldjs/dev-commands';
 import { getHudSnapshot } from './game-bridge';
@@ -142,11 +146,15 @@ void preloadAllVehicleModels(app).catch(() => {
 });
 
 await preloadDeckPbr(app);
+void preloadBuildingPbr(app);
 await applyCityNightsSky(app, bootSettings);
 buildDrivingWorld(app);
 void placeDistrictKenneyProps(app);
 void placeFreewayKenneyProps(app);
 void placeNatureKenneyProps(app);
+void placeFreewayRoadProps(app);
+void placeSuburbanKenneyProps(app);
+void placeOsmLandmarkMarkers(app);
 
 const moon = new Entity('moon');
 moon.addComponent('light', {

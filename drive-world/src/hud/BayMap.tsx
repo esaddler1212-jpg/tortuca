@@ -6,6 +6,7 @@ import { CITY_HUBS } from '../city-map-registry';
 import { NAMED_STREETS } from '../street-registry';
 import { homeServicePoint, resolveHomeSafehouse } from '../safehouse-registry';
 import { GAS_STATIONS } from '../gas-stations';
+import { gameToWgs84 } from '../geo-anchor';
 import { BAY_WATER_BOUNDS, DISTRICTS, FREEWAY_ROUTES, WORLD_HALF_M } from '../world-config';
 import { TOKYO_MINIMAP_TITLE } from '../tokyo-ff-cars';
 import { GHOST_SPRINT_CIRCUIT } from '../sprint-circuit-roster';
@@ -32,6 +33,7 @@ export type BayMapProps = {
   snap: HudSnapshot;
   size?: number;
   showDistrictLabels?: boolean;
+  showGeoHud?: boolean;
   className?: string;
 };
 
@@ -82,7 +84,17 @@ function TokyoMapBody({ snap, size }: { snap: HudSnapshot; size: number }) {
   );
 }
 
-function BayMapBody({ snap, size, showDistrictLabels }: { snap: HudSnapshot; size: number; showDistrictLabels: boolean }) {
+function BayMapBody({
+  snap,
+  size,
+  showDistrictLabels,
+  showGeoHud
+}: {
+  snap: HudSnapshot;
+  size: number;
+  showDistrictLabels: boolean;
+  showGeoHud: boolean;
+}) {
   const tokyoReady = snap.progress ? tokyoUnlockStatus(snap.progress).unlocked : false;
   const home = snap.progress ? resolveHomeSafehouse(snap.progress) : null;
   const svc = home ? homeServicePoint(home) : null;
@@ -261,15 +273,27 @@ function BayMapBody({ snap, size, showDistrictLabels }: { snap: HudSnapshot; siz
         className="minimap-player"
         transform={`rotate(${snap.yaw} ${mapX(snap.playerX, size)} ${mapY(snap.playerZ, size)})`}
       />
+      {showGeoHud ? (
+        <text x={6} y={size - 8} className="minimap-geo-hud">
+          {(() => {
+            const g = gameToWgs84(snap.playerX, snap.playerZ);
+            return `${g.lat.toFixed(4)}°, ${g.lon.toFixed(4)}°`;
+          })()}
+        </text>
+      ) : null}
     </>
   );
 }
 
-export function BayMap({ snap, size = 168, showDistrictLabels = false, className }: BayMapProps) {
+export function BayMap({ snap, size = 168, showDistrictLabels = false, showGeoHud = false, className }: BayMapProps) {
   const inTokyo = snap.inTokyo;
   return (
     <svg width={size} height={size} className={className ?? 'minimap'} aria-label={inTokyo ? TOKYO_MINIMAP_TITLE : 'Bay Area map'}>
-      {inTokyo ? <TokyoMapBody snap={snap} size={size} /> : <BayMapBody snap={snap} size={size} showDistrictLabels={showDistrictLabels} />}
+      {inTokyo ? (
+        <TokyoMapBody snap={snap} size={size} />
+      ) : (
+        <BayMapBody snap={snap} size={size} showDistrictLabels={showDistrictLabels} showGeoHud={showGeoHud} />
+      )}
     </svg>
   );
 }

@@ -135,7 +135,7 @@ function HudDrawerTabs({ snap }: { snap: HudSnapshot }) {
       <div className="hud-tab-panel" role="tabpanel">
         {tab === 'map' && (
           <div className="map-tab-panel">
-            <BayMap snap={snap} size={280} showDistrictLabels />
+            <BayMap snap={snap} size={280} showDistrictLabels showGeoHud={!!snap.settings.experimentalGeoHud} />
             <p className="map-legend">Orange = freeways · dots = landmarks · square = taco truck</p>
             <LandSearchPanel snap={snap} />
             <FastTravel snap={snap} />
@@ -635,6 +635,14 @@ function SettingsPanel() {
           onChange={(e) => apply({ ...s, tvHudMode: e.target.checked })}
         />
         TV / couch HUD (larger text)
+      </label>
+      <label className="checkbox-row">
+        <input
+          type="checkbox"
+          checked={!!s.experimentalGeoHud}
+          onChange={(e) => apply({ ...s, experimentalGeoHud: e.target.checked })}
+        />
+        Experimental map coordinates (WGS84 anchor)
       </label>
       <label className="slider-row">
         Fog

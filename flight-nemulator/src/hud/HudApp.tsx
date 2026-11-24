@@ -32,6 +32,7 @@ import { acknowledgeDialogue } from '../cutscene-queue';
 import { setQualityOverride } from '../game-settings';
 import { downloadPhoto } from '../photo-mode';
 import type { QualityTier } from '../quality-tier';
+import { HudIcon } from './HudIcon';
 import './hud.css';
 
 export type GameHudSnapshot = {
@@ -170,7 +171,9 @@ export function HudApp() {
         <div className="hud-panel">
           <div>{snap.speedKmh} km/h</div>
           <div>Damage {formatUsd(snap.destructionUsd)}</div>
-          <div className="wanted">Wanted {stars}</div>
+          <div className="wanted">
+            <HudIcon name="home" title="Wanted level" /> Wanted {stars}
+          </div>
           <div>
             Wave {snap.wave}
             {snap.waveCombatChip ? (
@@ -181,7 +184,7 @@ export function HudApp() {
             ) : null}
           </div>
           <div>
-            Energy {snap.stamina}/{snap.staminaMax}
+            <HudIcon name="energy" title="Stamina" /> Energy {snap.stamina}/{snap.staminaMax}
           </div>
           <div className="hud-tag">
             {snap.playerRole === 'villain' ? 'Heroes' : 'Raiders'} {snap.dronesLeft ?? 0}
@@ -197,7 +200,7 @@ export function HudApp() {
 
       {snap.arcObjectiveChip ? (
         <p className="hud-tag hud-arc-objective" title="Arc · Story · Lattice">
-          {snap.arcObjectiveChip}
+          <HudIcon name="objective" title="Arc objective" /> {snap.arcObjectiveChip}
         </p>
       ) : null}
       <Minimap

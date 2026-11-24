@@ -11,6 +11,8 @@ DRIVE_CITY_DIR="$DRIVE/models/kenney-city"
 MODULAR_DIR="$FLIGHT/models/kenney-modular"
 DRIVE_MODULAR_DIR="$DRIVE/models/kenney-modular"
 NATURE_DIR="$DRIVE/models/kenney-nature"
+ROADS_DIR="$DRIVE/models/kenney-roads"
+SUBURBAN_DIR="$DRIVE/models/kenney-suburban"
 PBR_DIR="$DRIVE/textures/ambientcg"
 
 INSTALL_AUDIO=false
@@ -18,7 +20,10 @@ INSTALL_CITY=false
 INSTALL_CITY_FULL=false
 INSTALL_MODULAR=false
 INSTALL_NATURE=false
+INSTALL_ROADS=false
+INSTALL_SUBURBAN=false
 INSTALL_PBR=false
+INSTALL_BUILDING_PBR=false
 CITY_GLB_LIMIT="${CITY_GLB_LIMIT:-48}"
 
 for arg in "$@"; do
@@ -28,17 +33,20 @@ for arg in "$@"; do
     --city-glb-full) INSTALL_CITY=true; INSTALL_CITY_FULL=true; CITY_GLB_LIMIT=999 ;;
     --modular-glb) INSTALL_MODULAR=true ;;
     --nature-glb) INSTALL_NATURE=true ;;
+    --roads-glb) INSTALL_ROADS=true ;;
+    --suburban-glb) INSTALL_SUBURBAN=true ;;
     --pbr-decks) INSTALL_PBR=true ;;
+    --building-pbr) INSTALL_BUILDING_PBR=true ;;
     --all) INSTALL_AUDIO=true; INSTALL_CITY=true; INSTALL_MODULAR=true; INSTALL_PBR=true ;;
     -h|--help)
-      echo "Usage: $0 [--audio] [--city-glb|--city-glb-full] [--modular-glb] [--nature-glb] [--pbr-decks] [--all]"
+      echo "Usage: $0 [--audio] [--city-glb|--city-glb-full] [--modular-glb] [--nature-glb] [--roads-glb] [--suburban-glb] [--pbr-decks] [--building-pbr] [--all]"
       exit 0
       ;;
   esac
 done
 
-if ! $INSTALL_AUDIO && ! $INSTALL_CITY && ! $INSTALL_MODULAR && ! $INSTALL_NATURE && ! $INSTALL_PBR; then
-  echo "Pick at least one: --audio --city-glb --modular-glb --nature-glb --pbr-decks"
+if ! $INSTALL_AUDIO && ! $INSTALL_CITY && ! $INSTALL_MODULAR && ! $INSTALL_NATURE && ! $INSTALL_ROADS && ! $INSTALL_SUBURBAN && ! $INSTALL_PBR && ! $INSTALL_BUILDING_PBR; then
+  echo "Pick at least one: --audio --city-glb --modular-glb --nature-glb --roads-glb --suburban-glb --pbr-decks --building-pbr"
   exit 1
 fi
 
@@ -156,6 +164,44 @@ PY
   fi
 fi
 
+install_kenney_sparse_glb() {
+  local repo_url="$1"
+  local sparse_path="$2"
+  local dest="$3"
+  local source_label="$4"
+  mkdir -p "$dest"
+  if git clone --depth 1 --filter=blob:none --sparse "$repo_url" "$tmpdir/pack" 2>/dev/null; then
+    git -C "$tmpdir/pack" sparse-checkout set "$sparse_path" 2>/dev/null || true
+    if [ -d "$tmpdir/pack/$sparse_path" ]; then
+      find "$tmpdir/pack/$sparse_path" -name '*.glb' | head -48 | while read -r f; do
+        cp -n "$f" "$dest/"
+      done
+      python3 - <<PY
+import glob, json, os
+files = sorted(os.path.basename(p) for p in glob.glob(os.path.join("$dest", "*.glb")))
+with open(os.path.join("$dest", "index.json"), "w", encoding="utf-8") as f:
+    json.dump({"files": files, "source": "$source_label"}, f)
+PY
+      echo "Installed GLBs → $dest"
+    else
+      echo "WARN: GLB folder missing for $source_label"
+    fi
+    rm -rf "$tmpdir/pack"
+  else
+    echo "WARN: clone failed for $source_label"
+  fi
+}
+
+if $INSTALL_ROADS; then
+  echo "Cloning Kenney Road Pack (CC0)…"
+  install_kenney_sparse_glb "https://github.com/KenneyNL/Road-Pack.git" "Models/GLB" "$ROADS_DIR" "kenney-road-pack-cc0"
+fi
+
+if $INSTALL_SUBURBAN; then
+  echo "Cloning Kenney City Kit Suburban (CC0)…"
+  install_kenney_sparse_glb "https://github.com/KenneyNL/City-Kit-Suburban.git" "Models/GLB" "$SUBURBAN_DIR" "kenney-suburban-kit-cc0"
+fi
+
 if $INSTALL_PBR; then
   mkdir -p "$PBR_DIR"
   echo "Fetching AmbientCG Ground085 1K asphalt (CC0)…"
@@ -171,6 +217,22 @@ if $INSTALL_PBR; then
     fi
   else
     echo "WARN: AmbientCG download failed — manual: https://ambientcg.com/view?id=Ground085"
+  fi
+fi
+
+if $INSTALL_BUILDING_PBR; then
+  mkdir -p "$PBR_DIR"
+  echo "Fetching AmbientCG Concrete047 1K (CC0) for optional facades…"
+  if curl -fsSL -A "Mozilla/5.0 (compatible; TortucaAssetInstaller/1.0)" \
+    "https://ambientcg.com/get?file=Concrete047_1K-JPG.zip" -o "$tmpdir/concrete.zip"; then
+    unzip -qo "$tmpdir/concrete.zip" -d "$tmpdir/concrete"
+    color="$(find "$tmpdir/concrete" -iname '*color*.jpg' -type f | head -1)"
+    if [ -n "$color" ]; then
+      cp -f "$color" "$PBR_DIR/building-facade.jpg"
+      echo "Installed building PBR → $PBR_DIR/building-facade.jpg"
+    fi
+  else
+    echo "WARN: Concrete047 download failed — https://ambientcg.com/view?id=Concrete047"
   fi
 fi
 
