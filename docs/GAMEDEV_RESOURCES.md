@@ -22,7 +22,9 @@ See [`FREE_3D_BUILDING_ASSETS.md`](./FREE_3D_BUILDING_ASSETS.md) for CC0 pack so
 |---------|---------|
 | `npm run gamedev-resources:sync` | Pin upstream commits (Kavex + public-apis) |
 | `bash tools/gamedev-resources/install-free-packs.sh --all` | Pull CC0 Kenney audio + city GLBs locally |
-| `bash tools/gamedev-resources/install-free-packs.sh --modular-glb` | Kenney Modular Buildings → `kenney-modular/` (optional) |
+| `bash tools/gamedev-resources/install-free-packs.sh --modular-glb` | Kenney Modular → wired loaders in both games |
+| `bash tools/gamedev-resources/install-free-packs.sh --city-glb-full` | All City Kit GLBs (not just 48-cap sample) |
+| `bash tools/gamedev-resources/install-free-packs.sh --pbr-decks` | AmbientCG asphalt → City Nights deck textures |
 
 ### Wired in Flight Nemulator (runtime)
 

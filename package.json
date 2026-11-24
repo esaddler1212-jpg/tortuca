@@ -26,6 +26,7 @@
     "test:playlist-ace": "tsx scripts/check-playlist-ace.mts",
     "test:vallejo-art": "tsx scripts/check-vallejo-art.mts",
     "test:battleworld-art": "tsx scripts/check-battleworld-art.mts",
+    "test:visual-tiers": "tsx scripts/check-visual-tiers.mts",
     "test:openworldjs": "tsx scripts/check-openworldjs-cherrypick.mts",
     "game-finish:report": "tsx scripts/game-finish-report.mts",
     "game:polish-prompt": "tsx scripts/game-polish-prompt.mts",

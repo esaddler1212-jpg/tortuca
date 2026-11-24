@@ -37,6 +37,12 @@ if (errors.length) {
   console.error('check-vallejo-art failed:\n' + errors.map((e) => `  - ${e}`).join('\n'));
   process.exit(1);
 }
+const tiers = spawnSync('npx', ['tsx', join(root, 'scripts/check-visual-tiers.mts')], {
+  cwd: root,
+  stdio: 'inherit'
+});
+if (tiers.status !== 0) process.exit(tiers.status ?? 1);
+
 const manifest = spawnSync('npx', ['tsx', join(root, 'scripts/check-art-district-manifest.mts')], {
   cwd: root,
   stdio: 'inherit'

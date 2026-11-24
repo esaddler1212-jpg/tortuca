@@ -27,6 +27,7 @@ import {
   createGraphicsDevice
 } from 'playcanvas';
 
+import { preloadDeckPbr } from './deck-pbr';
 import { buildDrivingWorld } from './build-world';
 import { placeDistrictKenneyProps } from './build-kenney-districts';
 import { startGameSession } from './game-loop';
@@ -137,6 +138,7 @@ void preloadAllVehicleModels(app).catch(() => {
   console.warn('[city-nights] Background vehicle preload incomplete.');
 });
 
+await preloadDeckPbr(app);
 buildDrivingWorld(app);
 void placeDistrictKenneyProps(app);
 

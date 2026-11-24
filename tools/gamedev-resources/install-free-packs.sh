@@ -10,26 +10,32 @@ CITY_DIR="$FLIGHT/models/kenney-city"
 DRIVE_CITY_DIR="$DRIVE/models/kenney-city"
 MODULAR_DIR="$FLIGHT/models/kenney-modular"
 DRIVE_MODULAR_DIR="$DRIVE/models/kenney-modular"
+PBR_DIR="$DRIVE/textures/ambientcg"
 
 INSTALL_AUDIO=false
 INSTALL_CITY=false
+INSTALL_CITY_FULL=false
 INSTALL_MODULAR=false
+INSTALL_PBR=false
+CITY_GLB_LIMIT="${CITY_GLB_LIMIT:-48}"
 
 for arg in "$@"; do
   case "$arg" in
     --audio) INSTALL_AUDIO=true ;;
     --city-glb) INSTALL_CITY=true ;;
+    --city-glb-full) INSTALL_CITY=true; INSTALL_CITY_FULL=true; CITY_GLB_LIMIT=999 ;;
     --modular-glb) INSTALL_MODULAR=true ;;
-    --all) INSTALL_AUDIO=true; INSTALL_CITY=true; INSTALL_MODULAR=true ;;
+    --pbr-decks) INSTALL_PBR=true ;;
+    --all) INSTALL_AUDIO=true; INSTALL_CITY=true; INSTALL_MODULAR=true; INSTALL_PBR=true ;;
     -h|--help)
-      echo "Usage: $0 [--audio] [--city-glb] [--modular-glb] [--all]"
+      echo "Usage: $0 [--audio] [--city-glb|--city-glb-full] [--modular-glb] [--pbr-decks] [--all]"
       exit 0
       ;;
   esac
 done
 
-if ! $INSTALL_AUDIO && ! $INSTALL_CITY && ! $INSTALL_MODULAR; then
-  echo "Pick at least one: --audio --city-glb --modular-glb"
+if ! $INSTALL_AUDIO && ! $INSTALL_CITY && ! $INSTALL_MODULAR && ! $INSTALL_PBR; then
+  echo "Pick at least one: --audio --city-glb --modular-glb --pbr-decks"
   exit 1
 fi
 
@@ -66,7 +72,7 @@ if $INSTALL_CITY; then
   if git clone --depth 1 --filter=blob:none --sparse https://github.com/KenneyNL/City-Kit-Commercial.git "$tmpdir/city" 2>/dev/null; then
     git -C "$tmpdir/city" sparse-checkout set Models/GLB 2>/dev/null || true
     if [ -d "$tmpdir/city/Models/GLB" ]; then
-      find "$tmpdir/city/Models/GLB" -name '*.glb' | head -24 | while read -r f; do
+      find "$tmpdir/city/Models/GLB" -name '*.glb' | head -"$CITY_GLB_LIMIT" | while read -r f; do
         cp -n "$f" "$CITY_DIR/"
         cp -n "$f" "$DRIVE_CITY_DIR/"
       done
@@ -102,9 +108,9 @@ if $INSTALL_MODULAR; then
   done
   if $got; then
     unzip -qo "$tmpdir/modular.zip" -d "$tmpdir/mod"
-    mapfile -t glbs < <(find "$tmpdir/mod" -name '*.glb' 2>/dev/null | head -32)
+    mapfile -t glbs < <(find "$tmpdir/mod" -name '*.glb' 2>/dev/null | head -48)
     if [ "${#glbs[@]}" -eq 0 ]; then
-      mapfile -t glbs < <(find "$tmpdir/mod" -path '*/GLB/*' -name '*.glb' 2>/dev/null | head -32)
+      mapfile -t glbs < <(find "$tmpdir/mod" -path '*/GLB/*' -name '*.glb' 2>/dev/null | head -48)
     fi
   for f in "${glbs[@]}"; do
       cp -n "$f" "$MODULAR_DIR/"
@@ -120,6 +126,24 @@ PY
     echo "Installed ${#glbs[@]} modular GLBs → $MODULAR_DIR"
   else
     echo "WARN: Modular download failed — https://kenney.nl/assets/modular-buildings or OpenGameArt kenney_modular-buildings.zip"
+  fi
+fi
+
+if $INSTALL_PBR; then
+  mkdir -p "$PBR_DIR"
+  echo "Fetching AmbientCG Ground085 1K asphalt (CC0)…"
+  if curl -fsSL -A "Mozilla/5.0 (compatible; TortucaAssetInstaller/1.0)" \
+    "https://ambientcg.com/get?file=Ground085_1K-JPG.zip" -o "$tmpdir/ground.zip"; then
+    unzip -qo "$tmpdir/ground.zip" -d "$tmpdir/ground"
+    color="$(find "$tmpdir/ground" -iname '*color*.jpg' -type f | head -1)"
+    if [ -n "$color" ]; then
+      cp -f "$color" "$PBR_DIR/deck-asphalt.jpg"
+      echo "Installed deck PBR → $PBR_DIR/deck-asphalt.jpg (City Nights art kits)"
+    else
+      echo "WARN: Ground085 Color jpg not found in zip"
+    fi
+  else
+    echo "WARN: AmbientCG download failed — manual: https://ambientcg.com/view?id=Ground085"
   fi
 fi
 

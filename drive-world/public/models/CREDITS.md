@@ -22,7 +22,11 @@ Not committed by default — see `drive-world/.gitignore`.
 
 `bash tools/gamedev-resources/install-free-packs.sh --modular-glb`
 
-Runtime loader is optional — see [`docs/VISUAL_UPGRADE_TIERS.md`](../../docs/VISUAL_UPGRADE_TIERS.md) Tier 3.
+Loaded at runtime via `placeDistrictModularProps` when installed.
+
+## AmbientCG deck asphalt (optional, CC0)
+
+`textures/ambientcg/deck-asphalt.jpg` from [Ground085](https://ambientcg.com/view?id=Ground085) via `install-free-packs.sh --pbr-decks`. Used by `kitDeckMaterial` on art-kit plazas.
 
 ## Light Helicopter (CC0 1.0)
 

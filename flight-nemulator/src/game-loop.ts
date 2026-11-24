@@ -200,7 +200,7 @@ import {
 import { isPhotoMode, togglePhotoMode } from './photo-mode';
 import { fetchManifestIfOnline, getManifestSuggestions } from './updates';
 import { attachHeroGltf } from './hero-gltf';
-import { placeDistrictKenneySkyline, placeKenneyLandmarks } from './build-city-kenney';
+import { placeDistrictKenneyModular, placeDistrictKenneySkyline, placeKenneyLandmarks } from './build-city-kenney';
 import { buildDistrictRimLights } from './build-district-rim-lights';
 import { placeWorldGachaTowns } from './build-city-worldgacha';
 import { UNIVERSE_LABEL, UNIVERSE_RIM_RGB, universeForDistrict } from './battleworld-districts';
@@ -337,6 +337,7 @@ export async function startGame(app: AppBase): Promise<void> {
   buildDistrictRimLights(app, root);
   void placeKenneyLandmarks(app, root, tier === 'low' ? 8 : tier === 'high' ? 28 : 16);
   void placeDistrictKenneySkyline(app, root);
+  void placeDistrictKenneyModular(app, root);
   void placeWorldGachaTowns(app, root, tier === 'low' ? 0 : tier === 'high' ? 3 : 1);
   spawnSimpleCars(app, root, tier === 'low' ? 32 : tier === 'high' ? 160 : 90);
   applyPersistedWorldDecor(app, root, savedTheme, savedMonument);

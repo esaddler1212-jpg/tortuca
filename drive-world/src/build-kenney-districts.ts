@@ -1,6 +1,6 @@
 import type { AppBase } from 'playcanvas';
 
-import { type KenneySlot, placeKenneySlots } from './build-kenney-props';
+import { type KenneySlot, placeKenneyPackSlots, placeKenneySlots } from './build-kenney-props';
 import { EAST_BAY_LAKE } from './build-eastbay-lake-kit';
 import { PENINSULA_SFO_GATE } from './build-peninsula-sfo-kit';
 import { SOUTH_BAY_SAP } from './build-southbay-sap-kit';
@@ -81,6 +81,35 @@ export async function placeEastbayLakeKenneyProps(app: AppBase): Promise<number>
   return placeKenneySlots(app, EAST_BAY_LAKE.x, EAST_BAY_LAKE.z, 'eastbay-lake-kenney-props', EAST_BAY_SLOTS);
 }
 
+const MODULAR_ANCHOR_SLOTS: KenneySlot[] = [
+  { dx: -22, dz: 16, scale: 2.2, yaw: 12, fileIdx: 0 },
+  { dx: 24, dz: 14, scale: 2.4, yaw: -18, fileIdx: 1 }
+];
+
+const DISTRICT_MODULAR_ANCHORS: { x: number; z: number; id: string }[] = [
+  { id: 'vallejo', x: VALLEJO_SAFEHOUSE.x, z: VALLEJO_SAFEHOUSE.z },
+  { id: 'sf-ferry', x: SF_FERRY_POINT.x, z: SF_FERRY_POINT.z },
+  { id: 'marin', x: MARIN_GG_VISTA.x, z: MARIN_GG_VISTA.z },
+  { id: 'eastbay', x: EAST_BAY_LAKE.x, z: EAST_BAY_LAKE.z },
+  { id: 'peninsula', x: PENINSULA_SFO_GATE.x, z: PENINSULA_SFO_GATE.z },
+  { id: 'southbay', x: SOUTH_BAY_SAP.x, z: SOUTH_BAY_SAP.z }
+];
+
+export async function placeDistrictModularProps(app: AppBase): Promise<number> {
+  let placed = 0;
+  for (const a of DISTRICT_MODULAR_ANCHORS) {
+    placed += await placeKenneyPackSlots(
+      app,
+      'kenney-modular',
+      a.x,
+      a.z,
+      `modular-${a.id}-props`,
+      MODULAR_ANCHOR_SLOTS
+    );
+  }
+  return placed;
+}
+
 export async function placeDistrictKenneyProps(app: AppBase): Promise<number> {
   const a = await placeVallejoKenneyProps(app);
   const b = await placeSfFerryKenneyProps(app);
@@ -88,5 +117,6 @@ export async function placeDistrictKenneyProps(app: AppBase): Promise<number> {
   const d = await placeEastbayLakeKenneyProps(app);
   const e = await placePeninsulaSfoKenneyProps(app);
   const f = await placeSouthbaySapKenneyProps(app);
-  return a + b + c + d + e + f;
+  const g = await placeDistrictModularProps(app);
+  return a + b + c + d + e + f + g;
 }

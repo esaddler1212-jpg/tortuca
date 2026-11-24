@@ -1,6 +1,6 @@
 import { Color, Entity, Vec3, type AppBase } from 'playcanvas';
 
-import { kitMaterial } from './art-kit-materials';
+import { kitDeckMaterial, kitMaterial } from './art-kit-materials';
 import { hillOffsetM } from './bay-terrain';
 import { BAY_WINDOW_LIGHTS, hash2 } from './night-palette';
 import { streetDeckY } from './street-utils';
@@ -26,7 +26,7 @@ export function buildSouthbaySapKit(app: AppBase): void {
   plaza.setEulerAngles(0, 4, 0);
   plaza.addComponent('render', {
     type: 'box',
-    material: kitMaterial(new Color(0.06, 0.06, 0.07), 0.07)
+    material: kitDeckMaterial(new Color(0.06, 0.06, 0.07), 0.07)
   });
   plaza.addComponent('collision', {
     type: 'box',
