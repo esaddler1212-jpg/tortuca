@@ -10,12 +10,14 @@ CITY_DIR="$FLIGHT/models/kenney-city"
 DRIVE_CITY_DIR="$DRIVE/models/kenney-city"
 MODULAR_DIR="$FLIGHT/models/kenney-modular"
 DRIVE_MODULAR_DIR="$DRIVE/models/kenney-modular"
+NATURE_DIR="$DRIVE/models/kenney-nature"
 PBR_DIR="$DRIVE/textures/ambientcg"
 
 INSTALL_AUDIO=false
 INSTALL_CITY=false
 INSTALL_CITY_FULL=false
 INSTALL_MODULAR=false
+INSTALL_NATURE=false
 INSTALL_PBR=false
 CITY_GLB_LIMIT="${CITY_GLB_LIMIT:-48}"
 
@@ -25,17 +27,18 @@ for arg in "$@"; do
     --city-glb) INSTALL_CITY=true ;;
     --city-glb-full) INSTALL_CITY=true; INSTALL_CITY_FULL=true; CITY_GLB_LIMIT=999 ;;
     --modular-glb) INSTALL_MODULAR=true ;;
+    --nature-glb) INSTALL_NATURE=true ;;
     --pbr-decks) INSTALL_PBR=true ;;
     --all) INSTALL_AUDIO=true; INSTALL_CITY=true; INSTALL_MODULAR=true; INSTALL_PBR=true ;;
     -h|--help)
-      echo "Usage: $0 [--audio] [--city-glb|--city-glb-full] [--modular-glb] [--pbr-decks] [--all]"
+      echo "Usage: $0 [--audio] [--city-glb|--city-glb-full] [--modular-glb] [--nature-glb] [--pbr-decks] [--all]"
       exit 0
       ;;
   esac
 done
 
-if ! $INSTALL_AUDIO && ! $INSTALL_CITY && ! $INSTALL_MODULAR && ! $INSTALL_PBR; then
-  echo "Pick at least one: --audio --city-glb --modular-glb --pbr-decks"
+if ! $INSTALL_AUDIO && ! $INSTALL_CITY && ! $INSTALL_MODULAR && ! $INSTALL_NATURE && ! $INSTALL_PBR; then
+  echo "Pick at least one: --audio --city-glb --modular-glb --nature-glb --pbr-decks"
   exit 1
 fi
 
@@ -126,6 +129,30 @@ PY
     echo "Installed ${#glbs[@]} modular GLBs → $MODULAR_DIR"
   else
     echo "WARN: Modular download failed — https://kenney.nl/assets/modular-buildings or OpenGameArt kenney_modular-buildings.zip"
+  fi
+fi
+
+if $INSTALL_NATURE; then
+  mkdir -p "$NATURE_DIR"
+  echo "Cloning Kenney Nature Kit (CC0)…"
+  if git clone --depth 1 --filter=blob:none --sparse https://github.com/KenneyNL/Nature-Kit.git "$tmpdir/nature" 2>/dev/null; then
+    git -C "$tmpdir/nature" sparse-checkout set Models/GLB 2>/dev/null || true
+    if [ -d "$tmpdir/nature/Models/GLB" ]; then
+      find "$tmpdir/nature/Models/GLB" -name '*.glb' | head -48 | while read -r f; do
+        cp -n "$f" "$NATURE_DIR/"
+      done
+      python3 - <<PY
+import glob, json, os
+files = sorted(os.path.basename(p) for p in glob.glob(os.path.join("$NATURE_DIR", "*.glb")))
+with open(os.path.join("$NATURE_DIR", "index.json"), "w", encoding="utf-8") as f:
+    json.dump({"files": files, "source": "kenney-nature-kit-cc0"}, f)
+PY
+      echo "Installed nature GLBs + index.json → $NATURE_DIR"
+    else
+      echo "WARN: Nature GLB folder missing — https://kenney.nl/assets/nature-kit"
+    fi
+  else
+    echo "WARN: Nature kit clone failed — download Kenney Nature Kit manually"
   fi
 fi
 

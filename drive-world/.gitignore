@@ -3,4 +3,5 @@ dist
 .DS_Store
 public/models/kenney-city/
 public/models/kenney-modular/
+public/models/kenney-nature/
 public/textures/ambientcg/

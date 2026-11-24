@@ -38,6 +38,7 @@ bash tools/gamedev-resources/install-free-packs.sh --all         # city + modula
 | `--modular-glb` | `*/public/models/kenney-modular/` + `index.json` | **Wired** — `placeDistrictModularProps` at each Bay anchor | **Wired** — `placeDistrictKenneyModular` per district |
 | `--city-glb-full` | Same as city (all GLBs from kit clone) | More building variety | Same |
 | `--pbr-decks` | `drive-world/public/textures/ambientcg/deck-asphalt.jpg` | **Wired** — `kitDeckMaterial` on art-kit plazas | — |
+| `--nature-glb` | `drive-world/public/models/kenney-nature/` + `index.json` | **Wired** — `placeNatureKenneyProps` (Tier 4) | — |
 | `--audio` | `flight-nemulator/public/audio/kenney/` | — | UI-style SFX |
 | `--all` | All of the above | | |
 
@@ -86,12 +87,12 @@ Track in art slices / PRs — not required for local dev.
 
 | # | Idea | Game | Notes |
 |---|------|------|--------|
-| 1 | Kenney **Roads** / **Suburban** / **Nature** | City Nights | Freeway props, palms — extend `install-free-packs.sh` or manual |
-| 2 | **Hub / freeway** Kenney slots (not only 6 anchors) | City Nights | I-80, 101, hub mazes — drives between landmarks |
-| 3 | **HUD map underlay** | City Nights | [`semi-accurate-bay-map`](../drive-world/research/findings/2026-11-13-semi-accurate-bay-map.md) — geography **on map**, not full 3D |
-| 4 | **World Gacha** satellite files | Battleworld | `files[]` in `worldgacha/index.json` |
-| 5 | **Poly Haven** local HDRIs | Both | Battleworld uses CDN sky; City Nights would need new sky path for parity |
-| 6 | **game-icons.net** HUD icons | Battleworld | CC BY — line in `CREDITS.md` |
+| 1 | Kenney **Nature** (`--nature-glb`) | City Nights | **Shipped** — `placeNatureKenneyProps` at coast anchors; Roads/Suburban still manual |
+| 2 | **Hub / freeway** Kenney slots | City Nights | **Shipped** — `placeFreewayKenneyProps` on I-80/101/880 + `CITY_HUBS` |
+| 3 | **HUD map underlay** | City Nights | **Shipped** — `BAY_WATER_BOUNDS` → `minimap-bay-underlay` in `BayMap.tsx` |
+| 4 | **World Gacha** satellite files | Battleworld | **Shipped example** — `public/models/worldgacha/index.example.json` (`files[]` schema) |
+| 5 | **Poly Haven** sky | City Nights | **Shipped** — `sky-env-cn.ts` (CDN JPG on Lush/Console); local HDRIs optional later |
+| 6 | **game-icons.net** HUD icons | Battleworld | **Todo** — CC BY — line in `CREDITS.md` when added |
 
 ---
 

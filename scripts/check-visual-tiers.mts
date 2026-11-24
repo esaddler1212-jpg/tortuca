@@ -24,6 +24,11 @@ if (!districts.includes('placeDistrictModularProps')) errors.push('kenney distri
 
 const main = readFileSync(join(root, 'drive-world/src/main.ts'), 'utf8');
 if (!main.includes('preloadDeckPbr')) errors.push('main: deck PBR preload missing');
+if (!main.includes('placeFreewayKenneyProps')) errors.push('main: freeway kenney missing');
+if (!main.includes('applyCityNightsSky')) errors.push('main: city nights sky missing');
+
+const bayMap = readFileSync(join(root, 'drive-world/src/hud/BayMap.tsx'), 'utf8');
+if (!bayMap.includes('minimap-bay-underlay')) errors.push('BayMap: bay underlay missing');
 
 const kenneyBw = readFileSync(join(root, 'flight-nemulator/src/build-city-kenney.ts'), 'utf8');
 if (!kenneyBw.includes('placeDistrictKenneyModular')) errors.push('battleworld: modular skyline missing');
@@ -31,9 +36,10 @@ if (!kenneyBw.includes('placeDistrictKenneyModular')) errors.push('battleworld: 
 const install = readFileSync(join(root, 'tools/gamedev-resources/install-free-packs.sh'), 'utf8');
 if (!install.includes('--pbr-decks')) errors.push('install script: pbr-decks missing');
 if (!install.includes('--city-glb-full')) errors.push('install script: city-glb-full missing');
+if (!install.includes('--nature-glb')) errors.push('install script: nature-glb missing');
 
 if (errors.length) {
   console.error('check-visual-tiers failed:\n' + errors.map((e) => `  - ${e}`).join('\n'));
   process.exit(1);
 }
-console.log('check-visual-tiers ok (Tier 1–3 hooks)');
+console.log('check-visual-tiers ok (Tier 1–4 hooks)');
