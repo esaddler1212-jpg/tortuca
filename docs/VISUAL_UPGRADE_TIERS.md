@@ -82,7 +82,7 @@ Track in art slices / PRs — not required for local dev.
 | 3 | **`--pbr-decks`** + `kitDeckMaterial` | **Shipped** | `deck-pbr.ts`, art-kit plaza decks |
 | 4 | **District rim lights** | **Shipped** | `build-district-rim-lights.ts` |
 | 5 | **Six Bay anchor kits** | **Shipped** | `shared/art-district-manifest.json` |
-| 6 | **Vice ’86 density pass** | **Todo** | [`GAME_POLISH_VICE86_PROMPTS.md`](./GAME_POLISH_VICE86_PROMPTS.md) |
+| 6 | **Vice ’86 density pass** | **Shipped** (Tier 6) | `vice86-density.ts`, [`COUCH_PASS_VISUAL.md`](./COUCH_PASS_VISUAL.md) |
 
 ---
 
@@ -109,6 +109,18 @@ Track in art slices / PRs — not required for local dev.
 | 3 | Optional building facade PBR | **Shipped** — `building-pbr.ts`, `--building-pbr` |
 | 4 | Asset marketplace policy | **Shipped** — [`GAMEDEV_MARKETPLACES.md`](./GAMEDEV_MARKETPLACES.md) |
 | 5 | Full OSM 3D road mesh / GPS driving physics | **Deferred** — see [`TIER5_SIM_BAY.md`](./TIER5_SIM_BAY.md) |
+
+---
+
+## Tier 6 — Vice ’86 “lived-in” read (no new building GLBs)
+
+| # | Item | Status |
+|---|------|--------|
+| 1 | **Kenney Car Kit full** in git + `--car-kit-full` | **Shipped** — see [`drive-world/public/models/CREDITS.md`](../drive-world/public/models/CREDITS.md) |
+| 2 | **Kenney Mini hero GLBs** (3 codenames) | **Shipped** — [`HERO_GLB_SOURCES.md`](./HERO_GLB_SOURCES.md) |
+| 3 | Couch QA doc | **Shipped** — [`COUCH_PASS_VISUAL.md`](./COUCH_PASS_VISUAL.md) |
+| 4 | Neon density toggle + drones/storefronts | **Shipped** — `vice86NeonRead` in settings |
+| 5 | Extra storefront strips | **Shipped** — `storefront-strips.ts` |
 
 ---
 

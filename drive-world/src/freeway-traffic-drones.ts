@@ -1,6 +1,7 @@
 import { Color, Entity, StandardMaterial, type AppBase } from 'playcanvas';
 
 import type { BayQualityPreset } from './bay-quality';
+import { freewayDroneBudget } from './vice86-density';
 import { snapToBayGround } from './openworldjs/ground-snap';
 import { FREEWAY_101, FREEWAY_880, FREEWAY_I80 } from './world-config';
 
@@ -56,15 +57,22 @@ const ARTERY_LOOPS: { id: string; path: (preset: BayQualityPreset) => { x: numbe
   }
 ];
 
-export function freewayDroneCountForPreset(preset: BayQualityPreset): number {
-  return FREEWAY_DRONE_BUDGET[preset];
+export function freewayDroneCountForPreset(
+  preset: BayQualityPreset,
+  vice86NeonRead = true
+): number {
+  return freewayDroneBudget(preset, vice86NeonRead);
 }
 
-export function spawnFreewayTrafficDrones(app: AppBase, preset: BayQualityPreset = 'balanced'): void {
+export function spawnFreewayTrafficDrones(
+  app: AppBase,
+  preset: BayQualityPreset = 'balanced',
+  vice86NeonRead = true
+): void {
   for (const d of drones) d.root.destroy();
   drones.length = 0;
 
-  const cap = FREEWAY_DRONE_BUDGET[preset];
+  const cap = freewayDroneBudget(preset, vice86NeonRead);
   const perRoute = Math.max(1, Math.floor(cap / ARTERY_LOOPS.length));
 
   const mat = new StandardMaterial();

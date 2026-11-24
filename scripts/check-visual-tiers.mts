@@ -42,9 +42,15 @@ if (!install.includes('--nature-glb')) errors.push('install script: nature-glb m
 if (!install.includes('--roads-glb')) errors.push('install script: roads-glb missing');
 if (!install.includes('--building-pbr')) errors.push('install script: building-pbr missing');
 if (!existsSync(join(root, 'drive-world/src/geo-anchor.ts'))) errors.push('geo-anchor missing');
+if (!existsSync(join(root, 'drive-world/src/vice86-density.ts'))) errors.push('vice86-density missing');
+if (!existsSync(join(root, 'docs/COUCH_PASS_VISUAL.md'))) errors.push('COUCH_PASS_VISUAL missing');
+const kenneyCars = join(root, 'drive-world/public/models/kenney/ambulance.glb');
+if (!existsSync(kenneyCars)) errors.push('full kenney car kit missing');
+const heroMini = join(root, 'flight-nemulator/public/models/heroes/emerald-pilot.glb');
+if (!existsSync(heroMini)) errors.push('kenney hero glb missing');
 
 if (errors.length) {
   console.error('check-visual-tiers failed:\n' + errors.map((e) => `  - ${e}`).join('\n'));
   process.exit(1);
 }
-console.log('check-visual-tiers ok (Tier 1–5 hooks)');
+console.log('check-visual-tiers ok (Tier 1–6 hooks)');

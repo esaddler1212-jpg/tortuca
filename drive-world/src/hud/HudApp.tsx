@@ -644,6 +644,14 @@ function SettingsPanel() {
         />
         Experimental map coordinates (WGS84 anchor)
       </label>
+      <label className="checkbox-row">
+        <input
+          type="checkbox"
+          checked={!!s.vice86NeonRead}
+          onChange={(e) => apply({ ...s, vice86NeonRead: e.target.checked })}
+        />
+        Vice ’86 neon read (reload free roam for freeway/storefront boost)
+      </label>
       <label className="slider-row">
         Fog
         <select
