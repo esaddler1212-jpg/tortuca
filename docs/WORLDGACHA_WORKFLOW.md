@@ -28,6 +28,8 @@ Do not scrape, reverse-engineer, or bulk-download the tool. Export only what you
 
 4. `cd flight-nemulator && npm run dev` — towns load with the procedural city (`build-city-worldgacha.ts`).
 
+**CC0 fallback in git:** `bay-modular-center.glb` (+ east/west satellites) copied from Kenney Modular so Battleworld has a skyline without a manual World Gacha export. Replace `centerpiece` when you drop a real town GLB.
+
 ## Tips in the tool
 
 - Match **飛ぶ速さ** (fly speed) to hero flight feel (~80–190 m/s in UI).

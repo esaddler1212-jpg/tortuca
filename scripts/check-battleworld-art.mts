@@ -28,6 +28,9 @@ if (!loop.includes('placeDistrictKenneyModular')) errors.push('game-loop: modula
 if (!hudApp.includes('HudIcon')) errors.push('HudApp: HudIcon missing');
 if (!existsSync(join(root, 'flight-nemulator/public/hud/icons/objective.svg'))) errors.push('hud icons missing');
 if (!existsSync(join(root, 'flight-nemulator/public/models/heroes/storm-hammer.glb'))) errors.push('storm-hammer kenney glb missing');
+if (!existsSync(join(root, 'flight-nemulator/public/models/heroes/jade-architect.glb'))) errors.push('jade-architect kenney glb missing');
+const wg = readFileSync(join(root, 'flight-nemulator/public/models/worldgacha/index.json'), 'utf8');
+if (!wg.includes('bay-modular-center.glb')) errors.push('worldgacha: centerpiece missing');
 
 if (errors.length) {
   console.error('check-battleworld-art failed:\n' + errors.map((e) => `  - ${e}`).join('\n'));

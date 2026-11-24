@@ -15,7 +15,8 @@ Default buildings, heroes, and drones are procedural primitives in `flight-nemul
 | Interface Sounds | [Kenney](https://kenney.nl/assets/interface-sounds) | CC0 |
 | City Kit GLBs | [Kenney City Kit Commercial](https://kenney.nl/assets/city-kit-commercial) | CC0 |
 | Modular Buildings | [Kenney Modular Buildings](https://kenney.nl/assets/modular-buildings) | CC0 |
-| Mini Characters (emerald-pilot, storm-hammer, chrome-sage) | [Kenney Mini Characters](https://kenney.nl/assets/mini-characters) | CC0 |
+| Mini Characters (emerald-pilot, storm-hammer, chrome-sage, jade-architect, garnet-brawler, spectrum-artist, ki-sage, time-blade) | [Kenney Mini Characters](https://kenney.nl/assets/mini-characters) | CC0 |
+| World Gacha fallback skyline (`worldgacha/bay-modular-*.glb`) | Kenney Modular Buildings (same kit as `kenney-modular/`) | CC0 |
 
 Install: `bash tools/gamedev-resources/install-free-packs.sh --all` from repo root. Hero refresh: `--hero-minis`. Tier guide: [`docs/VISUAL_UPGRADE_TIERS.md`](../../../docs/VISUAL_UPGRADE_TIERS.md), [`docs/HERO_GLB_SOURCES.md`](../../../docs/HERO_GLB_SOURCES.md).
 

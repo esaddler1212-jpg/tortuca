@@ -6,7 +6,12 @@ const OVERRIDES: Record<string, string> = {
   'wall-crawler': './models/heroes/wall-crawler.glb',
   'emerald-pilot': './models/heroes/emerald-pilot.glb',
   'storm-hammer': './models/heroes/storm-hammer.glb',
-  'chrome-sage': './models/heroes/chrome-sage.glb'
+  'chrome-sage': './models/heroes/chrome-sage.glb',
+  'jade-architect': './models/heroes/jade-architect.glb',
+  'garnet-brawler': './models/heroes/garnet-brawler.glb',
+  'spectrum-artist': './models/heroes/spectrum-artist.glb',
+  'ki-sage': './models/heroes/ki-sage.glb',
+  'time-blade': './models/heroes/time-blade.glb'
 };
 
 export function glbPathForHero(heroId: string): string {

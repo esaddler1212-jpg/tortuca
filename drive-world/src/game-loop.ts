@@ -74,6 +74,7 @@ import {
 } from './game-progress';
 import { bindDriveKeys, bindRecoverVehicle, pollDriveInput } from './game-input';
 import { countWheelsOnGround, recoverVehiclePose } from './vehicle-recover';
+import { spawnKenneyCrashDebris } from './vehicle-debris-vfx';
 import { isGamepadConnected, pollGamepadMenuActions } from './gamepad-hub';
 import {
   hapticDragGo,
@@ -258,6 +259,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   let wasCopBoxChase = false;
   let wheelsOffGroundT = 0;
   let showedRecoverHint = false;
+  let lastDriveMph = 0;
   const photoKeys = { fwd: false, back: false, left: false, right: false, up: false, down: false };
   const CALDECOTT = { x: 392, z: 265 };
   let autopilotActive = false;
@@ -320,11 +322,18 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   };
 
   bindDriveKeys();
+  const burstCrashDebris = (ent: Entity) => {
+    if ((progress.heatLevel ?? 0) < 2 && lastDriveMph < 28) return;
+    const p = ent.getPosition();
+    void spawnKenneyCrashDebris(app, p.x, p.y, p.z, ent.getEulerAngles().y);
+  };
+
   bindRecoverVehicle(() => {
     const ent = vehicle();
     if (!ent || isAerialVehicle(progress.activeVehicleId ?? '')) return;
     if (progress.phase !== 'home' || ridingWaymo) return;
     recoverVehiclePose(ent);
+    burstCrashDebris(ent);
     const p = ent.getPosition();
     progress = saveLastPose(progress, { x: p.x, y: p.y, z: p.z, yaw: ent.getEulerAngles().y });
     ui.showToast('Vehicle reset', 'Wheels back on the deck — R to repeat', 3200);
@@ -1192,6 +1201,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       const flightScript = scriptInstance(ent, 'flightVehicle') as { speed?: number } | undefined;
       const speedKmh = aerial ? Math.abs(flightScript?.speed ?? 0) : Math.abs(vehScript?.speed ?? 0);
       mph = speedKmh * 0.621371;
+      if (!aerial) lastDriveMph = mph;
       speedEl.textContent = aerial
         ? `${mph.toFixed(0)} mph · ${getVehicleSpec(progress.activeVehicleId!).locomotion === 'helicopter' ? 'Heli' : 'Hover'}`
         : `${mph.toFixed(0)} mph`;
@@ -1233,6 +1243,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         else wheelsOffGroundT = 0;
         if (wheelsOffGroundT > 1.5) {
           recoverVehiclePose(ent);
+          burstCrashDebris(ent);
           wheelsOffGroundT = 0;
           const p = ent.getPosition();
           progress = saveLastPose(progress, { x: p.x, y: p.y, z: p.z, yaw: ent.getEulerAngles().y });

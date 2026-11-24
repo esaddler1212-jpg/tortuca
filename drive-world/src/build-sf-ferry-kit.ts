@@ -1,6 +1,6 @@
 import { Color, Entity, Vec3, type AppBase } from 'playcanvas';
 
-import { kitDeckMaterial, kitMaterial } from './art-kit-materials';
+import { kitDeckMaterial, kitFacadeMaterial, kitMaterial } from './art-kit-materials';
 import { hillOffsetM } from './bay-terrain';
 import { BAY_BRIDGE_ORANGE, BAY_WINDOW_LIGHTS, hash2 } from './night-palette';
 import { streetDeckY } from './street-utils';
@@ -53,7 +53,7 @@ export function buildSfFerryKit(app: AppBase): void {
   tower.setLocalScale(11, 52, 11);
   tower.addComponent('render', {
     type: 'box',
-    material: kitMaterial(new Color(0.2, 0.18, 0.16), 0.18)
+    material: kitFacadeMaterial(new Color(0.2, 0.18, 0.16), 0.18)
   });
   root.addChild(tower);
 
@@ -69,13 +69,13 @@ export function buildSfFerryKit(app: AppBase): void {
   const wingL = new Entity('sf-ferry-wing-l');
   wingL.setPosition(fx - 22, baseY + 6, fz + 2);
   wingL.setLocalScale(28, 12, 18);
-  wingL.addComponent('render', { type: 'box', material: kitMaterial(new Color(0.14, 0.13, 0.12), 0.12) });
+  wingL.addComponent('render', { type: 'box', material: kitFacadeMaterial(new Color(0.14, 0.13, 0.12), 0.12) });
   root.addChild(wingL);
 
   const wingR = new Entity('sf-ferry-wing-r');
   wingR.setPosition(fx + 22, baseY + 6, fz + 2);
   wingR.setLocalScale(28, 12, 18);
-  wingR.addComponent('render', { type: 'box', material: kitMaterial(new Color(0.14, 0.13, 0.12), 0.12) });
+  wingR.addComponent('render', { type: 'box', material: kitFacadeMaterial(new Color(0.14, 0.13, 0.12), 0.12) });
   root.addChild(wingR);
 
   for (let i = 0; i < 6; i++) {
