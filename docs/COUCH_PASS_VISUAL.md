@@ -2,14 +2,19 @@
 
 One-shot verification after tiers, installs, or art PRs. Pair with [`VISUAL_UPGRADE_TIERS.md`](./VISUAL_UPGRADE_TIERS.md).
 
-## 1. Install (once per machine)
+## 1. Assets (browser vs your machine)
+
+**Players** only open the published URL — they never run installers.
+
+- **Netlify console builds** (games-hub / vantage-games) download CC0 packs during deploy — see [`BROWSER_VISUAL_DEPLOY.md`](./BROWSER_VISUAL_DEPLOY.md).
+- **Local dev / couch QA** on your laptop:
 
 ```bash
 bash tools/gamedev-resources/install-free-packs.sh --all --city-glb-full \
   --pbr-decks --nature-glb --roads-glb --suburban-glb --building-pbr
 ```
 
-Cars + sample heroes are **already in git** (`kenney/*.glb`, `heroes/emerald-pilot.glb`, …). Use `--car-kit-full` only to refresh from Kenney’s zip.
+Cars + heroes + modular skyline fallback are **already in git**. Use `--car-kit-full` only to refresh Kenney’s car zip.
 
 ## 2. City Nights settings (Tier 0 + 6)
 
