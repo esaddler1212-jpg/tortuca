@@ -39,6 +39,9 @@ bash tools/gamedev-resources/install-free-packs.sh --all         # city + modula
 | `--city-glb-full` | Same as city (all GLBs from kit clone) | More building variety | Same |
 | `--pbr-decks` | `drive-world/public/textures/ambientcg/deck-asphalt.jpg` | **Wired** — `kitDeckMaterial` on art-kit plazas | — |
 | `--nature-glb` | `drive-world/public/models/kenney-nature/` + `index.json` | **Wired** — `placeNatureKenneyProps` (Tier 4) | — |
+| `--roads-glb` | `drive-world/public/models/kenney-roads/` | **Wired** — `placeFreewayRoadProps` | — |
+| `--suburban-glb` | `drive-world/public/models/kenney-suburban/` | **Wired** — `placeSuburbanKenneyProps` | — |
+| `--building-pbr` | `drive-world/public/textures/ambientcg/building-facade.jpg` | **Wired** — `building-pbr.ts` (Tier 5) | — |
 | `--audio` | `flight-nemulator/public/audio/kenney/` | — | UI-style SFX |
 | `--all` | All of the above | | |
 
@@ -87,23 +90,25 @@ Track in art slices / PRs — not required for local dev.
 
 | # | Idea | Game | Notes |
 |---|------|------|--------|
-| 1 | Kenney **Nature** (`--nature-glb`) | City Nights | **Shipped** — `placeNatureKenneyProps` at coast anchors; Roads/Suburban still manual |
+| 1 | Kenney **Nature** (`--nature-glb`) | City Nights | **Shipped** — `placeNatureKenneyProps` |
+| 1b | Kenney **Roads** / **Suburban** | City Nights | **Shipped** — `--roads-glb`, `--suburban-glb`, `placeFreewayRoadProps`, `placeSuburbanKenneyProps` |
 | 2 | **Hub / freeway** Kenney slots | City Nights | **Shipped** — `placeFreewayKenneyProps` on I-80/101/880 + `CITY_HUBS` |
 | 3 | **HUD map underlay** | City Nights | **Shipped** — `BAY_WATER_BOUNDS` → `minimap-bay-underlay` in `BayMap.tsx` |
 | 4 | **World Gacha** satellite files | Battleworld | **Shipped example** — `public/models/worldgacha/index.example.json` (`files[]` schema) |
 | 5 | **Poly Haven** sky | City Nights | **Shipped** — `sky-env-cn.ts` (CDN JPG on Lush/Console); local HDRIs optional later |
-| 6 | **game-icons.net** HUD icons | Battleworld | **Todo** — CC BY — line in `CREDITS.md` when added |
+| 6 | **game-icons.net** HUD icons | Battleworld | **Shipped** — `HudIcon` + `public/hud/icons/`; swap CC BY from game-icons per `CREDITS.md` |
 
 ---
 
-## Tier 5 — Heavy (defer unless goal is sim-Bay)
+## Tier 5 — Heavy (sim-Bay hooks)
 
-| # | Idea | Why later |
-|---|------|-----------|
-| 1 | OSM / Location Scout **3D** geometry | Attribution, scale, perf — tools terms |
-| 2 | Full PBR on every building | Fights low-poly + `night-palette` contract |
-| 3 | Photoreal geo driving (lat/lng in sim) | Explicitly out of scope for shipping 3D (`GAME_FINISH_PROGRAM.md`) |
-| 4 | Bulk third-party marketplaces in PWA | `AGENTS.md` — optional docs/links only |
+| # | Idea | Status |
+|---|------|--------|
+| 1 | OSM offline ingest + optional markers | **Shipped** — `build:bay-freeways`, `build-osm-landmarks.ts`, `MAP_ATTRIBUTION.md` |
+| 2 | WGS84 anchor + experimental HUD coords | **Shipped** — `geo-anchor.ts`, Settings → experimental map coordinates |
+| 3 | Optional building facade PBR | **Shipped** — `building-pbr.ts`, `--building-pbr` |
+| 4 | Asset marketplace policy | **Shipped** — [`GAMEDEV_MARKETPLACES.md`](./GAMEDEV_MARKETPLACES.md) |
+| 5 | Full OSM 3D road mesh / GPS driving physics | **Deferred** — see [`TIER5_SIM_BAY.md`](./TIER5_SIM_BAY.md) |
 
 ---
 

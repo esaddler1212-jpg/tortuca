@@ -1,5 +1,6 @@
 import type { HudSnapshot } from '../game-bridge';
 import { TOKYO_MINIMAP_TITLE } from '../tokyo-ff-cars';
+import { loadSettings } from '../game-settings';
 import { BayMap } from './BayMap';
 
 const SIZE = 168;
@@ -17,7 +18,7 @@ export function Minimap({ snap }: { snap: HudSnapshot }) {
           </span>
         ) : null}
       </div>
-      <BayMap snap={snap} size={SIZE} />
+      <BayMap snap={snap} size={SIZE} showGeoHud={loadSettings().experimentalGeoHud} />
     </div>
   );
 }

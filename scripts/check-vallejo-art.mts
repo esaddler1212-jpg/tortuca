@@ -43,6 +43,9 @@ const tiers = spawnSync('npx', ['tsx', join(root, 'scripts/check-visual-tiers.mt
 });
 if (tiers.status !== 0) process.exit(tiers.status ?? 1);
 
+const geo = spawnSync('npx', ['tsx', join(root, 'scripts/check-geo-anchor.mts')], { cwd: root, stdio: 'inherit' });
+if (geo.status !== 0) process.exit(geo.status ?? 1);
+
 const manifest = spawnSync('npx', ['tsx', join(root, 'scripts/check-art-district-manifest.mts')], {
   cwd: root,
   stdio: 'inherit'

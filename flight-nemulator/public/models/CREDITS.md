@@ -22,6 +22,14 @@ Install: `bash tools/gamedev-resources/install-free-packs.sh --all` from repo ro
 
 Towns from [World Gacha](https://tools.oyasumi-gamedev.com/worldgacha/) — use in-game per [tool terms](https://oyasumi-gamedev.com/tools/terms/); do not commit redistributable asset packs. See [`docs/WORLDGACHA_WORKFLOW.md`](../../../docs/WORLDGACHA_WORKFLOW.md).
 
+## HUD icons (Battleworld)
+
+| File | Source | License |
+|------|--------|---------|
+| `public/hud/icons/*.svg` | Tortuca first-party glyphs (swap with [game-icons.net](https://game-icons.net) CC BY downloads) | CC0 / CC BY per file |
+
+When using **game-icons.net** assets, credit authors on [game-icons.net/about.html](https://game-icons.net/about.html) (CC BY 3.0).
+
 ## External indexes (not bundled)
 
-Curated free sources: [`gamedev-resources/tortuca-playcanvas.json`](../../../gamedev-resources/tortuca-playcanvas.json).
+Curated free sources: [`gamedev-resources/tortuca-playcanvas.json`](../../../gamedev-resources/tortuca-playcanvas.json). Marketplaces: [`docs/GAMEDEV_MARKETPLACES.md`](../../../docs/GAMEDEV_MARKETPLACES.md).

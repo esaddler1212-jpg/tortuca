@@ -4,4 +4,7 @@ dist
 public/models/kenney-city/
 public/models/kenney-modular/
 public/models/kenney-nature/
+public/models/kenney-roads/
+public/models/kenney-suburban/
+public/data/osm/landmarks.json
 public/textures/ambientcg/

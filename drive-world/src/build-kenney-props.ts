@@ -6,7 +6,12 @@ export type KenneyIndex = { files: string[] };
 
 export type KenneySlot = { dx: number; dz: number; scale: number; yaw: number; fileIdx: number };
 
-export type KenneyPackId = 'kenney-city' | 'kenney-modular' | 'kenney-nature' | 'kenney-roads';
+export type KenneyPackId =
+  | 'kenney-city'
+  | 'kenney-modular'
+  | 'kenney-nature'
+  | 'kenney-roads'
+  | 'kenney-suburban';
 
 export async function loadKenneyPackIndex(pack: KenneyPackId): Promise<KenneyIndex | null> {
   try {

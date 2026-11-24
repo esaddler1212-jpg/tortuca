@@ -5,6 +5,16 @@
   font-size: 14px;
 }
 
+.hud-icon {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 0.35rem;
+  vertical-align: -2px;
+  opacity: 0.9;
+  filter: brightness(1.6);
+}
+
 .hud-wave-combat {
   font-size: 0.72rem;
   font-weight: 600;
