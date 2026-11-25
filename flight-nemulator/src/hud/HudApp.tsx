@@ -30,8 +30,10 @@ import { HERO_MUTATIONS } from '../roster-mutations';
 import { Minimap } from './Minimap';
 import { acknowledgeDialogue } from '../cutscene-queue';
 import { setQualityOverride } from '../game-settings';
-import { downloadPhoto } from '../photo-mode';
+import { cyclePhotoFilter, downloadPhoto, photoFilterCss } from '../photo-mode';
+import { buildAlmanac } from '../battleworld-almanac';
 import type { QualityTier } from '../quality-tier';
+import { HudIcon } from './HudIcon';
 import './hud.css';
 
 export type GameHudSnapshot = {
@@ -102,6 +104,11 @@ export type GameHudSnapshot = {
   chapterChip?: string | null;
   chapterChainChip?: string | null;
   chapterChainObjective?: string | null;
+  arcObjectiveChip?: string | null;
+  homeMinimapX?: number;
+  homeMinimapZ?: number;
+  arcMinimapX?: number | null;
+  arcMinimapZ?: number | null;
   cutsceneActive?: boolean;
   cutsceneSpeaker?: string | null;
   cutsceneText?: string | null;
@@ -111,6 +118,17 @@ export type GameHudSnapshot = {
   districtUniverse?: string | null;
   districtUniverseLabel?: string | null;
   universeRimCss?: string | null;
+  roomGoalLine?: string | null;
+  almanacLine?: string | null;
+  findNextLabel?: string | null;
+  findNextMinimapX?: number | null;
+  findNextMinimapZ?: number | null;
+  dailyMissionLine?: string | null;
+  guestHint?: string | null;
+  inviteShardLine?: string | null;
+  districtStarsLine?: string | null;
+  districtStarsTotal?: string | null;
+  photoFilter?: string;
 };
 
 function formatUsd(n: number): string {
@@ -165,7 +183,9 @@ export function HudApp() {
         <div className="hud-panel">
           <div>{snap.speedKmh} km/h</div>
           <div>Damage {formatUsd(snap.destructionUsd)}</div>
-          <div className="wanted">Wanted {stars}</div>
+          <div className="wanted">
+            <HudIcon name="home" title="Wanted level" /> Wanted {stars}
+          </div>
           <div>
             Wave {snap.wave}
             {snap.waveCombatChip ? (
@@ -176,7 +196,7 @@ export function HudApp() {
             ) : null}
           </div>
           <div>
-            Energy {snap.stamina}/{snap.staminaMax}
+            <HudIcon name="energy" title="Stamina" /> Energy {snap.stamina}/{snap.staminaMax}
           </div>
           <div className="hud-tag">
             {snap.playerRole === 'villain' ? 'Heroes' : 'Raiders'} {snap.dronesLeft ?? 0}
@@ -190,13 +210,66 @@ export function HudApp() {
         </div>
       </div>
 
-      <Minimap heroX={snap.heroX ?? 0} heroZ={snap.heroZ ?? 0} />
+      {snap.arcObjectiveChip ? (
+        <p className="hud-tag hud-arc-objective" title="Arc · Story · Lattice">
+          <HudIcon name="objective" title="Arc objective" /> {snap.arcObjectiveChip}
+        </p>
+      ) : null}
+      {snap.findNextLabel ? (
+        <p className="hud-tag hud-find-next" title="Find next objective">
+          Find next · {snap.findNextLabel}
+        </p>
+      ) : null}
+      {snap.roomGoalLine ? (
+        <p className="hud-tag hud-room-goal" title="Weekly async room goal">
+          {snap.roomGoalLine}
+        </p>
+      ) : null}
+      {snap.dailyMissionLine ? (
+        <p className="hud-tag hud-daily-mission">{snap.dailyMissionLine}</p>
+      ) : null}
+      {snap.guestHint ? <p className="hud-tag hud-hint hud-guest">{snap.guestHint}</p> : null}
+      {snap.inviteShardLine ? <p className="hud-tag hud-hint">{snap.inviteShardLine}</p> : null}
+      {snap.districtStarsLine ? (
+        <p className="hud-tag" title={snap.districtStarsTotal ?? undefined}>
+          {snap.districtStarsLine}
+        </p>
+      ) : null}
+      {snap.almanacLine ? (
+        <details className="hud-panel hud-almanac">
+          <summary>{snap.almanacLine}</summary>
+          <AlmanacList heroId={heroId} />
+        </details>
+      ) : null}
+      <Minimap
+        heroX={snap.heroX ?? 0}
+        heroZ={snap.heroZ ?? 0}
+        homePin={
+          snap.homeMinimapX != null && snap.homeMinimapZ != null
+            ? { x: snap.homeMinimapX, z: snap.homeMinimapZ, label: 'H' }
+            : null
+        }
+        arcPin={
+          snap.arcMinimapX != null && snap.arcMinimapZ != null
+            ? { x: snap.arcMinimapX, z: snap.arcMinimapZ }
+            : null
+        }
+        findNextPin={
+          snap.findNextMinimapX != null && snap.findNextMinimapZ != null
+            ? { x: snap.findNextMinimapX, z: snap.findNextMinimapZ, label: '→' }
+            : null
+        }
+      />
 
       {snap.cutsceneActive && snap.cutsceneText && (
         <CutsceneOverlay snap={snap} onContinue={() => acknowledgeDialogue()} />
       )}
 
-      <QualitySettings quality={snap.quality} photoMode={!!snap.photoMode} />
+      <QualitySettings
+        quality={snap.quality}
+        photoMode={!!snap.photoMode}
+        photoFilter={snap.photoFilter}
+      />
       <RolePicker role={snap.playerRole ?? getPlayerRole()} heroId={heroId} />
       <WorldFatePanel snap={snap} />
 
@@ -220,16 +293,6 @@ export function HudApp() {
             </option>
           ))}
         </select>
-        {arcLine && (
-          <p className="hud-tag hud-hint hud-arc-picker" title="Battleworld arc thread">
-            {arcLine}
-          </p>
-        )}
-        {arcLinks && <p className="hud-tag hud-hint">{arcLinks}</p>}
-        {universe && <p className="hud-tag">Universe · {universe.toUpperCase()}</p>}
-        {snap.playerRole === 'hero' && snap.villainRivals && snap.villainRivals.length > 0 && (
-          <p className="hud-tag">Rivals: {snap.villainRivals.join(', ')}</p>
-        )}
         {snap.pairBossStatus === 'incoming' && snap.pairBossName && (
           <p className="hud-tag">Pair rival incoming: {snap.pairBossName}</p>
         )}
@@ -238,35 +301,11 @@ export function HudApp() {
             Final pair duel: {snap.pairBossName} — HP {snap.pairBossHpPct ?? 100}%
           </p>
         )}
-        {snap.pairBossStatus === 'defeated' && snap.pairBossName && (
-          <p className="hud-tag">Pair rival down: {snap.pairBossName}</p>
-        )}
-        {snap.alignmentNote && <p className="hud-tag">{snap.alignmentNote}</p>}
-        {snap.symbioteUnlocked && <p className="hud-tag">Symbiote suit unlocked — pick merged loadout</p>}
-        {snap.absorptionLabel && <p className="hud-tag">{snap.absorptionLabel}</p>}
-        {snap.venomBondLabel && <p className="hud-tag">{snap.venomBondLabel}</p>}
-        {snap.lanternArcHint && <p className="hud-tag">{snap.lanternArcHint}</p>}
-        {snap.doomStoryHint && <p className="hud-tag">{snap.doomStoryHint}</p>}
-        {snap.territoryHint && <p className="hud-tag">{snap.territoryHint}</p>}
-        {snap.villainAdvisorHint && <p className="hud-tag hud-hint">{snap.villainAdvisorHint}</p>}
-        {snap.villainScoutHint && <p className="hud-tag">{snap.villainScoutHint}</p>}
-        {snap.pairBossBlocked && (
-          <p className="hud-tag">
-            Final pair boss locked — clear takeovers
-            {(snap.takeoverDistricts ?? 0) > 0
-              ? ` (${snap.takeoverDistricts} district${snap.takeoverDistricts === 1 ? '' : 's'})`
-              : ''}{' '}
-            and defeat any God Emperor stone hunter
-          </p>
-        )}
-        {snap.infinityStoneHint && <p className="hud-tag">{snap.infinityStoneHint}</p>}
-        {snap.characterArcHint && <p className="hud-tag hud-hint">{snap.characterArcHint}</p>}
         {snap.latticeBeatChip && (
           <p className="hud-tag hud-lattice-chip" title="Territory · Stones · Home H · Pair · Save">
             Lattice {snap.latticeBeatChip}
           </p>
         )}
-        {snap.villainRunwayHint && <p className="hud-tag hud-hint">{snap.villainRunwayHint}</p>}
         {snap.chapterChainChip && (
           <p className="hud-tag hud-lattice-chip" title="Chapters 1–3 chain">
             Story {snap.chapterChainChip}
@@ -275,16 +314,53 @@ export function HudApp() {
         {snap.chapterChainObjective && (
           <p className="hud-tag hud-hint hud-chapter-chain">{snap.chapterChainObjective}</p>
         )}
-        {snap.chapterChip && (
-          <p className="hud-tag hud-lattice-chip" title="Battleworld chapter ladder">
-            Chapters {snap.chapterChip}
-          </p>
-        )}
-        {snap.chapterHint && <p className="hud-tag hud-hint">{snap.chapterHint}</p>}
-        {snap.latticeHint && <p className="hud-tag">{snap.latticeHint}</p>}
-        {snap.latticeCloudHint && <p className="hud-tag hud-hint">{snap.latticeCloudHint}</p>}
-        {snap.safeHouseHint && <p className="hud-tag hud-hint">{snap.safeHouseHint}</p>}
-        {snap.autosaveHint && <p className="hud-tag hud-hint">{snap.autosaveHint}</p>}
+        <details className="hero-picker-more">
+          <summary>Story &amp; arc details</summary>
+          {arcLine && (
+            <p className="hud-tag hud-hint hud-arc-picker" title="Battleworld arc thread">
+              {arcLine}
+            </p>
+          )}
+          {arcLinks && <p className="hud-tag hud-hint">{arcLinks}</p>}
+          {universe && <p className="hud-tag">Universe · {universe.toUpperCase()}</p>}
+          {snap.playerRole === 'hero' && snap.villainRivals && snap.villainRivals.length > 0 && (
+            <p className="hud-tag">Rivals: {snap.villainRivals.join(', ')}</p>
+          )}
+          {snap.pairBossStatus === 'defeated' && snap.pairBossName && (
+            <p className="hud-tag">Pair rival down: {snap.pairBossName}</p>
+          )}
+          {snap.alignmentNote && <p className="hud-tag">{snap.alignmentNote}</p>}
+          {snap.symbioteUnlocked && <p className="hud-tag">Symbiote suit unlocked — pick merged loadout</p>}
+          {snap.absorptionLabel && <p className="hud-tag">{snap.absorptionLabel}</p>}
+          {snap.venomBondLabel && <p className="hud-tag">{snap.venomBondLabel}</p>}
+          {snap.lanternArcHint && <p className="hud-tag">{snap.lanternArcHint}</p>}
+          {snap.doomStoryHint && <p className="hud-tag">{snap.doomStoryHint}</p>}
+          {snap.territoryHint && <p className="hud-tag">{snap.territoryHint}</p>}
+          {snap.villainAdvisorHint && <p className="hud-tag hud-hint">{snap.villainAdvisorHint}</p>}
+          {snap.villainScoutHint && <p className="hud-tag">{snap.villainScoutHint}</p>}
+          {snap.pairBossBlocked && (
+            <p className="hud-tag">
+              Final pair boss locked — clear takeovers
+              {(snap.takeoverDistricts ?? 0) > 0
+                ? ` (${snap.takeoverDistricts} district${snap.takeoverDistricts === 1 ? '' : 's'})`
+                : ''}{' '}
+              and defeat any God Emperor stone hunter
+            </p>
+          )}
+          {snap.infinityStoneHint && <p className="hud-tag">{snap.infinityStoneHint}</p>}
+          {snap.characterArcHint && <p className="hud-tag hud-hint">{snap.characterArcHint}</p>}
+          {snap.villainRunwayHint && <p className="hud-tag hud-hint">{snap.villainRunwayHint}</p>}
+          {snap.chapterChip && (
+            <p className="hud-tag hud-lattice-chip" title="Battleworld chapter ladder">
+              Chapters {snap.chapterChip}
+            </p>
+          )}
+          {snap.chapterHint && <p className="hud-tag hud-hint">{snap.chapterHint}</p>}
+          {snap.latticeHint && <p className="hud-tag">{snap.latticeHint}</p>}
+          {snap.latticeCloudHint && <p className="hud-tag hud-hint">{snap.latticeCloudHint}</p>}
+          {snap.safeHouseHint && <p className="hud-tag hud-hint">{snap.safeHouseHint}</p>}
+          {snap.autosaveHint && <p className="hud-tag hud-hint">{snap.autosaveHint}</p>}
+        </details>
         {snap.territoryHint?.includes('H: henchmen') && (
           <div className="fate-actions">
             <button type="button" className="hud-roam" onClick={() => confirmTerritoryHenchmen()}>
@@ -451,7 +527,24 @@ function RolePicker({ role, heroId }: { role: PlayerRole; heroId: string }) {
   );
 }
 
-function QualitySettings({ quality, photoMode }: { quality: string; photoMode: boolean }) {
+function QualitySettings({
+  quality,
+  photoMode,
+  photoFilter
+}: {
+  quality: string;
+  photoMode: boolean;
+  photoFilter?: string;
+}) {
+  useEffect(() => {
+    const canvas = document.getElementById('application-canvas') as HTMLCanvasElement | null;
+    if (!canvas) return;
+    canvas.style.filter = photoMode ? photoFilterCss() : 'none';
+    return () => {
+      canvas.style.filter = 'none';
+    };
+  }, [photoMode, photoFilter]);
+
   return (
     <div className="settings-bar hud-panel">
       <label>
@@ -465,23 +558,45 @@ function QualitySettings({ quality, photoMode }: { quality: string; photoMode: b
           }}
         >
           <option value="auto">Auto ({quality})</option>
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
+          <option value="low">Performance</option>
+          <option value="medium">Balanced</option>
           <option value="high">High</option>
         </select>
       </label>
       {photoMode && (
-        <button
-          type="button"
-          onClick={() => {
-            const canvas = document.getElementById('application-canvas') as HTMLCanvasElement | null;
-            if (canvas) void downloadPhoto(canvas, 'hero');
-          }}
-        >
-          Save photo
-        </button>
+        <>
+          <button type="button" onClick={() => cyclePhotoFilter()}>
+            Filter
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const canvas = document.getElementById('application-canvas') as HTMLCanvasElement | null;
+              if (canvas) void downloadPhoto(canvas, 'hero');
+            }}
+          >
+            Save postcard
+          </button>
+        </>
       )}
     </div>
+  );
+}
+
+function AlmanacList({ heroId }: { heroId: string }) {
+  const rows = buildAlmanac(heroId).filter((r) => r.discovered).slice(0, 12);
+  if (!rows.length) {
+    return <p className="hud-hint">Fly districts and clear lattice beats to fill the almanac.</p>;
+  }
+  return (
+    <ul className="hud-almanac-list">
+      {rows.map((r) => (
+        <li key={r.id}>
+          {r.label}
+          {r.hint ? ` — ${r.hint}` : ''}
+        </li>
+      ))}
+    </ul>
   );
 }
 

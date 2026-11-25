@@ -44,8 +44,26 @@ Progress: `arc-progress.ts` (local) + `pullBattleworldLatticeCloud` on boot (mer
 |-------|------|
 | `POST /api/flight-nemulator-research` | Homage-safe hero drafts |
 | `GET/POST /api/flight-nemulator-lattice` | Optional arc beat cloud sync |
+| `GET/POST /api/battleworld-room-goal` | Weekly shared district tally (async room goal) |
 
-Client env: `VITE_FN_RESEARCH_URL`, `VITE_BATTLEWORLD_LATTICE_URL`. Lattice fetches send `X-Alfred-Session` when the console shell has `alfred-session-id` in localStorage.
+Client env: `VITE_FN_RESEARCH_URL`, `VITE_BATTLEWORLD_LATTICE_URL`, `VITE_BATTLEWORLD_ROOM_GOAL_URL`. Lattice fetches send `X-Alfred-Session` when the console shell has `alfred-session-id` in localStorage.
+
+## Open-world tier pack (World Craft / browser peers)
+
+| Tier | Feature | Module |
+|------|---------|--------|
+| A | Weekly **room goal** + cloud tally | `battleworld-room-goal.ts` |
+| A | **Lattice almanac** (discovery book) | `battleworld-almanac.ts` |
+| A | World Gacha **rise** spawn | `build-city-worldgacha.ts` |
+| A | **Auto** quality probe (~90 frames) | `quality-tier.ts` |
+| A | **Guest** vs signed-in cloud hint | `battleworld-guest.ts` |
+| B | District **3★** challenges | `battleworld-district-challenge.ts` |
+| B | **Photo postcard** (P + filters) | `photo-mode.ts` |
+| B | **Find next** gold minimap pin | `battleworld-find-next.ts` |
+| C | Invite **shard** link `?bwShard=` | `battleworld-invite.ts` |
+| C | **Daily mission** + season id | `battleworld-seasons.ts` |
+
+`npm run test:flight-nemulator` includes `check-battleworld-openworld-tiers.mts`.
 
 ## CI
 

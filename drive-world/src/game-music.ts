@@ -144,7 +144,8 @@ async function playlistMode(): Promise<boolean> {
   stopNodes();
   playing = true;
   station = 'ambient';
-  return playPlaylist(0);
+  const { playlistStartIndex } = await import('./music-playlist');
+  return playPlaylist(playlistStartIndex());
 }
 
 export async function unlockMusic(): Promise<void> {
@@ -163,9 +164,9 @@ export async function unlockMusic(): Promise<void> {
 export async function startMusic(next: MusicStationId): Promise<void> {
   const s = loadSettings();
   if (s.musicUsePlaylist && next !== 'off') {
-    const { playPlaylist } = await import('./music-playlist');
+    const { playPlaylist, playlistStartIndex } = await import('./music-playlist');
     stopNodes();
-    playing = await playPlaylist(0);
+    playing = await playPlaylist(playlistStartIndex());
     station = next;
     saveSettings({ ...s, musicStation: next, musicEnabled: true, musicUsePlaylist: true });
     applyGainFromSettings();

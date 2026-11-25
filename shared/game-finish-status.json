@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-14T17:12:56.918Z",
+  "updatedAt": "2026-11-23T01:52:26.892Z",
   "activeSlice": {
-    "nightshift": "cn-d08",
-    "skyring": "bw-d08"
+    "nightshift": "cn-d10",
+    "skyring": "bw-d10"
   },
   "sliceState": {
     "cn-d01": {
@@ -42,13 +42,19 @@
       "note": "Photo orbit around car (WASD/Q-E), HUD exposure slider, weather exposure restores on P exit"
     },
     "cn-d08": {
-      "status": "active"
+      "status": "done",
+      "completedAt": "2026-11-23T01:38:19.061Z",
+      "note": "Heat-5 cop box at 4.5; spawn/escape toasts; chaser pulls tighter at max heat"
     },
     "cn-d09": {
-      "status": "pending"
+      "status": "done",
+      "completedAt": "2026-11-23T01:42:15.585Z",
+      "note": "ACE finish bed in playlist; Settings Music ACE swap + persisted aceStepBedFile"
     },
     "cn-d10": {
-      "status": "pending"
+      "status": "done",
+      "completedAt": "2026-11-23T01:52:26.679Z",
+      "note": "15-min funnel + couch doc signed; playtest gamepad RT/LT/Menu/B green"
     },
     "bw-d01": {
       "status": "done",
@@ -86,16 +92,58 @@
       "note": "VantageGames offline bundle flag + HUD offline autosave/lattice copy"
     },
     "bw-d08": {
-      "status": "active"
+      "status": "done",
+      "completedAt": "2026-11-23T01:42:15.769Z",
+      "note": "Chapter-clear cutscenes on territory/stone/home-mark beats; dialogue smoke extended"
     },
     "bw-d09": {
-      "status": "pending"
+      "status": "done",
+      "completedAt": "2026-11-23T01:42:15.950Z",
+      "note": "Minimap home H pin; arc objective chip; playtest asserts new player cues"
     },
     "bw-d10": {
-      "status": "pending"
+      "status": "done",
+      "completedAt": "2026-11-23T01:52:26.892Z",
+      "note": "Battleworld funnel doc + playtest smoke (chapter, H pin, arc chip)"
     }
   },
   "reports": [
+    {
+      "agent": "skyring",
+      "sliceId": "bw-d10",
+      "at": "2026-11-23T01:52:26.892Z",
+      "summary": "Battleworld funnel doc + playtest smoke (chapter, H pin, arc chip)"
+    },
+    {
+      "agent": "nightshift",
+      "sliceId": "cn-d10",
+      "at": "2026-11-23T01:52:26.679Z",
+      "summary": "15-min funnel + couch doc signed; playtest gamepad RT/LT/Menu/B green"
+    },
+    {
+      "agent": "skyring",
+      "sliceId": "bw-d09",
+      "at": "2026-11-23T01:42:15.950Z",
+      "summary": "Minimap home H pin; arc objective chip; playtest asserts new player cues"
+    },
+    {
+      "agent": "nightshift",
+      "sliceId": "cn-d09",
+      "at": "2026-11-23T01:42:15.585Z",
+      "summary": "ACE finish bed in playlist; Settings Music ACE swap + persisted aceStepBedFile"
+    },
+    {
+      "agent": "skyring",
+      "sliceId": "bw-d08",
+      "at": "2026-11-23T01:38:19.253Z",
+      "summary": "Chapter-clear cutscenes on territory/stone/home-mark beats; dialogue smoke extended"
+    },
+    {
+      "agent": "nightshift",
+      "sliceId": "cn-d08",
+      "at": "2026-11-23T01:38:19.061Z",
+      "summary": "Heat-5 cop box at 4.5; spawn/escape toasts; chaser pulls tighter at max heat"
+    },
     {
       "agent": "skyring",
       "sliceId": "bw-d07",

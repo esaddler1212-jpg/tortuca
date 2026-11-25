@@ -12,6 +12,8 @@ const hubDir = path.resolve(root, '..');
 const repoRoot = path.resolve(hubDir, '..');
 const hubDist = path.join(hubDir, 'dist');
 
+const netlifyBuild = process.env.NETLIFY === 'true' || process.env.INSTALL_VISUAL_ASSETS === '1';
+
 const siblingGames = [
   { pkg: 'drive-world', out: 'city-nights' },
   { pkg: 'flight-nemulator', out: 'flight-nemulator' }
@@ -35,6 +37,11 @@ function mergeGame(pkg, outName) {
   console.log(`→ Merging ${pkg} into dist/${outName}/…`);
   rimraf(dest);
   fs.cpSync(path.join(appDir, 'dist'), dest, { recursive: true });
+}
+
+if (netlifyBuild) {
+  console.log('→ Browser deploy: fetching CC0 visual packs…');
+  run('bash', ['tools/gamedev-resources/netlify-visual-assets.sh'], repoRoot);
 }
 
 console.log('→ Building games hub shell…');

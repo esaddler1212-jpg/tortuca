@@ -47,6 +47,25 @@ function placeEntity(
   root.addChild(ent);
 }
 
+function riseEntity(app: AppBase, ent: Entity, targetScale: number, delayMs: number): void {
+  ent.setLocalScale(0.02, 0.02, 0.02);
+  const startAt = performance.now() + delayMs;
+  const durationMs = 1400;
+  const handler = (_dt: number) => {
+    const now = performance.now();
+    if (now < startAt) return;
+    const t = Math.min(1, (now - startAt) / durationMs);
+    const eased = t * (2 - t);
+    const s = 0.02 + (targetScale - 0.02) * eased;
+    ent.setLocalScale(s, s, s);
+    if (t >= 1) {
+      ent.setLocalScale(targetScale, targetScale, targetScale);
+      app.off('update', handler);
+    }
+  };
+  app.on('update', handler);
+}
+
 /**
  * Oyasumi World Gacha exports (GLB) — see docs/WORLDGACHA_WORKFLOW.md.
  * Use in your game; do not redistribute raw GLBs as asset packs (tool terms).
@@ -69,6 +88,7 @@ export async function placeWorldGachaTowns(
     if (ent) {
       const [x, y, z] = index.offset ?? [420, 0, -320];
       placeEntity(ent, root, x, y, z, baseScale, index.yRotation ?? 0);
+      riseEntity(app, ent, baseScale, 0);
       placed++;
     }
   }
@@ -82,13 +102,18 @@ export async function placeWorldGachaTowns(
 
   for (let i = 0; i < Math.min(files.length, maxSatellites); i++) {
     const file = files[i]!;
-    const ent = await loadGlb(app, `./models/worldgacha/${file}`);
+    const ent = await loadGlb(app, urlFor(file));
     if (!ent) continue;
     const [x, y, z] = slots[i] ?? [i * 200, 0, -i * 180];
     const scale = baseScale * (0.85 + i * 0.05);
     placeEntity(ent, root, x, y, z, scale, (i + 1) * 47);
+    riseEntity(app, ent, scale, 180 + i * 220);
     placed++;
   }
 
   return placed;
+}
+
+function urlFor(file: string): string {
+  return `./models/worldgacha/${file}`;
 }

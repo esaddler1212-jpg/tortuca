@@ -1,0 +1,6 @@
+{
+  "generatedAt": "2026-11-24T14:06:43.652Z",
+  "source": "stub",
+  "note": "Set OVERPASS_URL and re-run to fetch motorway ways; gameplay uses world-config.ts FREEWAY_* until merged.",
+  "routes": []
+}

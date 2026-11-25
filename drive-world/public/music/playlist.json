@@ -15,6 +15,11 @@
     {
       "file": "marin-fog-cruise.ogg",
       "title": "Marin fog cruise (ambient bed)"
+    },
+    {
+      "file": "ace-step-nightshift-d09.ogg",
+      "title": "ACE nightshift finish bed (ambient bed)",
+      "aceStepBed": true
     }
   ]
 }

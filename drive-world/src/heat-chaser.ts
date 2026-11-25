@@ -1,6 +1,7 @@
 import { Color, Entity, StandardMaterial, type AppBase } from 'playcanvas';
 
 import { hillOffsetM } from './bay-terrain';
+import { HEAT_COP_BOX_SPAWN, HEAT_MAX } from './game-heat';
 
 let chaser: Entity | null = null;
 let flashT = 0;
@@ -34,7 +35,7 @@ export function destroyHeatChaser(): void {
   chaser = null;
 }
 
-/** Midnight Club–style box unit when speed-trap heat is hunted. */
+/** Midnight Club–style box unit when speed-trap heat hits Heat-5 tier. */
 export function tickHeatChaser(
   app: AppBase,
   enabled: boolean,
@@ -46,13 +47,13 @@ export function tickHeatChaser(
   mph: number,
   dt: number
 ): void {
-  if (!enabled || heat < 4) {
+  if (!enabled || heat < HEAT_COP_BOX_SPAWN) {
     if (chaser) destroyHeatChaser();
     return;
   }
   const ent = ensureChaser(app);
   const yaw = (yawDeg * Math.PI) / 180;
-  const tailDist = heat >= 4.8 ? 16 : 24;
+  const tailDist = heat >= HEAT_MAX - 0.2 ? 16 : 24;
   const targetX = px - Math.sin(yaw) * tailDist;
   const targetZ = pz - Math.cos(yaw) * tailDist;
   const cur = ent.getPosition();
@@ -65,7 +66,7 @@ export function tickHeatChaser(
   flashT += dt;
   const pulse = 0.75 + Math.sin(flashT * 14) * 0.25;
   ent.setLocalScale(1.85 * pulse, 0.65, 2.4 * pulse);
-  if (mph > 60 && heat >= 4.5) {
+  if (mph > 60 && heat >= HEAT_COP_BOX_SPAWN) {
     const close = Math.hypot(px - nx, pz - nz);
     if (close < 12) {
       ent.setPosition(

@@ -27,7 +27,8 @@ export function applyBayQualityPreset(base: GameSettings, preset: BayQualityPres
       fuelSimEnabled: true,
       frameCapFps: 30,
       resolutionScale: 0.85,
-      tvHudMode: true
+      tvHudMode: true,
+      vice86NeonRead: true
     };
   }
   if (preset === 'lush') {
@@ -38,7 +39,8 @@ export function applyBayQualityPreset(base: GameSettings, preset: BayQualityPres
       showTraffic: true,
       showSideshow: true,
       hubStreamingEnabled: true,
-      fuelSimEnabled: true
+      fuelSimEnabled: true,
+      vice86NeonRead: true
     };
   }
   return {

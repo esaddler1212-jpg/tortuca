@@ -73,6 +73,18 @@
   fill: rgba(12, 20, 32, 0.95);
 }
 
+.minimap-bay-underlay {
+  fill: rgba(18, 48, 82, 0.35);
+  stroke: rgba(40, 100, 160, 0.25);
+  stroke-width: 0.5;
+}
+
+.minimap-geo-hud {
+  fill: rgba(160, 200, 235, 0.85);
+  font-size: 9px;
+  font-family: ui-monospace, monospace;
+}
+
 .minimap-dot {
   fill: rgba(80, 180, 255, 0.85);
 }
@@ -702,6 +714,12 @@
   background: rgba(8, 12, 20, 0.82);
   border: 1px solid rgba(255, 255, 255, 0.1);
   font-size: 0.82rem;
+}
+
+.music-now-playing {
+  margin: 0.25rem 0 0;
+  font-size: 0.82rem;
+  opacity: 0.9;
 }
 
 .music-actions {

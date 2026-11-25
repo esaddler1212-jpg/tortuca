@@ -40,6 +40,14 @@ Garage tab → **Records · trophies** — landmarks, unlocks, parking stars, he
 
 Dual-rumble on nitro, drag GO, parking stars, and heat chase (when supported).
 
+## 15-minute funnel (cn-d10)
+
+Match the signed table in [`GAME_FINISH_PROGRAM.md`](./GAME_FINISH_PROGRAM.md) (`funnel-signed: vantagegames-s1`):
+
+1. **0–5 min:** Skip Waymo → car pick → freeway on-ramp; nitro or ghost sprint start; watch street rep chip.
+2. **5–15 min:** **Menu** pause → Garage records → vista / taco pin; try **Console / TV** preset.
+3. **Hook:** Rep rank-up, ghost PB, or heat-5 chase.
+
 ## Tests
 
 `npm run build && npm run test:playtest` in `drive-world/` — headless Chrome with SwiftShader WebGL and a stubbed gamepad: prologue skip → car pick → RT/LT/W drive → pause freezes the car → resume → frame cap keeps the sim ticking.

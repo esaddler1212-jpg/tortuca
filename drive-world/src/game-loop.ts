@@ -72,7 +72,9 @@ import {
   startTaxiContract,
   type SavedProgress
 } from './game-progress';
-import { bindDriveKeys, pollDriveInput } from './game-input';
+import { bindDriveKeys, bindRecoverVehicle, pollDriveInput } from './game-input';
+import { countWheelsOnGround, recoverVehiclePose } from './vehicle-recover';
+import { spawnKenneyCrashDebris } from './vehicle-debris-vfx';
 import { isGamepadConnected, pollGamepadMenuActions } from './gamepad-hub';
 import {
   hapticDragGo,
@@ -107,6 +109,7 @@ import { chapterObjectivePin } from './mission-nav';
 import { tryUnlockCraftVehicles } from './craft-vehicle-unlocks';
 import { tryAwardDistrictMeetBadge, tryUnlockDistrictMeetVehicles } from './district-meets';
 import { bumpHeatPeak, tryUnlockActivityVehicles } from './vehicle-activity-unlocks';
+import { tryUnlockKenneyServiceVehicles } from './vehicle-kenney-service-unlocks';
 import { appendJournal } from './cruise-journal';
 import { nearestCruiseVista, type CruiseVistaDef } from './cruise-vistas';
 import { loadSettings, saveSettings } from './game-settings';
@@ -174,7 +177,12 @@ import { pushCloudProgress } from './game-cloud-save';
 import { flushSessionTelemetry, installSessionTelemetryFlush, markSessionBoot } from './session-telemetry';
 import { updateHubStreetTraffic } from './hub-street-traffic';
 import { updateFreewayTrafficDrones } from './freeway-traffic-drones';
-import { heatDecay, heatFromSpeedTrap } from './game-heat';
+import {
+  HEAT_COP_BOX_ESCAPE,
+  HEAT_COP_BOX_SPAWN,
+  heatDecay,
+  heatFromSpeedTrap
+} from './game-heat';
 import { createPlayerVehicle, destroyPlayerVehicle, type PlayerVehicle } from './vehicle-factory';
 import { ensureVehicleModelLoaded, ensureVehicleModelsLoaded } from './vehicle-gltf';
 import type { GameSettings } from './game-settings';
@@ -197,6 +205,7 @@ import {
   isTokyoBuilt,
   nextTokyoLandmark,
   setTokyoActive,
+  tokyoGroundHeightM,
   tokyoUnlockStatus
 } from './tokyo-map';
 import { TOKYO_FF_GARAGE_LABEL, tokyoVehicleForLandmark } from './tokyo-ff-cars';
@@ -248,6 +257,10 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   let nitroBoosting = false;
   let wasNitroBoosting = false;
   let wasHeatHunted = false;
+  let wasCopBoxChase = false;
+  let wheelsOffGroundT = 0;
+  let showedRecoverHint = false;
+  let lastDriveMph = 0;
   const photoKeys = { fwd: false, back: false, left: false, right: false, up: false, down: false };
   const CALDECOTT = { x: 392, z: 265 };
   let autopilotActive = false;
@@ -310,6 +323,22 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   };
 
   bindDriveKeys();
+  const burstCrashDebris = (ent: Entity) => {
+    if ((progress.heatLevel ?? 0) < 2 && lastDriveMph < 28) return;
+    const p = ent.getPosition();
+    void spawnKenneyCrashDebris(app, p.x, p.y, p.z, ent.getEulerAngles().y);
+  };
+
+  bindRecoverVehicle(() => {
+    const ent = vehicle();
+    if (!ent || isAerialVehicle(progress.activeVehicleId ?? '')) return;
+    if (progress.phase !== 'home' || ridingWaymo) return;
+    recoverVehiclePose(ent);
+    burstCrashDebris(ent);
+    const p = ent.getPosition();
+    progress = saveLastPose(progress, { x: p.x, y: p.y, z: p.z, yaw: ent.getEulerAngles().y });
+    ui.showToast('Vehicle reset', 'Wheels back on the deck — R to repeat', 3200);
+  });
   window.addEventListener('drive-world:unlock-audio', () => unlockAudio(), { once: false });
   window.addEventListener('keydown', (e) => {
     if (autopilotActive && (e.key === 'c' || e.key === 'C' || e.key === 'w' || e.key === 'a' || e.key === 's' || e.key === 'd')) {
@@ -364,9 +393,13 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     destroyPlayerVehicle(player?.entity ?? null);
     player = null;
     const p = (pos ?? old ?? spawnFromProgress()).clone();
+    const surface = isInTokyo(p.x, p.z) ? tokyoGroundHeightM(p.x, p.z) : hillOffsetM(p.x, p.z);
     if (isAerialVehicle(vehicleId)) {
-      const floor = hillOffsetM(p.x, p.z) + 0.8;
+      const floor = surface + 0.8;
       p.set(p.x, Math.max(p.y, floor + 38), p.z);
+    } else {
+      const floor = surface + 0.55;
+      if (p.y < floor - 0.2) p.y = floor;
     }
     try {
       await ensureVehicleModelLoaded(app, vehicleId);
@@ -403,7 +436,8 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     const sources = [
       tryUnlockActivityVehicles(progress),
       tryUnlockDistrictMeetVehicles(progress),
-      tryUnlockCraftVehicles(progress)
+      tryUnlockCraftVehicles(progress),
+      tryUnlockKenneyServiceVehicles(progress)
     ];
     let changed = false;
     for (const out of sources) {
@@ -768,10 +802,28 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     flight = null;
     progress = recordTokyoFlight(progress);
     const to = run.to;
-    const y = hillOffsetM(to.x, to.z) + 0.8;
-    if (progress.activeVehicleId) void swapVehicle(progress.activeVehicleId, new Vec3(to.x, y, to.z), to.yaw);
-    progress = saveLastPose(progress, { x: to.x, y, z: to.z, yaw: to.yaw });
-    publishHud({ ridingWaymo: false, flightCinematic: null, inTokyo, progress });
+    const surface = isInTokyo(to.x, to.z) ? tokyoGroundHeightM(to.x, to.z) : hillOffsetM(to.x, to.z);
+    const yPad =
+      progress.activeVehicleId && isAerialVehicle(progress.activeVehicleId) ? surface + 0.8 : surface + 0.55;
+    if (progress.activeVehicleId) void swapVehicle(progress.activeVehicleId, new Vec3(to.x, yPad, to.z), to.yaw);
+    progress = saveLastPose(progress, { x: to.x, y: yPad, z: to.z, yaw: to.yaw });
+    const tokyoNext =
+      inTokyo && progress.phase === 'home' ? nextTokyoLandmark(progress.tokyoLandmarkIds, to.x, to.z) : null;
+    const nextAfterFlight =
+      progress.phase !== 'home'
+        ? null
+        : inTokyo
+          ? tokyoNext ?? { id: 'haneda', name: 'Haneda pad — fly home', x: HANEDA_PAD.x, z: HANEDA_PAD.z }
+          : null;
+    publishHud({
+      ridingWaymo: false,
+      flightCinematic: null,
+      inTokyo,
+      progress,
+      playerX: to.x,
+      playerZ: to.z,
+      nextLandmark: nextAfterFlight
+    });
     if (run.dir === 'toTokyo') {
       ui.showToast('Welcome to Tokyo', `${TOKYO_LANDMARKS.length} landmarks — unlock the Fast family fleet`);
     } else {
@@ -1151,10 +1203,17 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
             z: (vistaLookTarget ?? vistaNear!.vista).lookAtZ
           }
         : null;
+    const vehCam = scriptInstance(ent, 'vehicle') as { speed?: number } | undefined;
+    const flightCam = scriptInstance(ent, 'flightVehicle') as { speed?: number } | undefined;
+    const cameraMph = aerial
+      ? Math.abs(flightCam?.speed ?? 0) * 0.621371
+      : onAutopilot
+        ? mph
+        : Math.abs(vehCam?.speed ?? 0) * 0.621371;
     if (estateGarage && !onAutopilot && !aerial) {
       applyGarageInteriorCamera(camera, ent, shGarage!.house.x, shGarage!.house.z, dt);
     } else {
-      applyDriveCamera(camera, ent, activeCam, dt, vistaLook, app);
+      applyDriveCamera(camera, ent, activeCam, dt, vistaLook, app, cameraMph);
     }
 
     if (!onAutopilot) {
@@ -1162,6 +1221,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       const flightScript = scriptInstance(ent, 'flightVehicle') as { speed?: number } | undefined;
       const speedKmh = aerial ? Math.abs(flightScript?.speed ?? 0) : Math.abs(vehScript?.speed ?? 0);
       mph = speedKmh * 0.621371;
+      if (!aerial) lastDriveMph = mph;
       speedEl.textContent = aerial
         ? `${mph.toFixed(0)} mph · ${getVehicleSpec(progress.activeVehicleId!).locomotion === 'helicopter' ? 'Heli' : 'Hover'}`
         : `${mph.toFixed(0)} mph`;
@@ -1197,6 +1257,22 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         nitroCharge = Math.min(1, nitroCharge + dt * 0.14);
       }
       wasNitroBoosting = nitroBoosting;
+      if (!aerial && progress.phase === 'home' && !ridingWaymo && !photoMode && !inTokyo) {
+        const wheels = countWheelsOnGround(ent);
+        if (wheels === 0 && mph < 5) wheelsOffGroundT += dt;
+        else wheelsOffGroundT = 0;
+        if (wheelsOffGroundT > 1.5) {
+          recoverVehiclePose(ent);
+          burstCrashDebris(ent);
+          wheelsOffGroundT = 0;
+          const p = ent.getPosition();
+          progress = saveLastPose(progress, { x: p.x, y: p.y, z: p.z, yaw: ent.getEulerAngles().y });
+          if (!showedRecoverHint) {
+            showedRecoverHint = true;
+            ui.showToast('Auto recover', 'Off-pavement reset — press R if it happens again', 4500);
+          }
+        }
+      }
     }
 
     progress = heatDecay(progress, mph, dt);
@@ -1307,7 +1383,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
 
     let parkingSpot: ReturnType<typeof nearestParkingSpot> = null;
     let nearGas = false;
-    if (progress.phase === 'home' && !aerial) {
+    if (progress.phase === 'home' && !aerial && !inTokyo) {
       parkingSpot = nearestParkingSpot(pos.x, pos.z);
       const gasNear = nearestGasStation(pos.x, pos.z);
       nearGas = Boolean(gasNear);
@@ -1320,6 +1396,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
             saveProgress(progress);
             progress = appendJournal(progress, { kind: 'fuel', id: gasNear.id, label: gasNear.name });
             ui.showToast('Tank full', `${gasNear.name} — free fill`);
+            applyBonusVehicleUnlocks();
             if (nearGarage) refreshGarageUi();
           }
           fuelRefillT = 0;
@@ -1496,9 +1573,17 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     const frameMs = performance.now();
     const taElapsed =
       cpmRuntime.timeLapStartMs != null && taId ? frameMs - cpmRuntime.timeLapStartMs : null;
-    const heatHunted = (progress.heatLevel ?? 0) >= 4.1;
+    const heat = progress.heatLevel ?? 0;
+    const heatHunted = heat >= HEAT_COP_BOX_SPAWN;
     if (heatHunted && !wasHeatHunted) hapticHeatChase();
     wasHeatHunted = heatHunted;
+    const copBoxChase = heat >= HEAT_COP_BOX_SPAWN;
+    if (copBoxChase && !wasCopBoxChase) {
+      ui.showToast('Heat 5', 'Cop box on your bumper — lay off traps to escape', 5200);
+    } else if (wasCopBoxChase && heat < HEAT_COP_BOX_ESCAPE) {
+      ui.showToast('Escaped', 'Box unit peeled off — heat cooling', 4200);
+    }
+    wasCopBoxChase = copBoxChase;
 
     let ghostRivalLabel: string | null = null;
     if (sprintRuntime.sprintId && sprintRuntime.startedMs != null) {

@@ -9,6 +9,7 @@ import {
   getVehicleSpec
 } from './vehicle-catalog';
 import { ACTIVITY_VEHICLE_UNLOCKS } from './vehicle-activity-unlocks';
+import { KENNEY_SERVICE_UNLOCKS } from './vehicle-kenney-service-unlocks';
 import { DISTRICT_MEET_UNLOCKS } from './district-meets';
 import { districtHasLandmarkVisit, districtTacoFound } from './city-checkpoints';
 import { DISTRICT_LABELS, LANDMARKS } from './landmark-registry';
@@ -297,6 +298,16 @@ export function buildMissionBoard(
       label: `${owned ? '✓' : '○'} Activity: ${act.label}`,
       done: owned,
       hint: act.hint
+    });
+  }
+
+  for (const svc of KENNEY_SERVICE_UNLOCKS) {
+    const owned = synced.unlockedVehicleIds.includes(svc.id);
+    lines.push({
+      id: `svc-${svc.id}`,
+      label: `${owned ? '✓' : '○'} Service fleet: ${svc.label}`,
+      done: owned,
+      hint: svc.hint
     });
   }
 

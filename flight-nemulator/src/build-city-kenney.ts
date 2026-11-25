@@ -1,5 +1,5 @@
 import { Entity, type AppBase } from 'playcanvas';
-import { WORLD_HALF_M } from './districts';
+import { DISTRICTS, WORLD_HALF_M } from './districts';
 
 type KenneyIndex = { files: string[] };
 
@@ -8,9 +8,9 @@ function hash2(x: number, z: number): number {
   return s - Math.floor(s);
 }
 
-async function loadKenneyIndex(): Promise<KenneyIndex | null> {
+async function loadKenneyPackIndex(pack: 'kenney-city' | 'kenney-modular'): Promise<KenneyIndex | null> {
   try {
-    const res = await fetch('./models/kenney-city/index.json', { cache: 'no-cache' });
+    const res = await fetch(`./models/${pack}/index.json`, { cache: 'no-cache' });
     if (!res.ok) return null;
     return (await res.json()) as KenneyIndex;
   } catch {
@@ -33,6 +33,10 @@ function loadGlb(app: AppBase, url: string): Promise<Entity | null> {
 }
 
 /** Sprinkle CC0 Kenney buildings when install script populated kenney-city/. */
+async function loadKenneyIndex(): Promise<KenneyIndex | null> {
+  return loadKenneyPackIndex('kenney-city');
+}
+
 export async function placeKenneyLandmarks(app: AppBase, root: Entity, maxCount: number): Promise<number> {
   const index = await loadKenneyIndex();
   if (!index?.files?.length) return 0;
@@ -53,6 +57,70 @@ export async function placeKenneyLandmarks(app: AppBase, root: Entity, maxCount:
       ent.setLocalScale(scale, scale, scale);
       ent.setLocalEulerAngles(0, hash2(x, z) * 360, 0);
       root.addChild(ent);
+      placed++;
+    }
+  }
+  return placed;
+}
+
+type DistrictSlot = { dx: number; dz: number; scale: number; yaw: number; fileIdx: number };
+
+const SKYLINE_RING: DistrictSlot[] = [
+  { dx: 180, dz: 120, scale: 3.2, yaw: -20, fileIdx: 0 },
+  { dx: -160, dz: 140, scale: 2.9, yaw: 35, fileIdx: 1 },
+  { dx: 140, dz: -150, scale: 3.0, yaw: 110, fileIdx: 2 },
+  { dx: -170, dz: -130, scale: 2.8, yaw: -95, fileIdx: 3 }
+];
+
+/** Four Kenney silhouettes per district center when CC0 pack is installed (slice 2 skyline read). */
+export async function placeDistrictKenneySkyline(app: AppBase, root: Entity): Promise<number> {
+  const index = await loadKenneyIndex();
+  if (!index?.files?.length) return 0;
+  const files = index.files;
+  let placed = 0;
+
+  for (const d of DISTRICTS) {
+    const group = new Entity(`kenney-skyline-${d.id}`);
+    root.addChild(group);
+    for (const slot of SKYLINE_RING) {
+      const file = files[slot.fileIdx % files.length]!;
+      const url = `./models/kenney-city/${file}`;
+      const ent = await loadGlb(app, url);
+      if (!ent) continue;
+      ent.setLocalPosition(d.center.x + slot.dx, 0, d.center.z + slot.dz);
+      ent.setLocalScale(slot.scale, slot.scale * d.skylineMul, slot.scale);
+      ent.setLocalEulerAngles(0, slot.yaw, 0);
+      group.addChild(ent);
+      placed++;
+    }
+  }
+  return placed;
+}
+
+const MODULAR_RING: DistrictSlot[] = [
+  { dx: 95, dz: 75, scale: 2.5, yaw: 15, fileIdx: 0 },
+  { dx: -88, dz: 72, scale: 2.3, yaw: -20, fileIdx: 1 }
+];
+
+/** Inner modular towers at each district when `kenney-modular/` is installed. */
+export async function placeDistrictKenneyModular(app: AppBase, root: Entity): Promise<number> {
+  const index = await loadKenneyPackIndex('kenney-modular');
+  if (!index?.files?.length) return 0;
+  const files = index.files;
+  let placed = 0;
+
+  for (const d of DISTRICTS) {
+    const group = new Entity(`kenney-modular-${d.id}`);
+    root.addChild(group);
+    for (const slot of MODULAR_RING) {
+      const file = files[slot.fileIdx % files.length]!;
+      const url = `./models/kenney-modular/${file}`;
+      const ent = await loadGlb(app, url);
+      if (!ent) continue;
+      ent.setLocalPosition(d.center.x + slot.dx, 0, d.center.z + slot.dz);
+      ent.setLocalScale(slot.scale, slot.scale * d.skylineMul * 0.85, slot.scale);
+      ent.setLocalEulerAngles(0, slot.yaw, 0);
+      group.addChild(ent);
       placed++;
     }
   }

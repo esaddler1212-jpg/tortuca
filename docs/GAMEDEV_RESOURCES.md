@@ -10,12 +10,21 @@ We comb multiple **free resource indexes**:
 | [JannisX11/blockbench](https://github.com/JannisX11/blockbench) | [`BLOCKBENCH_WORKFLOW.md`](./BLOCKBENCH_WORKFLOW.md) — hero GLB pipeline |
 | [Oyasumi World Gacha](https://tools.oyasumi-gamedev.com/worldgacha/) | [`WORLDGACHA_WORKFLOW.md`](./WORLDGACHA_WORKFLOW.md) — town GLB import |
 
+## Free building research
+
+See [`VISUAL_UPGRADE_TIERS.md`](./VISUAL_UPGRADE_TIERS.md) for **Tier 0–5** visual ROI (settings → install → manual → code).
+
+See [`FREE_3D_BUILDING_ASSETS.md`](./FREE_3D_BUILDING_ASSETS.md) for CC0 pack sources and the district manifest.
+
 ## Quick commands
 
 | Command | Purpose |
 |---------|---------|
 | `npm run gamedev-resources:sync` | Pin upstream commits (Kavex + public-apis) |
 | `bash tools/gamedev-resources/install-free-packs.sh --all` | Pull CC0 Kenney audio + city GLBs locally |
+| `bash tools/gamedev-resources/install-free-packs.sh --modular-glb` | Kenney Modular → wired loaders in both games |
+| `bash tools/gamedev-resources/install-free-packs.sh --city-glb-full` | All City Kit GLBs (not just 48-cap sample) |
+| `bash tools/gamedev-resources/install-free-packs.sh --pbr-decks` | AmbientCG asphalt → City Nights deck textures |
 
 ### Wired in Flight Nemulator (runtime)
 

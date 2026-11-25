@@ -3,12 +3,13 @@ import { Color, Entity, StandardMaterial, type AppBase } from 'playcanvas';
 import { hillOffsetM } from './bay-terrain';
 import { CITY_HUBS } from './city-map-registry';
 import { STOREFRONT_STRIPS } from './storefront-strips';
+import { hubParkingEmissiveIntensity, storefrontEmissiveIntensity } from './vice86-density';
 
-export function buildHubParkingLots(app: AppBase): void {
+export function buildHubParkingLots(app: AppBase, vice86NeonRead = true): void {
   const bodyMat = new StandardMaterial();
   bodyMat.diffuse = new Color(0.35, 0.38, 0.42);
   bodyMat.emissive = new Color(0.25, 0.55, 0.75);
-  bodyMat.emissiveIntensity = 0.25;
+  bodyMat.emissiveIntensity = hubParkingEmissiveIntensity(vice86NeonRead);
   bodyMat.update();
 
   for (const hub of CITY_HUBS) {
@@ -29,10 +30,10 @@ export function buildHubParkingLots(app: AppBase): void {
   }
 }
 
-export function buildStorefrontSigns(app: AppBase): void {
+export function buildStorefrontSigns(app: AppBase, vice86NeonRead = true): void {
   const signMat = new StandardMaterial();
   signMat.emissive = new Color(0.85, 0.55, 0.25);
-  signMat.emissiveIntensity = 0.55;
+  signMat.emissiveIntensity = storefrontEmissiveIntensity(vice86NeonRead);
   signMat.update();
 
   for (const strip of STOREFRONT_STRIPS) {

@@ -1,0 +1,7 @@
+{
+  "centerpiece": "your-town-export.glb",
+  "scale": 0.45,
+  "offset": [420, 0, -320],
+  "yRotation": 12,
+  "files": ["satellite-a.glb", "satellite-b.glb", "satellite-c.glb"]
+}

@@ -1,6 +1,6 @@
 import { loadSettings, saveSettings } from './game-settings';
 
-export type PlaylistTrack = { file: string; title: string };
+export type PlaylistTrack = { file: string; title: string; aceStepBed?: boolean };
 
 let tracks: PlaylistTrack[] = [];
 let index = 0;
@@ -13,7 +13,7 @@ export async function loadPlaylistCatalog(): Promise<PlaylistTrack[]> {
     const res = await fetch('./music/playlist.json');
     if (!res.ok) return [];
     const data = (await res.json()) as { tracks?: PlaylistTrack[] };
-    tracks = (data.tracks ?? []).filter((t) => t.file && t.title);
+    tracks = (data.tracks ?? []).filter((t) => t.file && t.title) as PlaylistTrack[];
   } catch {
     tracks = [];
   }
@@ -95,4 +95,39 @@ export function isPlaylistPlaying(): boolean {
 export function setUsePlaylist(enabled: boolean): void {
   const s = loadSettings();
   saveSettings({ ...s, musicUsePlaylist: enabled });
+}
+
+export function aceStepBedFile(): string | null {
+  const tagged = tracks.find((t) => t.aceStepBed);
+  if (tagged) return tagged.file;
+  return tracks.find((t) => t.file.includes('ace-step'))?.file ?? null;
+}
+
+export function playlistIndexForFile(file: string): number {
+  return tracks.findIndex((t) => t.file === file);
+}
+
+export function playlistStartIndex(): number {
+  const s = loadSettings();
+  const preferred = s.musicAceStepBedFile ?? aceStepBedFile();
+  if (!preferred) return 0;
+  const idx = playlistIndexForFile(preferred);
+  return idx >= 0 ? idx : 0;
+}
+
+/** cn-d09 — jump to the ACE-Step finish bed and enable playlist mode in settings. */
+export async function playAceStepBed(): Promise<boolean> {
+  await loadPlaylistCatalog();
+  const file = aceStepBedFile();
+  if (!file) return false;
+  const idx = playlistIndexForFile(file);
+  if (idx < 0) return false;
+  const s = loadSettings();
+  saveSettings({ ...s, musicUsePlaylist: true, musicAceStepBedFile: file });
+  return playPlaylist(idx);
+}
+
+export function playlistHudLabel(): string | null {
+  const t = currentPlaylistTrack();
+  return t?.title ?? null;
 }

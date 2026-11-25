@@ -45,10 +45,14 @@ A slice is **done** only when:
 
 ## 15-minute funnel (fill in once)
 
+<!-- funnel-signed: vantagegames-s1 -->
+
+Signed off **2026-11-22** (Nightshift + Skyring): couch QA uses [`CITY_NIGHTS_CONSOLE_FEEL.md`](./CITY_NIGHTS_CONSOLE_FEEL.md) and [`BATTLEWORLD_CONSOLE_FEEL.md`](./BATTLEWORLD_CONSOLE_FEEL.md); CI runs `test:playtest` in both packages.
+
 | Game | Minute 0–5 | Minute 5–15 | Come back tomorrow because… |
 |------|------------|-------------|------------------------------|
-| **City Nights** | Spawn at SFO → freeway on-ramp → one ghost sprint or nitro hit; rep chip moves | Garage tune → cruise vista or taco truck pin; safehouse **H** if unlocked | *e.g. district %, new sprint, heat chase* |
-| **Battleworld** | Tap fly → hero pick → chapter objective chip readable | District rim flight → one wave or arc beat; **H** on minimap | *e.g. next chapter, GLB villain, offline save* |
+| **City Nights** | Skip Waymo → car pick → I-80 on-ramp; one nitro stripe or start **Estate** ghost sprint; street rep chip ticks | **Menu** pause → Garage **Records** → vista or taco pin; optional speed-trap heat; **Console / TV** preset on Series Edge | Next rep rank, ghost PB on 3 circuits, heat-5 box escape |
+| **Battleworld** | Tap fly → hero confirm → **Story** + chapter objective chips; short cruise boost | Rim flight toward home district; arc objective chip; minimap **H**; intro territory beat or wave chip | Chapter **stones** chain, wave-10 pair duel, VantageGames offline save streak |
 
 ---
 
@@ -93,6 +97,10 @@ Mark in git via `game-finish:report` — not checkboxes in this file (single sou
 | 10 | `bw-d10` | 15-min funnel QA | Smoke + manual |
 
 ---
+
+## Screenshot polish loop
+
+Between slices or during `cn-d10` / `bw-d10` QA, use [`GAME_POLISH_LOOP.md`](./GAME_POLISH_LOOP.md) and [`GAME_POLISH_VICE86_PROMPTS.md`](./GAME_POLISH_VICE86_PROMPTS.md): capture a signature moment → `npm run game:polish-prompt -- city-nights vice86-6` → fix top 5 fake reads → re-capture (2–3 rounds).
 
 ## After day 10
 

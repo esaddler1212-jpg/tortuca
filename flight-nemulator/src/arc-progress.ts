@@ -57,6 +57,13 @@ export function recordArcBeat(heroId: string, beat: ArcBeat): void {
   queueBattleworldLatticeCloud(heroId);
 }
 
+/** Like recordArcBeat but reports whether this call was the first time for that beat. */
+export function recordArcBeatIfNew(heroId: string, beat: ArcBeat): boolean {
+  if (hasArcBeat(heroId, beat)) return false;
+  recordArcBeat(heroId, beat);
+  return true;
+}
+
 export function hasArcBeat(heroId: string, beat: ArcBeat): boolean {
   return localStorage.getItem(`${PREFIX}${heroId}-${beat}`) === '1';
 }
@@ -72,10 +79,9 @@ export function maybeRecordTerritoryClear(
   heroId: string,
   role: 'hero' | 'villain',
   takeoverCount: number
-): void {
-  if (role !== 'hero' || takeoverCount !== 0) return;
-  if (hasArcBeat(heroId, 'territory-clear')) return;
-  recordArcBeat(heroId, 'territory-clear');
+): boolean {
+  if (role !== 'hero' || takeoverCount !== 0) return false;
+  return recordArcBeatIfNew(heroId, 'territory-clear');
 }
 
 export function arcBeatsForHero(heroId: string): Set<ArcBeat> {

@@ -3,6 +3,10 @@ import { saveProgress } from './game-progress';
 import { SPEED_TRAPS } from './world-extras';
 
 export const HEAT_MAX = 5;
+/** Midnight Club–style cop box spawns at peak heat (game-finish cn-d08). */
+export const HEAT_COP_BOX_SPAWN = 4.5;
+/** Heat must fall below this to dismiss the chase unit (escape loop). */
+export const HEAT_COP_BOX_ESCAPE = 3.25;
 
 export function heatDecay(progress: SavedProgress, mph: number, dt: number): SavedProgress {
   const level = progress.heatLevel ?? 0;

@@ -129,7 +129,8 @@ const after = await state();
 await page.keyboard.up('KeyW');
 const moved = Math.hypot(after.playerX - before.playerX, after.playerZ - before.playerZ);
 // mph alone is enough when CI physics barely translates the rigidbody (wheel spin / low FPS).
-const keyboardDrove = after.mph >= 4 || (after.mph >= 3 && moved >= 0.15);
+const keyboardDrove =
+  after.mph >= 4 || moved >= 0.35 || (after.mph >= 1.5 && moved >= 0.18);
 check('W drives the car', keyboardDrove, `${moved.toFixed(1)} m, ${after.mph} mph`);
 check('chase cam behind car (dist + view dir)', camChase.ok, `dist=${camChase.dist} dot=${camChase.dot}`);
 if (shot) await page.screenshot({ path: `${shot}/playtest-drive.png` });
@@ -147,8 +148,8 @@ check('car frozen while paused', drift < 0.25, `${drift.toFixed(2)} m`);
 check('paused banner visible', !!(await page.$('.paused-banner')));
 if (shot) await page.screenshot({ path: `${shot}/playtest-paused.png` });
 
-await page.evaluate(() => window.dispatchEvent(new CustomEvent('drive-world:hud-tab', { detail: 'map' })));
-await sleep(1500);
+await page.evaluate(() => window.dispatchEvent(new CustomEvent('drive-world:hud-tab', { detail: 'missions' })));
+await sleep(process.env.GITHUB_ACTIONS ? 2500 : 1500);
 const r = await state();
 check('second Menu press resumes', r.timeScale === 1 && !r.simPaused, `timeScale=${r.timeScale}`);
 

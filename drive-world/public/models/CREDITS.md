@@ -2,11 +2,33 @@
 
 ## Kenney Car Kit (CC0 1.0)
 
-Vehicles under `kenney/*.glb` are from [Kenney Car Kit](https://kenney.nl/assets/car-kit) (CC0).
+Vehicles under `kenney/*.glb` are from [Kenney Car Kit](https://kenney.nl/assets/car-kit) (CC0) — **full kit** (45 GLBs including debris/wheels) vendored in git. Refresh:
 
-This repo vendors copies from the community mirror [shorepine/kenney](https://github.com/shorepine/kenney/tree/main/3d/car) for reliable static hosting in Vite.
+`bash tools/gamedev-resources/install-free-packs.sh --car-kit-full`
+
+Originally mirrored from [shorepine/kenney](https://github.com/shorepine/kenney/tree/main/3d/car).
 
 Attribution is optional for CC0 but appreciated: [Kenney](https://kenney.nl).
+
+## Kenney City Kit (optional, CC0)
+
+`kenney-city/*.glb` when present are from [Kenney City Kit Commercial](https://kenney.nl/assets/city-kit-commercial). Install locally:
+
+`bash tools/gamedev-resources/install-free-packs.sh --city-glb`
+
+Not committed by default — see `drive-world/.gitignore`.
+
+## Kenney Modular Buildings (optional, CC0)
+
+`kenney-modular/*.glb` when present are from [Kenney Modular Buildings](https://kenney.nl/assets/modular-buildings) (CC0). Install:
+
+`bash tools/gamedev-resources/install-free-packs.sh --modular-glb`
+
+Loaded at runtime via `placeDistrictModularProps` when installed.
+
+## AmbientCG deck asphalt (optional, CC0)
+
+`textures/ambientcg/deck-asphalt.jpg` from [Ground085](https://ambientcg.com/view?id=Ground085) via `install-free-packs.sh --pbr-decks`. Used by `kitDeckMaterial` on art-kit plazas.
 
 ## Light Helicopter (CC0 1.0)
 
