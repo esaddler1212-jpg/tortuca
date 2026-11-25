@@ -51,6 +51,16 @@ export function isInTokyo(x: number, z: number): boolean {
   return Math.abs(x - TOKYO_CENTER.x) < TOKYO_HALF_M + 200 && Math.abs(z - TOKYO_CENTER.z) < TOKYO_HALF_M + 200;
 }
 
+/** Match `tokyoHeight` in `buildTokyo` for spawns / recover on the bonus map. */
+export function tokyoGroundHeightM(wx: number, wz: number): number {
+  return (
+    Math.sin(wx * 0.003) * 1.1 +
+    Math.cos(wz * 0.0025) * 0.85 +
+    (hash2(wx * 0.15, wz * 0.15) - 0.5) * 0.7 -
+    0.06
+  );
+}
+
 /** Every Bay car (all `tokyo-*` ids excluded) + all six regions. */
 export function tokyoUnlockStatus(progress: SavedProgress): {
   unlocked: boolean;
@@ -188,7 +198,8 @@ export function buildTokyo(app: AppBase): void {
       addHeightfieldPatch(app, root, wx, wz, Math.max(w, d), 10, tokyoHeight, g, `tokyo-ground-${lx}-${lz}`, false);
     }
   }
-  add('tokyo-ground', 0, -0.35, 0, half * 2, 0.4, half * 2, mat([0.035, 0.035, 0.05]), true);
+  // Physics slab — top ~0.14 m like Bay `ground` so Ammo raycast wheels stay in contact.
+  add('tokyo-ground', 0, 0.02, 0, half * 2, 0.24, half * 2, mat([0.035, 0.035, 0.05]), true);
 
   const wall = mat([0.08, 0.06, 0.1], [0.6, 0.2, 0.9], 0.35);
   for (const s of [-1, 1]) {

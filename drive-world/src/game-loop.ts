@@ -205,6 +205,7 @@ import {
   isTokyoBuilt,
   nextTokyoLandmark,
   setTokyoActive,
+  tokyoGroundHeightM,
   tokyoUnlockStatus
 } from './tokyo-map';
 import { TOKYO_FF_GARAGE_LABEL, tokyoVehicleForLandmark } from './tokyo-ff-cars';
@@ -392,11 +393,12 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     destroyPlayerVehicle(player?.entity ?? null);
     player = null;
     const p = (pos ?? old ?? spawnFromProgress()).clone();
+    const surface = isInTokyo(p.x, p.z) ? tokyoGroundHeightM(p.x, p.z) : hillOffsetM(p.x, p.z);
     if (isAerialVehicle(vehicleId)) {
-      const floor = hillOffsetM(p.x, p.z) + 0.8;
+      const floor = surface + 0.8;
       p.set(p.x, Math.max(p.y, floor + 38), p.z);
     } else {
-      const floor = hillOffsetM(p.x, p.z) + 0.55;
+      const floor = surface + 0.55;
       if (p.y < floor - 0.2) p.y = floor;
     }
     try {
@@ -800,10 +802,28 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     flight = null;
     progress = recordTokyoFlight(progress);
     const to = run.to;
-    const y = hillOffsetM(to.x, to.z) + 0.8;
-    if (progress.activeVehicleId) void swapVehicle(progress.activeVehicleId, new Vec3(to.x, y, to.z), to.yaw);
-    progress = saveLastPose(progress, { x: to.x, y, z: to.z, yaw: to.yaw });
-    publishHud({ ridingWaymo: false, flightCinematic: null, inTokyo, progress });
+    const surface = isInTokyo(to.x, to.z) ? tokyoGroundHeightM(to.x, to.z) : hillOffsetM(to.x, to.z);
+    const yPad =
+      progress.activeVehicleId && isAerialVehicle(progress.activeVehicleId) ? surface + 0.8 : surface + 0.55;
+    if (progress.activeVehicleId) void swapVehicle(progress.activeVehicleId, new Vec3(to.x, yPad, to.z), to.yaw);
+    progress = saveLastPose(progress, { x: to.x, y: yPad, z: to.z, yaw: to.yaw });
+    const tokyoNext =
+      inTokyo && progress.phase === 'home' ? nextTokyoLandmark(progress.tokyoLandmarkIds, to.x, to.z) : null;
+    const nextAfterFlight =
+      progress.phase !== 'home'
+        ? null
+        : inTokyo
+          ? tokyoNext ?? { id: 'haneda', name: 'Haneda pad — fly home', x: HANEDA_PAD.x, z: HANEDA_PAD.z }
+          : null;
+    publishHud({
+      ridingWaymo: false,
+      flightCinematic: null,
+      inTokyo,
+      progress,
+      playerX: to.x,
+      playerZ: to.z,
+      nextLandmark: nextAfterFlight
+    });
     if (run.dir === 'toTokyo') {
       ui.showToast('Welcome to Tokyo', `${TOKYO_LANDMARKS.length} landmarks — unlock the Fast family fleet`);
     } else {
@@ -1237,7 +1257,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         nitroCharge = Math.min(1, nitroCharge + dt * 0.14);
       }
       wasNitroBoosting = nitroBoosting;
-      if (!aerial && progress.phase === 'home' && !ridingWaymo && !photoMode) {
+      if (!aerial && progress.phase === 'home' && !ridingWaymo && !photoMode && !inTokyo) {
         const wheels = countWheelsOnGround(ent);
         if (wheels === 0 && mph < 5) wheelsOffGroundT += dt;
         else wheelsOffGroundT = 0;
@@ -1363,7 +1383,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
 
     let parkingSpot: ReturnType<typeof nearestParkingSpot> = null;
     let nearGas = false;
-    if (progress.phase === 'home' && !aerial) {
+    if (progress.phase === 'home' && !aerial && !inTokyo) {
       parkingSpot = nearestParkingSpot(pos.x, pos.z);
       const gasNear = nearestGasStation(pos.x, pos.z);
       nearGas = Boolean(gasNear);
