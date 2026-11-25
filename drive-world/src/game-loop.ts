@@ -73,7 +73,7 @@ import {
   type SavedProgress
 } from './game-progress';
 import { bindDriveKeys, bindRecoverVehicle, pollDriveInput } from './game-input';
-import { countWheelsOnGround, recoverVehiclePose } from './vehicle-recover';
+import { countWheelsOnGround, recoverVehiclePose, snapVehicleToDriveFloor } from './vehicle-recover';
 import { spawnKenneyCrashDebris } from './vehicle-debris-vfx';
 import { isGamepadConnected, pollGamepadMenuActions } from './gamepad-hub';
 import {
@@ -805,8 +805,15 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     const surface = isInTokyo(to.x, to.z) ? tokyoGroundHeightM(to.x, to.z) : hillOffsetM(to.x, to.z);
     const yPad =
       progress.activeVehicleId && isAerialVehicle(progress.activeVehicleId) ? surface + 0.8 : surface + 0.55;
-    if (progress.activeVehicleId) void swapVehicle(progress.activeVehicleId, new Vec3(to.x, yPad, to.z), to.yaw);
-    progress = saveLastPose(progress, { x: to.x, y: yPad, z: to.z, yaw: to.yaw });
+    const landPose = { x: to.x, y: yPad, z: to.z, yaw: to.yaw };
+    if (progress.activeVehicleId) {
+      void (async () => {
+        await swapVehicle(progress.activeVehicleId!, new Vec3(landPose.x, landPose.y, landPose.z), landPose.yaw);
+        const ent = vehicle();
+        if (ent) snapVehicleToDriveFloor(ent);
+      })();
+    }
+    progress = saveLastPose(progress, landPose);
     const tokyoNext =
       inTokyo && progress.phase === 'home' ? nextTokyoLandmark(progress.tokyoLandmarkIds, to.x, to.z) : null;
     const nextAfterFlight =

@@ -38,8 +38,14 @@ export function recoverVehiclePose(ent: Entity): void {
   ent.setEulerAngles(0, ent.getEulerAngles().y, 0);
   const rb = ent.rigidbody;
   if (rb) {
+    rb.teleport(pos.x, y, pos.z);
     rb.linearVelocity = Vec3.ZERO;
     rb.angularVelocity = Vec3.ZERO;
     rb.activate();
   }
+}
+
+/** After Tokyo flight landing or teleport — wheel raycasts need a synced pose. */
+export function snapVehicleToDriveFloor(ent: Entity): void {
+  recoverVehiclePose(ent);
 }

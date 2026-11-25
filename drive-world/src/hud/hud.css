@@ -93,6 +93,16 @@
   fill: rgba(80, 120, 80, 0.7);
 }
 
+.minimap-find-next-ring {
+  fill: rgba(245, 200, 66, 0.22);
+  stroke: #f5c842;
+  stroke-width: 1.5;
+}
+
+.minimap-find-next-core {
+  fill: #f5c842;
+}
+
 .minimap-taco {
   fill: rgba(255, 170, 50, 0.95);
 }
