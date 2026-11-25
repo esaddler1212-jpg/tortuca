@@ -33,6 +33,7 @@ export const PUBLIC_API_HANDLERS = [
   "google-oauth-status",
   "push-vapid",
   "pulse",
+  "battleworld-room-goal",
   "flight",
   "session",
   "woodhouse",

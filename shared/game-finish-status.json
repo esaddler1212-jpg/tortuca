@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-23T01:52:26.892Z",
+  "updatedAt": "2026-11-25T15:06:14.097Z",
   "activeSlice": {
     "nightshift": "cn-d10",
     "skyring": "bw-d10"
@@ -53,8 +53,8 @@
     },
     "cn-d10": {
       "status": "done",
-      "completedAt": "2026-11-23T01:52:26.679Z",
-      "note": "15-min funnel + couch doc signed; playtest gamepad RT/LT/Menu/B green"
+      "completedAt": "2026-11-25T15:06:14.096Z",
+      "note": "Tokyo landing physics HUD fix; find-next minimap gold pin; open-world parity doc"
     },
     "bw-d01": {
       "status": "done",
@@ -103,11 +103,23 @@
     },
     "bw-d10": {
       "status": "done",
-      "completedAt": "2026-11-23T01:52:26.892Z",
-      "note": "Battleworld funnel doc + playtest smoke (chapter, H pin, arc chip)"
+      "completedAt": "2026-11-25T15:06:13.657Z",
+      "note": "Open-world tier pack on integration branch; room goal API + almanac + find-next shipped"
     }
   },
   "reports": [
+    {
+      "agent": "nightshift",
+      "sliceId": "cn-d10",
+      "at": "2026-11-25T15:06:14.097Z",
+      "summary": "Tokyo landing physics HUD fix; find-next minimap gold pin; open-world parity doc"
+    },
+    {
+      "agent": "skyring",
+      "sliceId": "bw-d10",
+      "at": "2026-11-25T15:06:13.657Z",
+      "summary": "Open-world tier pack on integration branch; room goal API + almanac + find-next shipped"
+    },
     {
       "agent": "skyring",
       "sliceId": "bw-d10",

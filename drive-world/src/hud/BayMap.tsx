@@ -69,6 +69,22 @@ function TokyoMapBody({ snap, size }: { snap: HudSnapshot; size: number }) {
           className={visited.has(lm.id) ? 'minimap-dot done' : 'minimap-dot'}
         />
       ))}
+      {snap.nextLandmark ? (
+        <g className="minimap-find-next">
+          <circle
+            cx={tX(snap.nextLandmark.x, size)}
+            cy={tY(snap.nextLandmark.z, size)}
+            r={6.5}
+            className="minimap-find-next-ring"
+          />
+          <circle
+            cx={tX(snap.nextLandmark.x, size)}
+            cy={tY(snap.nextLandmark.z, size)}
+            r={3.2}
+            className="minimap-find-next-core"
+          />
+        </g>
+      ) : null}
       {route.slice(0, -1).map((a, i) => {
         const b = route[i + 1]!;
         return <line key={`r-${i}`} x1={tX(a.x, size)} y1={tY(a.z, size)} x2={tX(b.x, size)} y2={tY(b.z, size)} className="minimap-route" />;
@@ -263,6 +279,12 @@ function BayMapBody({
           );
         });
       })()}
+      {next ? (
+        <g className="minimap-find-next">
+          <circle cx={mapX(next.x, size)} cy={mapY(next.z, size)} r={6.5} className="minimap-find-next-ring" />
+          <circle cx={mapX(next.x, size)} cy={mapY(next.z, size)} r={3.2} className="minimap-find-next-core" />
+        </g>
+      ) : null}
       {pulse > 0 ? (
         <circle cx={mapX(snap.playerX, size)} cy={mapY(snap.playerZ, size)} r={pulse + 6} className="minimap-vista-pulse" />
       ) : null}

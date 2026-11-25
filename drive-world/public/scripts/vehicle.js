@@ -128,6 +128,9 @@ Vehicle.prototype.initialize = function () {
 // update code called every frame
 Vehicle.prototype.update = function (dt) {
     var vehicle = this.vehicle;
+    if (!vehicle) return;
+
+  try {
     var i;
 
     var body = this.entity.rigidbody.body;
@@ -146,17 +149,21 @@ Vehicle.prototype.update = function (dt) {
 
     var numWheels = vehicle.getNumWheels();
     for (i = 0; i < numWheels; i++) {
-        // synchronize the wheels with the (interpolated) chassis worldtransform
-        vehicle.updateWheelTransform(i, true);
-        var t = this.vehicle.getWheelTransformWS(i);
+      // synchronize the wheels with the (interpolated) chassis worldtransform
+      vehicle.updateWheelTransform(i, true);
+      var t = this.vehicle.getWheelTransformWS(i);
 
-        var p = t.getOrigin();
-        var q = t.getRotation();
+      var p = t.getOrigin();
+      var q = t.getRotation();
 
-        var wheel = this.wheels[i];
-        wheel.setPosition(p.x(), p.y(), p.z());
-        wheel.setRotation(q.x(), q.y(), q.z(), q.w());
+      var wheel = this.wheels[i];
+      wheel.setPosition(p.x(), p.y(), p.z());
+      wheel.setRotation(q.x(), q.y(), q.z(), q.w());
     }
+  } catch (e) {
+    this.engineForce = 0;
+    this.brakingForce = this.maxBrakingForce;
+  }
 };
 
 

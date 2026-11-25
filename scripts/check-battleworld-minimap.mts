@@ -46,6 +46,7 @@ const minimapSrc = fs.readFileSync(
   'utf8'
 );
 ok('minimap home svg class', minimapSrc.includes('minimap-home-h'));
+ok('minimap find-next pin', minimapSrc.includes('minimap-find-next'));
 
 if (failed) process.exitCode = 1;
 else console.log('check-battleworld-minimap: ok');

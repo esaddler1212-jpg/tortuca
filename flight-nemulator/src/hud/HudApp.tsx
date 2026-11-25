@@ -30,7 +30,8 @@ import { HERO_MUTATIONS } from '../roster-mutations';
 import { Minimap } from './Minimap';
 import { acknowledgeDialogue } from '../cutscene-queue';
 import { setQualityOverride } from '../game-settings';
-import { downloadPhoto } from '../photo-mode';
+import { cyclePhotoFilter, downloadPhoto, photoFilterCss } from '../photo-mode';
+import { buildAlmanac } from '../battleworld-almanac';
 import type { QualityTier } from '../quality-tier';
 import { HudIcon } from './HudIcon';
 import './hud.css';
@@ -117,6 +118,17 @@ export type GameHudSnapshot = {
   districtUniverse?: string | null;
   districtUniverseLabel?: string | null;
   universeRimCss?: string | null;
+  roomGoalLine?: string | null;
+  almanacLine?: string | null;
+  findNextLabel?: string | null;
+  findNextMinimapX?: number | null;
+  findNextMinimapZ?: number | null;
+  dailyMissionLine?: string | null;
+  guestHint?: string | null;
+  inviteShardLine?: string | null;
+  districtStarsLine?: string | null;
+  districtStarsTotal?: string | null;
+  photoFilter?: string;
 };
 
 function formatUsd(n: number): string {
@@ -203,6 +215,32 @@ export function HudApp() {
           <HudIcon name="objective" title="Arc objective" /> {snap.arcObjectiveChip}
         </p>
       ) : null}
+      {snap.findNextLabel ? (
+        <p className="hud-tag hud-find-next" title="Find next objective">
+          Find next · {snap.findNextLabel}
+        </p>
+      ) : null}
+      {snap.roomGoalLine ? (
+        <p className="hud-tag hud-room-goal" title="Weekly async room goal">
+          {snap.roomGoalLine}
+        </p>
+      ) : null}
+      {snap.dailyMissionLine ? (
+        <p className="hud-tag hud-daily-mission">{snap.dailyMissionLine}</p>
+      ) : null}
+      {snap.guestHint ? <p className="hud-tag hud-hint hud-guest">{snap.guestHint}</p> : null}
+      {snap.inviteShardLine ? <p className="hud-tag hud-hint">{snap.inviteShardLine}</p> : null}
+      {snap.districtStarsLine ? (
+        <p className="hud-tag" title={snap.districtStarsTotal ?? undefined}>
+          {snap.districtStarsLine}
+        </p>
+      ) : null}
+      {snap.almanacLine ? (
+        <details className="hud-panel hud-almanac">
+          <summary>{snap.almanacLine}</summary>
+          <AlmanacList heroId={heroId} />
+        </details>
+      ) : null}
       <Minimap
         heroX={snap.heroX ?? 0}
         heroZ={snap.heroZ ?? 0}
@@ -216,13 +254,22 @@ export function HudApp() {
             ? { x: snap.arcMinimapX, z: snap.arcMinimapZ }
             : null
         }
+        findNextPin={
+          snap.findNextMinimapX != null && snap.findNextMinimapZ != null
+            ? { x: snap.findNextMinimapX, z: snap.findNextMinimapZ, label: '→' }
+            : null
+        }
       />
 
       {snap.cutsceneActive && snap.cutsceneText && (
         <CutsceneOverlay snap={snap} onContinue={() => acknowledgeDialogue()} />
       )}
 
-      <QualitySettings quality={snap.quality} photoMode={!!snap.photoMode} />
+      <QualitySettings
+        quality={snap.quality}
+        photoMode={!!snap.photoMode}
+        photoFilter={snap.photoFilter}
+      />
       <RolePicker role={snap.playerRole ?? getPlayerRole()} heroId={heroId} />
       <WorldFatePanel snap={snap} />
 
@@ -480,7 +527,24 @@ function RolePicker({ role, heroId }: { role: PlayerRole; heroId: string }) {
   );
 }
 
-function QualitySettings({ quality, photoMode }: { quality: string; photoMode: boolean }) {
+function QualitySettings({
+  quality,
+  photoMode,
+  photoFilter
+}: {
+  quality: string;
+  photoMode: boolean;
+  photoFilter?: string;
+}) {
+  useEffect(() => {
+    const canvas = document.getElementById('application-canvas') as HTMLCanvasElement | null;
+    if (!canvas) return;
+    canvas.style.filter = photoMode ? photoFilterCss() : 'none';
+    return () => {
+      canvas.style.filter = 'none';
+    };
+  }, [photoMode, photoFilter]);
+
   return (
     <div className="settings-bar hud-panel">
       <label>
@@ -494,23 +558,45 @@ function QualitySettings({ quality, photoMode }: { quality: string; photoMode: b
           }}
         >
           <option value="auto">Auto ({quality})</option>
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
+          <option value="low">Performance</option>
+          <option value="medium">Balanced</option>
           <option value="high">High</option>
         </select>
       </label>
       {photoMode && (
-        <button
-          type="button"
-          onClick={() => {
-            const canvas = document.getElementById('application-canvas') as HTMLCanvasElement | null;
-            if (canvas) void downloadPhoto(canvas, 'hero');
-          }}
-        >
-          Save photo
-        </button>
+        <>
+          <button type="button" onClick={() => cyclePhotoFilter()}>
+            Filter
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const canvas = document.getElementById('application-canvas') as HTMLCanvasElement | null;
+              if (canvas) void downloadPhoto(canvas, 'hero');
+            }}
+          >
+            Save postcard
+          </button>
+        </>
       )}
     </div>
+  );
+}
+
+function AlmanacList({ heroId }: { heroId: string }) {
+  const rows = buildAlmanac(heroId).filter((r) => r.discovered).slice(0, 12);
+  if (!rows.length) {
+    return <p className="hud-hint">Fly districts and clear lattice beats to fill the almanac.</p>;
+  }
+  return (
+    <ul className="hud-almanac-list">
+      {rows.map((r) => (
+        <li key={r.id}>
+          {r.label}
+          {r.hint ? ` — ${r.hint}` : ''}
+        </li>
+      ))}
+    </ul>
   );
 }
 
