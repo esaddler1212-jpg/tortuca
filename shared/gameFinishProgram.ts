@@ -215,6 +215,43 @@ export const GAME_FINISH_SLICES: GameSliceDef[] = [
     game: "battleworld",
     verify: "Smoke boot + manual pass",
   },
+  // Season 2 — open-world integration + production wiring (2026-11)
+  {
+    id: "cn-s01",
+    day: 11,
+    title: "Open-world parity (find-next, Tokyo, parity audit)",
+    agent: "nightshift",
+    game: "city-nights",
+    verify: "check-city-nights-openworld-parity + test:tokyo",
+    doc: "docs/CITY_NIGHTS_OPEN_WORLD_TIERS.md",
+  },
+  {
+    id: "cn-s02",
+    day: 12,
+    title: "Peer comparison season-2 refresh",
+    agent: "nightshift",
+    game: "city-nights",
+    verify: "CITY_NIGHTS_PEER_COMPARISON.md open-world section",
+    doc: "docs/CITY_NIGHTS_PEER_COMPARISON.md",
+  },
+  {
+    id: "bw-s01",
+    day: 11,
+    title: "Open-world tier pack (room goal, almanac, seasons)",
+    agent: "skyring",
+    game: "battleworld",
+    verify: "check-battleworld-openworld-tiers",
+    doc: "docs/BATTLEWORLD.md",
+  },
+  {
+    id: "bw-s02",
+    day: 12,
+    title: "Production API wiring (room goal + lattice gate)",
+    agent: "skyring",
+    game: "battleworld",
+    verify: "check-vantagegames-production-wiring",
+    doc: "docs/VANTAGEGAMES_ROADMAP_STATUS.md",
+  },
 ];
 
 export interface GameFinishReport {

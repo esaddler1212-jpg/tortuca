@@ -107,6 +107,17 @@ Between slices or during `cn-d10` / `bw-d10` QA, use [`GAME_POLISH_LOOP.md`](./G
 - Re-run peer comparison ([`CITY_NIGHTS_PEER_COMPARISON.md`](./CITY_NIGHTS_PEER_COMPARISON.md)) and pick **season 2** slices.
 - Add slices in `shared/gameFinishProgram.ts` + reset or extend `game-finish-status.json`.
 
+### Season 2 slices (shipped)
+
+| ID | Agent | Slice |
+|----|-------|--------|
+| `cn-s01` | Nightshift | Open-world parity + Tokyo + find-next audit |
+| `cn-s02` | Nightshift | Peer comparison season-2 refresh |
+| `bw-s01` | Skyring | Open-world tier pack |
+| `bw-s02` | Skyring | Production API wiring (`npm run test:vantage-production`) |
+
+Roadmap + integration %: [`VANTAGEGAMES_ROADMAP_STATUS.md`](./VANTAGEGAMES_ROADMAP_STATUS.md).
+
 ## Tests
 
 ```bash

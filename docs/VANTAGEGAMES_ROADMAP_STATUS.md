@@ -8,9 +8,9 @@ Source: `shared/game-finish-status.json` + `npm run test:game-finish`
 
 | Track | Slices | Typical status |
 |-------|--------|----------------|
-| **Overall program** | 20 (`cn-d01…d10`, `bw-d01…d10`) | **100%** when all `done` |
-| **Nightshift** (City Nights) | 10 | **100%** |
-| **Skyring** (Battleworld) | 10 | **100%** |
+| **Overall program** | 24 (`cn-d01…d10`, `cn-s01…s02`, `bw-d01…d10`, `bw-s01…s02`) | **100%** when all `done` |
+| **Nightshift** (City Nights) | 12 | **100%** |
+| **Skyring** (Battleworld) | 12 | **100%** |
 
 Release gate: `VANTAGEGAME_FINISH_GATE=1 npm run test:game-finish` (requires 100% slices).
 
@@ -21,23 +21,24 @@ Release gate: `VANTAGEGAME_FINISH_GATE=1 npm run test:game-finish` (requires 100
 | Battleworld open-world tier pack merged | **Done** (`docs/BATTLEWORLD.md`) |
 | City Nights Tokyo CI / landing HUD | **Done** (`test:tokyo`) |
 | City Nights find-next minimap parity | **Done** (`CITY_NIGHTS_OPEN_WORLD_TIERS.md`) |
-| Merge `cursor/summer-engine-templates-b076` → `main` | Track in git / Netlify deploy |
-| Production smoke: room goal API + signed lattice | **Manual** after Tortuca deploy |
-| Season-2 slices defined in `gameFinishProgram.ts` | **Pending** product pass |
+| Merge integration → `main` (PR #149) | **Done** |
+| Production wiring audit | **Done** (`npm run test:vantage-production`) |
+| Season-2 slices in `gameFinishProgram.ts` | **Done** |
+| Live couch smoke on production Netlify | **Optional** — `docs/BROWSER_VISUAL_DEPLOY.md` after deploy |
 
-## Season-2 (suggested, not yet in `GAME_FINISH_SLICES`)
+**Integration checklist: 6 / 6 automated milestones done.**
+
+## Season-3 backlog (not in program yet)
 
 1. Async ghost sprint leaderboards (Nightshift)
-2. Battleworld room-goal production dogfood (Skyring)
+2. Battleworld room-goal live POST dogfood (Skyring)
 3. Tokyo heightfield physics OR accept flat slab doc
-4. Peer comparison refresh (`CITY_NIGHTS_PEER_COMPARISON.md`)
 
 ## Commands
 
 ```bash
 npm run test:game-finish
+npm run test:vantage-production
 npm run test:city-nights    # drive-world full gate
 npm run test:flight-nemulator
-node scripts/check-city-nights-openworld-parity.mts
-node scripts/check-battleworld-openworld-tiers.mts
 ```

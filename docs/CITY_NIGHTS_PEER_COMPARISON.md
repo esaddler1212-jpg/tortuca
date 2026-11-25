@@ -38,11 +38,23 @@ City Nights is a **browser PlayCanvas** night-drive RPG across the Bay Area. Thi
 - Console-feel branch: render cap via `renderNextFrame`, pause uses `timeScale` + drive lock, gamepad RT/LT no longer overwritten by `VehicleControls`.
 - Tokyo flight: **all Bay catalog vehicles** (exclude every `tokyo-*` id) + **all six regions** → **SFO FF gate** → **F** or **D-pad ↑**. In Tokyo, **each of 8 landmarks unlocks one Fast & Furious fan-tribute car** (capstone **Shuto Night Runner** at Odaiba).
 
+## Season 2 (post day-10) — closed this pass
+
+| Former gap | Now |
+|------------|-----|
+| Rep / tier stakes | **Street rep** meter + ranks (`cn-d01`), region % HUD |
+| Remix-style second map | **Tokyo** FF fleet + `test:tokyo` |
+| Open-world UX (World Craft–class) | **Find-next** gold pin, photo mode, journal — see [`CITY_NIGHTS_OPEN_WORLD_TIERS.md`](./CITY_NIGHTS_OPEN_WORLD_TIERS.md) |
+| Battleworld daily/room hooks | Peer pack on Skyring — [`BATTLEWORLD.md`](./BATTLEWORLD.md) tier table |
+
+Still out of scope: live multiplayer rooms, full CPM2 tuning UI, Horizon-scale seasons playlist.
+
 ## Recommended next slices (hours-scale, browser-safe)
 
 | Slice | Effort | Peer echo |
 |-------|--------|-----------|
-| Street rep meter tied to region % | Medium | MC rep |
+| Async ghost sprint leaderboards | Medium | CPM2 boards |
+| Street rep meter tied to region % | **Done** (`cn-d01`) | MC rep |
 | 5 ghost time trials on freeway segments | Medium | FH rivals |
 | Freeway traffic drones (no AI pathing) | Medium | MC traffic feel |
 | Nitro Zone post-FX + camera FOV punch | Small | MC Zone |
