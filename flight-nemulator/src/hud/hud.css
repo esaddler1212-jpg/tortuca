@@ -26,6 +26,34 @@
   text-shadow: 0 0 10px rgba(255, 90, 70, 0.45);
 }
 
+.hud-find-next {
+  color: #f5c842;
+  font-weight: 600;
+}
+
+.hud-room-goal {
+  color: #b8e8c8;
+  font-size: 0.82rem;
+}
+
+.hud-daily-mission {
+  color: #c4b8ff;
+  font-size: 0.82rem;
+}
+
+.hud-almanac {
+  pointer-events: auto;
+  max-width: min(420px, 92vw);
+  font-size: 0.82rem;
+}
+
+.hud-almanac-list {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+  max-height: 8rem;
+  overflow: auto;
+}
+
 .cutscene-overlay {
   pointer-events: auto;
   position: absolute;

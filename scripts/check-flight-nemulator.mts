@@ -42,6 +42,13 @@ const required = [
   'src/battleworld-arcs.ts',
   'src/battleworld-dialogue.ts',
   'src/battleworld-autosave.ts',
+  'src/battleworld-almanac.ts',
+  'src/battleworld-find-next.ts',
+  'src/battleworld-room-goal.ts',
+  'src/battleworld-seasons.ts',
+  'src/battleworld-invite.ts',
+  'src/battleworld-district-challenge.ts',
+  'src/battleworld-guest.ts',
   'src/cutscene-queue.ts',
   'src/arc-progress.ts',
   'src/infinity-stones-arc.ts',
@@ -145,6 +152,13 @@ const art = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-battleworld-
   stdio: 'inherit'
 });
 if (art.status !== 0) process.exit(art.status ?? 1);
+
+const openTiers = spawnSync(
+  'npx',
+  ['tsx', path.join(root, 'scripts/check-battleworld-openworld-tiers.mts')],
+  { cwd: root, stdio: 'inherit' }
+);
+if (openTiers.status !== 0) process.exit(openTiers.status ?? 1);
 
 const build = spawnSync('npm', ['run', 'build'], { cwd: app, stdio: 'inherit' });
 if (build.status !== 0) process.exit(build.status ?? 1);

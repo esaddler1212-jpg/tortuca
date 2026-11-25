@@ -65,7 +65,7 @@ import {
 import { spawnVillainApexInterceptor, VILLAIN_APEX_WAVE, villainApexCodename } from './hero-villain-apex';
 import { bindFlightKeys, pollFlightInput } from './game-input';
 import { setHudSnapshot } from './game-bridge';
-import { detectQualityTier, type QualityTier } from './quality-tier';
+import { detectQualityTier, tickQualityProbe, type QualityTier } from './quality-tier';
 import { checkHeroSmash, tickDebris } from './destruction';
 import { addDestructionHeat, createWanted, type WantedState } from './wanted';
 import { primaryStrikeParams, superCrater, throwProp } from './combat';
@@ -197,7 +197,31 @@ import {
   heroReclaimRazeDistrict,
   tickTerritoryInvasion
 } from './territory-tick';
-import { isPhotoMode, togglePhotoMode } from './photo-mode';
+import {
+  activePhotoFilter,
+  isPhotoMode,
+  shouldPauseSimulation,
+  togglePhotoMode
+} from './photo-mode';
+import { almanacSummary } from './battleworld-almanac';
+import {
+  contribRoomGoal,
+  currentRoomGoalLocal,
+  pullRoomGoalTally,
+  roomGoalHudLine,
+  type RoomGoalState
+} from './battleworld-room-goal';
+import { findNextObjective, type FindNextCue } from './battleworld-find-next';
+import { guestHudLine } from './battleworld-guest';
+import {
+  districtStarsChip,
+  noteDistrictAction,
+  noteDistrictMastery,
+  noteDistrictVisit,
+  districtStarsSummary
+} from './battleworld-district-challenge';
+import { consumeInviteShardFromUrl, loadInviteShard } from './battleworld-invite';
+import { completeDailyMission, dailyMissionFor, dailyMissionHudLine } from './battleworld-seasons';
 import { fetchManifestIfOnline, getManifestSuggestions } from './updates';
 import { attachHeroGltf } from './hero-gltf';
 import { placeDistrictKenneyModular, placeDistrictKenneySkyline, placeKenneyLandmarks } from './build-city-kenney';
@@ -247,6 +271,10 @@ export type GameSession = {
   infinity: InfinityStoneState;
   lastSafeHouseId: string | null;
   autosaveHint: string | null;
+  roomGoal: RoomGoalState;
+  roomGoalFetchAt: number;
+  lastDistrictId: string | null;
+  findNext: FindNextCue | null;
 };
 
 let session: GameSession | null = null;
@@ -309,14 +337,33 @@ function paintHero(entity: Entity, color: [number, number, number]): void {
   mat.update();
 }
 
+function refreshRoomGoalAsync(s: GameSession): void {
+  const now = performance.now();
+  if (now - s.roomGoalFetchAt < 45_000) return;
+  s.roomGoalFetchAt = now;
+  void pullRoomGoalTally().then((goal) => {
+    if (session) session.roomGoal = goal;
+  });
+}
+
 export async function startGame(app: AppBase): Promise<void> {
   bindFlightKeys();
   bootAudioFromGesture();
   void fetchManifestIfOnline();
 
+  const invite = consumeInviteShardFromUrl();
+  if (invite?.heroId) {
+    try {
+      localStorage.setItem('flight-nemulator-hero-id', invite.heroId);
+    } catch {
+      /* */
+    }
+  }
+
   const tier = detectQualityTier();
   const heroSpec = pickHero();
   await pullBattleworldLatticeCloud(heroSpec.id);
+  const roomGoal = await pullRoomGoalTally();
   enforceAlignmentForHero(heroSpec.id);
   const heroForm = resolveHeroForm(heroSpec, storedFormId(heroSpec));
   const spawn = spawnAtHome(heroSpec.districtId);
@@ -402,10 +449,18 @@ export async function startGame(app: AppBase): Promise<void> {
     territory,
     infinity: createInfinityStoneState(app, root),
     lastSafeHouseId: null,
-    autosaveHint: autosaveLabel(loadBattleworldAutosave())
+    autosaveHint: autosaveLabel(loadBattleworldAutosave()),
+    roomGoal,
+    roomGoalFetchAt: performance.now(),
+    lastDistrictId: null,
+    findNext: null
   };
 
   tryRestoreBattleworldAutosave(session);
+  const shard = loadInviteShard();
+  if (shard?.wave != null && shard.wave > session.wave) {
+    session.wave = Math.min(shard.wave, 15);
+  }
   queueDialogue(dialogueIntro(session.heroSpec.codename, session.playerRole));
 
   app.on('update', (dt: number) => {
@@ -431,7 +486,226 @@ function combatForm(s: GameSession): HeroForm {
   };
 }
 
+function refreshOpenWorldHooks(s: GameSession, pos: Vec3): void {
+  const districtHere = districtIdAtPosition(pos.x, pos.z);
+  if (districtHere && districtHere !== s.lastDistrictId) {
+    noteDistrictVisit(districtHere);
+    s.lastDistrictId = districtHere;
+  }
+  s.findNext = findNextObjective({
+    heroId: s.heroSpec.id,
+    role: s.playerRole,
+    posX: pos.x,
+    posZ: pos.z,
+    territory: s.territory,
+    infinity: s.infinity
+  });
+  if (s.city.integrityPct >= 45 && s.wave >= 8) {
+    completeDailyMission(s.heroSpec.id, 'integrity');
+  }
+}
+
+function roomGoalContrib(s: GameSession, districtId: string | null, kind: 'wave' | 'territory'): void {
+  if (!districtId || districtId !== s.roomGoal.districtId) return;
+  contribRoomGoal(1);
+  noteDistrictAction(districtId);
+  if (kind === 'territory') noteDistrictMastery(districtId);
+  completeDailyMission(s.heroSpec.id, 'room');
+}
+
+function publishBattleworldHud(s: GameSession, pos: Vec3, dt: number, solarCharge: number): void {
+  const districtHere = districtIdAtPosition(pos.x, pos.z);
+  const districtUniverse = universeForDistrict(districtHere);
+  const chron = getChronoState();
+  const nowMs = Date.now();
+  const bossForHud = s.factionNpcs.find((n) => n.isPairBoss);
+  const bossAliveHud = s.pairBoss.spawned && !s.pairBoss.defeated && !!bossForHud;
+  const pairIncomingHud =
+    (s.playerRole === 'hero' || isVillainOnlyHero(s.heroSpec.id)) &&
+    s.pairBoss.warned &&
+    !s.pairBoss.spawned &&
+    !s.pairBoss.defeated;
+  const hudJuicePhase = combatJuicePhase(s.wave, bossAliveHud, pairIncomingHud);
+  const waveCombatChip = waveCombatHudChip(hudJuicePhase, s.wave);
+  const lifetimeDestruction = s.stats.destructionUsd + s.destructionUsd;
+  const almanac = almanacSummary(s.heroSpec.id);
+  const stars = districtStarsSummary();
+
+  setHudSnapshot({
+    heroName: s.heroSpec.codename,
+    codename: s.heroSpec.tagline,
+    district: earthLabel(pos),
+    speedKmh: Math.round(s.hero.speedKmh()),
+    destructionUsd: s.destructionUsd,
+    wantedStars: s.wanted.stars,
+    wave: s.wave,
+    waveCombatChip,
+    combatJuiceHot: hudJuicePhase === 'pair-duel' || hudJuicePhase === 'finale',
+    stamina: Math.round(s.hero.stamina),
+    staminaMax: s.heroSpec.energy.staminaMax,
+    superReady: s.hero.canSuper(),
+    quality: s.tier,
+    flightMode: !isPhotoMode(),
+    photoMode: isPhotoMode(),
+    photoFilter: activePhotoFilter(),
+    heroX: pos.x,
+    heroZ: pos.z,
+    dronesLeft: s.factionNpcs.length,
+    playerRole: s.playerRole,
+    cityStatus: integrityHudLabel(s.playerRole, s.city),
+    foesStopped: s.foesStopped,
+    lifetimeDestructionUsd: lifetimeDestruction,
+    dronesDestroyed: s.foesStopped,
+    loadingTip: currentLoadingTip(),
+    manifestHints: (getManifestSuggestions() ?? []).slice(0, 3).map((m) => m.title),
+    orbitProgress: chron.orbitProgress,
+    chronoArmed: chron.chronoArmed,
+    chronoFrozen: chron.chronoFrozen,
+    worldGeneration: worldGeneration(),
+    annihilateUnlocked: annihilateUnlocked(s.playerRole, s.city),
+    annihilateProgress: s.playerRole === 'villain' ? annihilateProgress(s.city) : 0,
+    solarCharge: s.heroSpec.id === 'solar-apex' ? solarCharge : 0,
+    nearestFoe: nearestFoeCodename(s.factionNpcs, s.playerRole, pos),
+    villainRivals:
+      s.playerRole === 'hero' ? villainRivalsForHero(s.heroSpec.id).slice(0, 4) : undefined,
+    pairBossName:
+      s.playerRole === 'hero'
+        ? pairVillainCodename(s.heroSpec.id)
+        : isVillainOnlyHero(s.heroSpec.id)
+          ? villainApexCodename(s.heroSpec.id)
+          : null,
+    pairBossHpPct: pairBossHpPercent(bossForHud),
+    pairBossStatus:
+      s.playerRole === 'hero' || isVillainOnlyHero(s.heroSpec.id)
+        ? s.pairBoss.defeated
+          ? 'defeated'
+          : bossAliveHud
+            ? 'active'
+            : s.pairBoss.warned && !s.pairBoss.spawned
+              ? 'incoming'
+              : null
+        : null,
+    fatePrompt: s.worldFate.fatePrompt,
+    dyingRoamSeconds: dyingRoamSecondsLeft(s.worldFate, nowMs),
+    worldFatePhase: s.worldFate.phase,
+    heroWorldSaved: s.worldFate.heroSaved,
+    aerialMobility: aerialHudLabel(effectiveHeroAerial(s.heroSpec, s.heroForm)),
+    loadoutLabel: kitHudLabel(s.heroForm),
+    symbioteUnlocked: s.heroSpec.id === 'wall-crawler' ? isSymbioteUnlocked() : undefined,
+    absorptionLabel: absorptionHudLine(loadAbsorption(s.heroSpec.id)),
+    venomBondLabel: s.heroSpec.id === VENOM_PLAYABLE_ID ? venomBondHudLine() : null,
+    lanternSafehouseNear:
+      s.heroSpec.id === SOLAR_HERO_ID && nearLanternSafeHouse(pos) && s.playerRole === 'hero',
+    lanternArcHint: lanternArcHudLine(
+      nearLanternSafeHouse(pos),
+      lanternAidForFinalBoss(),
+      isSolarCorrupted()
+    ),
+    doomStoryHint: doomStoryHudLine(s.heroSpec.id, s.playerRole),
+    territoryHint: territoryHudLine(
+      s.territory,
+      s.playerRole,
+      districtIdAtPosition(pos.x, pos.z),
+      s.heroSpec.districtId
+    ),
+    villainAdvisorHint: s.territory.lastHint,
+    takeoverDistricts: territoryTakeoverCount(s.territory),
+    villainScoutHint:
+      s.playerRole === 'villain' ? pairHeroHintForPlayerVillain(s.heroSpec.id) : null,
+    battleworldTagline: battleworldRoleBlurb(s.playerRole),
+    infinityStoneHint: infinityStonesHudLine(s.infinity, s.playerRole, s.heroSpec.id),
+    pairBossBlocked:
+      s.playerRole === 'hero' &&
+      (!canHeroFacePairBoss(s.territory) || infinityBossBlocksFinale(s.factionNpcs)),
+    characterArcHint: characterArcHudLine(s.heroSpec.id, {
+      role: s.playerRole,
+      wave: s.wave,
+      takeoverCount: territoryTakeoverCount(s.territory),
+      pairBossBlocked:
+        s.playerRole === 'hero' &&
+        (!canHeroFacePairBoss(s.territory) || infinityBossBlocksFinale(s.factionNpcs)),
+      playerStones: playerInfinityStoneCount(),
+      stonesSealed: s.infinity.sites.filter((st) => st.claimedBy === 'sealed').length,
+      districtId: districtIdAtPosition(pos.x, pos.z),
+      lattice: battleworldLatticeStrength()
+    }),
+    latticeHint:
+      battleworldLatticeStrength() > 0 ? latticeHudLine(battleworldLatticeStrength()) : null,
+    latticeBeatChip: latticeBeatChip(s.heroSpec.id, s.playerRole),
+    latticeCloudHint: consumeLatticeCloudLabel() ?? offlineLatticeHint(),
+    safeHouseHint: (() => {
+      const house = nearBattleworldSafeHouse(pos, s.heroSpec.id, districtIdAtPosition(pos.x, pos.z));
+      return house ? `Safe house: ${house.label} — rest lattice (H)` : null;
+    })(),
+    villainRunwayHint: villainRunwayHudLine(s.heroSpec.id, s.wave),
+    chapterHint: nextBattleworldChapterHint(
+      s.heroSpec.id,
+      s.playerRole,
+      isVillainOnlyHero(s.heroSpec.id)
+    ),
+    chapterChip: battleworldChapterChip(s.heroSpec.id, s.playerRole, isVillainOnlyHero(s.heroSpec.id)),
+    chapterChainChip: battleworldOpeningChapterChip(
+      s.heroSpec.id,
+      s.playerRole,
+      isVillainOnlyHero(s.heroSpec.id)
+    ),
+    chapterChainObjective: battleworldOpeningChapterObjective(
+      s.heroSpec.id,
+      s.playerRole,
+      isVillainOnlyHero(s.heroSpec.id)
+    ),
+    arcObjectiveChip: arcObjectiveChip(
+      characterArcHudLine(s.heroSpec.id, {
+        role: s.playerRole,
+        wave: s.wave,
+        takeoverCount: territoryTakeoverCount(s.territory),
+        pairBossBlocked:
+          s.playerRole === 'hero' &&
+          (!canHeroFacePairBoss(s.territory) || infinityBossBlocksFinale(s.factionNpcs)),
+        playerStones: playerInfinityStoneCount(),
+        stonesSealed: s.infinity.sites.filter((st) => st.claimedBy === 'sealed').length,
+        districtId: districtIdAtPosition(pos.x, pos.z),
+        lattice: battleworldLatticeStrength()
+      }),
+      battleworldOpeningChapterChip(s.heroSpec.id, s.playerRole, isVillainOnlyHero(s.heroSpec.id)),
+      latticeBeatChip(s.heroSpec.id, s.playerRole),
+      s.playerRole === 'hero' && !hasDistrictSignatureBeat(s.heroSpec.id)
+    ),
+    homeMinimapX: homeMinimapPin(s.heroSpec.districtId).x,
+    homeMinimapZ: homeMinimapPin(s.heroSpec.districtId).z,
+    arcMinimapX: arcMinimapPin(s.heroSpec.id, s.playerRole)?.x ?? null,
+    arcMinimapZ: arcMinimapPin(s.heroSpec.id, s.playerRole)?.z ?? null,
+    findNextMinimapX: s.findNext?.pin.x ?? null,
+    findNextMinimapZ: s.findNext?.pin.z ?? null,
+    findNextLabel: s.findNext?.label ?? null,
+    roomGoalLine: roomGoalHudLine(s.roomGoal ?? currentRoomGoalLocal()),
+    almanacLine: `Almanac ${almanac.found}/${almanac.total}`,
+    districtStarsLine: districtStarsChip(districtHere),
+    districtStarsTotal: `${stars.districts3}/${stars.total} districts 3★`,
+    dailyMissionLine: dailyMissionHudLine(dailyMissionFor(s.heroSpec.id)),
+    guestHint: guestHudLine(),
+    inviteShardLine: loadInviteShard()?.label ?? null,
+    alignmentNote: canPickAlignment(s.heroSpec.id)
+      ? 'Doom: toggle Hero or Villain below'
+      : s.heroSpec.id === VENOM_PLAYABLE_ID
+        ? 'Defeat hero responders to bond new loadouts'
+        : ABSORBER_HERO_IDS.has(s.heroSpec.id)
+          ? 'Absorb fallen foes to copy powers'
+          : null,
+    autosaveHint: s.autosaveHint,
+    districtUniverse: districtUniverse,
+    districtUniverseLabel: UNIVERSE_LABEL[districtUniverse],
+    universeRimCss: (() => {
+      const [r, g, b] = UNIVERSE_RIM_RGB[districtUniverse];
+      return `rgb(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)})`;
+    })(),
+    ...cutsceneHudFields()
+  });
+}
+
 function tickFrame(s: GameSession, dt: number): void {
+  tickQualityProbe(dt);
+  refreshRoomGoalAsync(s);
   let input = pollFlightInput();
   if (isDialogueActive()) {
     input = {
@@ -445,9 +719,36 @@ function tickFrame(s: GameSession, dt: number): void {
   }
   if (input.photo) togglePhotoMode();
 
-  s.hero.form = s.heroForm;
-  s.hero.update(dt, input);
-  const pos = s.hero.entity.getPosition();
+  const photoPaused = shouldPauseSimulation();
+  let pos: Vec3;
+
+  if (!photoPaused) {
+    s.hero.form = s.heroForm;
+    s.hero.update(dt, input);
+    pos = s.hero.entity.getPosition();
+  } else {
+    pos = s.hero.entity.getPosition();
+  }
+
+  if (photoPaused) {
+    const f = s.hero.forward();
+    const shake = consumeShake();
+    const camPos = new Vec3(
+      pos.x - f.x * 14 + shake.x,
+      pos.y + 5 + shake.y,
+      pos.z - f.z * 14 + shake.z
+    );
+    s.camera.setPosition(camPos);
+    s.camera.lookAt(pos);
+    refreshOpenWorldHooks(s, pos);
+    publishBattleworldHud(
+      s,
+      pos,
+      dt,
+      tickSolarSpaceCharge(s.heroSpec.id, pos, s.hero.speedKmh(), 0)
+    );
+    return;
+  }
   const chrono = tickEarthOrbit(pos, s.hero.speedKmh(), dt);
   const simDt = dt * chrono.timeScale;
   const solarCharge = tickSolarSpaceCharge(s.heroSpec.id, pos, s.hero.speedKmh(), dt);
@@ -554,6 +855,7 @@ function tickFrame(s: GameSession, dt: number): void {
   applyBattleworldUniverseFog(s.app, districtUniverse);
   applyBattleworldUniverseSky(s.app, districtUniverse);
   if (input.interact && tryInteractInfinityStone(s.infinity, pos, s.playerRole, s.heroSpec.id)) {
+    completeDailyMission(s.heroSpec.id, 'stone');
     if (recordArcBeatIfNew(s.heroSpec.id, 'stone-linked')) {
       queueChapterClearDialogue('stone-linked', s.heroSpec.codename, s.playerRole);
     }
@@ -606,6 +908,7 @@ function tickFrame(s: GameSession, dt: number): void {
       ) {
         queueChapterClearDialogue('territory-clear', s.heroSpec.codename, s.playerRole);
       }
+      roomGoalContrib(s, districtHere, 'territory');
     }
   }
   if (input.interact) {
@@ -793,6 +1096,8 @@ function tickFrame(s: GameSession, dt: number): void {
     );
   } else {
     s.wave += 1;
+    roomGoalContrib(s, districtIdAtPosition(pos.x, pos.z), 'wave');
+    completeDailyMission(s.heroSpec.id, 'wave');
     const cd = s.playerRole === 'hero' ? 14 : Math.max(4, 12 - s.wave * 0.4 - s.wanted.stars);
     s.waveCooldown = cd;
     const count = waveNpcCount(s.wave, s.wanted.stars, s.playerRole);
@@ -845,6 +1150,7 @@ function tickFrame(s: GameSession, dt: number): void {
     if (maybeRecordTerritoryClear(s.heroSpec.id, s.playerRole, 0)) {
       queueChapterClearDialogue('territory-clear', s.heroSpec.codename, s.playerRole);
     }
+    roomGoalContrib(s, districtIdAtPosition(pos.x, pos.z), 'territory');
   }
 
   const npcTick = tickFactionNpcs(
@@ -952,185 +1258,13 @@ function tickFrame(s: GameSession, dt: number): void {
   if (houseNear && houseNear.id !== s.lastSafeHouseId) {
     s.lastSafeHouseId = houseNear.id;
     queueDialogue(dialogueSafeHouse(s.heroSpec.codename, houseNear.label));
+    completeDailyMission(s.heroSpec.id, 'safe');
   } else if (!houseNear) {
     s.lastSafeHouseId = null;
   }
 
-  const chron = getChronoState();
-  const bossForHud = s.factionNpcs.find((n) => n.isPairBoss);
-  const bossAliveHud = s.pairBoss.spawned && !s.pairBoss.defeated && !!bossForHud;
-  const pairIncomingHud =
-    (s.playerRole === 'hero' || isVillainOnlyHero(s.heroSpec.id)) &&
-    s.pairBoss.warned &&
-    !s.pairBoss.spawned &&
-    !s.pairBoss.defeated;
-  const hudJuicePhase = combatJuicePhase(s.wave, bossAliveHud, pairIncomingHud);
-  const waveCombatChip = waveCombatHudChip(hudJuicePhase, s.wave);
-  setHudSnapshot({
-    heroName: s.heroSpec.codename,
-    codename: s.heroSpec.tagline,
-    district: earthLabel(pos),
-    speedKmh: Math.round(s.hero.speedKmh()),
-    destructionUsd: s.destructionUsd,
-    wantedStars: s.wanted.stars,
-    wave: s.wave,
-    waveCombatChip,
-    combatJuiceHot: hudJuicePhase === 'pair-duel' || hudJuicePhase === 'finale',
-    stamina: Math.round(s.hero.stamina),
-    staminaMax: s.heroSpec.energy.staminaMax,
-    superReady: s.hero.canSuper(),
-    quality: s.tier,
-    flightMode: !isPhotoMode(),
-    photoMode: isPhotoMode(),
-    heroX: pos.x,
-    heroZ: pos.z,
-    dronesLeft: s.factionNpcs.length,
-    playerRole: s.playerRole,
-    cityStatus: integrityHudLabel(s.playerRole, s.city),
-    foesStopped: s.foesStopped,
-    lifetimeDestructionUsd: lifetimeDestruction,
-    dronesDestroyed: s.foesStopped,
-    loadingTip: currentLoadingTip(),
-    manifestHints: (getManifestSuggestions() ?? []).slice(0, 3).map((s) => s.title),
-    orbitProgress: chron.orbitProgress,
-    chronoArmed: chron.chronoArmed,
-    chronoFrozen: chron.chronoFrozen,
-    worldGeneration: worldGeneration(),
-    annihilateUnlocked: annihilateUnlocked(s.playerRole, s.city),
-    annihilateProgress: s.playerRole === 'villain' ? annihilateProgress(s.city) : 0,
-    solarCharge: s.heroSpec.id === 'solar-apex' ? solarCharge : 0,
-    nearestFoe: nearestFoeCodename(s.factionNpcs, s.playerRole, pos),
-    villainRivals:
-      s.playerRole === 'hero' ? villainRivalsForHero(s.heroSpec.id).slice(0, 4) : undefined,
-    pairBossName:
-      s.playerRole === 'hero'
-        ? pairVillainCodename(s.heroSpec.id)
-        : isVillainOnlyHero(s.heroSpec.id)
-          ? villainApexCodename(s.heroSpec.id)
-          : null,
-    pairBossHpPct: pairBossHpPercent(bossForHud),
-    pairBossStatus:
-      s.playerRole === 'hero' || isVillainOnlyHero(s.heroSpec.id)
-        ? s.pairBoss.defeated
-          ? 'defeated'
-          : bossAliveHud
-            ? 'active'
-            : s.pairBoss.warned && !s.pairBoss.spawned
-              ? 'incoming'
-              : null
-        : null,
-    fatePrompt: s.worldFate.fatePrompt,
-    dyingRoamSeconds: dyingRoamSecondsLeft(s.worldFate, nowMs),
-    worldFatePhase: s.worldFate.phase,
-    heroWorldSaved: s.worldFate.heroSaved,
-    aerialMobility: aerialHudLabel(effectiveHeroAerial(s.heroSpec, s.heroForm)),
-    loadoutLabel: kitHudLabel(s.heroForm),
-    symbioteUnlocked: s.heroSpec.id === 'wall-crawler' ? isSymbioteUnlocked() : undefined,
-    absorptionLabel: absorptionHudLine(loadAbsorption(s.heroSpec.id)),
-    venomBondLabel: s.heroSpec.id === VENOM_PLAYABLE_ID ? venomBondHudLine() : null,
-    lanternSafehouseNear:
-      s.heroSpec.id === SOLAR_HERO_ID && nearLanternSafeHouse(pos) && s.playerRole === 'hero',
-    lanternArcHint: lanternArcHudLine(
-      nearLanternSafeHouse(pos),
-      lanternAidForFinalBoss(),
-      isSolarCorrupted()
-    ),
-    doomStoryHint: doomStoryHudLine(s.heroSpec.id, s.playerRole),
-    territoryHint: territoryHudLine(
-      s.territory,
-      s.playerRole,
-      districtIdAtPosition(pos.x, pos.z),
-      s.heroSpec.districtId
-    ),
-    villainAdvisorHint: s.territory.lastHint,
-    takeoverDistricts: territoryTakeoverCount(s.territory),
-    villainScoutHint:
-      s.playerRole === 'villain' ? pairHeroHintForPlayerVillain(s.heroSpec.id) : null,
-    battleworldTagline: battleworldRoleBlurb(s.playerRole),
-    infinityStoneHint: infinityStonesHudLine(s.infinity, s.playerRole, s.heroSpec.id),
-    pairBossBlocked:
-      s.playerRole === 'hero' &&
-      (!canHeroFacePairBoss(s.territory) || infinityBossBlocksFinale(s.factionNpcs)),
-    characterArcHint: characterArcHudLine(s.heroSpec.id, {
-      role: s.playerRole,
-      wave: s.wave,
-      takeoverCount: territoryTakeoverCount(s.territory),
-      pairBossBlocked:
-        s.playerRole === 'hero' &&
-        (!canHeroFacePairBoss(s.territory) || infinityBossBlocksFinale(s.factionNpcs)),
-      playerStones: playerInfinityStoneCount(),
-      stonesSealed: s.infinity.sites.filter((st) => st.claimedBy === 'sealed').length,
-      districtId: districtIdAtPosition(pos.x, pos.z),
-      lattice: battleworldLatticeStrength()
-    }),
-    latticeHint:
-      battleworldLatticeStrength() > 0
-        ? latticeHudLine(battleworldLatticeStrength())
-        : null,
-    latticeBeatChip: latticeBeatChip(s.heroSpec.id, s.playerRole),
-    latticeCloudHint: consumeLatticeCloudLabel() ?? offlineLatticeHint(),
-    safeHouseHint: (() => {
-      const house = nearBattleworldSafeHouse(
-        pos,
-        s.heroSpec.id,
-        districtIdAtPosition(pos.x, pos.z)
-      );
-      return house ? `Safe house: ${house.label} — rest lattice (H)` : null;
-    })(),
-    villainRunwayHint: villainRunwayHudLine(s.heroSpec.id, s.wave),
-    chapterHint: nextBattleworldChapterHint(
-      s.heroSpec.id,
-      s.playerRole,
-      isVillainOnlyHero(s.heroSpec.id)
-    ),
-    chapterChip: battleworldChapterChip(s.heroSpec.id, s.playerRole, isVillainOnlyHero(s.heroSpec.id)),
-    chapterChainChip: battleworldOpeningChapterChip(
-      s.heroSpec.id,
-      s.playerRole,
-      isVillainOnlyHero(s.heroSpec.id)
-    ),
-    chapterChainObjective: battleworldOpeningChapterObjective(
-      s.heroSpec.id,
-      s.playerRole,
-      isVillainOnlyHero(s.heroSpec.id)
-    ),
-    arcObjectiveChip: arcObjectiveChip(
-      characterArcHudLine(s.heroSpec.id, {
-        role: s.playerRole,
-        wave: s.wave,
-        takeoverCount: territoryTakeoverCount(s.territory),
-        pairBossBlocked:
-          s.playerRole === 'hero' &&
-          (!canHeroFacePairBoss(s.territory) || infinityBossBlocksFinale(s.factionNpcs)),
-        playerStones: playerInfinityStoneCount(),
-        stonesSealed: s.infinity.sites.filter((st) => st.claimedBy === 'sealed').length,
-        districtId: districtIdAtPosition(pos.x, pos.z),
-        lattice: battleworldLatticeStrength()
-      }),
-      battleworldOpeningChapterChip(s.heroSpec.id, s.playerRole, isVillainOnlyHero(s.heroSpec.id)),
-      latticeBeatChip(s.heroSpec.id, s.playerRole),
-      s.playerRole === 'hero' && !hasDistrictSignatureBeat(s.heroSpec.id)
-    ),
-    homeMinimapX: homeMinimapPin(s.heroSpec.districtId).x,
-    homeMinimapZ: homeMinimapPin(s.heroSpec.districtId).z,
-    arcMinimapX: arcMinimapPin(s.heroSpec.id, s.playerRole)?.x ?? null,
-    arcMinimapZ: arcMinimapPin(s.heroSpec.id, s.playerRole)?.z ?? null,
-    alignmentNote: canPickAlignment(s.heroSpec.id)
-      ? 'Doom: toggle Hero or Villain below'
-      : s.heroSpec.id === VENOM_PLAYABLE_ID
-        ? 'Defeat hero responders to bond new loadouts'
-        : ABSORBER_HERO_IDS.has(s.heroSpec.id)
-          ? 'Absorb fallen foes to copy powers'
-          : null,
-    autosaveHint: s.autosaveHint,
-    districtUniverse: districtUniverse,
-    districtUniverseLabel: UNIVERSE_LABEL[districtUniverse],
-    universeRimCss: (() => {
-      const [r, g, b] = UNIVERSE_RIM_RGB[districtUniverse];
-      return `rgb(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)})`;
-    })(),
-    ...cutsceneHudFields()
-  });
+  refreshOpenWorldHooks(s, pos);
+  publishBattleworldHud(s, pos, dt, solarCharge);
 }
 
 export function confirmVillainWorldRemake(): void {

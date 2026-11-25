@@ -7,11 +7,12 @@ type Props = {
   heroZ: number;
   homePin?: Pin | null;
   arcPin?: Pin | null;
+  findNextPin?: Pin | null;
 };
 
 const SIZE = 120;
 
-export function Minimap({ heroX, heroZ, homePin, arcPin }: Props) {
+export function Minimap({ heroX, heroZ, homePin, arcPin, findNextPin }: Props) {
   const half = WORLD_HALF_M;
   const toPx = (x: number, z: number) => ({
     left: ((x + half) / (half * 2)) * SIZE,
@@ -36,6 +37,28 @@ export function Minimap({ heroX, heroZ, homePin, arcPin }: Props) {
             />
           );
         })}
+        {findNextPin ? (
+          <g className="minimap-find-next">
+            <circle
+              cx={toPx(findNextPin.x, findNextPin.z).left}
+              cy={toPx(findNextPin.x, findNextPin.z).top}
+              r={8}
+              fill="rgba(245,200,66,0.25)"
+              stroke="#f5c842"
+              strokeWidth={2}
+            />
+            <text
+              x={toPx(findNextPin.x, findNextPin.z).left}
+              y={toPx(findNextPin.x, findNextPin.z).top + 4}
+              textAnchor="middle"
+              fontSize={10}
+              fontWeight={800}
+              fill="#f5c842"
+            >
+              {findNextPin.label ?? '→'}
+            </text>
+          </g>
+        ) : null}
         {arcPin ? (
           <circle
             className="minimap-arc-pin"
@@ -43,8 +66,8 @@ export function Minimap({ heroX, heroZ, homePin, arcPin }: Props) {
             cy={toPx(arcPin.x, arcPin.z).top}
             r={5}
             fill="none"
-            stroke="#f5c842"
-            strokeWidth={2}
+            stroke="#9ec4ff"
+            strokeWidth={1.5}
           />
         ) : null}
         {homePin ? (
