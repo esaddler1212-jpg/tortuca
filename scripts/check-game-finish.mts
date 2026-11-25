@@ -32,7 +32,11 @@ const ok = (name: string, cond: boolean) => {
 };
 
 ok("two game-studio agents", GAME_STUDIO_AGENTS.length === 2);
-ok("20 slices (10 per game)", GAME_FINISH_SLICES.length === 20);
+const perGame = GAME_FINISH_SLICES.filter((s) => s.game === "city-nights").length;
+ok(
+  "day-10 + season-2 slices (balanced per game)",
+  GAME_FINISH_SLICES.length >= 20 && perGame === GAME_FINISH_SLICES.length / 2
+);
 
 const status = JSON.parse(fs.readFileSync(statusPath, "utf8")) as GameFinishStatusFile;
 for (const s of GAME_FINISH_SLICES) {

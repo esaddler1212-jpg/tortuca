@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-25T15:06:14.097Z",
+  "updatedAt": "2026-11-25T21:24:36.527Z",
   "activeSlice": {
-    "nightshift": "cn-d10",
-    "skyring": "bw-d10"
+    "nightshift": "cn-s02",
+    "skyring": "bw-s02"
   },
   "sliceState": {
     "cn-d01": {
@@ -105,9 +105,53 @@
       "status": "done",
       "completedAt": "2026-11-25T15:06:13.657Z",
       "note": "Open-world tier pack on integration branch; room goal API + almanac + find-next shipped"
+    },
+    "cn-s01": {
+      "status": "done",
+      "completedAt": "2026-11-25T21:24:35.458Z",
+      "note": "Open-world parity doc, find-next pin, Tokyo playtest gate"
+    },
+    "cn-s02": {
+      "status": "done",
+      "completedAt": "2026-11-25T21:24:35.719Z",
+      "note": "Peer comparison season-2 section shipped"
+    },
+    "bw-s01": {
+      "status": "done",
+      "completedAt": "2026-11-25T21:24:36.125Z",
+      "note": "Battleworld open-world tier pack on main"
+    },
+    "bw-s02": {
+      "status": "done",
+      "completedAt": "2026-11-25T21:24:36.527Z",
+      "note": "test:vantage-production wiring audit"
     }
   },
   "reports": [
+    {
+      "agent": "skyring",
+      "sliceId": "bw-s02",
+      "at": "2026-11-25T21:24:36.527Z",
+      "summary": "test:vantage-production wiring audit"
+    },
+    {
+      "agent": "skyring",
+      "sliceId": "bw-s01",
+      "at": "2026-11-25T21:24:36.126Z",
+      "summary": "Battleworld open-world tier pack on main"
+    },
+    {
+      "agent": "nightshift",
+      "sliceId": "cn-s02",
+      "at": "2026-11-25T21:24:35.719Z",
+      "summary": "Peer comparison season-2 section shipped"
+    },
+    {
+      "agent": "nightshift",
+      "sliceId": "cn-s01",
+      "at": "2026-11-25T21:24:35.458Z",
+      "summary": "Open-world parity doc, find-next pin, Tokyo playtest gate"
+    },
     {
       "agent": "nightshift",
       "sliceId": "cn-d10",
