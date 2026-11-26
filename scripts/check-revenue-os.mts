@@ -49,5 +49,6 @@ ok("go-live plan", activationPlanForDate(REVENUE_ACTIVATION_GO_LIVE)?.theme.incl
 ok("activation doc", fs.existsSync(path.join(root, "docs/REVENUE_OS_JAN2027_ACTIVATION.md")));
 ok("sure astryx deep dive", fs.existsSync(path.join(root, "docs/DEEP_DIVE_SURE_ASTRYX.md")));
 ok("medusa deep dive", fs.existsSync(path.join(root, "docs/DEEP_DIVE_MEDUSA.md")));
+ok("fleet optimization doc", fs.existsSync(path.join(root, "docs/IRIS_FLEET_AND_GOALS_OPTIMIZATION.md")));
 
 console.log(`\nRevenue OS checks passed (${n}).`);

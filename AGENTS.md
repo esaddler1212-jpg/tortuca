@@ -30,6 +30,10 @@ This repo runs **Iris** (voice chief of staff), **eleven module specialists** (`
 
 - Hand off **Iris** server and policy context with `docs/DEEPSEEK_IRIS_CODE_REVIEW.md` (paths, constraints, copy-paste review prompt). Do not paste secrets or `.env` values into external chats.
 
+## Fleet + goals (E’s devices)
+
+Full map: [`docs/IRIS_FLEET_AND_GOALS_OPTIMIZATION.md`](docs/IRIS_FLEET_AND_GOALS_OPTIMIZATION.md) — hardware roles (iPhone, iPads, Chromebooks, Mac mini, iMac), Iris specialist discipline, Revenue OS rhythm, VPS sequencing.
+
 ## Cursor / Cloud agents working on this repo
 
 - **City Nights browser research:** [`docs/CITY_NIGHTS_CRAFT_ANYTHING.md`](docs/CITY_NIGHTS_CRAFT_ANYTHING.md). **Summer Engine templates** (Godot reference for ghosts/roads/rally): [`docs/SUMMER_ENGINE_TEMPLATES.md`](docs/SUMMER_ENGINE_TEMPLATES.md) · `npm run summer-engine:bootstrap` — port ideas to PlayCanvas only ([`tools/summer-engine-templates/CHERRY_PICK.md`](tools/summer-engine-templates/CHERRY_PICK.md)). Install `bash tools/craft-anything/install.sh --cursor`, use MCP toolset `craft-anything` (enable `browser` / `javascript`). Write outcomes to `drive-world/research/findings/*.md` — do not commit Craft `capture/` blobs.
