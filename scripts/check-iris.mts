@@ -107,4 +107,31 @@ ok("hands the flight data back as a tool_result", back?.role === "user" && back.
 ok("answers from it", /United 123 is cruising/.test(f.reply));
 ok("usage: adds up tokens across hops", r.usage.hops === 2 && r.usage.inTok === 20 && r.usage.outTok === 20);
 ok("usage: records tool names, never words", JSON.stringify(f.usage.tools) === JSON.stringify(["track_flight"]) && !JSON.stringify(f.usage).includes("UA 123"));
+
+// ── reminders, check-offs and shopping by voice
+const seen4: any[] = [];
+const server4 = http.createServer((req, res) => {
+  let body = "";
+  req.on("data", (c) => (body += c));
+  req.on("end", () => {
+    const j = JSON.parse(body);
+    seen4.push(j);
+    res.writeHead(200, { "content-type": "application/json" });
+    res.end(JSON.stringify({ id: "m4", type: "message", role: "assistant", model: j.model, stop_sequence: null, usage: { input_tokens: 1, output_tokens: 1 }, stop_reason: "tool_use", content: [
+      { type: "text", text: "On it, boss." },
+      { type: "tool_use", id: "r1", name: "set_reminder", input: { text: "Call Mike about the shoot", date: "2026-11-12", time: "16:00" } },
+      { type: "tool_use", id: "c1", name: "complete_todo", input: { title: "Send sponsor deck v2 to Jordan" } },
+      { type: "tool_use", id: "s1", name: "add_shopping", input: { item: "Eggs" } },
+    ] }));
+  });
+});
+await new Promise<void>((r) => server4.listen(0, r));
+const client4 = new Anthropic({ apiKey: "test", baseURL: `http://127.0.0.1:${(server4.address() as any).port}`, maxRetries: 0 });
+const a = await runIris(client4, [{ role: "user", content: "remind me at 4 to call Mike, check off the sponsor deck, and add eggs" }], "It is Thursday; today's date is 2026-11-12.");
+server4.close();
+const names4 = seen4[0].tools.map((t: any) => t.name);
+ok("new tools offered (set_reminder, complete_todo, add_shopping)", ["set_reminder", "complete_todo", "add_shopping"].every((n) => names4.includes(n)));
+ok("reminder comes back with local date and time", JSON.stringify(a.reminders) === JSON.stringify([{ text: "Call Mike about the shoot", date: "2026-11-12", time: "16:00" }]));
+ok("check-off and shopping come back", a.completed[0] === "Send sponsor deck v2 to Jordan" && a.shopping[0] === "Eggs");
+ok("one call, she still speaks", seen4.length === 1 && a.reply === "On it, boss.");
 if (process.exitCode) process.exit(1);

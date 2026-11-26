@@ -1,3 +1,4 @@
+import { addReminder, reminderInstant, reminderWhen, remindersContext } from "../../shared/irisReminders";
 import Anthropic from "@anthropic-ai/sdk";
 import type { Handler } from "@netlify/functions";
 import { getStore } from "@netlify/blobs";
@@ -21,7 +22,7 @@ import type { IrisTrace } from "../../shared/irisUsage";
 import type { IrisSpecialistId } from "../../shared/irisTeam";
 import { isIrisSpecialistId } from "../../shared/irisTeam";
 import { parseDelegateHistory, mergeDelegateHistories, toSyncedDelegateLog } from "../../shared/irisTeamActivity";
-import { loadUserData, resolveDataKey, saveUserData } from "./_userData";
+import { loadUserData, pushTargets, resolveDataKey, saveUserData } from "./_userData";
 import { applyTierATools, tierABatchEmpty } from "./_tierAApply";
 import { tierAContextForIris } from "../../shared/tierAOps";
 
@@ -80,8 +81,9 @@ export const handler: Handler = async (event) => {
     const here = coords({ lat: String(body.lat ?? ""), lon: String(body.lon ?? "") });
     const delegateHistory = mergeDelegateHistories(accountData?.irisDelegateHistory, parseDelegateHistory(body.delegateHistory));
     const tierAHint = tierAContextForIris(accountData?.tierA);
-    const contextBlock = tierAHint ? `${body.context ?? ""}\n${tierAHint}` : body.context ?? "";
-    const { reply: text, todos, remember, forget, refused, module, specialist, delegateReport, delegateDeduped, usage, tierA } = await runIris(
+    const reminderHint = remindersContext(accountData?.irisReminders, tz);
+    const contextBlock = [body.context ?? "", tierAHint, reminderHint].filter(Boolean).join("\n");
+    const { reply: text, todos, remember, forget, refused, module, specialist, delegateReport, delegateDeduped, usage, tierA, reminders, completed, shopping } = await runIris(
       client,
       turns,
       clampIrisContext(contextBlock),
@@ -134,8 +136,35 @@ export const handler: Handler = async (event) => {
       const mergedTierA = applyTierATools(latest.tierA, tierA);
       await saveUserData(key, { ...latest, tierA: mergedTierA });
     }
+    // Timed reminders: saved on the account; reminder-check pushes them when due.
+    const setReminders: { text: string; when: string }[] = [];
+    const badReminders = reminders.length;
+    if (reminders.length) {
+      const latest = (await loadUserData(key)) ?? { updatedAt: new Date().toISOString() };
+      let list = latest.irisReminders;
+      for (const r of reminders) {
+        const at = reminderInstant(r.date, r.time, tz);
+        if (!at) continue;
+        list = addReminder(list, r.text, at);
+        setReminders.push({ text: r.text, when: reminderWhen(at, tz) });
+      }
+      if (setReminders.length) await saveUserData(key, { ...latest, irisReminders: list });
+    }
+    const pushReady = Boolean(accountData?.settings?.pushNotificationsEnabled && pushTargets(accountData).length);
+    const reminderLine = setReminders.length
+      ? `I'll remind you ${setReminders.map((r) => `${r.when} to ${r.text.charAt(0).toLowerCase()}${r.text.slice(1)}`).join(", and ")}.${pushReady ? "" : " Turn on notifications in Settings so it reaches your phone."}`
+      : badReminders
+        ? "I couldn't pin down that time. Tell me the day and time again?"
+        : "";
     const reply =
+      // A reminder she couldn't save, or one that can't reach his phone, must be said out loud.
+      (reminderLine && (!text || !setReminders.length || !pushReady) ? reminderLine : "") ||
       text ||
+      (completed.length
+        ? `Checked off ${completed.join(" and ")}.`
+        : shopping.length
+          ? `Added ${shopping.join(" and ")} to the shopping list.`
+          : "") ||
       (todos.length
         ? `Done. I added ${todos.map((t) => t.title).join(" and ")} to your list.`
         : remember.length
@@ -146,6 +175,8 @@ export const handler: Handler = async (event) => {
     return json(200, {
       reply,
       todos,
+      completed: completed.length ? completed : undefined,
+      shopping: shopping.length ? shopping : undefined,
       module: module && typeof module === "string" ? module : undefined,
       specialist: specialist && typeof specialist === "string" ? specialist : undefined,
       delegateReport: delegateReport && !delegateDeduped ? delegateReport : undefined,

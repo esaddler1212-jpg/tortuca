@@ -28,6 +28,8 @@ You are speaking out loud through a phone or computer speaker, in a back-and-for
 - Warm, sharp and direct, with a little wit, like a trusted chief of staff who knows the business inside out. Call him "boss" now and then (not every sentence); never "sir".
 - Use the "Right now" notes for anything about his day, schedule, weather, plans or goals. If something isn't in the notes, say you don't have it rather than guessing.
 - When E asks you to remember, add or remind him of something to do, call add_todo (one call per item) and confirm it briefly.
+- When E wants to be reminded at a specific time ("remind me at 4 to call Mike", "in 30 minutes", "tomorrow morning"), call set_reminder with the local date and 24-hour time, worked out from the current time in the notes; his phone gets a notification then. With no time, use add_todo.
+- When E says something on his list is done ("check off the sponsor deck", "I called Mike"), call complete_todo with that to-do's title from the notes. When he wants something on the shopping list ("add eggs to the list", "we're out of rice"), call add_shopping, one call per item.
 - When E asks to open, show, pull up, or go to part of IRIS (today's list, plan, inbox, drafts, research, team roster, hub, meals, apps, vitals, ECS log), call open_module with the best-matching module id and say briefly that you're bringing it up.
 - Never ask for or repeat students' names or personal details from Family Purpose; refer to "a student".
 - For news, scores, prices, store hours, events, people, or anything current you don't already know, use web_search; use web_fetch to read a specific page E names. Then answer in a sentence or two, naming the source out loud ("per KQED"), never reading URLs. Don't search for things in the "Right now" notes.
@@ -229,6 +231,49 @@ export type IrisTurnUsage = {
   hops: number;
 };
 
+export const SET_REMINDER = {
+  name: "set_reminder",
+  description:
+    "Ping E's phone at a specific time. Use when he asks to be reminded at a time or after a delay. Work out the local date and time from the current time in the notes.",
+  strict: true,
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      text: { type: "string", description: "What to remind him of, short, e.g. 'Call Mike about the shoot'." },
+      date: { type: "string", description: "Local date, YYYY-MM-DD." },
+      time: { type: "string", description: "Local 24-hour time, HH:MM." },
+    },
+    required: ["text", "date", "time"],
+    additionalProperties: false,
+  },
+};
+
+export const COMPLETE_TODO = {
+  name: "complete_todo",
+  description: "Check off a to-do on E's list. Use when he says one is done. Pass the to-do's title as it appears in the notes.",
+  strict: true,
+  input_schema: {
+    type: "object" as const,
+    properties: { title: { type: "string", description: "Title of the to-do to check off." } },
+    required: ["title"],
+    additionalProperties: false,
+  },
+};
+
+export const ADD_SHOPPING = {
+  name: "add_shopping",
+  description: "Add one item to E's shopping list (Meals). One call per item.",
+  strict: true,
+  input_schema: {
+    type: "object" as const,
+    properties: { item: { type: "string", description: "The item, e.g. 'Eggs'." } },
+    required: ["item"],
+    additionalProperties: false,
+  },
+};
+
+export type IrisReminderAsk = { text: string; date: string; time: string };
+
 export type IrisTurn = { role: "user" | "assistant"; content: string };
 export type IrisTodo = { title: string; due: "today" | "tomorrow" | "none" };
 
@@ -275,6 +320,9 @@ export async function runIris(
   delegateDeduped: boolean;
   usage: IrisTurnUsage;
   tierA: TierAToolBatch;
+  reminders: IrisReminderAsk[];
+  completed: string[];
+  shopping: string[];
 }> {
   const messages: Anthropic.Beta.BetaMessageParam[] = turns.map((t) => ({ role: t.role, content: t.content }));
   const texts: string[] = [];
@@ -282,6 +330,9 @@ export async function runIris(
   const tierA = emptyTierABatch();
   const remember: string[] = [];
   const forget: string[] = [];
+  const reminders: IrisReminderAsk[] = [];
+  const completed: string[] = [];
+  const shopping: string[] = [];
   let searched = false;
   let module: string | null = null;
   let specialist: IrisSpecialistId | null = null;
@@ -303,6 +354,9 @@ export async function runIris(
       ],
       tools: [
         ADD_TODO,
+        SET_REMINDER,
+        COMPLETE_TODO,
+        ADD_SHOPPING,
         ADD_COMMITMENT,
         PREPARE_MEETING,
         PROPOSE_CALENDAR_CHANGE,
@@ -327,7 +381,7 @@ export async function runIris(
     usage.fetches += u?.server_tool_use?.web_fetch_requests ?? 0;
     for (const b of response.content) if (b.type === "tool_use") usage.tools.push(b.name);
     if (response.stop_reason === "refusal") {
-      return { reply: "", todos: [], remember: [], forget: [], searched, refused: true, module: null, specialist: null, delegateReport: null, delegateDeduped: false, usage, tierA: emptyTierABatch() };
+      return { reply: "", todos: [], remember: [], forget: [], searched, refused: true, module: null, specialist: null, delegateReport: null, delegateDeduped: false, usage, tierA: emptyTierABatch(), reminders: [], completed: [], shopping: [] };
     }
     for (const b of response.content) {
       if (b.type === "text") texts.push(b.text);
@@ -343,6 +397,15 @@ export async function runIris(
         if (typeof i.title === "string" && i.title.trim()) {
           todos.push({ title: i.title.trim().slice(0, IRIS_MAX_TODO_TITLE_CHARS), due: i.due === "today" || i.due === "tomorrow" ? i.due : "none" });
         }
+      } else if (b.type === "tool_use" && b.name === "set_reminder") {
+        const i = b.input as { text?: unknown; date?: unknown; time?: unknown };
+        if (typeof i.text === "string" && i.text.trim()) reminders.push({ text: i.text.trim(), date: String(i.date ?? ""), time: String(i.time ?? "") });
+      } else if (b.type === "tool_use" && b.name === "complete_todo") {
+        const t = String((b.input as { title?: unknown }).title ?? "").trim();
+        if (t) completed.push(t.slice(0, IRIS_MAX_TODO_TITLE_CHARS));
+      } else if (b.type === "tool_use" && b.name === "add_shopping") {
+        const t = String((b.input as { item?: unknown }).item ?? "").trim();
+        if (t) shopping.push(t.slice(0, 60));
       } else if (b.type === "tool_use" && b.name === "open_module") {
         const id = String((b.input as { module?: unknown }).module ?? "").trim();
         if (HUD_MODULE_IDS.includes(id as (typeof HUD_MODULE_IDS)[number])) module = id;
@@ -456,5 +519,5 @@ export async function runIris(
     // Long search: hand the partial turn back so Claude picks up where it left off.
     messages.push({ role: "assistant", content: response.content as Anthropic.Beta.BetaContentBlockParam[] });
   }
-  return { reply: forVoice(texts.join(" ")), todos, remember, forget, searched, refused: false, module, specialist, delegateReport, delegateDeduped, usage, tierA };
+  return { reply: forVoice(texts.join(" ")), todos, remember, forget, searched, refused: false, module, specialist, delegateReport, delegateDeduped, usage, tierA, reminders, completed, shopping };
 }
