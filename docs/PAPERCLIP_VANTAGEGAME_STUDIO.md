@@ -52,6 +52,17 @@ Optional upstream agents (49-role kit): `npm run game-studios:bootstrap` → `to
 5. Connect **Cursor Cloud** (or your harness) adapters per agent; repo URL `esaddler1212-jpg/tortuca`, branch `main`.
 6. Import hire prompts from `tools/paperclip/vantagegames-hire-prompts.md` (one block per agent).
 
+## Current sprint (assigned in git)
+
+Sprint **`season-3-kickoff`** lives in `shared/game-studio-tasks.json`. Each developer has an **active** task. Iris includes sprint text in ask context.
+
+```bash
+npm run game-studio:task -- --id cn-s3-ghost --status done --note "HUD board shipped"
+npm run test:game-studio-tasks
+```
+
+Paperclip issue copy: `tools/paperclip/season-3-kickoff-issues.md`.
+
 ## Tortuca integration (today)
 
 - **Team → Game studio** card: slice % + Nightshift / Skyring active day.

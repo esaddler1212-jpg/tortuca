@@ -1,10 +1,7 @@
 {
   "version": 1,
   "updatedAt": "2026-11-25T21:24:36.527Z",
-  "activeSlice": {
-    "nightshift": "cn-s02",
-    "skyring": "bw-s02"
-  },
+  "activeSlice": {},
   "sliceState": {
     "cn-d01": {
       "status": "done",
