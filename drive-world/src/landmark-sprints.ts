@@ -1,5 +1,6 @@
 import type { SavedProgress } from './game-progress';
 import { resetGhostRun, storeGhostTapeIfPb } from './cpm-ghost';
+import { recordLandmarkSprintBoard } from './landmark-sprint-board';
 import { saveProgress } from './game-progress';
 
 export type LandmarkSprintDef = {
@@ -90,6 +91,10 @@ export function tickLandmarkSprint(
             if (sprint.ghostTape) {
               nextProgress = storeGhostTapeIfPb(nextProgress, 'time', sprint.id, ms, true);
             }
+            nextProgress = recordLandmarkSprintBoard(nextProgress, sprint.id, ms);
+            nextProgress = saveProgress(nextProgress);
+          } else if (elapsed > 1500) {
+            nextProgress = recordLandmarkSprintBoard(progress, sprint.id, ms);
             nextProgress = saveProgress(nextProgress);
           }
           const sec = (elapsed / 1000).toFixed(2);

@@ -69,6 +69,7 @@ export async function tryMergeCloudOnBoot(): Promise<void> {
       parkingStars: remote.parkingStars ?? {},
       heatPeakEver: (remote as SavedProgress).heatPeakEver ?? 0,
       landmarkSprintMs: (remote as SavedProgress).landmarkSprintMs ?? {},
+      landmarkSprintTop3: (remote as SavedProgress).landmarkSprintTop3 ?? {},
       cpmGhostTapes: (remote as SavedProgress).cpmGhostTapes ?? {}
     });
   } else if (localScore > remoteScore) {
@@ -92,6 +93,7 @@ export function importProgressJson(raw: string): boolean {
       parkingStars: parsed.parkingStars ?? {},
       heatPeakEver: parsed.heatPeakEver ?? 0,
       landmarkSprintMs: parsed.landmarkSprintMs ?? {},
+      landmarkSprintTop3: parsed.landmarkSprintTop3 ?? {},
       cpmGhostTapes: parsed.cpmGhostTapes ?? {}
     });
     return true;

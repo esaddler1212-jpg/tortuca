@@ -128,6 +128,8 @@ export type SavedProgress = {
   /** Personal-best ghost tapes for drag/time rivalry HUD */
   cpmGhostTapes: Record<string, CpmGhostTape>;
   landmarkSprintMs: Record<string, number>;
+  /** Local top-N sprint times per route (no multiplayer). */
+  landmarkSprintTop3?: Record<string, number[]>;
   taxiCompletedIds: string[];
   dynoRunCount: number;
   meetBadges: string[];
@@ -213,6 +215,7 @@ function withV9Defaults(p: Partial<Omit<SavedProgress, 'version'>> & { version: 
     cpmDragBestET: p.cpmDragBestET ?? null,
     cpmGhostTapes: p.cpmGhostTapes ?? {},
     landmarkSprintMs: p.landmarkSprintMs ?? {},
+    landmarkSprintTop3: p.landmarkSprintTop3 ?? {},
     taxiCompletedIds: p.taxiCompletedIds ?? [],
     dynoRunCount: p.dynoRunCount ?? 0,
     meetBadges: p.meetBadges ?? [],

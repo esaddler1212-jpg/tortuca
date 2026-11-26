@@ -20,6 +20,10 @@ const required = [
   'tools/summer-engine-templates/bootstrap.sh',
   'tools/summer-engine-templates/catalog.json',
   'docs/SUMMER_ENGINE_TEMPLATES.md',
+  'tools/awesome-gamedev-agent-skills/README.md',
+  'tools/awesome-gamedev-agent-skills/CHERRY_PICK.md',
+  'tools/awesome-gamedev-agent-skills/bootstrap.sh',
+  'docs/SUMMER_ENGINE_TEMPLATES.md',
   'drive-world/CLAUDE.md'
 ];
 

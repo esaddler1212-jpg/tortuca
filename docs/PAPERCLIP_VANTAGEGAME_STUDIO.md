@@ -2,6 +2,10 @@
 
 **Product direction:** [`VANTAGEGAMES_STUDIO_DIRECTION.md`](./VANTAGEGAMES_STUDIO_DIRECTION.md) (owner decisions — Paperclip goals should match).
 
+**Completion audit:** [`VANTAGEGAMES_COMPLETION_AUDIT.md`](./VANTAGEGAMES_COMPLETION_AUDIT.md) · Paperclip issues: [`tools/paperclip/completion-audit-issues.md`](../tools/paperclip/completion-audit-issues.md).
+
+**Agent skills:** `npm run gamedev-skills:bootstrap` · [`tools/awesome-gamedev-agent-skills/CHERRY_PICK.md`](../tools/awesome-gamedev-agent-skills/CHERRY_PICK.md).
+
 [Paperclip](https://github.com/paperclipai/paperclip) orchestrates **goals, org chart, tasks, and agent-written status reports**. Tortuca already ships slice progress via `game-finish:report`; this doc defines the **game developer group** to hire in Paperclip and how it maps to the Alfred Team tab.
 
 ## The report model (Paperclip)

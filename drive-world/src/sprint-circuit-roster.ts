@@ -1,5 +1,6 @@
 import type { SavedProgress } from './game-progress';
 import { LANDMARK_SPRINTS, type LandmarkSprintDef } from './landmark-sprints';
+import { formatSprintBoardLine } from './landmark-sprint-board';
 
 /** Ghost sprint circuit — Day 4 roster (three marked ghost routes). */
 export const GHOST_SPRINT_CIRCUIT: LandmarkSprintDef[] = LANDMARK_SPRINTS.filter((s) => s.ghostTape);
@@ -31,7 +32,9 @@ export function ghostCircuitRosterLabel(progress: SavedProgress | null): string 
   return lines
     .map((l, i) => {
       const pb = l.pbMs > 0 ? `${(l.pbMs / 1000).toFixed(1)}s` : '—';
-      return `${i + 1}:${pb}`;
+      const board = formatSprintBoardLine(progress?.landmarkSprintTop3?.[l.id]);
+      const boardSuffix = board !== '—' ? ` [${board}]` : '';
+      return `${i + 1}:${pb}${boardSuffix}`;
     })
     .join(' · ');
 }

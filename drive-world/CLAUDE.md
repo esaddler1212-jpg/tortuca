@@ -25,3 +25,7 @@ Repo root [`AGENTS.md`](../AGENTS.md) applies when touching `netlify/functions` 
 ## Optional Claude Code Game Studios
 
 Use **`modes.rigor: minimal`**. Map `/smoke-check` → `npm run test:smoke`. See [`tools/claude-code-game-studios/CHERRY_PICK.md`](../tools/claude-code-game-studios/CHERRY_PICK.md).
+
+## Optional awesome-gamedev-agent-skills
+
+Router + three.js/GLB/asset skills (no PlayCanvas skill — cherry-pick). `npm run gamedev-skills:bootstrap` or `npx skills add gamedev-skills/awesome-gamedev-agent-skills -a cursor`. [`tools/awesome-gamedev-agent-skills/CHERRY_PICK.md`](../tools/awesome-gamedev-agent-skills/CHERRY_PICK.md).

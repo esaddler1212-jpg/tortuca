@@ -1,77 +1,94 @@
 {
   "version": 1,
-  "sprintId": "season-3-kickoff",
-  "sprintGoal": "Family couch visuals on vantagegames1 (CC0 only) + room-goal API smoke on Alfred; Trustfund prototype spec.",
-  "updatedAt": "2026-11-26T05:40:00.000Z",
+  "sprintId": "season-3-completion",
+  "sprintGoal": "Gamedev-skills audit: finish family couch on vantagegames1 (CC0 visuals) + close API/content gaps from VANTAGEGAMES_COMPLETION_AUDIT.md",
+  "updatedAt": "2026-11-26T20:00:00.000Z",
   "tasks": [
     {
-      "id": "wh-s3-01",
+      "id": "wh-audit-01",
       "assignee": "woodhouse",
       "status": "active",
-      "title": "Paperclip: mirror sprint tasks; dedupe Cloud agents on bw-s3-room",
-      "verify": "All issues in Paperclip match shared/game-studio-tasks.json",
-      "doc": "docs/VANTAGEGAMES_STUDIO_DIRECTION.md",
-      "startedAt": "2026-11-26T05:40:00.000Z"
-    },
-    {
-      "id": "trust-s3-01",
-      "assignee": "nightshift",
-      "status": "active",
-      "title": "Trustfund prototype slice spec (heir wealth + City Nights heat)",
-      "verify": "drive-world/research/findings/*-trustfund-mvp.md",
-      "doc": "drive-world/research/findings/2026-11-22-son-of-a-billionaire-inspiration.md",
-      "startedAt": "2026-11-26T05:40:00.000Z"
+      "title": "Paperclip: file completion-audit issues; dedupe agents per task id",
+      "verify": "tools/paperclip/completion-audit-issues.md mirrored in Paperclip",
+      "doc": "docs/VANTAGEGAMES_COMPLETION_AUDIT.md",
+      "startedAt": "2026-11-26T20:00:00.000Z"
     },
     {
       "id": "cn-s3-ghost",
       "assignee": "nightshift",
-      "status": "pending",
-      "title": "Local ghost leaderboards (top-3 per circuit, no server)",
-      "verify": "cd drive-world && npm run test:wiring",
-      "doc": "docs/CITY_NIGHTS_PEER_COMPARISON.md"
+      "status": "done",
+      "title": "Local ghost sprint top-3 boards (localStorage save)",
+      "verify": "npm run test:landmark-sprint-board",
+      "doc": "docs/VANTAGEGAMES_COMPLETION_AUDIT.md",
+      "completedAt": "2026-11-26T20:00:00.000Z",
+      "note": "landmarkSprintTop3 + minimap roster suffix"
+    },
+    {
+      "id": "trust-s3-01",
+      "assignee": "nightshift",
+      "status": "done",
+      "title": "Trustfund MVP spec only (no gameplay code)",
+      "verify": "drive-world/research/findings/2026-11-26-trustfund-mvp.md",
+      "completedAt": "2026-11-26T20:00:00.000Z"
+    },
+    {
+      "id": "cn-p2-oracle",
+      "assignee": "nightshift",
+      "status": "active",
+      "title": "CN-P2-01: Nudge Chase Center vs Oracle Park overlap",
+      "verify": "Coords in map registry + smoke still green",
+      "doc": "docs/CITY_NIGHTS_AUDIT.md"
     },
     {
       "id": "bw-s3-room",
       "assignee": "skyring",
       "status": "active",
-      "title": "Room-goal live POST smoke (Alfred API — first Cloud agent)",
-      "verify": "npm run smoke:room-goal (BATTLEWORLD_ROOM_GOAL_URL or alfred2)",
+      "title": "BW-V2-02: Room-goal live POST smoke on alfred2",
+      "verify": "npm run smoke:room-goal",
       "doc": "docs/VANTAGE_GAMES_DEPLOY.md",
-      "startedAt": "2026-11-26T05:40:00.000Z"
+      "startedAt": "2026-11-26T20:00:00.000Z"
+    },
+    {
+      "id": "bw-audit-glb",
+      "assignee": "skyring",
+      "status": "pending",
+      "title": "BW-V2-01: Hero GLB backlog plan (CC0 / procedural only)",
+      "verify": "flight-nemulator/public/models/CREDITS.md section",
+      "doc": "docs/FLIGHT_NEMULATOR.md"
     },
     {
       "id": "kiln-s3-cc0",
       "assignee": "kiln",
       "status": "active",
-      "title": "CC0 visual pass for vantagegames1 console (tier 0–2, no paid packs)",
-      "verify": "bash tools/gamedev-resources/install-free-packs.sh --help; findings/*-cc0-vantagegames1.md",
+      "title": "CC0 hero/minis install + vantagegames1 visual findings",
+      "verify": "bash tools/gamedev-resources/install-free-packs.sh --hero-minis",
       "doc": "docs/VISUAL_UPGRADE_TIERS.md",
-      "startedAt": "2026-11-26T05:40:00.000Z"
+      "startedAt": "2026-11-26T20:00:00.000Z"
     },
     {
-      "id": "mix-s3-loud",
+      "id": "mix-cn-p2-music",
       "assignee": "mixdown",
       "status": "active",
-      "title": "Family-safe music levels (ACE + Tokyo beds) in console-feel doc",
-      "verify": "docs/CITY_NIGHTS_CONSOLE_FEEL.md music section updated",
-      "startedAt": "2026-11-26T05:40:00.000Z"
+      "title": "CN-P2-02: CC0 night loops + family loudness in console-feel",
+      "verify": "docs/CITY_NIGHTS_CONSOLE_FEEL.md",
+      "startedAt": "2026-11-26T20:00:00.000Z"
     },
     {
       "id": "gate-s3-couch",
       "assignee": "gatekeeper",
       "status": "active",
-      "title": "Couch pass on vantagegames1.netlify.app (boys console path)",
+      "title": "Couch pass vantagegames1 + audit checklist rows",
       "verify": "drive-world/research/findings/*-couch-vantagegames1.md",
       "doc": "docs/COUCH_PASS_VISUAL.md",
-      "startedAt": "2026-11-26T05:40:00.000Z"
+      "startedAt": "2026-11-26T20:00:00.000Z"
     },
     {
       "id": "lat-s3-wire",
       "assignee": "lattice",
       "status": "active",
-      "title": "Document two-site model: play vantagegames1 vs API alfred2",
-      "verify": "docs/VANTAGE_GAMES_DEPLOY.md + npm run test:vantage-production",
-      "startedAt": "2026-11-26T05:40:00.000Z"
+      "title": "Two-site deploy doc + gamedev-skills bootstrap in UPSTREAM doc",
+      "verify": "docs/UPSTREAM_GAME_TOOLCHAIN.md",
+      "startedAt": "2026-11-26T20:00:00.000Z"
     }
   ]
 }
