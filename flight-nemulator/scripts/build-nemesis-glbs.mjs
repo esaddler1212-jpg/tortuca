@@ -1,6 +1,5 @@
 /**
- * Nemesis GLB #1+ (procedural CC0).
- * Run: node scripts/build-nemesis-glbs.mjs
+ * Nemesis GLBs (procedural CC0) — wave-10 pair rivals.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -9,6 +8,14 @@ import { fileURLToPath } from 'node:url';
 const root = dirname(fileURLToPath(import.meta.url));
 const villainsDir = join(root, '..', 'public', 'models', 'villains');
 mkdirSync(villainsDir, { recursive: true });
+
+export const BUNDLED_VILLAIN_IDS = [
+  'krypton-eclipse',
+  'venom-echo',
+  'doctor-doom',
+  'titan-snap-echo',
+  'android-phalanx'
+];
 
 function boxIndices(base) {
   return [
@@ -71,23 +78,26 @@ function writeGlb(outPath, nodeName, positions, indices, posMin, posMax) {
   console.log(`wrote ${outPath} (${total} bytes)`);
 }
 
-// krypton-eclipse — nemesis GLB #1 (Solar Apex pair)
-{
+function writeNemesis(id, spread = 0.4) {
   const positions = new Float32Array([
-    -0.4, 0.55, -0.18, 0.4, 0.55, -0.18, 0.4, 1.55, -0.18, -0.4, 1.55, -0.18,
-    -0.4, 0.55, 0.18, 0.4, 0.55, 0.18, 0.4, 1.55, 0.18, -0.4, 1.55, 0.18,
+    -spread, 0.55, -0.18, spread, 0.55, -0.18, spread, 1.55, -0.18, -spread, 1.55, -0.18,
+    -spread, 0.55, 0.18, spread, 0.55, 0.18, spread, 1.55, 0.18, -spread, 1.55, 0.18,
     -0.18, 1.56, -0.12, 0.18, 1.56, -0.12, 0.18, 1.88, -0.12, -0.18, 1.88, -0.12,
-    -0.18, 1.56, 0.12, 0.18, 1.56, 0.12, 0.18, 1.88, 0.12, -0.18, 1.88, 0.12,
-    -0.65, 0.9, -0.05, -0.35, 0.5, -0.05, -0.35, 1.35, -0.05, -0.65, 1.35, -0.05,
-    -0.65, 0.9, 0.05, -0.35, 0.5, 0.05, -0.35, 1.35, 0.05, -0.65, 1.35, 0.05
+    -0.18, 1.56, 0.12, 0.18, 1.56, 0.12, 0.18, 1.88, 0.12, -0.18, 1.88, 0.12
   ]);
-  const indices = new Uint16Array([...boxIndices(0), ...boxIndices(8), ...boxIndices(16)]);
+  const indices = new Uint16Array([...boxIndices(0), ...boxIndices(8)]);
   writeGlb(
-    join(villainsDir, 'krypton-eclipse.glb'),
-    'krypton-eclipse',
+    join(villainsDir, `${id}.glb`),
+    id,
     positions,
     indices,
-    [-0.65, 0.5, -0.18],
-    [0.4, 1.88, 0.18]
+    [-spread, 0.55, -0.18],
+    [spread, 1.88, 0.18]
   );
 }
+
+writeNemesis('krypton-eclipse', 0.4);
+writeNemesis('venom-echo', 0.36);
+writeNemesis('doctor-doom', 0.42);
+writeNemesis('titan-snap-echo', 0.48);
+writeNemesis('android-phalanx', 0.34);

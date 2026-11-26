@@ -160,6 +160,14 @@ const openTiers = spawnSync(
 );
 if (openTiers.status !== 0) process.exit(openTiers.status ?? 1);
 
+if (process.env.BATTLEWORLD_COMPLETE_GATE === '1') {
+  const complete = spawnSync('npx', ['tsx', path.join(root, 'scripts/check-battleworld-completion.mts')], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+  if (complete.status !== 0) process.exit(complete.status ?? 1);
+}
+
 const build = spawnSync('npm', ['run', 'build'], { cwd: app, stdio: 'inherit' });
 if (build.status !== 0) process.exit(build.status ?? 1);
 

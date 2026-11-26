@@ -6,7 +6,8 @@ Default buildings, heroes, and drones are procedural primitives in `flight-nemul
 
 | `heroes/tin-aviator.glb` | Tortuca first-party low-poly pilot mesh (`npm run build:hero-glb`) | CC0 |
 | `heroes/wall-crawler.glb` | Procedural hero mesh #3 (`npm run build:hero-glb`) | CC0 |
-| `villains/krypton-eclipse.glb` | Nemesis mesh #1 (`npm run build:nemesis-glb`) | CC0 |
+| `heroes/*.glb` (11 bundled ids) | Procedural CC0 (`npm run build:hero-glb`) | CC0 |
+| `villains/*.glb` (5 bundled ids) | Procedural CC0 (`npm run build:nemesis-glb`) | CC0 |
 
 ## Optional CC0 (install scripts)
 

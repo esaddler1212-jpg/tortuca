@@ -15,6 +15,9 @@ const mem = new Map<string, string>();
 
 import {
   BATTLEWORLD_CHAPTER_CHAIN_1_3,
+  BATTLEWORLD_CHAPTER_CAMPAIGN,
+  battleworldCampaignChapterChip,
+  battleworldCampaignChapterObjective,
   battleworldOpeningChapterChip,
   battleworldOpeningChapterObjective,
   syncBattleworldChapterChain1_3,
@@ -51,7 +54,7 @@ recordArcBeat(hero, "stone-linked");
 const afterStones = syncBattleworldChapterChain1_3(hero, "hero", false);
 ok("ch3 done after stone-linked", afterStones[2]?.done === true);
 
-ok("opening complete message", battleworldOpeningChapterObjective(hero, "hero", false).includes("1–3 complete"));
+ok("after stones campaign ch4", battleworldOpeningChapterObjective(hero, "hero", false).includes("Ch.4"));
 
 // villain path: home-mark satisfies territory
 const villain = "villain-test-" + Date.now();
@@ -59,6 +62,11 @@ ok("villain territory via home-mark", !hasArcBeat(villain, "home-mark"));
 recordArcBeat(villain, "home-mark");
 const vRows = syncBattleworldChapterChain1_3(villain, "villain", true);
 ok("villain ch2 done", vRows[1]?.done === true);
+
+ok("campaign length 6", BATTLEWORLD_CHAPTER_CAMPAIGN.length === 6);
+const campObj = battleworldCampaignChapterObjective(hero, "hero", false);
+ok("campaign objective Ch.", campObj.startsWith("Ch."));
+ok("campaign chip 6 parts", battleworldCampaignChapterChip(hero, "hero", false).split("·").length >= 5);
 
 if (failed) process.exitCode = 1;
 else console.log("check-battleworld-chapters: ok");

@@ -49,7 +49,6 @@ export async function attachVillainGltf(
   entityScale: [number, number, number]
 ): Promise<boolean> {
   const path = glbPathForVillain(villainId);
-  if (!path) return false;
   const asset = await loadUrl(app, path);
   if (!asset?.resource) return false;
 
