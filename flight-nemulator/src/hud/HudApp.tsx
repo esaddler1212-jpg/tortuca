@@ -307,7 +307,7 @@ export function HudApp() {
           </p>
         )}
         {snap.chapterChainChip && (
-          <p className="hud-tag hud-lattice-chip" title="Chapters 1–3 chain">
+          <p className="hud-tag hud-lattice-chip" title="Chapters 1–6 campaign">
             Story {snap.chapterChainChip}
           </p>
         )}

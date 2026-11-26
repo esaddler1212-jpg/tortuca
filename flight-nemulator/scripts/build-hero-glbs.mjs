@@ -9,6 +9,21 @@ import { fileURLToPath } from 'node:url';
 const root = dirname(fileURLToPath(import.meta.url));
 const heroesDir = join(root, '..', 'public', 'models', 'heroes');
 
+/** Keep in sync with flight-nemulator/src/hero-gltf-paths.ts */
+export const BUNDLED_HERO_IDS = [
+  'tin-aviator',
+  'solar-apex',
+  'wall-crawler',
+  'emerald-pilot',
+  'storm-hammer',
+  'chrome-sage',
+  'jade-architect',
+  'garnet-brawler',
+  'spectrum-artist',
+  'ki-sage',
+  'time-blade'
+];
+
 function boxIndices(base) {
   return [
     base + 0, base + 1, base + 2, base + 0, base + 2, base + 3,
@@ -70,6 +85,48 @@ function writeGlb(outPath, nodeName, positions, indices, posMin, posMax) {
   console.log(`wrote ${outPath} (${total} bytes)`);
 }
 
+function torsoBox(sw, sh, depth, y0) {
+  const hw = sw / 2;
+  const hd = depth / 2;
+  return [
+    -hw, y0, -hd, hw, y0, -hd, hw, y0 + sh, -hd, -hw, y0 + sh, -hd,
+    -hw, y0, hd, hw, y0, hd, hw, y0 + sh, hd, -hw, y0 + sh, hd
+  ];
+}
+
+function headBox(size, y0, z = 0.16) {
+  const h = size / 2;
+  return [
+    -h, y0, -h + z, h, y0, -h + z, h, y0 + size, -h + z, -h, y0 + size, -h + z,
+    -h, y0, h + z, h, y0, h + z, h, y0 + size, h + z, -h, y0 + size, h + z
+  ];
+}
+
+function seedFromId(id) {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+function writeProceduralHero(id) {
+  const seed = seedFromId(id);
+  const sw = 0.38 + (seed % 12) / 100;
+  const sh = 0.88 + (seed % 18) / 100;
+  const hd = 0.14 + (seed % 8) / 100;
+  const y0 = 0.48 + (seed % 10) / 100;
+  const positions = new Float32Array([...torsoBox(sw, sh, hd * 2, y0), ...headBox(0.28 + (seed % 6) / 100, y0 + sh)]);
+  const indices = new Uint16Array([...boxIndices(0), ...boxIndices(8)]);
+  const maxY = y0 + sh + 0.35;
+  writeGlb(
+    join(heroesDir, `${id}.glb`),
+    id,
+    positions,
+    indices,
+    [-sw / 2 - 0.05, y0, -hd - 0.05],
+    [sw / 2 + 0.05, maxY, hd + 0.05]
+  );
+}
+
 // tin-aviator — slim pilot
 {
   const positions = new Float32Array([
@@ -89,7 +146,7 @@ function writeGlb(outPath, nodeName, positions, indices, posMin, posMax) {
   );
 }
 
-// solar-apex — wider shoulders + crest (default roster hero)
+// solar-apex — wider shoulders + crest
 {
   const positions = new Float32Array([
     -0.38, 0.55, -0.2, 0.38, 0.55, -0.2, 0.38, 1.48, -0.2, -0.38, 1.48, -0.2,
@@ -99,11 +156,7 @@ function writeGlb(outPath, nodeName, positions, indices, posMin, posMax) {
     -0.55, 1.05, -0.12, 0.55, 1.05, -0.12, 0.55, 1.35, -0.12, -0.55, 1.35, -0.12,
     -0.55, 1.05, 0.12, 0.55, 1.05, 0.12, 0.55, 1.35, 0.12, -0.55, 1.35, 0.12
   ]);
-  const indices = new Uint16Array([
-    ...boxIndices(0),
-    ...boxIndices(8),
-    ...boxIndices(16)
-  ]);
+  const indices = new Uint16Array([...boxIndices(0), ...boxIndices(8), ...boxIndices(16)]);
   writeGlb(
     join(heroesDir, 'solar-apex.glb'),
     'solar-apex',
@@ -114,7 +167,7 @@ function writeGlb(outPath, nodeName, positions, indices, posMin, posMax) {
   );
 }
 
-// wall-crawler — lanky hero (GLB #3)
+// wall-crawler — lanky
 {
   const positions = new Float32Array([
     -0.22, 0.5, -0.12, 0.22, 0.5, -0.12, 0.22, 1.62, -0.12, -0.22, 1.62, -0.12,
@@ -141,4 +194,9 @@ function writeGlb(outPath, nodeName, positions, indices, posMin, posMax) {
     [-0.38, 0.2, -0.12],
     [0.38, 1.92, 0.12]
   );
+}
+
+const CUSTOM = new Set(['tin-aviator', 'solar-apex', 'wall-crawler']);
+for (const id of BUNDLED_HERO_IDS) {
+  if (!CUSTOM.has(id)) writeProceduralHero(id);
 }

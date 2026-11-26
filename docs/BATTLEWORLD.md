@@ -4,6 +4,8 @@
 
 Marvel, DC, and DBZ **codename** legends share one sky ring: territory raids, Infinity Stone hunts, wave-10 finales, and lattice-linked arcs.
 
+**Family-complete gate:** [`BATTLEWORLD_COMPLETE.md`](./BATTLEWORLD_COMPLETE.md) · `npm run test:battleworld-complete`
+
 ## Quick start
 
 ```bash

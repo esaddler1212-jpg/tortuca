@@ -126,7 +126,7 @@ import {
 } from './arc-progress';
 import {
   battleworldChapterChip,
-  battleworldOpeningChapterChip,
+  battleworldCampaignChapterChip,
   battleworldOpeningChapterObjective,
   nextBattleworldChapterHint
 } from './battleworld-chapters';
@@ -644,7 +644,7 @@ function publishBattleworldHud(s: GameSession, pos: Vec3, dt: number, solarCharg
       isVillainOnlyHero(s.heroSpec.id)
     ),
     chapterChip: battleworldChapterChip(s.heroSpec.id, s.playerRole, isVillainOnlyHero(s.heroSpec.id)),
-    chapterChainChip: battleworldOpeningChapterChip(
+    chapterChainChip: battleworldCampaignChapterChip(
       s.heroSpec.id,
       s.playerRole,
       isVillainOnlyHero(s.heroSpec.id)
@@ -667,7 +667,7 @@ function publishBattleworldHud(s: GameSession, pos: Vec3, dt: number, solarCharg
         districtId: districtIdAtPosition(pos.x, pos.z),
         lattice: battleworldLatticeStrength()
       }),
-      battleworldOpeningChapterChip(s.heroSpec.id, s.playerRole, isVillainOnlyHero(s.heroSpec.id)),
+      battleworldCampaignChapterChip(s.heroSpec.id, s.playerRole, isVillainOnlyHero(s.heroSpec.id)),
       latticeBeatChip(s.heroSpec.id, s.playerRole),
       s.playerRole === 'hero' && !hasDistrictSignatureBeat(s.heroSpec.id)
     ),

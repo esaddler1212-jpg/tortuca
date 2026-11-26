@@ -1,5 +1,19 @@
 /** Optional Blockbench/Kenney GLBs under public/models/heroes/<id>.glb */
 
+export const BUNDLED_HERO_GLB_IDS = [
+  'tin-aviator',
+  'solar-apex',
+  'wall-crawler',
+  'emerald-pilot',
+  'storm-hammer',
+  'chrome-sage',
+  'jade-architect',
+  'garnet-brawler',
+  'spectrum-artist',
+  'ki-sage',
+  'time-blade'
+] as const;
+
 const OVERRIDES: Record<string, string> = {
   'tin-aviator': './models/heroes/tin-aviator.glb',
   'solar-apex': './models/heroes/solar-apex.glb',

@@ -8,7 +8,7 @@
 | Game | Shippable for family couch | vs “full” peer open-world / crossover vision | Automated gate |
 |------|----------------------------|-----------------------------------------------|----------------|
 | **City Nights** | **~88%** | **~62%** (no MP, sparse traffic, box city art) | `cd drive-world && npm run test:city-nights` |
-| **Battleworld** | **~90%** | **~55%** (procedural roster GLBs, v2 multiplayer/content) | `npm run test:flight-nemulator` |
+| **Battleworld** | **100%** ([`BATTLEWORLD_COMPLETE.md`](./BATTLEWORLD_COMPLETE.md)) | **~70%** vs full roster Blockbench (MP out of scope) | `npm run test:battleworld-complete` |
 | **Trustfund** | **0%** (spec only) | N/A | `*-trustfund-mvp.md` |
 
 “Entirety” here means: **complete festival-style slice** on web (play loop, save, console feel, second map, open-world UX, CI) — not parity with CPM2 multiplayer or FH seasons.
@@ -58,15 +58,15 @@
 - District ring, combat, arcs, chapters, stones, pair bosses, autosave, offline bundle on vantagegames1, open-world tier pack (room goal local + API, almanac, find-next, photo, seasons, guest hints).
 - Source: [`FLIGHT_NEMULATOR.md`](./FLIGHT_NEMULATOR.md) shipped table, [`BATTLEWORLD.md`](./BATTLEWORLD.md).
 
-### v2 backlog (entirety)
+### v2 backlog
 
-| ID | Item | Owner | Verify |
-|----|------|-------|--------|
-| BW-V2-01 | Hero GLB expansion (3 shipped procedural →更多 CC0) | Kiln + Skyring | `build:glb` + CREDITS |
-| BW-V2-02 | Live **room-goal POST** on **alfred2** | Skyring | `npm run smoke:room-goal` |
-| BW-V2-03 | Lattice signed session dogfood | Lattice | preview + session doc |
-| BW-V2-04 | X-Men tier B+ / roster backlog | Skyring | research doc only |
-| BW-V2-05 | Multiplayer | — | **Out of scope** (local-only policy) |
+| ID | Status |
+|----|--------|
+| BW-V2-01 Hero GLBs (11) + nemesis (5) | **Done** — `npm run build:glb` |
+| BW-V2-02 Campaign HUD 1–6 | **Done** |
+| BW-V2-03 Completion gate | **Done** — `test:battleworld-complete` |
+| BW-V2-04 Live room-goal on alfred2 | Optional deploy smoke |
+| BW-V2-05 Multiplayer | **Out of scope** |
 
 ---
 

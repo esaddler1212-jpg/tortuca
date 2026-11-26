@@ -61,19 +61,16 @@ Production build: `npm run build` → `dist/` (static deploy like `drive-world`)
 | `netlify/functions/flight-nemulator-research.ts` + client research hook | Shipped (wire Tortuca auth when live) |
 | Kenney / World Gacha / Poly Haven hooks | Shipped (optional install) |
 
-## v2 (not in v1)
+## v2 backlog (post-complete)
+
+Battleworld **family-complete** gate: [`BATTLEWORLD_COMPLETE.md`](./BATTLEWORLD_COMPLETE.md) · `npm run test:battleworld-complete`.
 
 | Item | Notes |
 |------|-------|
-| Multiplayer | Not started |
-| Mission chapters / checkpoint races | Light chapter HUD only — no drive-world races |
-| Blockbench hero GLBs for full roster | **1** pilot (`tin-aviator.glb`, script `npm run build:hero-glb`); rest procedural |
-| Universe-colored district rims / sky rings | Polish |
-| Per-hero district **H** signature beat (beyond Lantern / Ki / Stark) | Content pass |
-| X-Men tier B+ backlog (`FLIGHT_NEMULATOR_XMEN_RESEARCH.md`) | Tier A slice shipped; rest research |
-| Cyber / indie / golden-age factions | Research in [`FLIGHT_NEMULATOR_ROSTER_BACKLOG.md`](./FLIGHT_NEMULATOR_ROSTER_BACKLOG.md) |
-| Lattice cloud pull on boot + auth | POST sync shipped; Tortuca session gate optional |
-| `manifest-updates.json` | v3 real IDs; full OTA skin pipeline still stub |
+| Multiplayer | **Out of scope** (local room goal only) |
+| Blockbench GLBs for **full** roster | **11** heroes + **5** nemesis bundled; rest procedural |
+| X-Men tier B+ | Research only (`FLIGHT_NEMULATOR_XMEN_RESEARCH.md`) |
+| OTA skin CDN pipeline | Manifest v3 ships; per-skin assets optional |
 
 ## Tortuca / IRIS
 
