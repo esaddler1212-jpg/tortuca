@@ -36,4 +36,16 @@ npm run game-studio:task -- --id <taskId> --status done --note "…"
 
 Start point: [`drive-world/research/findings/2026-11-22-son-of-a-billionaire-inspiration.md`](../drive-world/research/findings/2026-11-22-son-of-a-billionaire-inspiration.md).
 
-**MVP slice (when pulled):** call sign **Trustfund**, `drive-world/` fork or feature flag, one **wealth meter** + heat interaction, no new Netlify scope.
+**This sprint:** **doc only** — Nightshift delivers `*-trustfund-mvp.md`; **no Trustfund gameplay code** until you pull the next milestone.
+
+**Later (code):** call sign **Trustfund**, `drive-world/` fork or feature flag, one **wealth meter** + heat interaction, no new Netlify scope.
+
+## Follow-up decisions (2026-11-26)
+
+| Topic | Choice |
+|--------|--------|
+| Room-goal smoke | Default **production alfred2.netlify.app** (`npm run smoke:room-goal`) |
+| Trustfund | **Spec only** this month |
+| Paperclip | Paste pack: `tools/paperclip/vantagegames-paperclip-paste.md` |
+| Kiln visuals | **`install-free-packs.sh --hero-minis`** + findings markdown |
+| Next Cloud agent | **Wait** until you say go (no automatic queue) |

@@ -17,7 +17,7 @@
       "id": "trust-s3-01",
       "assignee": "nightshift",
       "status": "active",
-      "title": "Trustfund prototype slice spec (heir wealth + City Nights heat)",
+      "title": "Trustfund MVP spec only (no gameplay code this sprint)",
       "verify": "drive-world/research/findings/*-trustfund-mvp.md",
       "doc": "drive-world/research/findings/2026-11-22-son-of-a-billionaire-inspiration.md",
       "startedAt": "2026-11-26T05:40:00.000Z"
@@ -35,7 +35,7 @@
       "assignee": "skyring",
       "status": "active",
       "title": "Room-goal live POST smoke (Alfred API — first Cloud agent)",
-      "verify": "npm run smoke:room-goal (BATTLEWORLD_ROOM_GOAL_URL or alfred2)",
+      "verify": "npm run smoke:room-goal → alfred2.netlify.app",
       "doc": "docs/VANTAGE_GAMES_DEPLOY.md",
       "startedAt": "2026-11-26T05:40:00.000Z"
     },
@@ -43,8 +43,8 @@
       "id": "kiln-s3-cc0",
       "assignee": "kiln",
       "status": "active",
-      "title": "CC0 visual pass for vantagegames1 console (tier 0–2, no paid packs)",
-      "verify": "bash tools/gamedev-resources/install-free-packs.sh --help; findings/*-cc0-vantagegames1.md",
+      "title": "CC0 hero/minis install + vantagegames1 visual findings",
+      "verify": "bash tools/gamedev-resources/install-free-packs.sh --hero-minis; findings/*-cc0-vantagegames1.md",
       "doc": "docs/VISUAL_UPGRADE_TIERS.md",
       "startedAt": "2026-11-26T05:40:00.000Z"
     },
