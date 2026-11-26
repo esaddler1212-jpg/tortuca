@@ -50,6 +50,14 @@
       "completedAt": "2026-11-26T21:00:00.000Z"
     },
     {
+      "id": "cn-s4-trust-code",
+      "assignee": "nightshift",
+      "status": "active",
+      "title": "Trustfund: no code until owner asks (spec only)",
+      "verify": "2026-11-26-trustfund-mvp.md unchanged scope",
+      "doc": "drive-world/research/findings/2026-11-26-trustfund-mvp.md"
+    },
+    {
       "id": "bw-s3-room",
       "assignee": "skyring",
       "status": "active",
