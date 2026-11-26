@@ -6,6 +6,7 @@ Curated forks and clones — **not** vendored into the PWA unless noted.
 |---------|-----|-------------------|--------|
 | **Sure** (`we-promise/sure`) | [`DEEP_DIVE_SURE_ASTRYX.md`](./DEEP_DIVE_SURE_ASTRYX.md) | `sure-summary` API, `shared/sureIrisBridge.ts`, `tools/sure/` | Bridge shipped; VPS install manual |
 | **Astryx** (`meta/astryx`) | [`DEEP_DIVE_SURE_ASTRYX.md`](./DEEP_DIVE_SURE_ASTRYX.md) | `tools/astryx-pilot/README.md` | Patterns only; pilot later |
+| **Medusa** (`medusajs/medusa`) | [`DEEP_DIVE_MEDUSA.md`](./DEEP_DIVE_MEDUSA.md) | `shared/medusaIrisBridge.ts`, `tools/medusa/` | Shopify-first; Medusa doc + Iris hint only |
 | Summer Engine / City Nights | [`SUMMER_ENGINE_TEMPLATES.md`](./SUMMER_ENGINE_TEMPLATES.md), [`CITY_NIGHTS_CRAFT_ANYTHING.md`](./CITY_NIGHTS_CRAFT_ANYTHING.md) | `drive-world/` | PlayCanvas ports |
 | Open Generative AI workshops | [`CREATIVE_WORKSHOPS.md`](./CREATIVE_WORKSHOPS.md) | `workshops/` | MuAPI local only |
 

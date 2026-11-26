@@ -48,5 +48,6 @@ ok("activation prep 36 days", REVENUE_ACTIVATION_PREP.length === 36);
 ok("go-live plan", activationPlanForDate(REVENUE_ACTIVATION_GO_LIVE)?.theme.includes("ACTIVATE") ?? false);
 ok("activation doc", fs.existsSync(path.join(root, "docs/REVENUE_OS_JAN2027_ACTIVATION.md")));
 ok("sure astryx deep dive", fs.existsSync(path.join(root, "docs/DEEP_DIVE_SURE_ASTRYX.md")));
+ok("medusa deep dive", fs.existsSync(path.join(root, "docs/DEEP_DIVE_MEDUSA.md")));
 
 console.log(`\nRevenue OS checks passed (${n}).`);

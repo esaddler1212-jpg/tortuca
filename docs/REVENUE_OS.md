@@ -69,5 +69,6 @@ Daily prep **Nov 26, 2026 → Dec 31** and go-live tasks **Jan 1**:
 ## Related
 
 - `shared/shopify.ts` — store snapshot + readiness  
+- [`DEEP_DIVE_MEDUSA.md`](./DEEP_DIVE_MEDUSA.md) — self-hosted commerce alternate (Shopify stays primary through Jan 2027)  
 - `docs/SERVER_PLAN.md` — 24/7 n8n when webhooks outgrow Netlify cron  
 - Settings → log thumbnail gigs; Team → Revenue OS strip mirrors Hub

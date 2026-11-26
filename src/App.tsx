@@ -45,6 +45,7 @@ import { useWoodhouse } from "./hooks/useWoodhouse";
 import { useStocks } from "./hooks/useStocks";
 import { useSureSummary } from "./hooks/useSureSummary";
 import { sureContextForIris } from "../shared/sureIrisBridge";
+import { medusaCommerceHintForIris } from "../shared/medusaIrisBridge";
 import { useCommute } from "./hooks/useCommute";
 import { useUserDataSync } from "./hooks/useUserDataSync";
 import { usePushNotifications } from "./hooks/usePushNotifications";
@@ -569,6 +570,7 @@ export default function App() {
                             tierAContextForIris(tierA),
                             revenueContextForIris(hub.money, today.slice(0, 7), hub.revenueOs, shopifyStore, sureSummary),
                             sureContextForIris(sureSummary),
+                            medusaCommerceHintForIris(Boolean(shopifyStore?.configured)),
                           ].filter(Boolean);
                         })(),
                       }),

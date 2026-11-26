@@ -19,6 +19,7 @@ ok("sure-summary handler exists", fs.existsSync(path.join(root, "netlify/functio
 ok("handler session gate", read("netlify/functions/sure-summary.ts").includes("getValidSession"));
 ok("policy lists sure-summary", SESSION_REQUIRED_HANDLERS.includes("sure-summary"));
 ok("deep dive doc", fs.existsSync(path.join(root, "docs/DEEP_DIVE_SURE_ASTRYX.md")));
+ok("medusa doc", fs.existsSync(path.join(root, "docs/DEEP_DIVE_MEDUSA.md")));
 ok("App wires sure context", read("src/App.tsx").includes("sureContextForIris"));
 ok("iris hint non-empty", sureSetupHintForIris().length > 80);
 ok(
