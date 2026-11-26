@@ -4,6 +4,8 @@ Running checklist to take **City Nights** and **Battleworld** from skeleton → 
 
 **Iris:** After each slice, agents update [`shared/game-finish-status.json`](../shared/game-finish-status.json). Alfred’s Team tab and Iris “Right now” include **Nightshift** and **Skyring** reports (game studio → Woodhouse → Iris → you).
 
+**Full developer group (Paperclip / hires):** [`PAPERCLIP_VANTAGEGAME_STUDIO.md`](./PAPERCLIP_VANTAGEGAME_STUDIO.md) · roster `shared/gameStudioDevelopers.ts`.
+
 **Completion %:** `game-finish:report` prints overall, Nightshift, and Skyring percentages after each `--status done` (see `gameFinishProgress()` in `shared/gameFinishProgram.ts`). The Team → Game studio card shows the same numbers.
 
 ## Agents (not HUD specialists)
