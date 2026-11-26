@@ -1,5 +1,7 @@
 # VantageGames studio on Paperclip
 
+**Product direction:** [`VANTAGEGAMES_STUDIO_DIRECTION.md`](./VANTAGEGAMES_STUDIO_DIRECTION.md) (owner decisions — Paperclip goals should match).
+
 [Paperclip](https://github.com/paperclipai/paperclip) orchestrates **goals, org chart, tasks, and agent-written status reports**. Tortuca already ships slice progress via `game-finish:report`; this doc defines the **game developer group** to hire in Paperclip and how it maps to the Alfred Team tab.
 
 ## The report model (Paperclip)

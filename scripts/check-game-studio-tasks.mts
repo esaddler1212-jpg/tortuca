@@ -22,7 +22,8 @@ for (const d of VANTAGEGAMES_DEVELOPER_GROUP) {
   const t = activeTaskFor(d.id, file);
   ok(`${d.id} has active task`, Boolean(t?.title && t.verify));
 }
-ok("season-3 ghost task for nightshift", file.tasks.some((t) => t.id === "cn-s3-ghost" && t.status === "active"));
+ok("bw-s3-room active for skyring", file.tasks.some((t) => t.id === "bw-s3-room" && t.status === "active"));
+ok("direction doc linked", file.sprintGoal.toLowerCase().includes("vantagegames1"));
 
 if (failed) process.exitCode = 1;
 else console.log("check-game-studio-tasks: ok");

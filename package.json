@@ -55,6 +55,7 @@
     "test:upstream-tools": "tsx scripts/check-upstream-game-tools.mts",
     "test:creative-workshops": "tsx scripts/check-creative-workshops.mts",
     "game-studio:task": "tsx scripts/game-studio-task.mts",
+    "smoke:room-goal": "node scripts/smoke-battleworld-room-goal.mjs",
     "test:game-studio-org": "tsx scripts/check-game-studio-org.mts",
     "test:game-studio-tasks": "tsx scripts/check-game-studio-tasks.mts",
     "test:vantage-production": "tsx scripts/check-vantagegames-production-wiring.mts",

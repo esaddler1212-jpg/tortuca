@@ -42,6 +42,9 @@ Do **not** use `boys-student`, `boys-with-purpose`, or `drive-world` as the base
 | Netlify base dir | *(empty / root)* | `vantage-games` |
 | Auth | Google session for Iris | None |
 | Functions | `netlify/functions/*` | None (static only) |
+| **Family QA default** | Iris + signed APIs | **`vantagegames1`** play at `/console/` |
+
+**Room-goal smoke** (`npm run smoke:room-goal`) hits **Alfred** (`BATTLEWORLD_ROOM_GOAL_URL` or `alfred2.netlify.app`), not vantagegames1. See [`VANTAGEGAMES_STUDIO_DIRECTION.md`](./VANTAGEGAMES_STUDIO_DIRECTION.md).
 
 Lattice cloud sync on Flight Nemulator (`/.netlify/functions/flight-nemulator-lattice`) only applies when the game is deployed on a site that ships those functions (e.g. Alfred production). The VantageGames bundle is offline-first; lattice APIs are optional. The console build sets `VITE_BATTLEWORLD_OFFLINE_BUNDLE=1` so Battleworld HUD labels autosave as **offline (this device)** and shows that lattice sync is optional.
 
