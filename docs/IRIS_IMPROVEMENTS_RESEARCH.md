@@ -46,7 +46,7 @@ Ranked ideas from upstream projects, Anthropic docs, and this repo’s audits. *
 | **Streaming `/api/ask` SSE** + incremental TTS | New handler contract, mobile Safari |
 | **Herald-style streaming audio WebSocket** | Netlify WS limits, cost |
 | **Tool Search / deferred tools** | Anthropic beta; changes tool surface |
-| **Full Three.js orb** | Bundle + GPU; keep 2D filament default |
+| **Full Three.js orb** | Bundle + GPU; keep 2D filament default — **pilot:** [Dust Orb v2](https://aqualang89.github.io/shipnotes-components/components/dust-orb/) MIT (`docs/DEEP_DIVE_DUST_ORB.md`, opt-in lazy load) |
 | **n8n / Voicebox marketplace agents** | AGENTS.md — optional only |
 
 ## Anthropic efficiency checklist (for `/api/ask` changes)
