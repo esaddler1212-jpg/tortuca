@@ -414,6 +414,12 @@
   .race-bar-fill {
     transition: none;
   }
+  .minimap-vista-pulse {
+    display: none;
+  }
+  .minimap-find-next-ring {
+    animation: none;
+  }
 }
 
 @keyframes heat-pulse {

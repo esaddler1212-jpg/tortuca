@@ -11,6 +11,7 @@ const required = [
   'tools/unreal-claude/bootstrap.sh',
   'tools/claude-code-game-studios/README.md',
   'tools/claude-code-game-studios/CHERRY_PICK.md',
+  'docs/GAME_STUDIOS_DEEP_DIVE.md',
   'tools/claude-code-game-studios/bootstrap.sh',
   'tools/audio2face-3d/README.md',
   'tools/audio2face-3d/CHERRY_PICK.md',

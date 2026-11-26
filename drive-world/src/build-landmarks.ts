@@ -117,7 +117,7 @@ export function buildBayAreaLandmarks(app: AppBase): void {
   box(app, 'painted-ladies', -900, 12, -220, 42, 18, 22, warm);
   box(app, 'fishermans-pier', -720, 8, -760, 55, 8, 30, stone, true);
   box(app, 'oracle-park', -880, 14, -610, 48, 20, 40, matConcrete(), true);
-  ringBuilding(app, 'chase-center', -878, -598, 48, glass);
+  ringBuilding(app, 'chase-center', -878, -668, 48, glass);
 
   bridgeSpan(app, 'golden-gate', -1190, -820, 80, 42);
 
