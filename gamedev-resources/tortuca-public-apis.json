@@ -1,5 +1,5 @@
 {
-  "catalogVersion": 1,
+  "catalogVersion": 2,
   "upstream": "https://github.com/public-apis/public-apis",
   "selectionRules": "Prefer Auth=No, HTTPS=Yes, CORS=Yes for browser clients; secrets via Netlify only.",
   "alreadyInTortuca": [
@@ -14,6 +14,48 @@
       "url": "https://open-meteo.com/en/docs/geocoding-api",
       "use": "City search",
       "where": ["src/lib/weather.ts"]
+    },
+    {
+      "id": "open-meteo-air-quality",
+      "url": "https://open-meteo.com/en/docs/air-quality-api",
+      "use": "Pulse vitals AQI",
+      "where": ["netlify/functions/_pulse.ts"]
+    },
+    {
+      "id": "usgs-earthquake",
+      "url": "https://earthquake.usgs.gov/fdsnws/event/1/",
+      "use": "Bay Area quake list in Pulse",
+      "where": ["netlify/functions/_pulse.ts"]
+    },
+    {
+      "id": "nws-alerts",
+      "url": "https://www.weather.gov/documentation/services-web-api",
+      "use": "Active weather alerts at user point",
+      "where": ["netlify/functions/_pulse.ts"]
+    },
+    {
+      "id": "adsb-lol",
+      "url": "https://api.adsb.lol/",
+      "use": "Local flight tracks for Pulse / God's Eye context",
+      "where": ["netlify/functions/_pulse.ts"]
+    },
+    {
+      "id": "caltrans-cctv",
+      "url": "https://cwwp2.dot.ca.gov/",
+      "use": "D4 traffic cameras near Vallejo",
+      "where": ["netlify/functions/_pulse.ts"]
+    },
+    {
+      "id": "wfigs-fires",
+      "url": "https://data-nifc.opendata.arcgis.com/",
+      "use": "Wildfire incidents near user",
+      "where": ["netlify/functions/_pulse.ts"]
+    },
+    {
+      "id": "finnhub",
+      "url": "https://finnhub.io/docs/api",
+      "use": "Stocks panel + Iris watchlist (session-gated)",
+      "where": ["netlify/functions/stocks.ts", "netlify/functions/_stocks-config.ts"]
     }
   ],
   "entries": [
@@ -88,6 +130,77 @@
       "cors": true,
       "use": ["backup-weather"],
       "target": "drive-world"
+    },
+    {
+      "id": "logoapi",
+      "url": "https://logoapi.sh/docs",
+      "auth": "none",
+      "cors": true,
+      "use": ["thumbnail-mockup-logos", "client-brand-chips"],
+      "target": "client-ok"
+    },
+    {
+      "id": "seller-fee",
+      "url": "https://seller-fee-api.narwhalapis.workers.dev",
+      "auth": "none",
+      "cors": true,
+      "use": ["revenue-os-net-payout-after-stripe-paypal"],
+      "target": "server-proxy-only"
+    },
+    {
+      "id": "spaceflight-news",
+      "url": "https://spaceflightnewsapi.net",
+      "auth": "none",
+      "cors": true,
+      "use": ["vitals-easter-egg", "scout-space"],
+      "target": "scout-only"
+    }
+  ],
+  "backlog": [
+    {
+      "id": "fred",
+      "url": "https://fred.stlouisfed.org/docs/api/fred/",
+      "auth": "apiKey",
+      "cors": true,
+      "use": "Macro one-liner in morning brief",
+      "target": "iris-proxy",
+      "module": "vitals"
+    },
+    {
+      "id": "marketaux",
+      "url": "https://www.marketaux.com/",
+      "auth": "apiKey",
+      "cors": true,
+      "use": "News tagged to watchlist tickers",
+      "target": "iris-proxy",
+      "module": "hub"
+    },
+    {
+      "id": "fiscaldata-treasury",
+      "url": "https://fiscaldata.treasury.gov/api-documentation/",
+      "auth": "none",
+      "cors": "unknown",
+      "use": "Optional macro context",
+      "target": "iris-proxy",
+      "module": "team"
+    },
+    {
+      "id": "the-calendar",
+      "url": "https://the-calendar.net/api/",
+      "auth": "none",
+      "cors": true,
+      "use": "Holiday JSON backup",
+      "target": "client-ok",
+      "module": "plan"
+    },
+    {
+      "id": "exchangerate-dev",
+      "url": "https://exchangerate.dev/docs",
+      "auth": "none",
+      "cors": "unknown",
+      "use": "International thumbnail clients — display only",
+      "target": "server-proxy-only",
+      "module": "hub"
     }
   ],
   "avoidInClient": [
@@ -98,6 +211,10 @@
     {
       "id": "comicvine",
       "reason": "Same; lore inspiration only off-device"
+    },
+    {
+      "id": "raw-crypto-exchange-apis",
+      "reason": "Finnhub covers watchlist; avoid duplicating keys and Iris quota advice on 100+ exchange entries"
     }
   ]
 }

@@ -47,6 +47,7 @@ import { useSureSummary } from "./hooks/useSureSummary";
 import { sureContextForIris } from "../shared/sureIrisBridge";
 import { medusaCommerceHintForIris } from "../shared/medusaIrisBridge";
 import { mayaCherryPickGuardForIris } from "../shared/mayaSentinelIrisBridge";
+import { publicApisContextForIris } from "../shared/publicApisIrisBridge";
 import { useCommute } from "./hooks/useCommute";
 import { useUserDataSync } from "./hooks/useUserDataSync";
 import { usePushNotifications } from "./hooks/usePushNotifications";
@@ -573,6 +574,7 @@ export default function App() {
                             sureContextForIris(sureSummary),
                             medusaCommerceHintForIris(Boolean(shopifyStore?.configured)),
                             mayaCherryPickGuardForIris(),
+                            publicApisContextForIris(),
                           ].filter(Boolean);
                         })(),
                       }),

@@ -28,6 +28,8 @@ const play = JSON.parse(readFileSync(path.join(root, 'gamedev-resources/tortuca-
 };
 const apis = JSON.parse(readFileSync(path.join(root, 'gamedev-resources/tortuca-public-apis.json'), 'utf8')) as {
   entries: unknown[];
+  alreadyInTortuca?: unknown[];
+  backlog?: unknown[];
 };
 if (!play.entries?.length || !apis.entries?.length) {
   console.error('catalog missing entries');
@@ -38,5 +40,5 @@ const pin = JSON.parse(readFileSync(path.join(root, 'gamedev-resources/upstream-
   kavexGameDevResources?: { commit?: string };
 };
 console.log(
-  `check-gamedev-resources: ok (play=${play.entries.length} apis=${apis.entries.length} kavex=${pin.kavexGameDevResources?.commit?.slice(0, 8)})`
+  `check-gamedev-resources: ok (play=${play.entries.length} apis=${apis.entries.length} wired=${apis.alreadyInTortuca?.length ?? 0} backlog=${apis.backlog?.length ?? 0} kavex=${pin.kavexGameDevResources?.commit?.slice(0, 8)})`
 );

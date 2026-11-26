@@ -5,7 +5,7 @@ We comb multiple **free resource indexes**:
 | Source | Tortuca slice |
 |--------|----------------|
 | [Kavex/GameDev-Resources](https://github.com/Kavex/GameDev-Resources) | [`tortuca-playcanvas.json`](../gamedev-resources/tortuca-playcanvas.json) — assets, audio, tools |
-| [public-apis/public-apis](https://github.com/public-apis/public-apis) | [`tortuca-public-apis.json`](../gamedev-resources/tortuca-public-apis.json) — browser-safe APIs |
+| [public-apis/public-apis](https://github.com/public-apis/public-apis) | [`tortuca-public-apis.json`](../gamedev-resources/tortuca-public-apis.json) — [`DEEP_DIVE_PUBLIC_APIS.md`](./DEEP_DIVE_PUBLIC_APIS.md) |
 | [GitHub **game-engines** collection](https://github.com/collections/game-engines) | [`tortuca-game-engines.json`](../gamedev-resources/tortuca-game-engines.json) |
 | [JannisX11/blockbench](https://github.com/JannisX11/blockbench) | [`BLOCKBENCH_WORKFLOW.md`](./BLOCKBENCH_WORKFLOW.md) — hero GLB pipeline |
 | [Oyasumi World Gacha](https://tools.oyasumi-gamedev.com/worldgacha/) | [`WORLDGACHA_WORKFLOW.md`](./WORLDGACHA_WORKFLOW.md) — town GLB import |
