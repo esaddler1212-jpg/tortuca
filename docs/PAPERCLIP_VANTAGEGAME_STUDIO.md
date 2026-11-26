@@ -1,5 +1,7 @@
 # VantageGames studio on Paperclip
 
+**Product direction:** [`VANTAGEGAMES_STUDIO_DIRECTION.md`](./VANTAGEGAMES_STUDIO_DIRECTION.md) (owner decisions — Paperclip goals should match).
+
 [Paperclip](https://github.com/paperclipai/paperclip) orchestrates **goals, org chart, tasks, and agent-written status reports**. Tortuca already ships slice progress via `game-finish:report`; this doc defines the **game developer group** to hire in Paperclip and how it maps to the Alfred Team tab.
 
 ## The report model (Paperclip)
@@ -51,6 +53,17 @@ Optional upstream agents (49-role kit): `npm run game-studios:bootstrap` → `to
 4. Assign responsibilities with verify commands from the table; enable **status reports** on each.
 5. Connect **Cursor Cloud** (or your harness) adapters per agent; repo URL `esaddler1212-jpg/tortuca`, branch `main`.
 6. Import hire prompts from `tools/paperclip/vantagegames-hire-prompts.md` (one block per agent).
+
+## Current sprint (assigned in git)
+
+Sprint **`season-3-kickoff`** lives in `shared/game-studio-tasks.json`. Each developer has an **active** task. Iris includes sprint text in ask context.
+
+```bash
+npm run game-studio:task -- --id cn-s3-ghost --status done --note "HUD board shipped"
+npm run test:game-studio-tasks
+```
+
+Paperclip issue copy: `tools/paperclip/season-3-kickoff-issues.md`.
 
 ## Tortuca integration (today)
 

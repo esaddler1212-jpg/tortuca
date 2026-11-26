@@ -24,6 +24,8 @@ import {
   defaultDeveloperReport,
   type GameDeveloperId,
 } from "../../../shared/gameStudioDevelopers";
+import { activeTaskFor } from "../../../shared/gameStudioTasks";
+import { gameStudioTasks } from "../../lib/gameFinishContext";
 
 interface Props {
   timeZone: string;
@@ -157,6 +159,9 @@ function GameStudioCard() {
     <div className="rounded-md border border-violet-400/25 bg-violet-950/20 px-3 py-2 space-y-2">
       <p className="font-mono text-[10px] uppercase tracking-wider text-violet-300/70">Game studio → Iris</p>
       <p className="text-xs text-violet-50/90">{gameFinishTeamSummary()}</p>
+      <p className="text-[11px] text-violet-200/80">
+        Sprint <span className="font-mono text-violet-300">{gameStudioTasks().sprintId}</span> — {gameStudioTasks().sprintGoal}
+      </p>
       <div className="grid gap-1.5 text-[11px] text-violet-100/85" aria-label="Finish program progress">
         <p>
           <span className="text-violet-300/80">Overall</span> {prog.program.percent}% ({prog.program.done}/{prog.program.total})
@@ -222,20 +227,27 @@ function DeveloperGroupGrid({
     if (id === "woodhouse" || id === "gatekeeper") return programPct;
     return programPct;
   };
-  const roster = VANTAGEGAMES_DEVELOPER_GROUP.filter((d) => d.id !== "woodhouse");
+  const taskFile = gameStudioTasks();
+  const roster = VANTAGEGAMES_DEVELOPER_GROUP;
   return (
     <p className="border-t border-violet-400/10 pt-2 space-y-1.5">
       <span className="font-mono text-[10px] uppercase tracking-wider text-violet-300/60">
-        Developer group · Paperclip reports
+        Developer group · active tasks
       </span>
       <ul className="grid gap-1.5 sm:grid-cols-2 text-[10px] text-alfred-mist">
         {roster.map((d) => {
           const rep = defaultDeveloperReport(d, pctFor(d.id));
+          const task = activeTaskFor(d.id, taskFile);
           return (
             <li key={d.id} className="rounded border border-violet-400/10 bg-black/20 px-2 py-1">
               <p className="text-violet-100/90 font-mono">{d.name}</p>
               <p className="text-[9px] uppercase tracking-wide text-violet-300/50">{d.title}</p>
-              <p className={statusTone(rep.status)}>
+              {task ? (
+                <p className="text-violet-50/95 mt-0.5 line-clamp-3">
+                  <span className="text-amber-200/90">Task:</span> {task.title}
+                </p>
+              ) : null}
+              <p className={`${statusTone(rep.status)} mt-0.5 line-clamp-2`}>
                 {rep.status.replace("_", " ")} — {rep.message}
               </p>
             </li>
