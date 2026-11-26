@@ -6,6 +6,7 @@ import PeriodPicker from "./PeriodPicker";
 import { buildMailtoUrl } from "./debrief";
 import { PDF_PREP_HINT } from "./lowPowerHint";
 import { yieldToMain } from "./yieldMain";
+import { useReportData } from "./useReportData";
 
 function StatGrid({
   report,
@@ -35,18 +36,24 @@ function StatGrid({
 }
 
 export default function ReportsTab({
-  checkIns,
-  sessions,
+  checkIns: localCheckIns,
+  sessions: localSessions,
   settings,
+  dataRevision,
   onCopied,
   onPdfDownloaded,
 }: {
   checkIns: CheckIn[];
   sessions: GroupSession[];
   settings: DebriefSettings;
+  dataRevision: number;
   onCopied: () => void;
   onPdfDownloaded: () => void;
 }) {
+  const mergedData = useReportData(settings, dataRevision);
+  const checkIns = mergedData.loading ? localCheckIns : mergedData.checkIns;
+  const sessions = mergedData.loading ? localSessions : mergedData.sessions;
+
   const choices = useMemo(
     () => periodChoices(checkIns, sessions),
     [checkIns, sessions],
@@ -56,13 +63,13 @@ export default function ReportsTab({
   );
   const [pdfBusy, setPdfBusy] = useState(false);
 
-  const report = useMemo(
+  const periodReport = useMemo(
     () => buildPeriodReport(checkIns, sessions, period.range),
     [checkIns, sessions, period],
   );
   const text = useMemo(
-    () => buildReportText(report, settings),
-    [report, settings],
+    () => buildReportText(periodReport, settings),
+    [periodReport, settings],
   );
 
   const groupName = settings.groupName.trim() || "Group";
@@ -78,7 +85,7 @@ export default function ReportsTab({
       await yieldToMain();
       const { downloadReportPdf } = await import("./reportPdf");
       await yieldToMain();
-      downloadReportPdf(report, settings);
+      downloadReportPdf(periodReport, settings);
       onPdfDownloaded();
     } finally {
       setPdfBusy(false);
@@ -88,7 +95,7 @@ export default function ReportsTab({
   const emailTo = (recipients: string[]) => {
     window.location.href = buildMailtoUrl(
       recipients,
-      `Student support summary — ${report.range.label}`,
+      `Student support summary — ${periodReport.range.label}`,
       text,
     );
   };
@@ -109,11 +116,14 @@ export default function ReportsTab({
         onChange={setPeriod}
       />
 
-      <StatGrid report={report} groupName={groupName} />
+      <StatGrid report={periodReport} groupName={groupName} />
 
       <div className="debrief-preview" aria-label="Summary preview">
-        {text}
+        {mergedData.loading ? "Loading check-ins from all devices…" : text}
       </div>
+      {mergedData.cloudIncluded && !mergedData.loading && (
+        <p className="hint">Includes check-ins uploaded from all linked devices.</p>
+      )}
 
       <div className="btn-row">
         <button

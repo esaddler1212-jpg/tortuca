@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { DebriefSettings } from "./types";
-import { runCloudSync } from "./autoBackup";
+import { runUploadNow } from "./autoBackup";
 
 export function DeviceSyncHint({ settings }: { settings: DebriefSettings }) {
   const [online, setOnline] = useState(() => navigator.onLine);
@@ -22,8 +22,8 @@ export function DeviceSyncHint({ settings }: { settings: DebriefSettings }) {
         <strong>Phone + computer not linked yet</strong>
         <p className="hint">
           On both devices, open Settings and paste the same backup upload URL
-          and key from Netlify. Check-ins will sync automatically when you are
-          online.
+          and key from Netlify. Each device uploads at 2:30 PM Pacific; debrief
+          and weekly reports pull everyone&apos;s check-ins when you open them.
         </p>
       </div>
     );
@@ -34,8 +34,8 @@ export function DeviceSyncHint({ settings }: { settings: DebriefSettings }) {
       <strong>Phone and computer linked</strong>
       <p className="hint">
         {online
-          ? "Syncing both ways when you open the app, save a check-in, or every few minutes. Chromebook Downloads only at 2:30 PM Pacific."
-          : "Offline — new check-ins stay on this device until you reconnect."}
+          ? "This device uploads at 2:30 PM Pacific. Debrief and weekly summary include check-ins from all devices when online."
+          : "Offline — check-ins stay on this device until you reconnect. Reports show this device only until the cloud is reachable."}
       </p>
     </div>
   );
@@ -44,31 +44,25 @@ export function DeviceSyncHint({ settings }: { settings: DebriefSettings }) {
 export function SyncNowButton({
   settings,
   onMessage,
-  onDataChange,
 }: {
   settings: DebriefSettings;
   onMessage: (msg: string) => void;
-  onDataChange: () => void;
+  onDataChange?: () => void;
 }) {
   const [busy, setBusy] = useState(false);
 
   if (!settings.backupUploadUrl.trim()) return null;
 
-  const sync = async () => {
+  const upload = async () => {
     setBusy(true);
     try {
-      const result = await runCloudSync(settings);
+      const result = await runUploadNow(settings);
       if (result.error) {
         onMessage(result.error);
-      } else if (result.merged) {
-        onDataChange();
-        onMessage(
-          `Synced ${result.merged} check-in${result.merged === 1 ? "" : "s"} from the cloud`,
-        );
       } else if (result.uploaded) {
-        onMessage("Synced with cloud — your check-ins are uploaded");
+        onMessage("Uploaded this device's check-ins to the cloud");
       } else {
-        onMessage("Already up to date with the cloud");
+        onMessage("Nothing to upload");
       }
     } finally {
       setBusy(false);
@@ -80,9 +74,9 @@ export function SyncNowButton({
       type="button"
       className="btn btn-secondary"
       disabled={busy || !navigator.onLine}
-      onClick={() => void sync()}
+      onClick={() => void upload()}
     >
-      {busy ? "Syncing…" : "Sync phone and computer now"}
+      {busy ? "Uploading…" : "Upload this device now"}
     </button>
   );
 }

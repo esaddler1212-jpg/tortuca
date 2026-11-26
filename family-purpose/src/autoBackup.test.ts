@@ -8,6 +8,7 @@ import {
   runCloudSync,
   runAutoBackup,
   runScheduledBackup,
+  runUploadNow,
 } from "./autoBackup";
 import { CHECKINS_KEY, clearCheckInCache } from "./storage";
 import { DEFAULT_DEBRIEF_SETTINGS } from "./types";
@@ -70,11 +71,8 @@ describe("runAutoBackup", () => {
     vi.restoreAllMocks();
   });
 
-  it("uploads when a URL is configured", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce({ status: 404 })
-      .mockResolvedValueOnce({ ok: true });
+  it("uploads when a URL is configured without pulling remote data", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce({ ok: true });
     vi.stubGlobal("fetch", fetchMock);
 
     const result = await runAutoBackup({
@@ -86,17 +84,8 @@ describe("runAutoBackup", () => {
     });
 
     expect(result.uploaded).toBe(true);
-    expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      1,
-      "https://example.com/api/family-purpose-backup",
-      expect.objectContaining({
-        method: "GET",
-        headers: expect.objectContaining({ "X-Backup-Key": "secret" }),
-      }),
-    );
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      2,
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
       "https://example.com/api/family-purpose-backup",
       expect.objectContaining({
         method: "POST",
@@ -106,11 +95,8 @@ describe("runAutoBackup", () => {
     vi.unstubAllGlobals();
   });
 
-  it("cloud sync pulls and uploads without download", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce({ status: 404 })
-      .mockResolvedValueOnce({ ok: true });
+  it("upload now posts without pulling from cloud", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce({ ok: true });
     vi.stubGlobal("fetch", fetchMock);
     const download = vi.spyOn(backup, "downloadBackup").mockImplementation(() => {});
 
@@ -122,9 +108,29 @@ describe("runAutoBackup", () => {
     });
 
     expect(result.uploaded).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ method: "POST" }),
+    );
     expect(download).not.toHaveBeenCalled();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+  });
+
+  it("runUploadNow uploads even when backup was already marked", async () => {
+    markBackedUp(dataFingerprint(), "upload");
+    const fetchMock = vi.fn().mockResolvedValueOnce({ ok: true });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await runUploadNow({
+      ...DEFAULT_DEBRIEF_SETTINGS,
+      backupUploadUrl: "https://example.com/api/family-purpose-backup",
+    });
+
+    expect(result.uploaded).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    vi.unstubAllGlobals();
   });
 
   it("skips when auto-backup is off", async () => {
@@ -165,10 +171,7 @@ describe("runAutoBackup", () => {
   it("scheduled backup uploads without download on phone", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-08-05T21:30:00.000Z"));
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce({ status: 404 })
-      .mockResolvedValueOnce({ ok: true });
+    const fetchMock = vi.fn().mockResolvedValueOnce({ ok: true });
     vi.stubGlobal("fetch", fetchMock);
     const download = vi.spyOn(backup, "downloadBackup").mockImplementation(() => {});
 
@@ -181,6 +184,7 @@ describe("runAutoBackup", () => {
     });
 
     expect(result.uploaded).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(download).not.toHaveBeenCalled();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();

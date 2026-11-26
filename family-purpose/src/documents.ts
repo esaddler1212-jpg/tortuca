@@ -6,6 +6,7 @@ import {
   careTeamReferrals,
   formatDueLabel,
   studentLabel,
+  studentLabelWithDevice,
 } from "./followups";
 
 export interface WeekRange {
@@ -192,7 +193,7 @@ export function buildWeeklySummary(
       .map(([day, entries]) => ({
         day,
         label: shortDay(day),
-        students: entries.map(studentLabel),
+        students: entries.map(studentLabelWithDevice),
         checkIns: entries.length,
       })),
     totalCheckIns: inWeek.length,
