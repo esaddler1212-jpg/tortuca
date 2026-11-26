@@ -18,6 +18,7 @@ import { weatherLabel } from "./lib/weather";
 import { pulseSummary } from "../shared/pulse";
 import { issContext } from "../shared/skyText";
 import { gymContext, inboxContext, memosContext, moneyContext, shoppingContext, stocksContext } from "../shared/irisContext";
+import { revenueContextForIris, revenueOsBriefLine } from "../shared/revenueOs";
 import { useHub } from "./hooks/useHub";
 import { DEFAULT_ROUTINE, gymDayFor, moneyMonth } from "../shared/hub";
 import { useBusinessResearch } from "./hooks/useBusinessResearch";
@@ -356,6 +357,7 @@ export default function App() {
             const g = gymDayFor(hub.routine ?? DEFAULT_ROUTINE, today);
             return g?.isToday ? g.plan.title : undefined;
           })(),
+          revenue: revenueOsBriefLine(hub.money, today.slice(0, 7), hub.revenueOs, shopifyStore),
         });
   const briefMe = () => voiceOut.speak(briefText(), { force: true });
 
@@ -562,6 +564,7 @@ export default function App() {
                             gameFinishForAskExtra(),
                             shopifyContextForIris(shopifyStore),
                             tierAContextForIris(tierA),
+                            revenueContextForIris(hub.money, today.slice(0, 7), hub.revenueOs, shopifyStore),
                           ].filter(Boolean);
                         })(),
                       }),
@@ -700,6 +703,10 @@ export default function App() {
           <TeamPanel
             timeZone={settings.timezone}
             onOpenModule={focusModule}
+            hub={hub}
+            updateHub={updateHub}
+            today={today}
+            shopify={shopifyStore}
             onAskSpecialist={(id) => {
               const s = specialistById(id);
               if (!s) return;
@@ -851,6 +858,8 @@ export default function App() {
             stocksLoading={stocksLoading}
             stocksError={stocksError}
             onRefreshStocks={() => void refreshStocks()}
+            shopify={shopifyStore}
+            onOpenModule={focusModule}
           />
         );
       case "meal":

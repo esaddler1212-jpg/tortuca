@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { consumeResearchPrefill } from "../lib/researchPrefill";
 import { Briefcase, Loader2, Search } from "lucide-react";
 import type { ResearchArea, ResearchTemplate } from "../../shared/businessResearch";
 import { RESEARCH_PRESETS } from "../../shared/businessResearch";
@@ -19,6 +20,14 @@ export function BusinessResearcherPanel({ googleConnected, loading, error, last,
   const [query, setQuery] = useState("");
   const [area, setArea] = useState<ResearchArea>("ECS");
   const [template, setTemplate] = useState<ResearchTemplate | undefined>(undefined);
+
+  useEffect(() => {
+    const pre = consumeResearchPrefill();
+    if (!pre) return;
+    setQuery(pre.query);
+    setArea(pre.area);
+    setTemplate(pre.template);
+  }, []);
 
   const submit = () => {
     if (!query.trim() || loading) return;

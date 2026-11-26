@@ -26,14 +26,21 @@ import {
 } from "../../../shared/gameStudioDevelopers";
 import { activeTaskFor } from "../../../shared/gameStudioTasks";
 import { gameStudioTasks } from "../../lib/gameFinishContext";
+import type { HubState } from "../../../shared/hub";
+import type { ShopifyStoreSnapshot } from "../../../shared/shopify";
+import { RevenueOsPanel } from "../RevenueOsPanel";
 
 interface Props {
   timeZone: string;
   onOpenModule: (id: HudModuleId) => void;
   onAskSpecialist?: (id: IrisSpecialistId) => void;
+  hub?: HubState;
+  updateHub?: (fn: (h: HubState) => HubState) => void;
+  today?: string;
+  shopify?: ShopifyStoreSnapshot | null;
 }
 
-export function TeamPanel({ timeZone, onOpenModule, onAskSpecialist }: Props) {
+export function TeamPanel({ timeZone, onOpenModule, onAskSpecialist, hub, updateHub, today, shopify }: Props) {
   const [last, setLast] = useState<IrisDelegateLog | null>(() => readLastDelegate());
   const [recent, setRecent] = useState<IrisDelegateLog[]>(() => readDelegateHistory().slice(0, 8));
   const [ops, setOps] = useState(() => teamEfficiencySummary(readDelegateHistory()));
@@ -93,6 +100,10 @@ export function TeamPanel({ timeZone, onOpenModule, onAskSpecialist }: Props) {
           </ul>
         </div>
       </div>
+
+      {hub && updateHub && today ? (
+        <RevenueOsPanel hub={hub} update={updateHub} today={today} shopify={shopify} compact onOpenModule={onOpenModule} />
+      ) : null}
 
       {ops && !ops.includes("no specialist delegates") ? (
         <div className="rounded-md border border-indigo-400/25 bg-indigo-950/20 px-3 py-2">

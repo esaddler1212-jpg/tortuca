@@ -1,4 +1,5 @@
 import type { Area } from "./planData";
+import { REVENUE_SCOUT_PRESET } from "./revenueOs";
 
 export type ResearchArea = Area | "General";
 
@@ -70,6 +71,7 @@ export const RESEARCH_PRESETS: {
     query:
       "Realistic revenue ladder for a multi-division creative founder (film, merch, music, youth program): benchmarks and bottlenecks.",
   },
+  REVENUE_SCOUT_PRESET,
   {
     label: "Film festival strategy",
     area: "Tortuga",

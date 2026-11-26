@@ -55,6 +55,8 @@ export function buildDailyBrief(opts: {
   gym?: string;
   /** Bay Area Pulse summary, only when something needs attention. */
   pulse?: string;
+  /** Revenue OS one-liner (Hub Money MTD). */
+  revenue?: string;
 }): string {
   const { tz, now, weather, leaveBy } = opts;
   const h = localHour(tz, now);
@@ -74,6 +76,7 @@ export function buildDailyBrief(opts: {
   const next = upcomingEvents(opts.events, now, 1).find((e) => dayKey(tz, new Date(e.start)) === today);
   if (next) parts.push(`Next on the calendar: ${next.title} at ${time(next.start, tz)}.`);
   if (opts.pulse) parts.push(`Around the Bay: ${forSpeech(opts.pulse)}.`);
+  if (opts.revenue) parts.push(forSpeech(opts.revenue));
   if (opts.gym) parts.push(`Gym day: ${opts.gym}.`);
   if (opts.spark) parts.push(`Today's spark: ${forSpeech(opts.spark.mindset)} And a prompt: ${forSpeech(opts.spark.prompt)}`);
   return parts.join(" ");
