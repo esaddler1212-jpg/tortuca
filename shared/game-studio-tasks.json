@@ -34,10 +34,20 @@
     {
       "id": "cn-p2-oracle",
       "assignee": "nightshift",
-      "status": "active",
+      "status": "done",
       "title": "CN-P2-01: Nudge Chase Center vs Oracle Park overlap",
-      "verify": "Coords in map registry + smoke still green",
-      "doc": "docs/CITY_NIGHTS_AUDIT.md"
+      "verify": "npm run test:city-nights-complete",
+      "doc": "docs/CITY_NIGHTS_COMPLETE.md",
+      "completedAt": "2026-11-26T21:00:00.000Z"
+    },
+    {
+      "id": "cn-complete-gate",
+      "assignee": "nightshift",
+      "status": "done",
+      "title": "City Nights completion gate + GAME_STUDIOS skills",
+      "verify": "npm run test:city-nights-complete",
+      "doc": "docs/CITY_NIGHTS_COMPLETE.md",
+      "completedAt": "2026-11-26T21:00:00.000Z"
     },
     {
       "id": "bw-s3-room",
