@@ -49,7 +49,7 @@ Compressed **Bay Area night sandbox** in `drive-world/` (PlayCanvas 2.23 + Ammo 
 | Bundle | 1.26 MB PlayCanvas chunk (336 KB gzip) + 223 KB React. Acceptable; Ammo WASM on top |
 | Cloud save endpoint | `city-nights-progress` is unauthenticated by design (random sync key), CORS `*`, 120 KB cap, **no rate limit**. **Done:** per-key write throttle (`MIN_WRITE_GAP_MS`) |
 | Save key naming | Storage key is still `drive-world-progress-v5` while data is v9. Works; rename only with a migration |
-| Geography overlap | Oracle Park (−880, −610) and Chase Center (−878, −598) are **12 m apart** — beacons/meshes overlap. Real-world they're ~1 km apart; nudge Chase Center south |
+| Geography overlap | **Fixed:** Chase Center nudged to **z −668** (~58 m from Oracle Park) |
 | `game-loop.ts` size | 1,450+ lines; nav, fuel, parking, streaming, HUD publish all inline. Split per system before adding more |
 | No unit tests in `drive-world/` | Pure modules (`bay-navigation`, `fuel-system`, `parking-rewards`, save migration) are easy Vitest targets |
 | Accessibility | 4 `aria-*` usages across HUD; no reduced-motion option for vista pulse / sideshow spin |
@@ -105,4 +105,4 @@ _Pass 2: boot crash fixes, typecheck gate, layout fix, headless smoke. Prior pas
 
 **Automated gates (local, Nov 2026):** `npm run test:city-nights` pass on `cursor/tokyo-bonus-fc6d`.
 
-**Still P2 from pass 2:** Oracle/Chase 12 m overlap, `game-loop` monolith, no Vitest in `drive-world/`, empty `public/music/`.
+**Completion gate:** [`CITY_NIGHTS_COMPLETE.md`](./CITY_NIGHTS_COMPLETE.md) · `npm run test:city-nights-complete`. **Still optional P2:** `game-loop` monolith split, Vitest for pure modules.

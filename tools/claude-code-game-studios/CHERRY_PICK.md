@@ -33,3 +33,15 @@ Upstream git hooks expect **their** `project.yaml` at repo root. Running full ho
 ## Evidence folder pattern
 
 Their “launch game + screenshot before closing story” rule fits manual QA: save captures to `/opt/cursor/artifacts/` or `drive-world/research/findings/` when playtesting.
+
+## Committed Tortuca skills (Cursor / Claude)
+
+Deep dive: [`docs/GAME_STUDIOS_DEEP_DIVE.md`](../../docs/GAME_STUDIOS_DEEP_DIVE.md).
+
+| Skill | Path |
+|-------|------|
+| Smoke | `.claude/skills/tortuca-smoke-check/` |
+| Regression | `.claude/skills/tortuca-regression-suite/` |
+| Playtest report | `.claude/skills/tortuca-playtest-report/` |
+| Gate check | `.claude/skills/tortuca-gate-check/` |
+| Perf profile | `.claude/skills/tortuca-perf-profile/` |

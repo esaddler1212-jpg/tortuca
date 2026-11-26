@@ -7,7 +7,7 @@
 
 | Game | Shippable for family couch | vs “full” peer open-world / crossover vision | Automated gate |
 |------|----------------------------|-----------------------------------------------|----------------|
-| **City Nights** | **~88%** | **~62%** (no MP, sparse traffic, box city art) | `cd drive-world && npm run test:city-nights` |
+| **City Nights** | **100%** ([`CITY_NIGHTS_COMPLETE.md`](./CITY_NIGHTS_COMPLETE.md)) | **~65%** vs CPM2/Horizon (art density, MP) | `npm run test:city-nights-complete` |
 | **Battleworld** | **100%** ([`BATTLEWORLD_COMPLETE.md`](./BATTLEWORLD_COMPLETE.md)) | **~70%** vs full roster Blockbench (MP out of scope) | `npm run test:battleworld-complete` |
 | **Trustfund** | **0%** (spec only) | N/A | `*-trustfund-mvp.md` |
 
@@ -26,7 +26,7 @@
 
 | ID | Item | Owner | Verify | Upstream skill hint |
 |----|------|-------|--------|---------------------|
-| CN-P2-01 | Oracle Park / Chase Center overlap (~12 m) | Nightshift | Manual + map coords | — |
+| CN-P2-01 | Oracle Park / Chase Center overlap | Nightshift | **Done** — `test:city-nights-complete` | — |
 | CN-P2-02 | `public/music/` CC0 night loop set | Mixdown | Playlist non-empty in smoke | — |
 | CN-P2-03 | `aria` / reduced-motion for vista pulse | Nightshift | a11y spot in console-feel doc | `prototype-fast` scope |
 | CN-P2-04 | Vitest on pure modules (`bay-navigation`, saves) | Gatekeeper | `drive-world` test script | Game Studios `/regression-suite` |

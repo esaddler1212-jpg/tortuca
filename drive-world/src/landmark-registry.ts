@@ -34,7 +34,7 @@ export const LANDMARKS: LandmarkDef[] = [
   { id: 'pixar-campus', name: 'Pixar Campus', district: 'eastBay', x: 618, z: -278, visitRadius: 55 },
   { id: 'grizzly-peak', name: 'Grizzly Peak', district: 'eastBay', x: 400, z: 220, visitRadius: 58 },
   { id: 'oracle-park', name: 'Oracle Park', district: 'sf', x: -880, z: -610, visitRadius: 55 },
-  { id: 'chase-center', name: 'Chase Center', district: 'sf', x: -878, z: -598, visitRadius: 58 },
+  { id: 'chase-center', name: 'Chase Center', district: 'sf', x: -878, z: -668, visitRadius: 58 },
   { id: 'mare-island', name: 'Mare Island crane', district: 'vallejo', x: 444, z: 1020, visitRadius: 50 },
   { id: 'hoover', name: 'Hoover Tower', district: 'peninsula', x: -540, z: -1180, visitRadius: 48 },
   { id: 'dumbarton', name: 'Dumbarton Bridge', district: 'peninsula', x: -40, z: -670, visitRadius: 65 },

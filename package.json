@@ -60,6 +60,7 @@
     "smoke:room-goal": "node scripts/smoke-battleworld-room-goal.mjs",
     "test:game-studio-org": "tsx scripts/check-game-studio-org.mts",
     "test:landmark-sprint-board": "tsx scripts/check-landmark-sprint-board.mts",
+    "test:city-nights-complete": "tsx scripts/check-city-nights-completion.mts",
     "test:game-studio-tasks": "tsx scripts/check-game-studio-tasks.mts",
     "test:vantage-production": "tsx scripts/check-vantagegames-production-wiring.mts",
     "test:revenue-os": "tsx scripts/check-revenue-os.mts",
