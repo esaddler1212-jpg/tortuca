@@ -30,10 +30,10 @@ Aliases: `processing` → thinking, `talking` → speaking, `waiting` → idle.
 | MIT, no API key | Another visual lane beside cinema-eye / filament (prefs explosion) |
 | Optional Air+glass SFX | Extra audio policy (user mute, school hours) |
 
-**Recommendation (aligned fleet + Jan 2027):**
+**Shipped behavior:**
 
-1. **Now:** Keep **K.A.R.A. filament** (`CoreRing` + combo HUD) as default on all devices — proven on `test:devices`.
-2. **Pilot:** Optional **“Dust core”** in HUD settings on **iPad landscape + Mac** only; lazy-load scripts when selected (not in main Vite chunk).
+1. **≥833px** (iPad landscape, Chromebook, desktop): **Dust Orb** lazy-loads from `public/vendor/dust-orb/` (`CoreRing` + `DustOrbHost`).
+2. **&lt;833px** (iPhone, iPad portrait): **SVG reactor** or **K.A.R.A. filament** when combo HUD + kara pref on phone only.
 3. **Wire:** `shared/dustOrbBridge.ts` maps conversation → `setState` / rough `setVoiceLevel` from `useVoiceSignal`.
 4. **Skip sound** in PWA v1 (Iris already has TTS); add glass cues later if muted=false and user toggles.
 

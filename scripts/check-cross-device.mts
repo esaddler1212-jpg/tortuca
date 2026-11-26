@@ -25,6 +25,7 @@ const appTs = read("src/App.tsx");
 const hudNav = read("src/components/hud/HudNav.tsx");
 const hudHeader = read("src/components/hud/HudHeader.tsx");
 const deck = read("src/components/hud/HudHomeCommandDeck.tsx");
+const coreRing = read("src/components/hud/CoreRing.tsx");
 
 // ── PWA shell (iPhone + iPad Home Screen, Chromebook install) ─────────
 ok("viewport viewport-fit=cover", /viewport-fit=cover/.test(indexHtml));
@@ -37,6 +38,8 @@ ok("manifest orientation any (iPad landscape + Chromebook)", manifest.includes('
 ok("tailwind lg breakpoint 833px", /lg:\s*["']833px["']/.test(tailwind));
 ok("index.css 833px iris dock height", indexCss.includes("@media (min-width: 833px)"));
 ok("deck hidden below lg, grid at lg", deck.includes("hidden lg:grid"));
+ok("dust orb default at lg in CoreRing", coreRing.includes("useWideCoreViewport") && coreRing.includes("DustOrbHost"));
+ok("dust orb vendor on disk", fs.existsSync(path.join(root, "public/vendor/dust-orb/dust-orb.js")));
 
 // ── iPhone safe area + no zoom on focus picker ─────────────────────────
 ok("safe-top on header", hudHeader.includes("safe-top"));

@@ -1,6 +1,8 @@
 import { useHudAccent } from "../../hooks/useHudAccent";
 import { useVoiceSignal } from "../../hooks/useVoiceOutput";
+import { useWideCoreViewport } from "../../hooks/useWideCoreViewport";
 import { KaraFilamentOrb } from "./KaraFilamentOrb";
+import { DustOrbHost } from "./DustOrbHost";
 
 interface Props {
   /** K.A.R.A. Original filament orb (combo reactor home). */
@@ -18,6 +20,8 @@ interface Props {
   active?: boolean;
   /** Iris has a greeting ready and is waiting for a first tap. */
   waiting?: boolean;
+  /** Failed ask or quota — agitated dust state. */
+  askError?: boolean;
 }
 
 const COLOR: Record<Props["status"], string> = {
@@ -36,7 +40,11 @@ export function CoreRing({
   active = false,
   waiting = false,
   kara = false,
+  askError = false,
 }: Props) {
+  const wide = useWideCoreViewport();
+  const useDustCore = wide;
+  const showKara = kara && !useDustCore;
   const color = COLOR[status];
   const c = "currentColor";
   // Iris's "face": the core glows and ripples with each word while she speaks.
@@ -63,7 +71,7 @@ export function CoreRing({
   );
   return (
     <div
-      className={`relative mx-auto aspect-square w-full max-w-[420px] [container-type:inline-size] ${kara ? "kara-orb-shell" : ""} ${onActivate ? "cursor-pointer select-none rounded-full outline-none focus-visible:ring-2 focus-visible:ring-alfred-gold" : ""}`}
+      className={`relative mx-auto aspect-square w-full max-w-[420px] [container-type:inline-size] ${showKara ? "kara-orb-shell" : ""} ${useDustCore ? "dust-orb-shell overflow-hidden rounded-full" : ""} ${onActivate ? "cursor-pointer select-none rounded-full outline-none focus-visible:ring-2 focus-visible:ring-alfred-gold" : ""}`}
       style={{ color, WebkitTapHighlightColor: "transparent" }}
       aria-label={onActivate ? (waiting && !active ? "Tap to start: Iris has your brief ready" : active ? `Iris is ${label.toLowerCase()}. Tap to ${listening ? "stop listening" : "talk"}` : "Talk to Iris") : `${lines[0]} ${lines[1]}`}
       role={onActivate ? "button" : "img"}
@@ -76,7 +84,18 @@ export function CoreRing({
         }
       }}
     >
-      {kara ? (
+      {useDustCore ? (
+        <DustOrbHost
+          phase={phase}
+          speaking={talking}
+          waiting={waiting}
+          degraded={status === "degraded"}
+          askError={askError}
+          replyTick={replyTick}
+          voiceTick={voice.tick}
+        />
+      ) : null}
+      {showKara ? (
         <KaraFilamentOrb
           energy={energy}
           voiceTick={voice.tick}
@@ -89,7 +108,7 @@ export function CoreRing({
       ) : null}
       <svg
         viewBox="0 0 400 400"
-        className={`h-full w-full fill-none ${kara ? "kara-orb-chrome pointer-events-none" : ""}`}
+        className={`h-full w-full fill-none ${showKara ? "kara-orb-chrome pointer-events-none" : ""} ${useDustCore ? "opacity-0 pointer-events-none" : ""}`}
         aria-hidden
       >
         <defs>
@@ -98,20 +117,20 @@ export function CoreRing({
             <stop offset="100%" stopColor={c} stopOpacity="0" />
           </radialGradient>
         </defs>
-        {!kara ? (
+        {!showKara && !useDustCore ? (
           <circle cx="200" cy="200" r="190" fill="url(#core-glow)" className={talking ? "animate-hud-talk-glow" : ""} style={{ transformOrigin: "200px 200px" }} />
         ) : null}
-        {!kara ? (
+        {!showKara && !useDustCore ? (
           <g className="animate-hud-spin" style={{ transformOrigin: "200px 200px", animationDuration: thinking ? "2.5s" : listening ? "16s" : "40s" }}>
             <circle cx="200" cy="200" r="188" stroke={c} strokeOpacity="0.55" strokeWidth="2" strokeDasharray="10 8" />
           </g>
-        ) : (
+        ) : showKara ? (
           <g className="animate-hud-spin" style={{ transformOrigin: "200px 200px", animationDuration: "48s" }}>
             <circle cx="200" cy="200" r="188" stroke={c} strokeOpacity="0.22" strokeWidth="1" strokeDasharray="4 12" />
           </g>
-        )}
-        {!kara ? <circle cx="200" cy="200" r="166" stroke={c} strokeOpacity="0.35" strokeWidth="1.5" /> : null}
-        {!kara ? (
+        ) : null}
+        {!showKara && !useDustCore ? <circle cx="200" cy="200" r="166" stroke={c} strokeOpacity="0.35" strokeWidth="1.5" /> : null}
+        {!showKara && !useDustCore ? (
           <>
             <g className="animate-hud-spin" style={{ transformOrigin: "200px 200px", animationDuration: thinking ? "1.2s" : "14s", animationDirection: thinking ? "reverse" : "normal" }}>
               <line x1="200" y1="28" x2="200" y2="52" stroke={c} strokeWidth="5" strokeLinecap="round" transform="rotate(-30 200 200)" />
@@ -132,14 +151,14 @@ export function CoreRing({
             ))}
           </>
         ) : null}
-        {!kara ? <circle cx="200" cy="200" r="118" stroke={c} strokeOpacity="0.4" strokeWidth="1.5" /> : null}
-        {replyTick > 0 && (
+        {!showKara && !useDustCore ? <circle cx="200" cy="200" r="118" stroke={c} strokeOpacity="0.4" strokeWidth="1.5" /> : null}
+        {replyTick > 0 && !useDustCore && (
           <circle key={`burst-${replyTick}`} cx="200" cy="200" r="118" stroke={c} strokeWidth="4" className="animate-hud-burst" style={{ transformOrigin: "200px 200px" }} />
         )}
-        {listening && !kara ? (
+        {listening && !showKara && !useDustCore ? (
           <circle cx="200" cy="200" r="80" stroke={c} strokeWidth="2" strokeDasharray="4 6" className="animate-hud-listen" style={{ transformOrigin: "200px 200px" }} />
         ) : null}
-        {!kara ? (
+        {!showKara && !useDustCore ? (
           <>
             <circle
               cx="200"
@@ -171,7 +190,7 @@ export function CoreRing({
         ) : null}
       </svg>
       <div
-        className={`absolute inset-0 flex flex-col items-center justify-center pointer-events-none ${kara ? "kara-orb-label z-[1]" : ""}`}
+        className={`absolute inset-0 flex flex-col items-center justify-center pointer-events-none ${showKara ? "kara-orb-label z-[1]" : ""} ${useDustCore ? "z-[2]" : ""}`}
       >
         <span className="font-display text-[4cqw] leading-tight tracking-[0.15em]" style={{ color: c, textShadow: `0 0 12px ${c}` }}>
           {lines[0]}

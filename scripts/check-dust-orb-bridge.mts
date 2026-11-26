@@ -13,6 +13,9 @@ const ok = (name: string, cond: boolean) => {
 };
 
 ok("deep dive", fs.existsSync(path.join(root, "docs/DEEP_DIVE_DUST_ORB.md")));
+ok("vendor dust-orb.js", fs.existsSync(path.join(root, "public/vendor/dust-orb/dust-orb.js")));
+ok("CoreRing dust host", fs.readFileSync(path.join(root, "src/components/hud/CoreRing.tsx"), "utf8").includes("DustOrbHost"));
+ok("wide hook", fs.existsSync(path.join(root, "src/hooks/useWideCoreViewport.ts")));
 ok("thinking", mapIrisToDustOrb({ phase: "thinking", speaking: false }).state === "thinking");
 ok("speaking", mapIrisToDustOrb({ phase: "speaking", speaking: true }).state === "speaking");
 ok("agitated", mapIrisToDustOrb({ phase: "idle", speaking: false, askError: true }).state === "agitated");

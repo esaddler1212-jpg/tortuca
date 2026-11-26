@@ -630,6 +630,7 @@ export default function App() {
       active={convo.active}
       waiting={convo.pendingGreeting}
       onActivate={convo.tap}
+      askError={Boolean(convo.error)}
       kara={hudPrefs.combo135 && hudPrefs.karaOrb}
     />
   );
