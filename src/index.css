@@ -323,6 +323,16 @@ body {
   );
 }
 
+/* Iris orb — Lantern gold shell */
+.iris-orb-lantern {
+  color: #fbbf24;
+  filter: drop-shadow(0 0 10px rgb(251 191 36 / 0.25));
+}
+.iris-orb-lantern .kara-orb-shell,
+.iris-orb-lantern svg {
+  color: #fbbf24;
+}
+
 /* ── Persona skins (JARVIS · FRIDAY · Ultron diagnostic) ── */
 :root[data-voice-persona="friday"] {
   --persona-scan-ms: 2.1s;

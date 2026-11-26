@@ -1,4 +1,6 @@
 import type { Conversation } from "../hooks/useConversation";
+import type { IrisOrbStyleId } from "../../shared/irisOrbStyles";
+import type { HudModuleId } from "../../shared/hudModules";
 import { JarvisCinemaBar } from "./hud/JarvisCinemaBar";
 
 /** Inline Iris voice panel (Today desktop — beside Do today). */
@@ -6,10 +8,20 @@ export function IrisTalkBox({
   convo,
   googleConnected,
   onDismiss,
+  irisOrbStyle,
+  orbQuick,
 }: {
   convo: Conversation;
   googleConnected: boolean;
   onDismiss?: () => void;
+  irisOrbStyle?: IrisOrbStyleId;
+  orbQuick?: {
+    unread: number;
+    pendingTodos: number;
+    pulseUrgent: boolean;
+    onOpenModule: (id: HudModuleId) => void;
+    interim?: string;
+  };
 }) {
   return (
     <aside
@@ -23,6 +35,8 @@ export function IrisTalkBox({
         googleConnected={googleConnected}
         onActivate={convo.tap}
         onDismiss={onDismiss}
+        irisOrbStyle={irisOrbStyle}
+        orbQuick={orbQuick}
       />
     </aside>
   );

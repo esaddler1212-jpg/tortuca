@@ -1,5 +1,6 @@
 import type { HudPrefs, ParticleViz } from "../../lib/hudPrefs";
 import type { VoicePersonaPref } from "../../lib/voicePersona";
+import { IRIS_ORB_STYLES } from "../../../shared/irisOrbStyles";
 
 const VOICE: { id: VoicePersonaPref; label: string }[] = [
   { id: "auto", label: "Auto (Friday when voice is live)" },
@@ -55,6 +56,25 @@ export function HudPrefsPanel({ prefs, onChange }: { prefs: HudPrefs; onChange: 
       <p className="text-xs text-alfred-mist/80">
         Ultron-style brackets appear only when system status is degraded or offline. Lantern daily ritual:{" "}
         <code className="text-alfred-cream/90">gods-eye/LANTERN_RITUAL.md</code>
+      </p>
+      <label className="block text-xs text-alfred-mist" htmlFor="iris-orb-style">
+        Iris talking orb
+      </label>
+      <select
+        id="iris-orb-style"
+        className="input-field"
+        value={prefs.irisOrbStyle}
+        onChange={(e) => onChange({ irisOrbStyle: e.target.value as HudPrefs["irisOrbStyle"] })}
+      >
+        {IRIS_ORB_STYLES.map((s) => (
+          <option key={s.id} value={s.id}>
+            {s.label}
+          </option>
+        ))}
+      </select>
+      <p className="text-[11px] text-alfred-mist/75">
+        {IRIS_ORB_STYLES.find((s) => s.id === prefs.irisOrbStyle)?.blurb}{" "}
+        <span className="text-alfred-cream/70">Full list: docs/IRIS_ORB_OPTIONS.md</span>
       </p>
       <label className="block text-xs text-alfred-mist" htmlFor="particle-viz">
         Particle visualization

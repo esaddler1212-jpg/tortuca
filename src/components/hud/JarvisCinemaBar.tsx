@@ -3,6 +3,9 @@ import type { Conversation, ConversationPhase } from "../../hooks/useConversatio
 import { specialistLabel } from "../../../shared/irisTeam";
 import { X, Check, PanelBottomClose } from "lucide-react";
 import { VoicePhasePills, VoiceWaveform } from "./VoiceWaveform";
+import type { IrisOrbStyleId } from "../../../shared/irisOrbStyles";
+import type { HudModuleId } from "../../../shared/hudModules";
+import { IrisOrbMini } from "./IrisOrb";
 
 const STATUS: Record<ConversationPhase, string> = {
   idle: "STANDBY",
@@ -92,6 +95,8 @@ export function JarvisCinemaBar({
   onActivate,
   onDismiss,
   layout = "bar",
+  irisOrbStyle,
+  orbQuick,
 }: {
   convo: Conversation;
   googleConnected: boolean;
@@ -99,6 +104,14 @@ export function JarvisCinemaBar({
   onDismiss?: () => void;
   /** bar = bottom dock strip; box = stacked panel beside Do today */
   layout?: "bar" | "box";
+  irisOrbStyle?: IrisOrbStyleId;
+  orbQuick?: {
+    unread: number;
+    pendingTodos: number;
+    pulseUrgent: boolean;
+    onOpenModule: (id: HudModuleId) => void;
+    interim?: string;
+  };
 }) {
   const subtitle = useMemo(() => subtitleFor(convo, googleConnected), [convo, googleConnected]);
   const chip =
@@ -112,6 +125,7 @@ export function JarvisCinemaBar({
         : "Talk to Iris";
 
   const stacked = layout === "box";
+  const dockOrb = irisOrbStyle === "capsule" || irisOrbStyle === "ops-console";
 
   return (
     <div
@@ -129,18 +143,33 @@ export function JarvisCinemaBar({
         </button>
       ) : null}
       <div className={`flex flex-col gap-2 ${stacked ? "" : "lg:flex-row lg:items-center lg:gap-4"}`}>
-        <button
-          type="button"
-          onClick={onActivate}
-          className={`shrink-0 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 ${stacked ? "flex items-center gap-3" : "lg:flex lg:items-center lg:gap-3"}`}
-          aria-label={activateLabel}
-        >
-          {!stacked ? <CinemaFace phase={convo.phase} /> : null}
-          <MiniCore phase={convo.phase} visible={stacked} />
-          <span className={`font-mono text-[10px] uppercase tracking-[0.2em] text-cyan-300/90 ${stacked ? "inline" : "hidden lg:inline"}`}>
-            Talk to Iris
-          </span>
-        </button>
+        {dockOrb && irisOrbStyle && orbQuick ? (
+          <div className={`shrink-0 ${stacked ? "w-full" : "w-[140px] lg:w-[200px]"}`}>
+            <IrisOrbMini
+              style={irisOrbStyle}
+              lines={["IRIS", "TALK"]}
+              status="ok"
+              phase={convo.phase}
+              onActivate={onActivate}
+              active={convo.active}
+              waiting={convo.pendingGreeting}
+              quick={orbQuick}
+            />
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={onActivate}
+            className={`shrink-0 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 ${stacked ? "flex items-center gap-3" : "lg:flex lg:items-center lg:gap-3"}`}
+            aria-label={activateLabel}
+          >
+            {!stacked ? <CinemaFace phase={convo.phase} /> : null}
+            <MiniCore phase={convo.phase} visible={stacked} />
+            <span className={`font-mono text-[10px] uppercase tracking-[0.2em] text-cyan-300/90 ${stacked ? "inline" : "hidden lg:inline"}`}>
+              Talk to Iris
+            </span>
+          </button>
+        )}
         <div className="min-w-0 flex-1 space-y-1 lg:space-y-1.5">
           <div className="flex flex-wrap items-center gap-2">
             <p className="font-mono text-[9px] uppercase tracking-[0.28em] text-cyan-400/80">{STATUS[convo.phase]}</p>

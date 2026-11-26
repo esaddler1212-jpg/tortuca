@@ -57,7 +57,8 @@ import { buildWeeklyReview, isWeeklyReviewTime } from "./lib/weeklyReview";
 import { buildFitnessStatus } from "./lib/fitness";
 import { assessOvercommitment } from "./lib/overcommitment";
 import { HudHeader, type SystemStatus } from "./components/hud/HudHeader";
-import { CoreRing } from "./components/hud/CoreRing";
+import { IrisOrb } from "./components/hud/IrisOrb";
+import { parseShareTargetParams, peekShareInbox, stashShareInbox } from "./lib/shareTarget";
 import { HudCore } from "./components/hud/HudCore";
 import { UpNextPanel, UrgentLine } from "./components/hud/HudHome";
 import { IrisDock } from "./components/hud/IrisDock";
@@ -127,6 +128,20 @@ export default function App() {
     const themeColor = { school: "#22d3ee", network: "#4ade80", weekend: "#c084fc", holiday: "#c084fc", vantage: "#c084fc" }[mode];
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", themeColor);
   }, [mode]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shared = parseShareTargetParams(params);
+    if (!shared) return;
+    stashShareInbox(shared);
+    params.delete("title");
+    params.delete("text");
+    params.delete("url");
+    const rest = params.toString();
+    const path = `${window.location.pathname}${rest ? `?${rest}` : ""}${window.location.hash}`;
+    window.history.replaceState({}, "", path);
+  }, []);
+
   const { snapshot: stocks, loading: stocksLoading, error: stocksError, refresh: refreshStocks } = useStocks();
   const commute = useCommute(settings, connected);
   const effectiveMinutes = commute.effectiveMinutes;
@@ -562,6 +577,12 @@ export default function App() {
                             gameFinishForAskExtra(),
                             shopifyContextForIris(shopifyStore),
                             tierAContextForIris(tierA),
+                            (() => {
+                              const s = peekShareInbox();
+                              if (!s) return "";
+                              const bits = [s.title, s.text, s.url].filter(Boolean);
+                              return bits.length ? `Shared into IRIS (share sheet): ${bits.join(" · ")}` : "";
+                            })(),
                           ].filter(Boolean);
                         })(),
                       }),
@@ -610,8 +631,18 @@ export default function App() {
         : "hud-with-iris-dock";
 
   // Iris's ring: the centre of the HUD (tap to talk). Same ring in the full and compact core.
+  const orbQuick = {
+    unread,
+    pendingTodos: pending.length,
+    pulseUrgent: pulseUrgent,
+    onOpenModule: focusModule,
+    interim: convo.interim,
+  };
+
   const coreRing = (
-    <CoreRing
+    <IrisOrb
+      style={hudPrefs.irisOrbStyle}
+      size="home"
       lines={coreLines}
       status={systemStatus}
       phase={convo.phase}
@@ -619,7 +650,8 @@ export default function App() {
       active={convo.active}
       waiting={convo.pendingGreeting}
       onActivate={convo.tap}
-      kara={hudPrefs.combo135 && hudPrefs.karaOrb}
+      karaCombo={hudPrefs.combo135 && hudPrefs.karaOrb}
+      quick={orbQuick}
     />
   );
 
@@ -794,6 +826,8 @@ export default function App() {
                     convo={convo}
                     googleConnected={connected}
                     onDismiss={() => setIrisVoiceDeckOpen(false)}
+                    irisOrbStyle={hudPrefs.irisOrbStyle}
+                    orbQuick={orbQuick}
                   />
                 ) : undefined
               }
@@ -994,6 +1028,8 @@ export default function App() {
         inlineOnDesktopToday={todayIrisInline}
         convo={convo}
         googleConnected={connected}
+        irisOrbStyle={hudPrefs.irisOrbStyle}
+        orbQuick={orbQuick}
         onDismiss={activeModule ? () => setIrisVoiceDeckOpen(false) : undefined}
       />
 
