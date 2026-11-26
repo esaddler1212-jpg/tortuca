@@ -19,6 +19,11 @@ import {
   gameFinishProgress,
   sliceById,
 } from "../../../shared/gameFinishProgram";
+import {
+  VANTAGEGAMES_DEVELOPER_GROUP,
+  defaultDeveloperReport,
+  type GameDeveloperId,
+} from "../../../shared/gameStudioDevelopers";
 
 interface Props {
   timeZone: string;
@@ -186,7 +191,58 @@ function GameStudioCard() {
       ) : (
         <p className="text-[11px] text-alfred-mist">Cloud agents log slices with npm run game-finish:report</p>
       )}
+      <DeveloperGroupGrid
+        nightshiftPct={prog.nightshift.percent}
+        skyringPct={prog.skyring.percent}
+        programPct={prog.program.percent}
+      />
     </div>
+  );
+}
+
+function statusTone(status: string): string {
+  if (status === "on_track") return "text-emerald-300/90";
+  if (status === "at_risk") return "text-amber-300/90";
+  if (status === "behind") return "text-rose-300/90";
+  return "text-violet-200/70";
+}
+
+function DeveloperGroupGrid({
+  nightshiftPct,
+  skyringPct,
+  programPct,
+}: {
+  nightshiftPct: number;
+  skyringPct: number;
+  programPct: number;
+}) {
+  const pctFor = (id: GameDeveloperId) => {
+    if (id === "nightshift") return nightshiftPct;
+    if (id === "skyring") return skyringPct;
+    if (id === "woodhouse" || id === "gatekeeper") return programPct;
+    return programPct;
+  };
+  const roster = VANTAGEGAMES_DEVELOPER_GROUP.filter((d) => d.id !== "woodhouse");
+  return (
+    <p className="border-t border-violet-400/10 pt-2 space-y-1.5">
+      <span className="font-mono text-[10px] uppercase tracking-wider text-violet-300/60">
+        Developer group · Paperclip reports
+      </span>
+      <ul className="grid gap-1.5 sm:grid-cols-2 text-[10px] text-alfred-mist">
+        {roster.map((d) => {
+          const rep = defaultDeveloperReport(d, pctFor(d.id));
+          return (
+            <li key={d.id} className="rounded border border-violet-400/10 bg-black/20 px-2 py-1">
+              <p className="text-violet-100/90 font-mono">{d.name}</p>
+              <p className="text-[9px] uppercase tracking-wide text-violet-300/50">{d.title}</p>
+              <p className={statusTone(rep.status)}>
+                {rep.status.replace("_", " ")} — {rep.message}
+              </p>
+            </li>
+          );
+        })}
+      </ul>
+    </p>
   );
 }
 
