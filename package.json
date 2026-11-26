@@ -58,6 +58,7 @@
     "game-studio:task": "tsx scripts/game-studio-task.mts",
     "smoke:room-goal": "node scripts/smoke-battleworld-room-goal.mjs",
     "test:game-studio-org": "tsx scripts/check-game-studio-org.mts",
+    "test:landmark-sprint-board": "tsx scripts/check-landmark-sprint-board.mts",
     "test:game-studio-tasks": "tsx scripts/check-game-studio-tasks.mts",
     "test:vantage-production": "tsx scripts/check-vantagegames-production-wiring.mts",
     "test:os": "npm run build && npm run test:time && npm run test:speech && npm run test:herald && npm run test:upstream-tools && npm run test:iris && npm run test:research && npm run test:audit && npm run test:devices && npm run test:guardrails && npm run test:thin && npm run test:weekly && npm run test:flight-nemulator && npm run test:gamedev-resources && npm run test:game-finish && npm run test:vantage-production && npm run test:creative-workshops"
