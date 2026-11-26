@@ -9,6 +9,7 @@ import {
   revenueContextForIris,
 } from "../shared/revenueOs.ts";
 import { REVENUE_SCOUT_PRESET } from "../shared/revenueOs.ts";
+import { REVENUE_ACTIVATION_PREP, REVENUE_ACTIVATION_GO_LIVE, activationPlanForDate } from "../shared/revenueActivationPlan.ts";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel: string) => fs.readFileSync(path.join(root, rel), "utf8");
@@ -43,5 +44,8 @@ ok("RevenueOsPanel in Hub", read("src/components/HubPanel.tsx").includes("Revenu
 ok("scout preset in research", read("shared/businessResearch.ts").includes("REVENUE_SCOUT_PRESET"));
 ok("Thumbnails income category", read("shared/hub.ts").includes('"Thumbnails"'));
 ok("thumbnail preset query", REVENUE_SCOUT_PRESET.query.length > 40);
+ok("activation prep 36 days", REVENUE_ACTIVATION_PREP.length === 36);
+ok("go-live plan", activationPlanForDate(REVENUE_ACTIVATION_GO_LIVE)?.theme.includes("ACTIVATE") ?? false);
+ok("activation doc", fs.existsSync(path.join(root, "docs/REVENUE_OS_JAN2027_ACTIVATION.md")));
 
 console.log(`\nRevenue OS checks passed (${n}).`);

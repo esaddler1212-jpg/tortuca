@@ -40,6 +40,8 @@ export interface RevenueOsState {
   launchChecklist: Partial<Record<ShopifyLaunchCheckId, boolean>>;
   /** Primary thumbnail package id */
   servicePackageId?: (typeof THUMBNAIL_PACKAGES)[number]["id"];
+  /** Daily Jan 1 prep tasks — keys `YYYY-MM-DD:taskId` (see revenueActivationPlan.ts). */
+  activationDone?: Record<string, boolean>;
 }
 
 export const DEFAULT_REVENUE_OS: RevenueOsState = {
@@ -52,6 +54,7 @@ export function ensureRevenueOs(raw?: RevenueOsState | null): RevenueOsState {
     ...DEFAULT_REVENUE_OS,
     ...raw,
     launchChecklist: { ...DEFAULT_REVENUE_OS.launchChecklist, ...raw?.launchChecklist },
+    activationDone: { ...raw?.activationDone },
   };
 }
 

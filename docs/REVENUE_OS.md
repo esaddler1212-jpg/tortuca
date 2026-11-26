@@ -59,6 +59,13 @@ Launch checklist (toggle in Hub → Money → Revenue OS):
 
 Typical shape: **~$6–7k product** + **~$2–3k service/recurring**, or one scaled product line with audience. Trading is **optional satellite** — not the core freedom loop.
 
+## Jan 1, 2027 activation
+
+Daily prep **Nov 26, 2026 → Dec 31** and go-live tasks **Jan 1**:
+- **App:** Hub → Money → Revenue OS → **Jan 1 prep** (checkboxes sync)
+- **Printable:** [REVENUE_OS_JAN2027_ACTIVATION.md](./REVENUE_OS_JAN2027_ACTIVATION.md)
+- **Source:** `shared/revenueActivationPlan.ts`
+
 ## Related
 
 - `shared/shopify.ts` — store snapshot + readiness  
