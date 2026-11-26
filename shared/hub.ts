@@ -6,6 +6,7 @@
  */
 import type { Area } from "./planData";
 import { addDays, weekdayOfDay } from "./timezone";
+import type { RevenueOsState } from "./revenueOs";
 
 // ── The Feed ─────────────────────────────────────────────────────────────
 
@@ -311,8 +312,17 @@ export function lastWeight(log: GymLog, exerciseId: string, before: string): num
 
 // ── Money ────────────────────────────────────────────────────────────────
 
-export type MoneyCategory = Area | "Bills" | "Food" | "Gas" | "Gear" | "Other";
-export const INCOME_CATEGORIES: MoneyCategory[] = ["ECS", "Easy Supply", "2EASY", "Tortuga", "North Star", "Personal", "Other"];
+export type MoneyCategory = Area | "Bills" | "Food" | "Gas" | "Gear" | "Thumbnails" | "Other";
+export const INCOME_CATEGORIES: MoneyCategory[] = [
+  "ECS",
+  "Easy Supply",
+  "Thumbnails",
+  "2EASY",
+  "Tortuga",
+  "North Star",
+  "Personal",
+  "Other",
+];
 export const EXPENSE_CATEGORIES: MoneyCategory[] = ["Bills", "Food", "Gas", "Gear", "ECS", "Easy Supply", "2EASY", "Tortuga", "North Star", "Other"];
 const ECS_AREAS = new Set<MoneyCategory>(["ECS", "Easy Supply", "2EASY", "Tortuga", "North Star"]);
 
@@ -384,6 +394,8 @@ export interface HubState {
   gymLog: GymLog;
   money: MoneyEntry[];
   revenueGoal: number;
+  /** Shopify launch checklist + thumbnail package prefs (see shared/revenueOs.ts). */
+  revenueOs?: RevenueOsState;
   memos: Memo[];
   links: { booking?: string; notes?: string };
   updatedAt: string;
@@ -395,7 +407,7 @@ export const EMPTY_HUB: HubState = {
   routine: null,
   gymLog: {},
   money: [],
-  revenueGoal: REVENUE_LADDER[0],
+  revenueGoal: 2_000,
   memos: [],
   links: {},
   updatedAt: new Date(0).toISOString(),

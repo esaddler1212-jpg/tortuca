@@ -30,6 +30,10 @@ This repo runs **Iris** (voice chief of staff), **eleven module specialists** (`
 
 - Hand off **Iris** server and policy context with `docs/DEEPSEEK_IRIS_CODE_REVIEW.md` (paths, constraints, copy-paste review prompt). Do not paste secrets or `.env` values into external chats.
 
+## Fleet + goals (E’s devices)
+
+Full map: [`docs/IRIS_FLEET_AND_GOALS_OPTIMIZATION.md`](docs/IRIS_FLEET_AND_GOALS_OPTIMIZATION.md) — hardware roles (iPhone, iPads, Chromebooks, Mac mini, iMac), Iris specialist discipline, Revenue OS rhythm, VPS sequencing.
+
 ## Cursor / Cloud agents working on this repo
 
 - **City Nights browser research:** [`docs/CITY_NIGHTS_CRAFT_ANYTHING.md`](docs/CITY_NIGHTS_CRAFT_ANYTHING.md). **Summer Engine templates** (Godot reference for ghosts/roads/rally): [`docs/SUMMER_ENGINE_TEMPLATES.md`](docs/SUMMER_ENGINE_TEMPLATES.md) · `npm run summer-engine:bootstrap` — port ideas to PlayCanvas only ([`tools/summer-engine-templates/CHERRY_PICK.md`](tools/summer-engine-templates/CHERRY_PICK.md)). Install `bash tools/craft-anything/install.sh --cursor`, use MCP toolset `craft-anything` (enable `browser` / `javascript`). Write outcomes to `drive-world/research/findings/*.md` — do not commit Craft `capture/` blobs.
@@ -38,6 +42,7 @@ This repo runs **Iris** (voice chief of staff), **eleven module specialists** (`
 - Do not weaken `safeFact`, duplicate-delegate checks, or session gates without explicit product approval.
 - Do not embed third-party agent marketplaces (Voicebox, n8n flows, etc.) into the PWA unless requested — optional docs/links only.
 - Before opening a PR: `npm run test:os` (build, time, iris, research, HUD audit, cross-device audit, guardrails, flight-nemulator, gamedev-resources catalog).
+- **Cherry-pick / clone hygiene:** before `npm ci`, Docker, or MCP on unfamiliar GitHub repos, zip the tree and run **[MAYA Sentinel](https://github.com/MAYA-Platform/MAYA-Sentinel)** locally (`tools/maya-sentinel/README.md`, `ai-surface` for agents). Sentinel does not run in Netlify; it complements `npm run scan:secrets` on *this* repo.
 - **PlayCanvas asset index:** `gamedev-resources/` (Kavex, [public-apis](https://github.com/public-apis/public-apis), [game-engines](https://github.com/collections/game-engines), [Blockbench](https://github.com/JannisX11/blockbench)) — [`docs/GAMEDEV_RESOURCES.md`](docs/GAMEDEV_RESOURCES.md). **Visual ROI (Tier 0–5):** [`docs/VISUAL_UPGRADE_TIERS.md`](docs/VISUAL_UPGRADE_TIERS.md). Optional CC0 installs: `bash tools/gamedev-resources/install-free-packs.sh`.
 - **Creative workshops:** Plan → Workshops tab; catalog `workshops/tortuca-creative.json`, Open Generative AI clone `tools/open-generative-ai/` — [`docs/CREATIVE_WORKSHOPS.md`](docs/CREATIVE_WORKSHOPS.md). MuAPI keys stay in the workshop app only (never Netlify env or Iris memory).
 - **Game finish program:** [`docs/GAME_FINISH_PROGRAM.md`](docs/GAME_FINISH_PROGRAM.md). Screenshot polish loop (Vice ’86 driving carousel only): [`docs/GAME_POLISH_LOOP.md`](docs/GAME_POLISH_LOOP.md) · [`docs/GAME_POLISH_VICE86_PROMPTS.md`](docs/GAME_POLISH_VICE86_PROMPTS.md) · `npm run game:polish-prompt -- city-nights vice86-6`. Pick a slice id (`cn-d01` … `bw-d10`). **Nightshift** → `drive-world/`; **Skyring** → `flight-nemulator/`. After the slice, run `npm run game-finish:report -- --agent nightshift|skyring --slice <id> --status done --summary "…"` and commit `shared/game-finish-status.json`. Iris reads progress on Alfred (Team → Game studio). No `consult_specialist` — status is in Right now.

@@ -42,7 +42,9 @@ import { promptForMemo } from "../lib/promptGenerator";
 import { PromptButton } from "./PromptButton";
 import { GymTab } from "./GymTab";
 import { MoneyMarketUpdate } from "./MoneyMarketUpdate";
+import { RevenueOsPanel } from "./RevenueOsPanel";
 import type { StocksSnapshot } from "../types/stocks";
+import type { ShopifyStoreSnapshot } from "../../shared/shopify";
 
 type Tab = "feed" | "watch" | "gym" | "money" | "memos";
 const TAB_LABEL: Record<Tab, string> = { feed: "Feed", watch: "Watch", gym: "Gym", money: "Money", memos: "Memos" };
@@ -64,6 +66,8 @@ interface Props {
   stocksLoading?: boolean;
   stocksError?: string | null;
   onRefreshStocks?: () => void;
+  shopify?: ShopifyStoreSnapshot | null;
+  onOpenModule?: (id: import("../../shared/hudModules").HudModuleId) => void;
 }
 
 const newId = (p: string) => `${p}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
@@ -473,7 +477,7 @@ function UptimeStatus({ r }: { r?: WatchResult }) {
 
 // ── Money ────────────────────────────────────────────────────────────────
 
-function MoneyTab({ hub, update, today, stocks, stocksLoading, stocksError, onRefreshStocks }: Props) {
+function MoneyTab({ hub, update, today, stocks, stocksLoading, stocksError, onRefreshStocks, shopify, onOpenModule }: Props) {
   const month = today.slice(0, 7);
   const sum = useMemo(() => moneyMonth(hub.money, month), [hub.money, month]);
   const [kind, setKind] = useState<"in" | "out">("out");
@@ -488,6 +492,7 @@ function MoneyTab({ hub, update, today, stocks, stocksLoading, stocksError, onRe
 
   return (
     <div className="space-y-3">
+      <RevenueOsPanel hub={hub} update={update} today={today} shopify={shopify} onOpenModule={onOpenModule} />
       <p className="hud-label flex items-center gap-1.5">
         <Wallet className="h-3.5 w-3.5" aria-hidden /> {new Date(`${month}-15T12:00:00Z`).toLocaleDateString("en-US", { month: "long", timeZone: "UTC" })}
       </p>

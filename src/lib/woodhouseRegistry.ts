@@ -14,6 +14,12 @@ export const DEFAULT_WOODHOUSE_NODES: WoodhouseRegistryEntry[] = [
     baseUrl: "",
     provider: "family-purpose-backup",
   },
+  {
+    id: "sure-ledger",
+    displayName: "Sure (finance)",
+    nodeType: "finance",
+    baseUrl: "",
+  },
 ];
 
 export function migrateWoodhouseNodes(settings: {

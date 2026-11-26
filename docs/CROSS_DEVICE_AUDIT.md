@@ -8,8 +8,8 @@ IRIS is one PWA with **three layout bands**, not three separate apps. Data and p
 |--------|------------------|---------|-----------------|
 | **iPhone** | 390–430 × 844+ | `< 833px` (`lg`) | Stacked: gauges + core + up next; bottom tab bar; Iris dock above tabs when talking |
 | **iPad portrait** | 768–820 × 1024+ | `< 833px` | Same as iPhone (intentional — thumb reach, no squeezed 3-column deck) |
-| **iPad landscape** | 1024+ × 768+ | `≥ 833px` | **Command deck**: status \| core \| up next; filament orb in centre column |
-| **Chromebook** | 1366×768+ | `≥ 833px` | Same as iPad landscape; tab bar widens to 1100px to match home |
+| **iPad landscape** | 1024+ × 768+ | `≥ 833px` | **Command deck**: status \| core \| up next; **Dust Orb** in centre (Ship Notes v2, MIT) |
+| **Chromebook** | 1366×768+ | `≥ 833px` | Same as iPad landscape; tab bar widens to 1100px; **Dust Orb** core (lazy WebGL) |
 
 Breakpoint source of truth: `tailwind.config.js` → `screens.lg: "833px"` (mirrored in `src/index.css` media queries).
 
