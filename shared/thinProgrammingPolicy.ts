@@ -24,6 +24,7 @@ export const SESSION_REQUIRED_HANDLERS = [
   "wearable-ingest",
   "inbox-triage",
   "voice-call",
+  "sure-summary",
 ] as const;
 
 /** Intentionally callable without Google session (public data or OAuth setup). */
@@ -58,6 +59,7 @@ export const CLIENT_FETCHES_REQUIRE_AUTH = [
   { file: "src/hooks/useCommute.ts", needle: "/api/commute", headerFn: "authHeaders" },
   { file: "src/lib/google.ts", needle: "/gmail", headerFn: "authHeaders" },
   { file: "src/hooks/useStocks.ts", needle: "/api/stocks", headerFn: "authHeaders" },
+  { file: "src/hooks/useSureSummary.ts", needle: "/api/sure-summary", headerFn: "authHeaders" },
   { file: "src/lib/tierAApi.ts", needle: "/api/", headerFn: "authHeaders" },
 ] as const;
 

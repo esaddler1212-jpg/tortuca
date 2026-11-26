@@ -43,6 +43,8 @@ import { useGoogleIntegration, useSchedule } from "./hooks/useGoogle";
 import { useEmails } from "./hooks/useEmails";
 import { useWoodhouse } from "./hooks/useWoodhouse";
 import { useStocks } from "./hooks/useStocks";
+import { useSureSummary } from "./hooks/useSureSummary";
+import { sureContextForIris } from "../shared/sureIrisBridge";
 import { useCommute } from "./hooks/useCommute";
 import { useUserDataSync } from "./hooks/useUserDataSync";
 import { usePushNotifications } from "./hooks/usePushNotifications";
@@ -129,6 +131,7 @@ export default function App() {
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", themeColor);
   }, [mode]);
   const { snapshot: stocks, loading: stocksLoading, error: stocksError, refresh: refreshStocks } = useStocks();
+  const { snapshot: sureSummary } = useSureSummary();
   const commute = useCommute(settings, connected);
   const effectiveMinutes = commute.effectiveMinutes;
   const { logs: fitnessLogs, logWorkout, loadRemote: loadFitness } = useFitness(settings);
@@ -564,7 +567,8 @@ export default function App() {
                             gameFinishForAskExtra(),
                             shopifyContextForIris(shopifyStore),
                             tierAContextForIris(tierA),
-                            revenueContextForIris(hub.money, today.slice(0, 7), hub.revenueOs, shopifyStore),
+                            revenueContextForIris(hub.money, today.slice(0, 7), hub.revenueOs, shopifyStore, sureSummary),
+                            sureContextForIris(sureSummary),
                           ].filter(Boolean);
                         })(),
                       }),

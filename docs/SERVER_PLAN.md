@@ -16,6 +16,7 @@ ready to go when we turn it on.
 | 0 | **Tailscale** | Private network between the server, your iPhone, Chromebook and computers, so private apps (Paperless, Immich, God's Eye) never face the public internet | tiny |
 | 0 | **Coolify** | One-click installs, HTTPS, updates and backups for everything below | ~0.5 GB |
 | 1 | **n8n** | Automation backbone: Gmail → Drive filing, Spotify logging for 2EASY, Easy Supply orders → Money, scheduled sponsor follow-ups | ~0.5–1 GB |
+| 1b | **Sure** (finance) | AGPL ledger sidecar — bank/credit truth, budgets; Tortuca reads totals via `SURE_API_URL` ([`DEEP_DIVE_SURE_ASTRYX.md`](./DEEP_DIVE_SURE_ASTRYX.md)) | ~1–2 GB |
 | 2 | **Twenty CRM** | Pipeline for jobs, the North Star board, partners/sponsors and $BAY subjects | ~1.5–2 GB (with Postgres + Redis) |
 | 3 | **GPT Researcher** | "Research this" button on any task or goal → a sourced report in a few minutes | ~1 GB |
 | 4 | **browser-use** | Automates sites that have no API (portals, forms, submission pages) | ~1–1.5 GB (runs a browser) |

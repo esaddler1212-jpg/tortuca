@@ -23,6 +23,8 @@ import type { ShopifyStoreSnapshot } from "../../shared/shopify";
 import { shopifyReadiness } from "../../shared/shopify";
 import type { HudModuleId } from "../../shared/hudModules";
 import { stashResearchPrefill } from "../lib/researchPrefill";
+import { useSureSummary } from "../hooks/useSureSummary";
+import { sureSummaryLine } from "../../shared/sureIrisBridge";
 
 const money = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
 
@@ -65,6 +67,8 @@ export function RevenueOsPanel({
   const dayPlan = activationPlanForDate(today);
   const prepDay = activationPrepIndex(today);
   const dayProg = activationProgress(today, ros.activationDone);
+  const { snapshot: sureSnap } = useSureSummary();
+  const sureLine = sureSummaryLine(sureSnap);
 
   const toggleActivation = (taskId: string) => {
     const key = activationTaskKey(today, taskId);
@@ -243,6 +247,13 @@ export function RevenueOsPanel({
           Shop launch {launch.pct}% · {pkg.label} {money(pkg.price)} · Hub for checklist
         </p>
       )}
+      {sureLine ? (
+        <p className="text-[10px] font-mono text-emerald-400/70">{sureLine}</p>
+      ) : !compact ? (
+        <p className="text-[10px] text-alfred-mist/80">
+          Optional Sure ledger on Woodhouse VPS — <code className="text-cyan-400/70">tools/sure/README.md</code>
+        </p>
+      ) : null}
     </section>
   );
 }

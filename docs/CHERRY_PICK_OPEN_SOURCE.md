@@ -1,0 +1,12 @@
+# Open-source cherry-picks (Tortuca / IRIS)
+
+Curated forks and clones — **not** vendored into the PWA unless noted.
+
+| Project | Doc | Tortuca touchpoint | Status |
+|---------|-----|-------------------|--------|
+| **Sure** (`we-promise/sure`) | [`DEEP_DIVE_SURE_ASTRYX.md`](./DEEP_DIVE_SURE_ASTRYX.md) | `sure-summary` API, `shared/sureIrisBridge.ts`, `tools/sure/` | Bridge shipped; VPS install manual |
+| **Astryx** (`meta/astryx`) | [`DEEP_DIVE_SURE_ASTRYX.md`](./DEEP_DIVE_SURE_ASTRYX.md) | `tools/astryx-pilot/README.md` | Patterns only; pilot later |
+| Summer Engine / City Nights | [`SUMMER_ENGINE_TEMPLATES.md`](./SUMMER_ENGINE_TEMPLATES.md), [`CITY_NIGHTS_CRAFT_ANYTHING.md`](./CITY_NIGHTS_CRAFT_ANYTHING.md) | `drive-world/` | PlayCanvas ports |
+| Open Generative AI workshops | [`CREATIVE_WORKSHOPS.md`](./CREATIVE_WORKSHOPS.md) | `workshops/` | MuAPI local only |
+
+**Workflow:** explore in `/tmp` or `tools/*/`, write findings to `docs/`, add thin adapters in `shared/` + session-gated Netlify handlers, run `npm run test:os` before PR.

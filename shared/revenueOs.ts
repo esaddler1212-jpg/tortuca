@@ -5,6 +5,8 @@
 import type { MoneyEntry } from "./hub";
 import type { ShopifyStoreSnapshot } from "./shopify";
 import { shopifyReadiness } from "./shopify";
+import type { SureSummarySnapshot } from "./sureIrisBridge";
+import { sureSummaryLine } from "./sureIrisBridge";
 
 export const REVENUE_TARGETS = {
   shortMonthly: 2_000,
@@ -128,6 +130,7 @@ export function revenueContextForIris(
   month: string,
   revenueOs: RevenueOsState | undefined,
   shopify?: ShopifyStoreSnapshot | null,
+  sure?: SureSummarySnapshot | null,
 ): string {
   const b = revenueMonthBreakdown(entries, month);
   const launch = shopLaunchProgress(ensureRevenueOs(revenueOs).launchChecklist);
@@ -142,7 +145,10 @@ export function revenueContextForIris(
     launch.pct < 100
       ? "While Shopify is not-ready, prioritize thumbnail clients first; do not recommend heavy ad spend."
       : "Shop may contribute; still gate spend and listing changes behind E's OK.",
-  ].join(" ");
+    sureSummaryLine(sure) || "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
 
 export const REVENUE_SCOUT_PRESET = {
