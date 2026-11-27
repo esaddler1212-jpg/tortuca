@@ -64,6 +64,13 @@ export function spawnHubStreetTraffic(app: AppBase, preset: BayQualityPreset = '
   }
 }
 
+export function forEachHubTrafficPosition(fn: (x: number, z: number, key: string) => void): void {
+  for (const car of hubCars) {
+    const p = car.root.getPosition();
+    fn(p.x, p.z, car.root.name);
+  }
+}
+
 export function updateHubStreetTraffic(dt: number, enabled: boolean): void {
   if (!enabled) return;
   for (const car of hubCars) {

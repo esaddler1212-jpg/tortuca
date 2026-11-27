@@ -57,6 +57,8 @@ await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60_000 });
 await page.waitForSelector('#tap-start', { timeout: 30_000 });
 await page.click('#tap-start');
 await page.waitForFunction(() => typeof window.__battleworld?.hud === 'function', { timeout: 120_000 });
+const self = await page.evaluate(() => window.__battleworld.runSelfTests?.());
+check('runSelfTests', self?.ok === true, self?.results?.filter((r) => !r.ok).map((r) => r.name).join(', '));
 await sleep(2500);
 
 const h0 = await page.evaluate(() => window.__battleworld.hud());

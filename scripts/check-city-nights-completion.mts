@@ -47,5 +47,14 @@ if (existsSync(join(root, 'scripts/check-landmark-sprint-board.mts'))) {
   ok('landmark sprint board check', r.status === 0);
 }
 
+ok('near-miss boost module', existsSync(join(dw, 'src/near-miss-boost.ts')));
+const loop = readFileSync(join(dw, 'src/game-loop.ts'), 'utf8');
+ok('near-miss wired in game-loop', loop.includes('scanNearMiss') && loop.includes('gatherTrafficTargets'));
+
+if (existsSync(join(root, 'scripts/verify-near-miss-offline.mts'))) {
+  const r = spawnSync('npx', ['tsx', join(root, 'scripts/verify-near-miss-offline.mts')], { cwd: root, stdio: 'inherit' });
+  ok('verify-near-miss-offline', r.status === 0);
+}
+
 if (failed) process.exitCode = 1;
 else console.log('check-city-nights-completion: ok');

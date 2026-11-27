@@ -56,6 +56,8 @@ export type HudSnapshot = {
   /** 0–100 nitro tank (Midnight Club–style boost) */
   nitroPercent?: number;
   nitroBoosting?: boolean;
+  /** Neon Drift–style near-miss chain (0 when idle). */
+  nearMissChain?: number;
   /** Lush preset + boost — MC Nitro Zone grade */
   nitroZoneActive?: boolean;
   driftScore?: number;

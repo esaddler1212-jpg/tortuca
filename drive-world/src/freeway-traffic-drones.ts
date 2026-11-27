@@ -103,6 +103,13 @@ export function spawnFreewayTrafficDrones(
   }
 }
 
+export function forEachFreewayDronePosition(fn: (x: number, z: number, key: string) => void): void {
+  for (const drone of drones) {
+    const p = drone.root.getPosition();
+    fn(p.x, p.z, drone.root.name);
+  }
+}
+
 export function updateFreewayTrafficDrones(dt: number, enabled: boolean): void {
   if (!enabled) return;
   for (const drone of drones) {

@@ -183,6 +183,8 @@ import {
   heatDecay,
   heatFromSpeedTrap
 } from './game-heat';
+import { createNearMissState, scanNearMiss } from './near-miss-boost';
+import { gatherTrafficTargets } from './traffic-targets';
 import { createPlayerVehicle, destroyPlayerVehicle, type PlayerVehicle } from './vehicle-factory';
 import { ensureVehicleModelLoaded, ensureVehicleModelsLoaded } from './vehicle-gltf';
 import type { GameSettings } from './game-settings';
@@ -256,6 +258,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
   let nitroCharge = 1;
   let nitroBoosting = false;
   let wasNitroBoosting = false;
+  let nearMissState = createNearMissState();
   let wasHeatHunted = false;
   let wasCopBoxChase = false;
   let wheelsOffGroundT = 0;
@@ -1264,6 +1267,23 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
         nitroCharge = Math.min(1, nitroCharge + dt * 0.14);
       }
       wasNitroBoosting = nitroBoosting;
+      if (
+        !aerial &&
+        !onAutopilot &&
+        settings.showTraffic &&
+        progress.phase === 'home' &&
+        !ridingWaymo &&
+        !photoMode &&
+        !inTokyo
+      ) {
+        const nm = scanNearMiss(pos.x, pos.z, mph, gatherTrafficTargets(), nearMissState, worldTime, dt);
+        nearMissState = nm.state;
+        if (nm.event) {
+          nitroCharge = Math.min(1, nitroCharge + nm.event.nitroGain);
+          ui.showToast('Near miss', nm.event.body, nm.event.chain > 2 ? 3600 : 2600);
+          if (nm.event.chain > 1) hapticNitro();
+        }
+      }
       if (!aerial && progress.phase === 'home' && !ridingWaymo && !photoMode && !inTokyo) {
         const wheels = countWheelsOnGround(ent);
         if (wheels === 0 && mph < 5) wheelsOffGroundT += dt;
@@ -1672,6 +1692,7 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
       storefrontStripLabel: strip ? `${strip.label} — ${strip.shops[0] ?? 'shops'}` : null,
       nitroPercent: Math.round(nitroCharge * 100),
       nitroBoosting,
+      nearMissChain: nearMissState.chain,
       nitroZoneActive: nitroZoneActive(settings.bayQualityPreset ?? 'balanced', nitroBoosting),
       driftScore: progress.phase === 'home' ? cpmRuntime.driftScore : 0,
       driftGoal,
