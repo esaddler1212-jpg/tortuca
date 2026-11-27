@@ -10,6 +10,7 @@ Four **local-only** upstream repos Tortuca references for City Nights, Flight Ne
 | [NVIDIA Audio2Face-3D SDK](https://github.com/NVIDIA/Audio2Face-3D-SDK) | [`tools/audio2face-3d/`](../tools/audio2face-3d/) | **Lip-sync / emotion** from speech (film, future Iris face — not web yet) |
 | [Summer Engine templates](https://github.com/SummerEngine) | [`tools/summer-engine-templates/`](../tools/summer-engine-templates/) | **Godot reference** for ghosts, roads, rally feel → PlayCanvas cherry-picks ([`docs/SUMMER_ENGINE_TEMPLATES.md`](./SUMMER_ENGINE_TEMPLATES.md)) |
 | [awesome-gamedev-agent-skills](https://github.com/gamedev-skills/awesome-gamedev-agent-skills) | [`tools/awesome-gamedev-agent-skills/`](../tools/awesome-gamedev-agent-skills/) | **79 Agent Skills + router** (three.js/GLB, assets, genres); PlayCanvas via cherry-pick |
+| [OpenGame](https://github.com/nexu-io/opengame) | [`tools/opengame/`](../tools/opengame/) | **Super Game Agent** — QA gates, templates (`neon-drift`, `tidebreaker`), playtest discipline — [`OPENGAME_VANTAGEGAMES_REVIEW.md`](./OPENGAME_VANTAGEGAMES_REVIEW.md) |
 
 ## Bootstrap (shallow clone, gitignored)
 
@@ -20,6 +21,7 @@ npm run unreal-claude:bootstrap
 npm run audio2face:bootstrap
 npm run summer-engine:bootstrap
 npm run gamedev-skills:bootstrap
+npm run opengame:bootstrap
 ```
 
 Refresh: `ACE_STEP_PULL=1 npm run ace-step:bootstrap` (same pattern per tool’s README).
