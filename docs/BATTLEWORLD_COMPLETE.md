@@ -2,6 +2,8 @@
 
 Battleworld is **complete** when this doc’s gate passes and [`npm run test:flight-nemulator`](../package.json) is green (includes **`BATTLEWORLD_COMPLETE_GATE=1`**).
 
+OpenGame-style checklist: [`BATTLEWORLD_VERIFICATION.md`](./BATTLEWORLD_VERIFICATION.md). Family URL smoke: [`COUCH_SMOKE_VANTAGEGAMES1.md`](./COUCH_SMOKE_VANTAGEGAMES1.md).
+
 ## Shipped in the completion pass
 
 | Area | What |

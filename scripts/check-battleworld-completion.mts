@@ -56,6 +56,7 @@ ok('campaign objective', obj.includes('Ch.'));
 
 const shipped = readFileSync(join(root, 'docs/BATTLEWORLD_COMPLETE.md'), 'utf8');
 ok('BATTLEWORLD_COMPLETE doc', shipped.includes('BATTLEWORLD_COMPLETE_GATE'));
+ok('BATTLEWORLD_VERIFICATION doc', existsSync(join(root, 'docs/BATTLEWORLD_VERIFICATION.md')));
 
 ok('bw-self-tests module', existsSync(join(fn, 'src/bw-self-tests.ts')));
 const mainBw = readFileSync(join(fn, 'src/main.ts'), 'utf8');
