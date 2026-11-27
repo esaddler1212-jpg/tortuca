@@ -39,6 +39,8 @@ page.on('pageerror', (e) => errors.push(e.message));
 
 await page.goto(`${url}?cnDebug`, { waitUntil: 'domcontentloaded', timeout: 60_000 });
 await page.waitForFunction(() => !!window.__cityNights, { timeout: 120_000 });
+const self0 = await page.evaluate(() => window.__cityNights.runSelfTests?.());
+check('runSelfTests (invariants)', self0?.ok === true, self0?.results?.filter((r) => !r.ok).map((r) => r.name).join(', '));
 await page.click('#tap-start').catch(() => {});
 await sleep(1500);
 
@@ -212,6 +214,19 @@ check('pad glyphs shown', (await hud()).gamepadConnected === true);
 if (shot) await page.screenshot({ path: `${shot}/playtest-gamepad.png` });
 
 check('no page errors', errors.length === 0, [...new Set(errors)].slice(0, 3).join(' | '));
+
+if (process.env.PLAYTEST_PORTRAIT === '1') {
+  await page.setViewport({ width: 390, height: 844 });
+  await sleep(1200);
+  const portraitOk = await page.evaluate(() => {
+    const hud = document.getElementById('hud');
+    const react = document.getElementById('react-hud');
+    if (!hud || !react) return false;
+    const r = hud.getBoundingClientRect();
+    return r.width > 0 && r.height > 0 && react.childElementCount > 0;
+  });
+  check('portrait 390×844 hud mounts', portraitOk);
+}
 
 await browser.close();
 await server?.close();

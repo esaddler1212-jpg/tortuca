@@ -39,7 +39,8 @@ import { placeSuburbanKenneyProps } from './build-kenney-suburban';
 import { placeOsmLandmarkMarkers } from './build-osm-landmarks';
 import { startGameSession } from './game-loop';
 import { installOpenworldDevCommands } from './openworldjs/dev-commands';
-import { getHudSnapshot } from './game-bridge';
+import { getHudSnapshot, requestSkipWaymo } from './game-bridge';
+import { runCityNightsSelfTests } from './cn-self-tests';
 import { installMobileShell } from './install-mobile-shell';
 import { isIOS, recommendedPixelRatio } from './mobile-platform';
 import { applyFrameCap, applyResolutionScale, installRenderCap } from './console-graphics';
@@ -191,6 +192,8 @@ if (new URLSearchParams(location.search).has('cnDebug')) {
     app,
     renders: () => renders,
     ticks: () => ticks,
-    hud: getHudSnapshot
+    hud: getHudSnapshot,
+    runSelfTests: runCityNightsSelfTests,
+    skipCinematic: requestSkipWaymo
   };
 }

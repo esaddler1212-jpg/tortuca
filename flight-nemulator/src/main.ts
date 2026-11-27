@@ -16,6 +16,7 @@ import {
   createGraphicsDevice
 } from 'playcanvas';
 import { getHudSnapshot } from './game-bridge';
+import { runBattleworldSelfTests } from './bw-self-tests';
 import { mountHud } from './hud/mount';
 import { selectHero, startGame } from './game-loop';
 import { refreshLoadingTips, currentLoadingTip } from './loading-tips';
@@ -81,5 +82,6 @@ await startGame(app);
 (window as unknown as { __battleworld?: unknown }).__battleworld = {
   app,
   hud: getHudSnapshot,
-  selectHero
+  selectHero,
+  runSelfTests: runBattleworldSelfTests
 };

@@ -382,7 +382,9 @@ function RacingHud({ snap }: { snap: HudSnapshot }) {
   const showTime = time != null && time > 0;
   const ghost = snap.ghostRivalLabel;
   const showGhost = Boolean(ghost);
-  if (!showDrift && !showNitro && !showTree && !showTime && !showGhost) return null;
+  const chain = snap.nearMissChain ?? 0;
+  const showChain = chain > 0;
+  if (!showDrift && !showNitro && !showTree && !showTime && !showGhost && !showChain) return null;
   const driftPct = snap.driftGoal ? Math.min(100, (drift / snap.driftGoal) * 100) : Math.min(100, drift / 10);
   return (
     <div className="racing-hud" aria-live="polite">
@@ -404,6 +406,7 @@ function RacingHud({ snap }: { snap: HudSnapshot }) {
           Time {(time! / 1000).toFixed(2)}s {snap.timeAttackProgress ? `· ${snap.timeAttackProgress}` : ''}
         </div>
       ) : null}
+      {showChain ? <div className="race-strip ghost-rival">Near-miss chain ×{chain}</div> : null}
       {showNitro ? (
         <div className={`race-strip nitro${snap.nitroZoneActive ? ' nitro-zone' : ''}`}>
           {snap.nitroZoneActive ? 'NITRO ZONE' : `N₂O ${snap.nitroBoosting ? 'BOOST' : 'Tank'}`}{' '}

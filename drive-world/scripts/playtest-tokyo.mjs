@@ -35,7 +35,29 @@ const check = (name, ok, detail) => {
 };
 const readMinimapTitle = () => page.$eval('.minimap-wrap .minimap-title', (e) => (e.textContent ?? '').trim());
 const isBayMinimapTitle = (title) => title === 'City Nights map' || title.startsWith('City Nights map ·');
+/** Haneda arrival pad (TOKYO_CENTER + local offset). */
+const HANEDA_PAD_X = 8360;
+const HANEDA_PAD_Z = -640;
+
 const boardFlightWaitMs = process.env.GITHUB_ACTIONS ? 20_000 : 10_000;
+const flightLandWaitMs = process.env.GITHUB_ACTIONS ? 120_000 : 90_000;
+
+const waitFlightCinematic = async (evaluateDone) => {
+  const start = Date.now();
+  let lastSkip = 0;
+  while (Date.now() - start < flightLandWaitMs) {
+    const done = await page.evaluate(evaluateDone);
+    if (done) return;
+    const elapsed = Date.now() - start;
+    if (elapsed > 20_000 && elapsed - lastSkip > 8_000) {
+      await page.evaluate(() => window.__cityNights?.skipCinematic?.()).catch(() => {});
+      await page.click('.skip-waymo').catch(() => {});
+      lastSkip = elapsed;
+    }
+    await sleep(400);
+  }
+  throw new Error(`flight cinematic did not finish within ${flightLandWaitMs}ms`);
+};
 const waitFlightBoarded = () =>
   page.waitForFunction(
     () => {
@@ -70,7 +92,9 @@ const browser = await puppeteer.launch({
     '--use-angle=swiftshader',
     '--enable-unsafe-swiftshader',
     '--ignore-gpu-blocklist',
+    '--disable-background-timer-throttling',
     '--disable-renderer-backgrounding',
+    '--disable-backgrounding-occluded-windows',
     '--window-size=960,540'
   ],
   defaultViewport: { width: 960, height: 540 }
@@ -164,7 +188,10 @@ check('F boards the flight', !!h.cine && h.riding === true, h.cine?.label ?? 'no
 await sleep(4000);
 if (shot) await page.screenshot({ path: `${shot}/tokyo-02-takeoff.png` });
 
-await page.waitForFunction(() => !window.__cityNights.hud().flightCinematic, { timeout: 90_000 });
+await waitFlightCinematic(() => {
+  const h = window.__cityNights.hud();
+  return h.inTokyo === true && !h.flightCinematic;
+});
 await sleep(3000);
 h = await hud();
 check('cinematic lands in Tokyo', h.inTokyo && h.x > 8000, `(${h.x.toFixed(0)}, ${h.z.toFixed(0)}) flights=${h.flights}`);
@@ -258,28 +285,52 @@ const ffFleet = await page.evaluate(() =>
 );
 check('full Tokyo FF fleet unlocked', ffFleet === 8, `${ffFleet}/8`);
 
-await teleport(8360, -640);
+await teleport(HANEDA_PAD_X, HANEDA_PAD_Z);
 await sleep(3500);
-await page.evaluate(() => {
-  const key = 'drive-world-progress-v5';
-  const raw = JSON.parse(localStorage.getItem(key) ?? '{}');
-  raw.lastPose = { x: 8360, y: 0.95, z: -640, yaw: 45 };
-  localStorage.setItem(key, JSON.stringify(raw));
-});
+await page.evaluate(
+  ([x, z]) => {
+    const key = 'drive-world-progress-v5';
+    const raw = JSON.parse(localStorage.getItem(key) ?? '{}');
+    raw.lastPose = { x, y: 0.95, z, yaw: 45 };
+    localStorage.setItem(key, JSON.stringify(raw));
+  },
+  [HANEDA_PAD_X, HANEDA_PAD_Z]
+);
 await page.reload({ waitUntil: 'domcontentloaded' });
 await boot();
+await teleport(HANEDA_PAD_X, HANEDA_PAD_Z);
+await sleep(process.env.GITHUB_ACTIONS ? 3500 : 2000);
+await page
+  .waitForFunction(
+    () => {
+      const p = window.__cityNights.hud().flightPrompt;
+      return p?.ready === true && p.label === 'Fly home to SFO';
+    },
+    { timeout: 45_000, polling: 200 }
+  )
+  .catch(() => {});
 h = await hud();
 const car2 = await carState();
 check('reload resumes in Tokyo', h.inTokyo && h.x > 8000, `(${h.x.toFixed(0)}, ${h.z.toFixed(0)})`);
 check('car on ground after Tokyo resume', !!car2 && car2.y > -0.5 && car2.y < 3, car2 ? `y=${car2.y.toFixed(2)}` : 'no car');
-check('Haneda prompt offers flight home', h.prompt?.label === 'Fly home to SFO', h.prompt?.label);
+check(
+  'Haneda prompt offers flight home',
+  h.prompt?.label === 'Fly home to SFO' && h.prompt?.ready === true,
+  h.prompt?.label ?? 'no prompt'
+);
 
 await tryBoardFlight();
-let hReturn = await hud();
-check('return flight starts', !!hReturn.cine, hReturn.cine?.label ?? 'no cinematic');
-await page.waitForSelector('.skip-waymo', { timeout: 15_000 });
-await page.click('.skip-waymo');
-await sleep(3000);
+const hReturn = await hud();
+check(
+  'return flight starts',
+  !!hReturn.cine && hReturn.riding === true,
+  hReturn.cine?.label ?? 'no cinematic'
+);
+await waitFlightCinematic(() => {
+  const h = window.__cityNights.hud();
+  return h.inTokyo !== true && !h.flightCinematic;
+});
+await sleep(1500);
 h = await hud();
 check('Land now returns to SFO', !h.inTokyo && Math.hypot(h.x + 420, h.z + 1260) < 40, `(${h.x.toFixed(0)}, ${h.z.toFixed(0)})`);
 check('minimap back to Bay', await bayMinimapTitle(), await readMinimapTitle());

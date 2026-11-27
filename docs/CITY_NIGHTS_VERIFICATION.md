@@ -22,7 +22,7 @@ Living checklist for **Hard Fails** (P0), experience (P1), and **Known gaps P2**
 ## Known gaps P2 (OpenGame cap: list ≤ 5 to family)
 
 1. Procedural city blocks (no Kenney district pack on deploy machine)
-2. No near-miss boost chain (see `neon-drift` peer — CN-OG-02)
+2. Near-miss boost + `runSelfTests` — **CN-OG-02 / 03 shipped**
 3. `game-loop.ts` monolith — split deferred
 4. Light police pursuit above heat 4 — design only
 5. Trustfund third game — spec only

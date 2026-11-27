@@ -103,6 +103,13 @@ export function spawnAmbientTraffic(app: AppBase, preset: BayQualityPreset = 'ba
   }
 }
 
+export function forEachAmbientTrafficPosition(fn: (x: number, z: number, key: string) => void): void {
+  for (const car of traffic) {
+    const p = car.root.getPosition();
+    fn(p.x, p.z, car.root.name);
+  }
+}
+
 export function updateAmbientTraffic(dt: number, enabled: boolean): void {
   if (!enabled) return;
   for (const car of traffic) {
