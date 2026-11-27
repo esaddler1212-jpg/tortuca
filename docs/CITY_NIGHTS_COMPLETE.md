@@ -32,6 +32,7 @@ cd drive-world && npm run test:city-nights
 - `prefers-reduced-motion` hides minimap vista pulse ring
 - Sprint leaderboard field + static check
 
-## Agent skills (Game Studios → Tortuca)
+## Verification (OpenGame-style)
 
-See [`docs/GAME_STUDIOS_DEEP_DIVE.md`](./GAME_STUDIOS_DEEP_DIVE.md) and `.claude/skills/tortuca-*`.
+Hard Fails + P2 list: [`CITY_NIGHTS_VERIFICATION.md`](./CITY_NIGHTS_VERIFICATION.md)  
+OpenGame gap review: [`OPENGAME_VANTAGEGAMES_REVIEW.md`](./OPENGAME_VANTAGEGAMES_REVIEW.md)

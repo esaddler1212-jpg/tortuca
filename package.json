@@ -50,6 +50,7 @@
     "unreal-claude:bootstrap": "bash tools/unreal-claude/bootstrap.sh",
     "game-studios:bootstrap": "bash tools/claude-code-game-studios/bootstrap.sh",
     "gamedev-skills:bootstrap": "bash tools/awesome-gamedev-agent-skills/bootstrap.sh",
+    "opengame:bootstrap": "bash tools/opengame/bootstrap.sh",
     "audio2face:bootstrap": "bash tools/audio2face-3d/bootstrap.sh",
     "open-generative-ai:bootstrap": "bash tools/open-generative-ai/bootstrap.sh",
     "summer-engine:bootstrap": "bash tools/summer-engine-templates/bootstrap.sh",
