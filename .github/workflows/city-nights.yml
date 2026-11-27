@@ -33,6 +33,10 @@ jobs:
       - run: npm run test:playtest
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
+      - run: npm run test:playtest
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
+          PLAYTEST_PORTRAIT: '1'
       - run: npm run test:tokyo
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
