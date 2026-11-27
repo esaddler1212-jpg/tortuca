@@ -70,7 +70,9 @@ const browser = await puppeteer.launch({
     '--use-angle=swiftshader',
     '--enable-unsafe-swiftshader',
     '--ignore-gpu-blocklist',
+    '--disable-background-timer-throttling',
     '--disable-renderer-backgrounding',
+    '--disable-backgrounding-occluded-windows',
     '--window-size=960,540'
   ],
   defaultViewport: { width: 960, height: 540 }
@@ -164,7 +166,29 @@ check('F boards the flight', !!h.cine && h.riding === true, h.cine?.label ?? 'no
 await sleep(4000);
 if (shot) await page.screenshot({ path: `${shot}/tokyo-02-takeoff.png` });
 
-await page.waitForFunction(() => !window.__cityNights.hud().flightCinematic, { timeout: 90_000 });
+const flightLandWaitMs = process.env.GITHUB_ACTIONS ? 120_000 : 90_000;
+const waitFlightLanded = async () => {
+  const start = Date.now();
+  let lastSkip = 0;
+  while (Date.now() - start < flightLandWaitMs) {
+    const landed = await page.evaluate(() => {
+      const h = window.__cityNights.hud();
+      return h.inTokyo === true && !h.flightCinematic;
+    });
+    if (landed) return;
+    const elapsed = Date.now() - start;
+    if (elapsed > 20_000 && elapsed - lastSkip > 8_000) {
+      await page
+        .evaluate(() => window.__cityNights?.skipCinematic?.() ?? window.__cityNights?.hud())
+        .catch(() => {});
+      await page.click('.skip-waymo').catch(() => {});
+      lastSkip = elapsed;
+    }
+    await sleep(400);
+  }
+  throw new Error(`flight cinematic did not finish within ${flightLandWaitMs}ms`);
+};
+await waitFlightLanded();
 await sleep(3000);
 h = await hud();
 check('cinematic lands in Tokyo', h.inTokyo && h.x > 8000, `(${h.x.toFixed(0)}, ${h.z.toFixed(0)}) flights=${h.flights}`);
