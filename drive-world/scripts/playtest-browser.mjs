@@ -120,6 +120,10 @@ const gMoved = Math.hypot(g1.playerX - g0.playerX, g1.playerZ - g0.playerZ);
 // Headless CI often logs ~0.5 m after 4s (float rounding); mph still proves throttle works.
 const drove = g1.mph >= 3 && (gMoved >= 0.35 || g1.mph >= 5);
 check('pad RT drives', drove, `${g0.mph.toFixed(1)} → ${g1.mph.toFixed(1)} mph, ${gMoved.toFixed(1)} m`);
+const starterRoad = await page.evaluate(() =>
+  !!window.__cityNights.app.root.find((n) => n.name?.startsWith('starter-vallejo-egress'))
+);
+check('vallejo starter road mesh', starterRoad);
 await press(6, true);
 await sleep(5000);
 const g1b = await state();

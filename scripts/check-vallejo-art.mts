@@ -14,6 +14,8 @@ const peninsula = readFileSync(join(root, 'drive-world/src/build-peninsula-sfo-k
 const southbay = readFileSync(join(root, 'drive-world/src/build-southbay-sap-kit.ts'), 'utf8');
 const districts = readFileSync(join(root, 'drive-world/src/build-kenney-districts.ts'), 'utf8');
 const recover = readFileSync(join(root, 'drive-world/src/vehicle-recover.ts'), 'utf8');
+const maze = readFileSync(join(root, 'drive-world/src/build-openworld-maze.ts'), 'utf8');
+const streets = readFileSync(join(root, 'drive-world/src/build-city-streets.ts'), 'utf8');
 
 const errors: string[] = [];
 if (!/ground\.setPosition\(0,\s*0\.02/.test(ground)) {
@@ -32,6 +34,8 @@ if (!districts.includes('placePeninsulaSfoKenneyProps')) errors.push('build-kenn
 if (!southbay.includes('southbay-sap-plaza')) errors.push('build-southbay-sap-kit: plaza missing');
 if (!districts.includes('placeSouthbaySapKenneyProps')) errors.push('build-kenney-districts: South Bay Kenney slots missing');
 if (!recover.includes('countWheelsOnGround')) errors.push('vehicle-recover: wheel contact helper missing');
+if (!maze.includes('exclusions:')) errors.push('build-openworld-maze: safehouse maze exclusion missing');
+if (!streets.includes('buildVallejoStarterCorridor')) errors.push('build-city-streets: starter egress corridor missing');
 
 if (errors.length) {
   console.error('check-vallejo-art failed:\n' + errors.map((e) => `  - ${e}`).join('\n'));
