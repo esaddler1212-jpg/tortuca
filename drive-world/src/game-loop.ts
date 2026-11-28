@@ -528,7 +528,11 @@ export function startGameSession(app: AppBase, speedEl: HTMLElement): GameSessio
     ui.setAutonomousMode(false);
     ui.setMission(missionTextForPhase('home', progress));
     swapVehicle(vehicleId, safehouseSpawn(), 195);
-    ui.showToast('Chapter 1', 'Find the Vallejo taco truck + any Vallejo landmark to open the Bay.');
+    ui.showToast('Chapter 1', 'Drive the lit road out · taco + any Vallejo landmark opens the Bay.', 8000);
+    window.setTimeout(
+      () => ui.showToast('Phone', 'Landscape · gas = right pedal · Missions tab = next pin', 6500),
+      2200
+    );
     ui.setProgressSummary(progress);
     unlockAudio();
     void unlockMusic();

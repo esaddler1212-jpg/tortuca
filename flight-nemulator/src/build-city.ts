@@ -10,6 +10,7 @@ import {
   type AppBase
 } from 'playcanvas';
 import { DISTRICTS, WORLD_HALF_M, type DistrictSpec } from './districts';
+import { isGlobeMode } from './globe-coords';
 import type { QualityTier } from './quality-tier';
 
 export type DestructibleTag = {
@@ -74,17 +75,19 @@ function makeBoxMesh(app: AppBase, w: number, h: number, d: number): Mesh {
   return mesh;
 }
 
-function districtAt(x: number, z: number): DistrictSpec | null {
+function districtAt(x: number, z: number, y = 0): DistrictSpec | null {
   for (const d of DISTRICTS) {
     const dx = x - d.center.x;
-    const dz = z - d.center.z;
-    if (dx * dx + dz * dz <= d.radiusM * d.radiusM) return d;
+    const dy = y - d.center.y;
+      const dz = z - d.center.z;
+    const r2 = isGlobeMode() ? dx * dx + dy * dy + dz * dz : dx * dx + dz * dz;
+    if (r2 <= d.radiusM * d.radiusM) return d;
   }
   return null;
 }
 
-export function districtIdAtPosition(x: number, z: number): string | null {
-  return districtAt(x, z)?.id ?? null;
+export function districtIdAtPosition(x: number, z: number, y?: number): string | null {
+  return districtAt(x, z, y ?? 0)?.id ?? null;
 }
 
 function gridStep(tier: QualityTier): number {
@@ -99,53 +102,97 @@ function skipChance(tier: QualityTier): number {
   return 0.22;
 }
 
-export function buildMetropolis(app: AppBase, root: Entity, opts: BuildCityOptions): void {
-  destructibles.length = 0;
-  const step = gridStep(opts.tier);
-  const skipBelow = skipChance(opts.tier);
-
-  const ground = new Entity('ground');
-  ground.setLocalScale(WORLD_HALF_M * 2, 1, WORLD_HALF_M * 2);
-  ground.setLocalPosition(0, -0.5, 0);
-  const gMesh = makeBoxMesh(app, WORLD_HALF_M * 2, 1, WORLD_HALF_M * 2);
-  const gMat = new StandardMaterial();
-  gMat.diffuse = new Color(0.08, 0.1, 0.12);
-  gMat.update();
-  ground.addComponent('render', { meshInstances: [new MeshInstance(gMesh, gMat)] });
-  root.addChild(ground);
-
-  for (let x = -WORLD_HALF_M + step; x < WORLD_HALF_M; x += step) {
-    for (let z = -WORLD_HALF_M + step; z < WORLD_HALF_M; z += step) {
-      const dist = districtAt(x, z);
-      const mul = dist?.skylineMul ?? 0.65;
+function buildDistrictSkylinePatch(
+  app: AppBase,
+  root: Entity,
+  d: DistrictSpec,
+  step: number,
+  skipBelow: number
+): void {
+  const yBase = isGlobeMode() ? d.center.y : 0;
+  for (let ox = -d.radiusM; ox < d.radiusM; ox += step) {
+    for (let oz = -d.radiusM; oz < d.radiusM; oz += step) {
+      if (ox * ox + oz * oz > d.radiusM * d.radiusM) continue;
+      const x = d.center.x + ox;
+      const z = d.center.z + oz;
+      const mul = d.skylineMul;
       const r = hash2(x, z);
-      if (!dist && r < 0.68) continue;
-      if (dist && r < skipBelow) continue;
+      if (r < skipBelow) continue;
       const w = 18 + r * 22;
       const h = (14 + hash2(z, x) * 90) * mul;
-      const d = 16 + hash2(x + z, x - z) * 20;
-      const ent = new Entity(`bld-${x}-${z}`);
-      ent.setLocalPosition(x, h / 2, z);
-      ent.setLocalScale(w, h, d);
+      const depth = 16 + hash2(x + z, x - z) * 20;
+      const ent = new Entity(`bld-${d.id}-${x}-${z}`);
+      ent.setLocalPosition(x, yBase + h / 2, z);
+      ent.setLocalScale(w, h, depth);
       const mat = new StandardMaterial();
-      const accent = dist?.accent ?? [0.25, 0.28, 0.32];
       const shade = 0.85 + hash2(x * 2, z * 2) * 0.15;
-      mat.diffuse = new Color(accent[0] * shade, accent[1] * shade, accent[2] * shade);
+      mat.diffuse = new Color(d.accent[0] * shade, d.accent[1] * shade, d.accent[2] * shade);
       mat.cull = CULLFACE_BACK;
       mat.blendType = BLEND_NORMAL;
       mat.update();
       const mesh = makeBoxMesh(app, 1, 1, 1);
       ent.addComponent('render', { meshInstances: [new MeshInstance(mesh, mat)] });
       root.addChild(ent);
-      const cost = Math.round((w * h * d) / 80 + 50_000);
-      destructibles.push({ entity: ent, costUsd: cost, intact: true, w, h, d });
+      const cost = Math.round((w * h * depth) / 80 + 50_000);
+      destructibles.push({ entity: ent, costUsd: cost, intact: true, w, h, d: depth });
+    }
+  }
+}
+
+export function buildMetropolis(app: AppBase, root: Entity, opts: BuildCityOptions): void {
+  destructibles.length = 0;
+  const step = gridStep(opts.tier);
+  const skipBelow = skipChance(opts.tier);
+
+  if (!isGlobeMode()) {
+    const ground = new Entity('ground');
+    ground.setLocalScale(WORLD_HALF_M * 2, 1, WORLD_HALF_M * 2);
+    ground.setLocalPosition(0, -0.5, 0);
+    const gMesh = makeBoxMesh(app, WORLD_HALF_M * 2, 1, WORLD_HALF_M * 2);
+    const gMat = new StandardMaterial();
+    gMat.diffuse = new Color(0.08, 0.1, 0.12);
+    gMat.update();
+    ground.addComponent('render', { meshInstances: [new MeshInstance(gMesh, gMat)] });
+    root.addChild(ground);
+
+    for (let x = -WORLD_HALF_M + step; x < WORLD_HALF_M; x += step) {
+      for (let z = -WORLD_HALF_M + step; z < WORLD_HALF_M; z += step) {
+        const dist = districtAt(x, z);
+        const mul = dist?.skylineMul ?? 0.65;
+        const r = hash2(x, z);
+        if (!dist && r < 0.68) continue;
+        if (dist && r < skipBelow) continue;
+        const w = 18 + r * 22;
+        const h = (14 + hash2(z, x) * 90) * mul;
+        const depth = 16 + hash2(x + z, x - z) * 20;
+        const ent = new Entity(`bld-${x}-${z}`);
+        ent.setLocalPosition(x, h / 2, z);
+        ent.setLocalScale(w, h, depth);
+        const mat = new StandardMaterial();
+        const accent = dist?.accent ?? [0.25, 0.28, 0.32];
+        const shade = 0.85 + hash2(x * 2, z * 2) * 0.15;
+        mat.diffuse = new Color(accent[0] * shade, accent[1] * shade, accent[2] * shade);
+        mat.cull = CULLFACE_BACK;
+        mat.blendType = BLEND_NORMAL;
+        mat.update();
+        const mesh = makeBoxMesh(app, 1, 1, 1);
+        ent.addComponent('render', { meshInstances: [new MeshInstance(mesh, mat)] });
+        root.addChild(ent);
+        const cost = Math.round((w * h * depth) / 80 + 50_000);
+        destructibles.push({ entity: ent, costUsd: cost, intact: true, w, h, d: depth });
+      }
+    }
+  } else {
+    for (const d of DISTRICTS) {
+      buildDistrictSkylinePatch(app, root, d, step, skipBelow);
     }
   }
 
   for (const d of DISTRICTS) {
+    const yBase = isGlobeMode() ? d.center.y : 0;
     const home = new Entity(`home-${d.id}`);
     const towerH = 120 * d.skylineMul;
-    home.setLocalPosition(d.center.x, towerH / 2, d.center.z);
+    home.setLocalPosition(d.center.x, yBase + towerH / 2, d.center.z);
     home.setLocalScale(40, towerH, 40);
     const hm = new StandardMaterial();
     hm.emissive = new Color(d.accent[0] * 0.55, d.accent[1] * 0.55, d.accent[2] * 0.55);
@@ -156,7 +203,7 @@ export function buildMetropolis(app: AppBase, root: Entity, opts: BuildCityOptio
     root.addChild(home);
 
     const pad = new Entity(`pad-${d.id}`);
-    pad.setLocalPosition(d.center.x, 0.4, d.center.z + 34);
+    pad.setLocalPosition(d.center.x, yBase + 0.4, d.center.z + 34);
     pad.setLocalScale(52, 0.35, 52);
     const pm = new StandardMaterial();
     pm.emissive = new Color(d.accent[0] * 0.25, d.accent[1] * 0.25, d.accent[2] * 0.25);

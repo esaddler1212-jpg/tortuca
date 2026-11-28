@@ -67,6 +67,16 @@ NETLIFY_AUTH_TOKEN=... bash scripts/deploy-netlify.sh
 
 Override with `VANTAGE_GAMES_SITE_NAME` if needed. (The script also deploys Family Purpose when run; see `scripts/deploy-netlify.sh`.)
 
+## Product deploy checklist (family)
+
+After merge to `main`:
+
+1. **Trigger deploy** — base `vantage-games` · **clear cache**
+2. Env (in `vantage-games/netlify.toml` or UI): `INSTALL_VISUAL_ASSETS=true`, `VITE_BATTLEWORLD_GLOBE=1`
+3. `npm run smoke:vantagegames1` + `npm run smoke:vantagegames1:browser`
+4. Phone landscape pass — [`PHONE_FIRST_10.md`](./PHONE_FIRST_10.md)
+5. Boys play once — note wow moment per [`PRODUCT_VISION.md`](./PRODUCT_VISION.md)
+
 ## Post-deploy smoke
 
 ```bash

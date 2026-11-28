@@ -6,6 +6,8 @@
 
 [build.environment]
   NODE_VERSION = "22"
+  INSTALL_VISUAL_ASSETS = "true"
+  VITE_BATTLEWORLD_GLOBE = "1"
 
 [[headers]]
   for = "/console/city-nights/assets/*"

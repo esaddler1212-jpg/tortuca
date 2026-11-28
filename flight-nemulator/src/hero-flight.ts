@@ -60,7 +60,8 @@ export class HeroFlightController {
     const fwd = this.forward();
     const drag = 0.92 - dt * 0.8;
     this.velocity.mulScalar(drag);
-    const thrust = targetSpeed * dt * 2.4;
+    const thrustMul = input.boost ? 3.1 : 2.4;
+    const thrust = targetSpeed * dt * thrustMul;
     this.velocity.add(new Vec3(fwd.x * thrust, fwd.y * thrust, fwd.z * thrust));
 
     const up = new Vec3(0, 1, 0);

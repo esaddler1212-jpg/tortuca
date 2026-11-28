@@ -20,6 +20,10 @@ function onFirstGesture(): void {
 export function installMobileShell(): void {
   if (isTouchPrimary()) {
     document.body.classList.add('touch-ui');
+    const sub = document.querySelector('.tap-start-sub');
+    if (sub && window.matchMedia('(orientation: portrait)').matches) {
+      sub.textContent = 'Rotate to landscape for driving · then tap to start';
+    }
   }
   if (isIOS()) {
     document.body.classList.add('ios');

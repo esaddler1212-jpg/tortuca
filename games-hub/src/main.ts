@@ -42,6 +42,8 @@ function renderDetail(game: GameTile): void {
   detail.innerHTML = `
     <h2 class="detail-title">${game.title}</h2>
     <p class="detail-tagline">${game.tagline}</p>
+    <p class="detail-meta"><strong>First goal:</strong> ${game.firstGoal}</p>
+    <p class="detail-meta"><strong>Controls:</strong> ${game.controls}</p>
     <p class="detail-meta">${last}</p>
     <button type="button" class="detail-play" id="play-btn">Play</button>
   `;

@@ -4,6 +4,9 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   base: './',
   plugins: [react()],
+  define: {
+    'import.meta.env.VITE_BATTLEWORLD_GLOBE': JSON.stringify(process.env.VITE_BATTLEWORLD_GLOBE ?? '1')
+  },
   build: {
     target: 'es2022',
     chunkSizeWarningLimit: 4000,

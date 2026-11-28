@@ -1,7 +1,8 @@
-import { Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
+import { BLEND_NORMAL, Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas';
 import { battleworldDistrictLabel } from './battleworld';
 import { DISTRICT_UNIVERSE, UNIVERSE_RIM_RGB } from './battleworld-districts';
 import { DISTRICTS, WORLD_HALF_M } from './districts';
+import { districtGlobePosition, GLOBE_RADIUS_M, isGlobeMode } from './globe-coords';
 import { attachUnitBox } from './primitive-mesh';
 
 /** One playable Battleworld disk — nine homage city cells on a ring (Marvel / DC / DBZ). */
@@ -16,9 +17,13 @@ export function initEarthDistrictRing(): void {
   if (earthLayoutReady) return;
   const n = DISTRICTS.length;
   for (let i = 0; i < n; i++) {
-    const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
     const d = DISTRICTS[i]!;
-    d.center.set(Math.cos(angle) * EARTH_RING_RADIUS_M, 0, Math.sin(angle) * EARTH_RING_RADIUS_M);
+    if (isGlobeMode()) {
+      d.center.copy(districtGlobePosition(i, n));
+    } else {
+      const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+      d.center.set(Math.cos(angle) * EARTH_RING_RADIUS_M, 0, Math.sin(angle) * EARTH_RING_RADIUS_M);
+    }
   }
   earthLayoutReady = true;
 }
@@ -44,6 +49,34 @@ export function horizontalRadius(pos: Vec3): number {
 
 /** Ring marker + ocean tint so the world reads as one globe. */
 export function buildPlanetShell(app: AppBase, root: Entity): void {
+  if (isGlobeMode()) {
+    const body = new Entity('battleworld-globe');
+    body.setLocalScale(GLOBE_RADIUS_M * 2, GLOBE_RADIUS_M * 2, GLOBE_RADIUS_M * 2);
+    const mat = new StandardMaterial();
+    mat.diffuse = new Color(0.06, 0.1, 0.16);
+    mat.emissive = new Color(0.03, 0.06, 0.12);
+    mat.emissiveIntensity = 0.35;
+    mat.opacity = 0.92;
+    mat.blendType = BLEND_NORMAL;
+    mat.update();
+    body.addComponent('render', { type: 'sphere', material: mat });
+    root.addChild(body);
+    for (let i = 0; i < DISTRICTS.length; i++) {
+      const d = DISTRICTS[i]!;
+      const beacon = new Entity(`globe-city-${d.id}`);
+      beacon.setPosition(d.center);
+      const [r, g, b] = d.accent;
+      const bmat = new StandardMaterial();
+      bmat.emissive = new Color(r * 0.7, g * 0.7, b * 0.7);
+      bmat.emissiveIntensity = 1.4;
+      bmat.update();
+      beacon.setLocalScale(120, 120, 120);
+      beacon.addComponent('render', { type: 'sphere', material: bmat });
+      root.addChild(beacon);
+    }
+    return;
+  }
+
   const ring = new Entity('earth-ring');
   const segs = 64;
   const y = -8;
