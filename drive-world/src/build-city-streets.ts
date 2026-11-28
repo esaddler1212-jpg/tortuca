@@ -30,17 +30,19 @@ export type StreetMaterials = {
 
 function streetMaterials(): StreetMaterials {
   const asphalt = new StandardMaterial();
-  asphalt.diffuse = new Color(0.08, 0.085, 0.09);
+  asphalt.diffuse = new Color(0.1, 0.105, 0.11);
   asphalt.gloss = 0.55;
   asphalt.metalness = 0.08;
+  asphalt.emissive = new Color(0.06, 0.07, 0.09);
+  asphalt.emissiveIntensity = 0.22;
   asphalt.update();
 
   const arterial = new StandardMaterial();
-  arterial.diffuse = new Color(0.1, 0.1, 0.11);
+  arterial.diffuse = new Color(0.12, 0.12, 0.13);
   arterial.gloss = 0.62;
   arterial.metalness = 0.1;
-  arterial.emissive = new Color(0.04, 0.06, 0.08);
-  arterial.emissiveIntensity = 0.12;
+  arterial.emissive = new Color(0.1, 0.12, 0.16);
+  arterial.emissiveIntensity = 0.28;
   arterial.update();
 
   const line = new StandardMaterial();
@@ -59,11 +61,11 @@ function streetMaterials(): StreetMaterials {
   return { asphalt, line, arterial, plaza };
 }
 
-function segmentClear(ax: number, az: number, bx: number, bz: number): boolean {
+function segmentClear(ax: number, az: number, bx: number, bz: number, ignoreFreeway = false): boolean {
   const mx = (ax + bx) * 0.5;
   const mz = (az + bz) * 0.5;
   if (inBayWater(mx, mz)) return false;
-  if (tooCloseToFreeway(mx, mz, 14)) return false;
+  if (!ignoreFreeway && tooCloseToFreeway(mx, mz, 14)) return false;
   return true;
 }
 
@@ -76,9 +78,10 @@ function addStreetDeck(
   width: number,
   mats: StreetMaterials,
   tag: string,
-  arterial: boolean
+  arterial: boolean,
+  ignoreFreeway = false
 ) {
-  if (!segmentClear(ax, az, bx, bz)) return;
+  if (!segmentClear(ax, az, bx, bz, ignoreFreeway)) return;
 
   const dx = bx - ax;
   const dz = bz - az;
@@ -161,19 +164,33 @@ function buildPointRoute(
   width: number,
   tag: string,
   ring: boolean,
-  mats: StreetMaterials
+  mats: StreetMaterials,
+  ignoreFreeway = false
 ) {
   if (points.length < 2) return;
   for (let i = 0; i < points.length - 1; i++) {
     const a = points[i]!;
     const b = points[i + 1]!;
-    addStreetDeck(app, a.x, a.z, b.x, b.z, width, mats, tag, true);
+    addStreetDeck(app, a.x, a.z, b.x, b.z, width, mats, tag, true, ignoreFreeway);
   }
   if (ring) {
     const a = points[points.length - 1]!;
     const b = points[0]!;
-    addStreetDeck(app, a.x, a.z, b.x, b.z, width, mats, `${tag}-ring`, true);
+    addStreetDeck(app, a.x, a.z, b.x, b.z, width, mats, `${tag}-ring`, true, ignoreFreeway);
   }
+}
+
+/** Guaranteed drivable path from Vallejo estate — not culled by I-80 proximity. */
+function buildVallejoStarterCorridor(app: AppBase, mats: StreetMaterials): void {
+  const pts = [
+    { x: 500, z: 948 },
+    { x: 502, z: 990 },
+    { x: 512, z: 1035 },
+    { x: 528, z: 1085 },
+    { x: 548, z: 1125 },
+    { x: 560, z: 1160 }
+  ];
+  buildPointRoute(app, pts, 22, 'starter-vallejo-egress', false, mats, true);
 }
 
 function buildLandmarkPlazas(app: AppBase, mats: StreetMaterials): void {
@@ -287,5 +304,6 @@ export function buildCityStreets(app: AppBase): void {
   }
 
   buildLandmarkPlazas(app, mats);
+  buildVallejoStarterCorridor(app, mats);
   buildHubStreetSigns(app);
 }

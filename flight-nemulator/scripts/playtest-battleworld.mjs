@@ -3,7 +3,7 @@
  * Battleworld playtest: tap → hero roster live → chapter chain HUD → fly loop.
  * Usage: npm run build && npm run test:playtest
  */
-import { existsSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer-core';
@@ -22,6 +22,12 @@ const chrome =
     existsSync
   );
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const burstDir = process.env.PLAYTEST_SHOTS || (process.env.PLAYTEST_BURST === '1' ? '/opt/cursor/artifacts/bw-burst' : '');
+const shot = async (page, name) => {
+  if (!burstDir) return;
+  mkdirSync(burstDir, { recursive: true });
+  await page.screenshot({ path: `${burstDir}/${name}.png` });
+};
 const results = [];
 const check = (name, ok, detail) => {
   results.push(ok);
@@ -69,11 +75,27 @@ check(
   h0?.chapterChainObjective
 );
 check('story chip', !!h0?.chapterChainChip, h0?.chapterChainChip);
+await shot(page, 'burst-01-chapter-hud');
 
 await page.keyboard.down('KeyW');
-await sleep(3500);
+await sleep(2000);
+if (process.env.PLAYTEST_BURST === '1') {
+  await page.keyboard.down('ShiftLeft');
+  await sleep(2500);
+  await shot(page, 'burst-02-boost');
+  const burst = await page.evaluate(() => {
+    const h = window.__battleworld.hud();
+    return { speed: h.speedKmh, juice: h.combatJuiceHot, super: h.superReady };
+  });
+  check('burst frame: speed or juice', burst.speed > 120 || burst.juice === true, JSON.stringify(burst));
+  await page.keyboard.up('ShiftLeft');
+  await sleep(500);
+} else {
+  await sleep(1500);
+}
 await page.keyboard.up('KeyW');
 const h1 = await page.evaluate(() => window.__battleworld.hud());
+await shot(page, 'burst-03-after-flight');
 const moved = Math.hypot((h1.heroX ?? 0) - (h0.heroX ?? 0), (h1.heroZ ?? 0) - (h0.heroZ ?? 0));
 check('flight moves hero', h1.speedKmh > 80 || moved > 15, `Δ ${moved.toFixed(0)} m · ${h1.speedKmh?.toFixed?.(0) ?? h1.speedKmh} km/h`);
 

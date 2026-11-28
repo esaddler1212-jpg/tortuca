@@ -175,7 +175,7 @@ if (process.env.SKIP_PLAYTEST !== '1') {
   const playtest = spawnSync('npm', ['run', 'test:playtest'], {
     cwd: app,
     stdio: 'inherit',
-    env: process.env
+    env: { ...process.env, PLAYTEST_BURST: process.env.PLAYTEST_BURST ?? '1' }
   });
   if (playtest.status !== 0) process.exit(playtest.status ?? 1);
 }

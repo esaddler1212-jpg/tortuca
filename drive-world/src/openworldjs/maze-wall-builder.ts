@@ -6,6 +6,8 @@ import { Color, Entity, StandardMaterial, Vec3, type AppBase } from 'playcanvas'
 
 import { hillOffsetM } from '../bay-terrain';
 
+export type MazeExclusionZone = { x: number; z: number; radiusM: number };
+
 export type OpenworldMazeBuildOptions = {
   mazeSize: number;
   cellSizeM: number;
@@ -13,7 +15,17 @@ export type OpenworldMazeBuildOptions = {
   wallWidthM: number;
   centerX: number;
   centerZ: number;
+  /** Keep starter safehouse / driveway clear (e.g. Vallejo estate). */
+  exclusions?: MazeExclusionZone[];
 };
+
+function inMazeExclusion(x: number, z: number, zones: MazeExclusionZone[] | undefined): boolean {
+  if (!zones?.length) return false;
+  for (const zone of zones) {
+    if (Math.hypot(x - zone.x, z - zone.z) < zone.radiusM) return true;
+  }
+  return false;
+}
 
 const defaultWallMat = (): StandardMaterial => {
   const m = new StandardMaterial();
@@ -54,7 +66,7 @@ export function buildMazeWallSegments(
   app.root.addChild(root);
 
   const mat = defaultWallMat();
-  const { mazeSize, cellSizeM, wallHeightM, wallWidthM, centerX, centerZ } = opts;
+  const { mazeSize, cellSizeM, wallHeightM, wallWidthM, centerX, centerZ, exclusions } = opts;
   const worldMazeSize = cellSizeM * mazeSize;
   const originX = centerX - worldMazeSize / 2;
   const originZ = centerZ - worldMazeSize / 2;
@@ -71,6 +83,10 @@ export function buildMazeWallSegments(
       const wallCenterX = originX + j * cellSizeM + wallLength / 2 - wallWidthM / 2;
       const wallCenterZ = originZ + i * cellSizeM + cellSizeM / 2;
       const wallCenterY = hillOffsetM(wallCenterX, wallCenterZ) + wallHeightM / 2;
+      if (inMazeExclusion(wallCenterX, wallCenterZ, exclusions)) {
+        j = k - 1;
+        continue;
+      }
       addWallSegment(
         app,
         root,
@@ -97,6 +113,10 @@ export function buildMazeWallSegments(
       const wallCenterX = originX + j * cellSizeM + cellSizeM / 2;
       const wallCenterZ = originZ + i * cellSizeM + cellSizeM / 2 + wallLength / 2;
       const wallCenterY = hillOffsetM(wallCenterX, wallCenterZ) + wallHeightM / 2;
+      if (inMazeExclusion(wallCenterX, wallCenterZ, exclusions)) {
+        i = k - 1;
+        continue;
+      }
       addWallSegment(
         app,
         root,

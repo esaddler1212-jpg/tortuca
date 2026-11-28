@@ -59,6 +59,8 @@
     "test:creative-workshops": "tsx scripts/check-creative-workshops.mts",
     "game-studio:task": "tsx scripts/game-studio-task.mts",
     "smoke:room-goal": "node scripts/smoke-battleworld-room-goal.mjs",
+    "smoke:vantagegames1": "node scripts/smoke-vantagegames1.mjs",
+    "smoke:vantagegames1:browser": "cd drive-world && node scripts/smoke-vantagegames1-browser.mjs",
     "test:game-studio-org": "tsx scripts/check-game-studio-org.mts",
     "test:landmark-sprint-board": "tsx scripts/check-landmark-sprint-board.mts",
     "test:city-nights-complete": "tsx scripts/check-city-nights-completion.mts",

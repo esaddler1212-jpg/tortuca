@@ -66,3 +66,12 @@ NETLIFY_AUTH_TOKEN=... bash scripts/deploy-netlify.sh
 ```
 
 Override with `VANTAGE_GAMES_SITE_NAME` if needed. (The script also deploys Family Purpose when run; see `scripts/deploy-netlify.sh`.)
+
+## Post-deploy smoke
+
+```bash
+npm run smoke:vantagegames1              # HTTP paths
+npm run smoke:vantagegames1:browser      # portrait tap-start (needs CHROME_PATH)
+```
+
+Manual Xbox/phone steps: [`COUCH_SMOKE_VANTAGEGAMES1.md`](./COUCH_SMOKE_VANTAGEGAMES1.md).

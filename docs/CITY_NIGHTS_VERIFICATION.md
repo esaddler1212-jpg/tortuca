@@ -17,7 +17,7 @@ Living checklist for **Hard Fails** (P0), experience (P1), and **Known gaps P2**
 - Chapter 1 pin visible at Vallejo cold start
 - Map tab find-next pin when mission active
 - Gamepad RT/LT throttle on Console preset
-- Heat hunted state readable at 1280×720 and **390×844**
+- Heat hunted state readable at 1280×720 and **390×844** (`PLAYTEST_PORTRAIT=1` in City Nights CI)
 
 ## Known gaps P2 (OpenGame cap: list ≤ 5 to family)
 

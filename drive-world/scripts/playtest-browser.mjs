@@ -66,6 +66,29 @@ if (card) {
   await sleep(2500);
 }
 check('home phase after car pick', (await hud()).phase === 'home', (await hud()).phase);
+
+if (process.env.PLAYTEST_PORTRAIT === '1') {
+  await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true });
+  await sleep(600);
+  try {
+    await page.waitForFunction(
+      () => {
+        const mph = document.querySelector('#react-hud .hud-mph');
+        const map = document.querySelector('#react-hud .minimap-wrap');
+        if (!mph || !map) return false;
+        const a = mph.getBoundingClientRect();
+        const b = map.getBoundingClientRect();
+        return a.width > 0 && a.height > 0 && b.width > 12 && b.height > 12 && a.bottom <= 900;
+      },
+      { timeout: 20_000, polling: 100 }
+    );
+    check('portrait 390×844 hud (mph + minimap)', true);
+  } catch {
+    check('portrait 390×844 hud (mph + minimap)', false, 'hud-mph or minimap not visible');
+  }
+  await page.setViewport({ width: 960, height: 540 });
+  await sleep(400);
+}
 check(
   '3D bay terrain present',
   await page.evaluate(
@@ -97,6 +120,10 @@ const gMoved = Math.hypot(g1.playerX - g0.playerX, g1.playerZ - g0.playerZ);
 // Headless CI often logs ~0.5 m after 4s (float rounding); mph still proves throttle works.
 const drove = g1.mph >= 3 && (gMoved >= 0.35 || g1.mph >= 5);
 check('pad RT drives', drove, `${g0.mph.toFixed(1)} → ${g1.mph.toFixed(1)} mph, ${gMoved.toFixed(1)} m`);
+const starterRoad = await page.evaluate(() =>
+  !!window.__cityNights.app.root.find((n) => n.name?.startsWith('starter-vallejo-egress'))
+);
+check('vallejo starter road mesh', starterRoad);
 await press(6, true);
 await sleep(5000);
 const g1b = await state();
@@ -214,19 +241,6 @@ check('pad glyphs shown', (await hud()).gamepadConnected === true);
 if (shot) await page.screenshot({ path: `${shot}/playtest-gamepad.png` });
 
 check('no page errors', errors.length === 0, [...new Set(errors)].slice(0, 3).join(' | '));
-
-if (process.env.PLAYTEST_PORTRAIT === '1') {
-  await page.setViewport({ width: 390, height: 844 });
-  await sleep(1200);
-  const portraitOk = await page.evaluate(() => {
-    const hud = document.getElementById('hud');
-    const react = document.getElementById('react-hud');
-    if (!hud || !react) return false;
-    const r = hud.getBoundingClientRect();
-    return r.width > 0 && r.height > 0 && react.childElementCount > 0;
-  });
-  check('portrait 390×844 hud mounts', portraitOk);
-}
 
 await browser.close();
 await server?.close();

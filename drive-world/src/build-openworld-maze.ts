@@ -1,6 +1,7 @@
 import type { AppBase } from 'playcanvas';
 
 import type { BayQualityPreset } from './bay-quality';
+import { VALLEJO_SAFEHOUSE } from './landmark-registry';
 import { OPENWORLD_MAZE_SIZE, fetchDefaultMazeBitmap } from './openworldjs/maze-bitmap';
 import { buildMazeWallSegments } from './openworldjs/maze-wall-builder';
 
@@ -31,7 +32,8 @@ export async function buildOpenworldCherryPickMaze(
     wallHeightM: WALL_H,
     wallWidthM: WALL_W,
     centerX: OPENWORLD_MAZE_CENTER.x,
-    centerZ: OPENWORLD_MAZE_CENTER.z
+    centerZ: OPENWORLD_MAZE_CENTER.z,
+    exclusions: [{ x: VALLEJO_SAFEHOUSE.x, z: VALLEJO_SAFEHOUSE.z, radiusM: 98 }]
   });
   return maze.flat().filter((v) => v === 1).length;
 }

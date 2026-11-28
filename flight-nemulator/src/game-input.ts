@@ -74,14 +74,15 @@ export function pollFlightInput(): FlightInput {
   let yaw = 0;
   let pitch = 0;
   let vertical = 0;
-  let throttle = 0.85;
+  let throttle = 0;
   if (keys.left) yaw += 1;
   if (keys.right) yaw -= 1;
   if (keys.up) pitch += 1;
   if (keys.down) pitch -= 1;
   if (keys.climb) vertical += 1;
   if (keys.descend) vertical -= 1;
-  if (keys.up || keys.down) throttle = 1;
+  if (keys.up) throttle = 1;
+  if (keys.down) throttle = 0.35;
 
   const gp = navigator.getGamepads?.()[0];
   let boost = keys.boost;
@@ -91,6 +92,7 @@ export function pollFlightInput(): FlightInput {
     if (Math.abs(ax0) > 0.12) yaw = -ax0;
     if (Math.abs(ax1) > 0.12) pitch = -ax1;
     if (gp.buttons[7]?.pressed) boost = true;
+    if (gp.buttons[7]?.pressed) throttle = Math.max(throttle, 0.85);
     if (gp.buttons[5]?.pressed) throttle = 1;
     if (gp.buttons[4]?.pressed) vertical = 1;
     if (gp.buttons[3]?.pressed) vertical = -1;

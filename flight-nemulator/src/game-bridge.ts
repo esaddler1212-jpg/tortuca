@@ -37,7 +37,7 @@ let touch: TouchFlight = {
   yaw: 0,
   pitch: 0,
   vertical: 0,
-  throttle: 0.85,
+  throttle: 0,
   boost: false,
   primary: false,
   throw: false,
