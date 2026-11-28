@@ -137,10 +137,15 @@ function formatUsd(n: number): string {
   return `$${n}`;
 }
 
+const FLIGHT_COACH_KEY = 'bw-flight-coach-v1';
+
 export function HudApp() {
   const [snap, setSnap] = useState<GameHudSnapshot>(getHudSnapshot());
   const [heroId, setHeroId] = useState(
     () => localStorage.getItem('flight-nemulator-hero-id') ?? 'solar-apex'
+  );
+  const [showCoach, setShowCoach] = useState(
+    () => typeof localStorage !== 'undefined' && localStorage.getItem(FLIGHT_COACH_KEY) !== '1'
   );
 
   useEffect(() => {
@@ -422,6 +427,22 @@ export function HudApp() {
         Coast Lantern (Solar Apex)
       </p>
 
+      {showCoach ? (
+        <div className="hud-flight-coach hud-panel" role="dialog">
+          <strong>Fly like a hero</strong>
+          <p className="hud-tag">W = thrust · Shift = boost · Space/Ctrl = up/down · F = fire · fly to <strong>H</strong> on the map</p>
+          <button
+            type="button"
+            className="hud-roam"
+            onClick={() => {
+              localStorage.setItem(FLIGHT_COACH_KEY, '1');
+              setShowCoach(false);
+            }}
+          >
+            Got it
+          </button>
+        </div>
+      ) : null}
       <TouchPad />
     </div>
   );

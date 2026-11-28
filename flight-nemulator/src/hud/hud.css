@@ -5,6 +5,20 @@
   font-size: 14px;
 }
 
+.hud-flight-coach {
+  pointer-events: auto;
+  position: fixed;
+  left: 50%;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  max-width: min(92vw, 420px);
+  padding: 10px 14px;
+  z-index: 12000;
+  background: rgba(8, 12, 22, 0.92);
+  border: 1px solid rgba(130, 180, 255, 0.35);
+  border-radius: 12px;
+}
+
 .hud-icon {
   display: inline-block;
   width: 14px;

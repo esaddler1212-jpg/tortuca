@@ -1,4 +1,5 @@
 import { Vec3 } from 'playcanvas';
+import { isGlobeMode, spawnAboveDistrictSurface } from './globe-coords';
 
 export interface DistrictSpec {
   id: string;
@@ -163,5 +164,8 @@ export function districtForHero(districtId: string): DistrictSpec {
 
 export function spawnAtHome(districtId: string): Vec3 {
   const d = districtForHero(districtId);
+  if (isGlobeMode()) {
+    return spawnAboveDistrictSurface(d.center, 58);
+  }
   return new Vec3(d.center.x, 42, d.center.z + 30);
 }

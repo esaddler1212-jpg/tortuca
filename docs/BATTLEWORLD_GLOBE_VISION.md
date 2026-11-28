@@ -26,7 +26,7 @@ v1 is a **flight combat sandbox**, not globe exploration.
 
 | Phase | Deliverable | Risk |
 |-------|-------------|------|
-| **0** | Idle throttle + control overlay + deploy latest to vantagegames1 | Low — **now** |
+| **0** | Idle throttle + flight coach HUD + `VITE_BATTLEWORLD_GLOBE=1` shell | **In progress** — product-vision branch |
 | **1** | Per-district city **layouts** (14 seeds) on flat disk — still readable cities | Medium |
 | **2** | **Sphere coordinates** — spawn on shell, tangent flight near surface | High — refactors `districtIdAtPosition`, orbit, shatter |
 | **3** | Streaming chunks + Kiln CC0 city packs per district | High |

@@ -74,7 +74,13 @@ export function loadSettings(): GameSettings {
     const raw = localStorage.getItem(KEY);
     if (!raw) {
       const base = { ...defaults };
-      if (isTouchPrimary()) base.fogQuality = 'low';
+      if (isTouchPrimary()) {
+        base.fogQuality = 'low';
+        base.bayQualityPreset = 'balanced';
+        base.resolutionScale = 0.88;
+        base.frameCapFps = 60;
+        base.musicUsePlaylist = true;
+      }
       return base;
     }
     return { ...defaults, ...(JSON.parse(raw) as GameSettings) };

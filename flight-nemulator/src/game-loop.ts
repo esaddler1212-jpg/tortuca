@@ -275,6 +275,7 @@ export type GameSession = {
   roomGoalFetchAt: number;
   lastDistrictId: string | null;
   findNext: FindNextCue | null;
+  cameraSmoothed: Vec3;
 };
 
 let session: GameSession | null = null;
@@ -453,7 +454,8 @@ export async function startGame(app: AppBase): Promise<void> {
     roomGoal,
     roomGoalFetchAt: performance.now(),
     lastDistrictId: null,
-    findNext: null
+    findNext: null,
+    cameraSmoothed: new Vec3(spawn.x - 12, spawn.y + 6, spawn.z)
   };
 
   tryRestoreBattleworldAutosave(session);
@@ -487,7 +489,7 @@ function combatForm(s: GameSession): HeroForm {
 }
 
 function refreshOpenWorldHooks(s: GameSession, pos: Vec3): void {
-  const districtHere = districtIdAtPosition(pos.x, pos.z);
+  const districtHere = districtIdAtPosition(pos.x, pos.z, pos.y);
   if (districtHere && districtHere !== s.lastDistrictId) {
     noteDistrictVisit(districtHere);
     s.lastDistrictId = districtHere;
@@ -514,7 +516,7 @@ function roomGoalContrib(s: GameSession, districtId: string | null, kind: 'wave'
 }
 
 function publishBattleworldHud(s: GameSession, pos: Vec3, dt: number, solarCharge: number): void {
-  const districtHere = districtIdAtPosition(pos.x, pos.z);
+  const districtHere = districtIdAtPosition(pos.x, pos.z, pos.y);
   const districtUniverse = universeForDistrict(districtHere);
   const chron = getChronoState();
   const nowMs = Date.now();
@@ -605,7 +607,7 @@ function publishBattleworldHud(s: GameSession, pos: Vec3, dt: number, solarCharg
     territoryHint: territoryHudLine(
       s.territory,
       s.playerRole,
-      districtIdAtPosition(pos.x, pos.z),
+      districtIdAtPosition(pos.x, pos.z, pos.y),
       s.heroSpec.districtId
     ),
     villainAdvisorHint: s.territory.lastHint,
@@ -626,7 +628,7 @@ function publishBattleworldHud(s: GameSession, pos: Vec3, dt: number, solarCharg
         (!canHeroFacePairBoss(s.territory) || infinityBossBlocksFinale(s.factionNpcs)),
       playerStones: playerInfinityStoneCount(),
       stonesSealed: s.infinity.sites.filter((st) => st.claimedBy === 'sealed').length,
-      districtId: districtIdAtPosition(pos.x, pos.z),
+      districtId: districtIdAtPosition(pos.x, pos.z, pos.y),
       lattice: battleworldLatticeStrength()
     }),
     latticeHint:
@@ -634,7 +636,7 @@ function publishBattleworldHud(s: GameSession, pos: Vec3, dt: number, solarCharg
     latticeBeatChip: latticeBeatChip(s.heroSpec.id, s.playerRole),
     latticeCloudHint: consumeLatticeCloudLabel() ?? offlineLatticeHint(),
     safeHouseHint: (() => {
-      const house = nearBattleworldSafeHouse(pos, s.heroSpec.id, districtIdAtPosition(pos.x, pos.z));
+      const house = nearBattleworldSafeHouse(pos, s.heroSpec.id, districtIdAtPosition(pos.x, pos.z, pos.y));
       return house ? `Safe house: ${house.label} — rest lattice (H)` : null;
     })(),
     villainRunwayHint: villainRunwayHudLine(s.heroSpec.id, s.wave),
@@ -664,7 +666,7 @@ function publishBattleworldHud(s: GameSession, pos: Vec3, dt: number, solarCharg
           (!canHeroFacePairBoss(s.territory) || infinityBossBlocksFinale(s.factionNpcs)),
         playerStones: playerInfinityStoneCount(),
         stonesSealed: s.infinity.sites.filter((st) => st.claimedBy === 'sealed').length,
-        districtId: districtIdAtPosition(pos.x, pos.z),
+        districtId: districtIdAtPosition(pos.x, pos.z, pos.y),
         lattice: battleworldLatticeStrength()
       }),
       battleworldCampaignChapterChip(s.heroSpec.id, s.playerRole, isVillainOnlyHero(s.heroSpec.id)),
@@ -819,7 +821,7 @@ function tickFrame(s: GameSession, dt: number): void {
       addVillainHavoc(s.city, smash.costUsd);
       addDistrictDestruction(
         s.territory,
-        districtIdAtPosition(pos.x, pos.z),
+        districtIdAtPosition(pos.x, pos.z, pos.y),
         smash.costUsd,
         s.heroSpec.districtId
       );
@@ -850,7 +852,7 @@ function tickFrame(s: GameSession, dt: number): void {
     }
   }
 
-  const districtHere = districtIdAtPosition(pos.x, pos.z);
+  const districtHere = districtIdAtPosition(pos.x, pos.z, pos.y);
   const districtUniverse = universeForDistrict(districtHere);
   applyBattleworldUniverseFog(s.app, districtUniverse);
   applyBattleworldUniverseSky(s.app, districtUniverse);
@@ -1096,7 +1098,7 @@ function tickFrame(s: GameSession, dt: number): void {
     );
   } else {
     s.wave += 1;
-    roomGoalContrib(s, districtIdAtPosition(pos.x, pos.z), 'wave');
+    roomGoalContrib(s, districtIdAtPosition(pos.x, pos.z, pos.y), 'wave');
     completeDailyMission(s.heroSpec.id, 'wave');
     const cd = s.playerRole === 'hero' ? 14 : Math.max(4, 12 - s.wave * 0.4 - s.wanted.stars);
     s.waveCooldown = cd;
@@ -1150,7 +1152,7 @@ function tickFrame(s: GameSession, dt: number): void {
     if (maybeRecordTerritoryClear(s.heroSpec.id, s.playerRole, 0)) {
       queueChapterClearDialogue('territory-clear', s.heroSpec.codename, s.playerRole);
     }
-    roomGoalContrib(s, districtIdAtPosition(pos.x, pos.z), 'territory');
+    roomGoalContrib(s, districtIdAtPosition(pos.x, pos.z, pos.y), 'territory');
   }
 
   const npcTick = tickFactionNpcs(
@@ -1239,12 +1241,18 @@ function tickFrame(s: GameSession, dt: number): void {
 
   const f = s.hero.forward();
   const shake = consumeShake();
-  const camPos = new Vec3(
-    pos.x - f.x * 14 + shake.x,
-    pos.y + 5 + shake.y,
-    pos.z - f.z * 14 + shake.z
+  const camTarget = new Vec3(
+    pos.x - f.x * 16 + shake.x,
+    pos.y + 6 + shake.y * 0.5,
+    pos.z - f.z * 16 + shake.z
   );
-  s.camera.setPosition(camPos);
+  const smooth = 1 - Math.exp(-12 * dt);
+  s.cameraSmoothed.set(
+    s.cameraSmoothed.x + (camTarget.x - s.cameraSmoothed.x) * smooth,
+    s.cameraSmoothed.y + (camTarget.y - s.cameraSmoothed.y) * smooth,
+    s.cameraSmoothed.z + (camTarget.z - s.cameraSmoothed.z) * smooth
+  );
+  s.camera.setPosition(s.cameraSmoothed);
   s.camera.lookAt(pos);
 
   const lifetimeDestruction = s.stats.destructionUsd + s.destructionUsd;
@@ -1253,7 +1261,7 @@ function tickFrame(s: GameSession, dt: number): void {
   const houseNear = nearBattleworldSafeHouse(
     pos,
     s.heroSpec.id,
-    districtIdAtPosition(pos.x, pos.z)
+    districtIdAtPosition(pos.x, pos.z, pos.y)
   );
   if (houseNear && houseNear.id !== s.lastSafeHouseId) {
     s.lastSafeHouseId = houseNear.id;
@@ -1320,7 +1328,7 @@ export function selectPlayerRole(role: PlayerRole): void {
 export function confirmTerritoryHenchmen(): void {
   if (!session || session.playerRole !== 'villain') return;
   const pos = session.hero.entity.getPosition();
-  const did = districtIdAtPosition(pos.x, pos.z);
+  const did = districtIdAtPosition(pos.x, pos.z, pos.y);
   if (!did) return;
   applyTerritoryHenchmenChoice(
     session.territory,
@@ -1336,7 +1344,7 @@ export function confirmTerritoryHenchmen(): void {
 export function confirmTerritoryRaze(): void {
   if (!session || session.playerRole !== 'villain') return;
   const pos = session.hero.entity.getPosition();
-  const did = districtIdAtPosition(pos.x, pos.z);
+  const did = districtIdAtPosition(pos.x, pos.z, pos.y);
   if (!did) return;
   applyTerritoryRazeChoice(session.territory, did, session.city);
 }

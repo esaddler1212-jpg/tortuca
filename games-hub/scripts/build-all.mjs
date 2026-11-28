@@ -19,8 +19,13 @@ const siblingGames = [
   { pkg: 'flight-nemulator', out: 'flight-nemulator' }
 ];
 
-function run(cmd, args, cwd) {
-  const r = spawnSync(cmd, args, { cwd, stdio: 'inherit', shell: false });
+function run(cmd, args, cwd, extraEnv = {}) {
+  const r = spawnSync(cmd, args, {
+    cwd,
+    stdio: 'inherit',
+    shell: false,
+    env: { ...process.env, ...extraEnv }
+  });
   if (r.status !== 0) process.exit(r.status ?? 1);
 }
 
@@ -32,7 +37,11 @@ function mergeGame(pkg, outName) {
   const appDir = path.join(repoRoot, pkg);
   console.log(`→ Building ${pkg}…`);
   run('npm', ['ci'], appDir);
-  run('npm', ['run', 'build'], appDir);
+  const globeEnv =
+    outName === 'flight-nemulator'
+      ? { VITE_BATTLEWORLD_GLOBE: process.env.VITE_BATTLEWORLD_GLOBE ?? '1' }
+      : {};
+  run('npm', ['run', 'build'], appDir, globeEnv);
   const dest = path.join(hubDist, outName);
   console.log(`→ Merging ${pkg} into dist/${outName}/…`);
   rimraf(dest);
